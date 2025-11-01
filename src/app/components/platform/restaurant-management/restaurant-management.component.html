@@ -1,0 +1,621 @@
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
+   <!-- Header Section -->
+  <div class="mb-6">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Restaurant Management</h1>
+        <p class="text-gray-600 dark:text-gray-300">Manage all restaurants on the platform</p>
+      </div>
+      <button
+        (click)="showAddRestaurantForm()"
+        class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
+        <i class="fas fa-plus"></i>
+        <span>Add Restaurant</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div class="md:col-span-2">
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-search mr-2 text-red-500"></i>Search Restaurants
+        </label>
+        <div class="relative">
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            (input)="filterRestaurants()"
+            placeholder="Search by name, owner, or email..."
+            class="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-filter mr-2 text-blue-500"></i>Status Filter
+        </label>
+        <select
+          [(ngModel)]="statusFilter"
+          (change)="filterRestaurants()"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="suspended">Suspended</option>
+        </select>
+      </div>
+      <div class="flex items-end">
+        <div class="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 px-4 py-3 rounded-xl border border-red-200 dark:border-red-800">
+          <div class="text-sm text-gray-700 dark:text-gray-300">
+            <span class="font-bold text-red-600 dark:text-red-400">{{ filteredRestaurants.length }}</span> restaurants found
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Restaurant Modal -->
+  <div *ngIf="showAddForm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center">
+            <i class="fas fa-utensils text-white"></i>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">Add New Restaurant</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Create a new restaurant profile</p>
+          </div>
+        </div>
+        <button
+          (click)="cancelAdd()"
+          class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+          <i class="fas fa-times text-gray-500 dark:text-gray-400"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-red-500 scrollbar-track-gray-100 dark:scrollbar-track-gray-700">
+        <form (ngSubmit)="addRestaurant()" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Restaurant Name -->
+            <div class="md:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-store mr-2 text-red-500"></i>Restaurant Name
+              </label>
+              <input
+                type="text"
+                [(ngModel)]="newRestaurant.name"
+                name="name"
+                required
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                placeholder="Enter restaurant name">
+            </div>
+
+            <!-- Email -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-envelope mr-2 text-blue-500"></i>Email Address
+              </label>
+              <input
+                type="email"
+                [(ngModel)]="newRestaurant.email"
+                name="email"
+                required
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                placeholder="restaurant@example.com">
+            </div>
+
+            <!-- Phone -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-phone mr-2 text-green-500"></i>Phone Number
+              </label>
+              <input
+                type="tel"
+                [(ngModel)]="newRestaurant.phone"
+                name="phone"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                placeholder="+91 98765 43210">
+            </div>
+
+            <!-- City -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-city mr-2 text-purple-500"></i>City
+              </label>
+              <input
+                type="text"
+                [(ngModel)]="newRestaurant.city"
+                name="city"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                placeholder="Enter city">
+            </div>
+
+            <!-- Subscription Plan -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-crown mr-2 text-yellow-500"></i>Subscription Plan
+              </label>
+              <select
+                [(ngModel)]="newRestaurant.subscriptionPlan"
+                name="subscriptionPlan"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                <option value="Starter">Starter Plan</option>
+                <option value="Pro">Pro Plan</option>
+                <option value="Enterprise">Enterprise Plan</option>
+              </select>
+            </div>
+
+            <!-- Address -->
+            <div class="md:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-map-marker-alt mr-2 text-red-500"></i>Full Address
+              </label>
+              <textarea
+                [(ngModel)]="newRestaurant.address"
+                name="address"
+                rows="4"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 resize-none"
+                placeholder="Enter complete address with landmark"></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <button
+          type="button"
+          (click)="cancelAdd()"
+          class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          Cancel
+        </button>
+        <button
+          type="submit"
+          (click)="addRestaurant()"
+          class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+          {{ 'Add Restaurant' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Restaurants Grid -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <!-- Header with Compact Pagination -->
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Restaurants</h3>
+      <div *ngIf="totalPages > 1" class="flex items-center space-x-1">
+        <span class="text-xs text-gray-500 dark:text-gray-400 mr-2">
+          {{ currentPage }} of {{ totalPages }} pages ({{ itemsPerPage }} restaurants per page)
+        </span>
+        <button
+          (click)="changePage(1)"
+          [disabled]="currentPage === 1"
+          class="p-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          title="First Page">
+          <i class="fas fa-angle-double-left"></i>
+        </button>
+        <button
+          (click)="changePage(currentPage - 1)"
+          [disabled]="currentPage === 1"
+          class="p-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          title="Previous Page">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <span class="px-2 py-1 text-xs text-gray-700 dark:text-gray-300">
+          {{ currentPage }} / {{ totalPages }}
+        </span>
+        <button
+          (click)="changePage(currentPage + 1)"
+          [disabled]="currentPage === totalPages"
+          class="p-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          title="Next Page">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+        <button
+          (click)="changePage(totalPages)"
+          [disabled]="currentPage === totalPages"
+          class="p-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          title="Last Page">
+          <i class="fas fa-angle-double-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div
+        *ngFor="let restaurant of paginatedRestaurants"
+        (click)="selectRestaurant(restaurant)"
+        class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 cursor-pointer hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
+        <!-- Header -->
+        <div class="flex items-start justify-between mb-6">
+          <div class="flex items-center space-x-4">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/30 dark:to-red-800/30 flex items-center justify-center transition-transform duration-200">
+              <i class="fas fa-utensils text-red-600 dark:text-red-400 text-xl"></i>
+            </div>
+            <div class="min-w-0 flex-1">
+              <h3 class="font-bold text-gray-900 dark:text-white text-lg truncate">{{ restaurant.name }}</h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                <i class="fas fa-user mr-1"></i>{{ restaurant.ownerName }}
+              </p>
+            </div>
+          </div>
+          <div class="flex flex-col items-end space-y-2">
+            <span
+              [class]="getStatusColor(restaurant.status)"
+              class="px-3 py-1 text-xs rounded-full font-semibold">
+              {{ restaurant.status | titlecase }}
+            </span>
+            <span class="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-lg">
+              {{ restaurant.subscriptionPlan }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Details Grid -->
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
+            <div class="flex items-center space-x-2 mb-1">
+              <i class="fas fa-shopping-cart text-blue-500 text-sm"></i>
+              <span class="text-xs text-gray-500 dark:text-gray-400">Orders</span>
+            </div>
+            <div class="text-lg font-bold text-gray-900 dark:text-white">{{ restaurant.totalOrders }}</div>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
+            <div class="flex items-center space-x-2 mb-1">
+              <i class="fas fa-rupee-sign text-green-500 text-sm"></i>
+              <span class="text-xs text-gray-500 dark:text-gray-400">Revenue</span>
+            </div>
+            <div class="text-lg font-bold text-gray-900 dark:text-white">{{ formatCurrency(restaurant.totalRevenue) }}</div>
+          </div>
+        </div>
+
+        <!-- Contact Info -->
+        <div class="space-y-3 mb-6">
+          <div class="flex items-center space-x-3 text-sm">
+            <i class="fas fa-envelope text-gray-400 w-4"></i>
+            <span class="text-gray-700 dark:text-gray-300 truncate">{{ restaurant.email }}</span>
+          </div>
+          <div class="flex items-center space-x-3 text-sm">
+            <i class="fas fa-phone text-gray-400 w-4"></i>
+            <span class="text-gray-700 dark:text-gray-300">{{ restaurant.phone }}</span>
+          </div>
+          <div class="flex items-center space-x-3 text-sm">
+            <i class="fas fa-map-marker-alt text-gray-400 w-4"></i>
+            <span class="text-gray-700 dark:text-gray-300">{{ restaurant.city }}</span>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+            <div class="flex items-center space-x-1">
+              <i class="fas fa-calendar-plus"></i>
+              <span>Created {{ formatDate(restaurant.createdAt) }}</span>
+            </div>
+            <div class="flex items-center space-x-1">
+              <i class="fas fa-clock"></i>
+              <span>Active {{ formatDate(restaurant.lastActive) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Hover Overlay -->
+        <div class="absolute inset-0 bg-gradient-to-r from-primary-500/10 to-primary-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl flex items-center justify-center">
+          <div class="text-center">
+          </div>
+        </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="filteredRestaurants.length === 0" class="text-center py-12">
+    <i class="fas fa-search text-gray-400 text-4xl mb-4"></i>
+    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No restaurants found</h3>
+    <p class="text-gray-500 dark:text-gray-400">Try adjusting your filters or add a new restaurant.</p>
+  </div>
+</div>
+
+<!-- Edit Restaurant Modal -->
+    <div *ngIf="showEditForm && selectedRestaurant" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center">
+              <i class="fas fa-edit text-white"></i>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-gray-900 dark:text-white">Edit Restaurant</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400">Update restaurant information</p>
+            </div>
+          </div>
+          <button
+            (click)="closeEditForm()"
+            class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+            <i class="fas fa-times text-gray-500 dark:text-gray-400"></i>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-red-500 scrollbar-track-gray-100 dark:scrollbar-track-gray-700">
+          <form (ngSubmit)="updateRestaurant()" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Restaurant Name -->
+              <div class="md:col-span-2">
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-store mr-2 text-red-500"></i>Restaurant Name
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="newRestaurant.name"
+                  name="editName"
+                  required
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                  placeholder="Enter restaurant name">
+              </div>
+ 
+              <!-- Email -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-envelope mr-2 text-blue-500"></i>Email Address
+                </label>
+                <input
+                  type="email"
+                  [(ngModel)]="newRestaurant.email"
+                  name="editEmail"
+                  required
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                  placeholder="restaurant@example.com">
+              </div>
+ 
+              <!-- Phone -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-phone mr-2 text-green-500"></i>Phone Number
+                </label>
+                <input
+                  type="tel"
+                  [(ngModel)]="newRestaurant.phone"
+                  name="editPhone"
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                  placeholder="+91 98765 43210">
+              </div>
+ 
+              <!-- City -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-city mr-2 text-purple-500"></i>City
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="newRestaurant.city"
+                  name="editCity"
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                  placeholder="Enter city">
+              </div>
+ 
+              <!-- Subscription Plan -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-crown mr-2 text-yellow-500"></i>Subscription Plan
+                </label>
+                <select
+                  [(ngModel)]="newRestaurant.subscriptionPlan"
+                  name="editSubscriptionPlan"
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                  <option value="Starter">Starter Plan</option>
+                  <option value="Pro">Pro Plan</option>
+                  <option value="Enterprise">Enterprise Plan</option>
+                </select>
+              </div>
+ 
+              <!-- Address -->
+              <div class="md:col-span-2">
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-map-marker-alt mr-2 text-red-500"></i>Full Address
+                </label>
+                <textarea
+                  [(ngModel)]="newRestaurant.address"
+                  name="editAddress"
+                  rows="4"
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 resize-none"
+                  placeholder="Enter complete address with landmark"></textarea>
+              </div>
+            </div>
+ 
+          </form>
+        </div>
+  
+        <!-- Modal Footer -->
+        <div class="flex justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+          <button
+            type="button"
+            (click)="closeEditForm()"
+            class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            (click)="updateRestaurant()"
+            class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+            {{ 'Update Restaurant' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Restaurant Details Modal -->
+  <div *ngIf="showDetailsModal && selectedRestaurant" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+      <!-- Modal Header -->
+      <div class="bg-gray-100 dark:bg-gray-700 p-4 border-b border-gray-200 dark:border-gray-600">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ selectedRestaurant.name }}</h2>
+            <p class="text-gray-600 dark:text-gray-300 text-sm">Managed by {{ selectedRestaurant.ownerName }}</p>
+          </div>
+          <div class="flex space-x-2">
+            <button
+              (click)="showEditRestaurantForm()"
+              class="px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button
+              (click)="updateRestaurantStatus(selectedRestaurant, selectedRestaurant.status === 'active' ? 'suspended' : 'active')"
+              [class]="selectedRestaurant.status === 'active' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'"
+              class="px-3 py-2 text-white text-sm rounded-lg transition-colors">
+              <i class="fas fa-power-off"></i>
+            </button>
+            <button
+              (click)="deleteRestaurant(selectedRestaurant)"
+              class="px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
+              <i class="fas fa-trash"></i>
+            </button>
+            <button
+              (click)="closeDetailsModal()"
+              class="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors text-gray-600 dark:text-gray-400">
+              <i class="fas fa-times text-lg"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    <!-- Content -->
+    <div class="p-6">
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-800">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center">
+              <i class="fas fa-shopping-cart text-white"></i>
+            </div>
+            <span class="text-blue-600 dark:text-blue-400 text-sm font-medium">Orders</span>
+          </div>
+          <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ selectedRestaurant.totalOrders }}</div>
+          <div class="text-sm text-gray-600 dark:text-gray-400">Total Orders</div>
+        </div>
+
+        <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-2xl p-6 border border-green-200 dark:border-green-800">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 rounded-xl bg-green-500 flex items-center justify-center">
+              <i class="fas fa-rupee-sign text-white"></i>
+            </div>
+            <span class="text-green-600 dark:text-green-400 text-sm font-medium">Revenue</span>
+          </div>
+          <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ formatCurrency(selectedRestaurant.totalRevenue) }}</div>
+          <div class="text-sm text-gray-600 dark:text-gray-400">Total Revenue</div>
+        </div>
+
+        <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-2xl p-6 border border-purple-200 dark:border-purple-800">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 rounded-xl bg-purple-500 flex items-center justify-center">
+              <i class="fas fa-crown text-white"></i>
+            </div>
+            <span class="text-purple-600 dark:text-purple-400 text-sm font-medium">Plan</span>
+          </div>
+          <div class="text-2xl font-bold text-gray-900 dark:text-white mb-1">{{ selectedRestaurant.subscriptionPlan }}</div>
+          <div class="text-sm text-gray-600 dark:text-gray-400">Subscription</div>
+        </div>
+
+        <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-2xl p-6 border border-orange-200 dark:border-orange-800">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center">
+              <i class="fas fa-clock text-white"></i>
+            </div>
+            <span class="text-orange-600 dark:text-orange-400 text-sm font-medium">Activity</span>
+          </div>
+          <div class="text-lg font-bold text-gray-900 dark:text-white mb-1">{{ formatDate(selectedRestaurant.lastActive) }}</div>
+          <div class="text-sm text-gray-600 dark:text-gray-400">Last Active</div>
+        </div>
+      </div>
+
+      <!-- Details Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Contact Information -->
+        <div class="space-y-6">
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white flex items-center">
+            <i class="fas fa-address-card mr-3 text-red-500"></i>Contact Information
+          </h3>
+          <div class="space-y-4">
+            <div class="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+              <div class="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <i class="fas fa-envelope text-red-600 dark:text-red-400"></i>
+              </div>
+              <div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Email Address</div>
+                <div class="font-medium text-gray-900 dark:text-white">{{ selectedRestaurant.email }}</div>
+              </div>
+            </div>
+            <div class="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+              <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                <i class="fas fa-phone text-blue-600 dark:text-blue-400"></i>
+              </div>
+              <div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Phone Number</div>
+                <div class="font-medium text-gray-900 dark:text-white">{{ selectedRestaurant.phone }}</div>
+              </div>
+            </div>
+            <div class="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+              <div class="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                <i class="fas fa-map-marker-alt text-green-600 dark:text-green-400"></i>
+              </div>
+              <div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Address</div>
+                <div class="font-medium text-gray-900 dark:text-white">{{ selectedRestaurant.address }}, {{ selectedRestaurant.city }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="space-y-6">
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white flex items-center">
+            <i class="fas fa-bolt mr-3 text-yellow-500"></i>Quick Actions
+          </h3>
+          <div class="space-y-4">
+            <button class="w-full text-left p-4 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl hover:shadow-lg transition-all duration-200 border border-blue-200 dark:border-blue-800 group">
+              <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                  <i class="fas fa-chart-bar text-white"></i>
+                </div>
+                <div>
+                  <div class="font-semibold text-gray-900 dark:text-white">View Analytics</div>
+                  <div class="text-sm text-gray-600 dark:text-gray-400">Check performance metrics & reports</div>
+                </div>
+              </div>
+            </button>
+            <button class="w-full text-left p-4 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-xl hover:shadow-lg transition-all duration-200 border border-green-200 dark:border-green-800 group">
+              <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-xl bg-green-500 flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                  <i class="fas fa-users text-white"></i>
+                </div>
+                <div>
+                  <div class="font-semibold text-gray-900 dark:text-white">Manage Staff</div>
+                  <div class="text-sm text-gray-600 dark:text-gray-400">View and edit staff members</div>
+                </div>
+              </div>
+            </button>
+            <button class="w-full text-left p-4 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-xl hover:shadow-lg transition-all duration-200 border border-purple-200 dark:border-purple-800 group">
+              <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-xl bg-purple-500 flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                  <i class="fas fa-cog text-white"></i>
+                </div>
+                <div>
+                  <div class="font-semibold text-gray-900 dark:text-white">Settings</div>
+                  <div class="text-sm text-gray-600 dark:text-gray-400">Configure restaurant settings</div>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

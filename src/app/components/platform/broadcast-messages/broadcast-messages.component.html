@@ -1,0 +1,545 @@
+<div class="p-6">
+  <div class="mb-6">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Broadcast Messages</h1>
+        <p class="text-gray-600 dark:text-gray-300">Send mass communications to all platform users</p>
+      </div>
+      <button
+        (click)="showCreateBroadcastForm()"
+        class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
+        <i class="fas fa-bullhorn"></i>
+        <span>Send Broadcast</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-search mr-2 text-red-500"></i>Search Broadcasts
+        </label>
+        <div class="relative">
+          <input
+            type="text"
+            placeholder="Search by title or content..."
+            class="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-tag mr-2 text-blue-500"></i>Broadcast Type
+        </label>
+        <select
+          [(ngModel)]="typeFilter"
+          (change)="filterBroadcasts()"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Types</option>
+          <option value="announcement">Announcement</option>
+          <option value="promotion">Promotion</option>
+          <option value="maintenance">Maintenance</option>
+          <option value="emergency">Emergency</option>
+          <option value="update">Update</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-toggle-on mr-2 text-green-500"></i>Status
+        </label>
+        <select
+          [(ngModel)]="statusFilter"
+          (change)="filterBroadcasts()"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Status</option>
+          <option value="draft">Draft</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="sent">Sent</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+      <div class="flex items-end">
+        <div class="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 px-4 py-3 rounded-xl border border-red-200 dark:border-red-800">
+          <div class="text-sm text-gray-700 dark:text-gray-300">
+            <span class="font-bold text-red-600 dark:text-red-400">{{ filteredBroadcasts.length }}</span> broadcasts found
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Broadcast Modal -->
+  <div *ngIf="showCreateForm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center">
+            <i class="fas fa-bullhorn text-white"></i>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">Send Broadcast</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Send mass communication to platform users</p>
+          </div>
+        </div>
+        <button
+          (click)="cancelCreate()"
+          class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+          <i class="fas fa-times text-gray-500 dark:text-gray-400"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-red-500 scrollbar-track-gray-100 dark:scrollbar-track-gray-700">
+        <form (ngSubmit)="createBroadcast()" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Template Selection -->
+            <div class="md:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-file-alt mr-2 text-red-500"></i>Select Template
+              </label>
+              <select
+                name="template"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                <option value="">Choose a template...</option>
+                <option value="announcement">Announcement Template</option>
+                <option value="promotion">Promotion Template</option>
+                <option value="maintenance">Maintenance Template</option>
+                <option value="emergency">Emergency Template</option>
+                <option value="update">Update Template</option>
+              </select>
+            </div>
+
+            <!-- Broadcast Title -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-heading mr-2 text-blue-500"></i>Broadcast Title
+              </label>
+              <input
+                type="text"
+                [(ngModel)]="newBroadcast.title"
+                name="title"
+                required
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                placeholder="Enter broadcast title">
+            </div>
+
+            <!-- Type -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-tag mr-2 text-green-500"></i>Type
+              </label>
+              <select
+                [(ngModel)]="newBroadcast.type"
+                name="type"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                <option value="announcement">Announcement</option>
+                <option value="promotion">Promotion</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="emergency">Emergency</option>
+                <option value="update">Update</option>
+              </select>
+            </div>
+
+            <!-- Priority -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-exclamation-triangle mr-2 text-yellow-500"></i>Priority
+              </label>
+              <select
+                [(ngModel)]="newBroadcast.priority"
+                name="priority"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select>
+            </div>
+
+            <!-- Target Audience -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-users mr-2 text-purple-500"></i>Target Audience
+              </label>
+              <select
+                [(ngModel)]="newBroadcast.targetAudience"
+                name="targetAudience"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                <option value="all">All Users</option>
+                <option value="restaurants">Restaurant Owners</option>
+                <option value="customers">Customers</option>
+                <option value="staff">Staff Members</option>
+                <option value="specific">Specific Users</option>
+              </select>
+            </div>
+
+            <!-- Schedule -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-calendar mr-2 text-indigo-500"></i>Schedule For (Optional)
+              </label>
+              <input
+                type="datetime-local"
+                [(ngModel)]="newBroadcast.scheduledFor"
+                name="scheduledFor"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+            </div>
+
+            <!-- Expires At -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-clock mr-2 text-orange-500"></i>Expires At (Optional)
+              </label>
+              <input
+                type="datetime-local"
+                [(ngModel)]="newBroadcast.expiresAt"
+                name="expiresAt"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+            </div>
+
+            <!-- Message -->
+            <div class="md:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-edit mr-2 text-gray-500"></i>Message
+              </label>
+              <textarea
+                [(ngModel)]="newBroadcast.message"
+                name="message"
+                required
+                rows="4"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 resize-none"
+                placeholder="Enter broadcast message. Use variables like userName for personalization."></textarea>
+            </div>
+          </div>
+
+          <!-- CTA Section -->
+          <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+            <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+              <i class="fas fa-mouse-pointer mr-3 text-red-500"></i>Call-to-Action (Optional)
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-link mr-2 text-blue-500"></i>CTA Text
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="newBroadcast.ctaText"
+                  name="ctaText"
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                  placeholder="e.g., Learn More">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-external-link-alt mr-2 text-green-500"></i>CTA URL
+                </label>
+                <input
+                  type="url"
+                  [(ngModel)]="newBroadcast.ctaUrl"
+                  name="ctaUrl"
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                  placeholder="https://example.com">
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <button
+          type="button"
+          (click)="cancelCreate()"
+          class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          Cancel
+        </button>
+        <button
+          type="submit"
+          (click)="createBroadcast()"
+          class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+          Send Broadcast
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Broadcasts List -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <!-- Header with Compact Pagination -->
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Broadcast Messages</h3>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div
+        *ngFor="let broadcast of filteredBroadcasts"
+        class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
+      <div class="flex items-center space-x-4 mb-4">
+        <div class="w-12 h-12 rounded-lg flex items-center justify-center"
+              [class]="getTypeColor(broadcast.type)">
+          <i class="fas fa-bullhorn text-lg text-white"></i>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-bold text-gray-900 dark:text-white text-lg">{{ broadcast.title }}</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400">{{ formatDate(broadcast.sentAt || broadcast.scheduledFor!) }}</p>
+        </div>
+        <span
+          [class]="getStatusColor(broadcast.status)"
+          class="px-3 py-1 text-xs rounded-full font-medium">
+          {{ broadcast.status | titlecase }}
+        </span>
+      </div>
+
+      <div class="space-y-2 text-sm mb-4">
+        <div class="flex justify-between">
+          <span class="text-gray-500 dark:text-gray-400">Type:</span>
+          <span class="text-gray-900 dark:text-white">{{ broadcast.type | titlecase }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-500 dark:text-gray-400">Priority:</span>
+          <span class="text-gray-900 dark:text-white">{{ broadcast.priority | titlecase }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-500 dark:text-gray-400">Audience:</span>
+          <span class="text-gray-900 dark:text-white">{{ getAudienceDisplayName(broadcast.targetAudience) }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-500 dark:text-gray-400">Recipients:</span>
+          <span class="text-gray-900 dark:text-white">{{ broadcast.totalRecipients }}</span>
+        </div>
+      </div>
+
+      <p class="text-sm text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">{{ broadcast.message }}</p>
+
+      <!-- Engagement Stats -->
+      <div class="mb-4">
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-gray-500 dark:text-gray-400">Read:</span>
+          <span class="text-gray-900 dark:text-white">{{ broadcast.readCount }}/{{ broadcast.totalRecipients }}</span>
+        </div>
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-gray-500 dark:text-gray-400">Engagement:</span>
+          <span class="text-gray-900 dark:text-white">{{ broadcast.engagementRate }}%</span>
+        </div>
+      </div>
+
+      <!-- Card Actions -->
+      <div class="flex flex-wrap gap-2">
+        <button
+          (click)="selectBroadcast(broadcast)"
+          class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30 transition-colors">
+          <i class="fas fa-eye mr-2"></i>
+          View Details
+        </button>
+        <button
+          (click)="duplicateBroadcast(broadcast)"
+          class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg text-green-700 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30 transition-colors">
+          <i class="fas fa-copy mr-2"></i>
+          Duplicate
+        </button>
+      </div>
+
+      <!-- Card Hover Overlay -->
+      <div class="absolute inset-0 bg-gradient-to-r from-primary-500/10 to-primary-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl flex items-center justify-center">
+        <div class="text-center">
+        </div>
+      </div>
+    </div>
+
+    <!-- Broadcast Details Modal -->
+    <div *ngIf="selectedBroadcast" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center"
+                  [class]="getTypeColor(selectedBroadcast.type)">
+              <i class="fas fa-bullhorn text-xl text-white"></i>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ selectedBroadcast.title }}</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400">Broadcast Details</p>
+            </div>
+          </div>
+          <button
+            (click)="selectedBroadcast = null"
+            class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+            <i class="fas fa-times text-gray-500 dark:text-gray-400"></i>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-red-500 scrollbar-track-gray-100 dark:scrollbar-track-gray-700">
+          <div class="space-y-6">
+            <!-- Broadcast Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-tag mr-2 text-red-500"></i>Broadcast Title
+                </label>
+                <div class="text-gray-900 dark:text-white font-medium">{{ selectedBroadcast.title }}</div>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-list mr-2 text-blue-500"></i>Broadcast Type
+                </label>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                  {{ selectedBroadcast.type | titlecase }}
+                </span>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-exclamation-triangle mr-2 text-green-500"></i>Priority Level
+                </label>
+                <span [class]="getPriorityColor(selectedBroadcast.priority)" class="px-2 py-1 text-sm rounded-full font-medium">
+                  {{ selectedBroadcast.priority | titlecase }}
+                </span>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-toggle-on mr-2 text-purple-500"></i>Status
+                </label>
+                <span [class]="getStatusColor(selectedBroadcast.status)" class="px-2 py-1 text-sm rounded-full font-medium">
+                  {{ selectedBroadcast.status | titlecase }}
+                </span>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-users mr-2 text-indigo-500"></i>Target Audience
+                </label>
+                <div class="text-gray-900 dark:text-white">{{ getAudienceDisplayName(selectedBroadcast.targetAudience) }}</div>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-calendar mr-2 text-yellow-500"></i>{{ selectedBroadcast.sentAt ? 'Sent Date' : 'Scheduled Date' }}
+                </label>
+                <div class="text-gray-900 dark:text-white">{{ formatDate(selectedBroadcast.sentAt || selectedBroadcast.scheduledFor!) }}</div>
+              </div>
+            </div>
+
+            <!-- Message Content -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-file-alt mr-2 text-indigo-500"></i>Message Content
+              </label>
+              <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl">
+                <p class="text-gray-900 dark:text-white">{{ selectedBroadcast.message }}</p>
+              </div>
+            </div>
+
+            <!-- Delivery Statistics -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
+                    <i class="fas fa-users text-white"></i>
+                  </div>
+                  <div>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ selectedBroadcast.totalRecipients }}</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Total Recipients</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-xl p-4 border border-green-200 dark:border-green-800">
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 rounded-lg bg-green-500 flex items-center justify-center">
+                    <i class="fas fa-eye text-white"></i>
+                  </div>
+                  <div>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ selectedBroadcast.readCount }}</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Read Count</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-xl p-4 border border-purple-200 dark:border-purple-800">
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 rounded-lg bg-purple-500 flex items-center justify-center">
+                    <i class="fas fa-percentage text-white"></i>
+                  </div>
+                  <div>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ selectedBroadcast.engagementRate }}%</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Engagement Rate</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-xl p-4 border border-orange-200 dark:border-orange-800">
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 rounded-lg bg-orange-500 flex items-center justify-center">
+                    <i class="fas fa-paper-plane text-white"></i>
+                  </div>
+                  <div>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ selectedBroadcast.deliveryStatus | titlecase }}</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Delivery Status</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Call-to-Action -->
+            <div *ngIf="selectedBroadcast.ctaText && selectedBroadcast.ctaUrl" class="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
+                  <i class="fas fa-mouse-pointer text-white"></i>
+                </div>
+                <div>
+                  <div class="font-medium text-gray-900 dark:text-white">Call-to-Action</div>
+                  <div class="text-sm text-gray-600 dark:text-gray-400">
+                    <strong>{{ selectedBroadcast.ctaText }}</strong> → {{ selectedBroadcast.ctaUrl }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Expiration -->
+            <div *ngIf="selectedBroadcast.expiresAt" class="bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 rounded-xl p-4 border border-yellow-200 dark:border-yellow-800">
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-lg bg-yellow-500 flex items-center justify-center">
+                  <i class="fas fa-clock text-white"></i>
+                </div>
+                <div>
+                  <div class="font-medium text-gray-900 dark:text-white">Expiration</div>
+                  <div class="text-sm text-gray-600 dark:text-gray-400">
+                    This broadcast expires on {{ formatDate(selectedBroadcast.expiresAt) }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="flex justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+          <button
+            type="button"
+            (click)="selectedBroadcast = null"
+            class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            Close
+          </button>
+          <button
+            *ngIf="selectedBroadcast.status === 'draft'"
+            (click)="sendBroadcast(selectedBroadcast)"
+            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+            Send Now
+          </button>
+          <button
+            *ngIf="selectedBroadcast.status === 'scheduled'"
+            (click)="cancelBroadcast(selectedBroadcast)"
+            class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+            Cancel Schedule
+          </button>
+          <button
+            (click)="duplicateBroadcast(selectedBroadcast)"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            Duplicate
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

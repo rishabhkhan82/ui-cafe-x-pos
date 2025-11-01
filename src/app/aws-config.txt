@@ -1,0 +1,22 @@
+AWS Config - Free Tier
+
+--------------------------------------------------------------------------------------------------------------------
+
+AWS Free Tier Resources You Can Use:
+
+EC2 (Elastic Compute Cloud): You can use a t2.micro or t3.micro instance for hosting your Spring Boot backend. The Free Tier provides 750 hours/month of t2.micro or t3.micro for the first 12 months.
+
+RDS (Relational Database Service): You can host your MySQL database using the RDS Free Tier (750 hours/month of db.t2.micro instance with 20GB storage for 12 months).
+
+S3 (Simple Storage Service): You can use S3 to host your Angular frontend, as it's a static site. The Free Tier provides 5GB of storage and 15GB of data transfer per month for the first 12 months.
+
+Route 53 (DNS): If you want to set up a custom domain, you can use Route 53 to point to your website. You'll only incur a small charge for domain registration (if you choose to do that), but managing DNS is part of the Free Tier.
+
+--------------------------------------------------------------------------------------------------------------------
+
+Step-by-Step Setup:
+0. AWS account creation
+1. Set Up Angular Frontend in S3:
+2. Set Up MySQL Database (RDS):
+3. Set Up Spring Boot Backend on EC2:
+4. Connect Angular to Spring Boot:

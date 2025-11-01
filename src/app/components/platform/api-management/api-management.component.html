@@ -1,0 +1,375 @@
+<div class="p-6">
+  <div class="mb-6">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">API Management</h1>
+        <p class="text-gray-600 dark:text-gray-300">Manage API keys, monitor usage, and configure endpoints</p>
+      </div>
+      <div class="flex space-x-3">
+        <button
+          (click)="showCreateKey()"
+          class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
+          <i class="fas fa-plus"></i>
+          <span>Create API Key</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Metrics -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="pos-card rounded-2xl p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Total Requests</p>
+          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ metrics.totalRequests.toLocaleString() }}</h3>
+          <p class="text-sm text-green-600 dark:text-green-400">+12.5% this month</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-500">
+          <i class="fas fa-chart-line text-xl"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="pos-card rounded-2xl p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Active API Keys</p>
+          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ metrics.activeKeys }}</h3>
+          <p class="text-sm text-green-600 dark:text-green-400">All keys active</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-green-50 dark:bg-green-900/30 flex items-center justify-center text-green-500">
+          <i class="fas fa-key text-xl"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="pos-card rounded-2xl p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Avg Response Time</p>
+          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ metrics.averageResponseTime }}ms</h3>
+          <p class="text-sm text-green-600 dark:text-green-400">-5.2% improvement</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center text-purple-500">
+          <i class="fas fa-clock text-xl"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="pos-card rounded-2xl p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 dark:text-gray-400">API Uptime</p>
+          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ metrics.uptime }}%</h3>
+          <p class="text-sm text-green-600 dark:text-green-400">Last 30 days</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-primary-50 dark:bg-red-900/30 flex items-center justify-center text-primary-500">
+          <i class="fas fa-server text-xl"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="pos-card rounded-2xl p-6 mb-6">
+    <div class="border-b border-gray-200 dark:border-gray-700 mb-6">
+      <nav class="flex space-x-8">
+        <button
+          (click)="selectedTab = 'keys'"
+          [class.text-primary-600]="selectedTab === 'keys'"
+          [class.border-primary-500]="selectedTab === 'keys'"
+          class="py-2 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+          API Keys
+        </button>
+        <button
+          (click)="selectedTab = 'endpoints'"
+          [class.text-primary-600]="selectedTab === 'endpoints'"
+          [class.border-primary-500]="selectedTab === 'endpoints'"
+          class="py-2 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+          Endpoints
+        </button>
+        <button
+          (click)="selectedTab = 'analytics'"
+          [class.text-primary-600]="selectedTab === 'analytics'"
+          [class.border-primary-500]="selectedTab === 'analytics'"
+          class="py-2 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+          Analytics
+        </button>
+      </nav>
+    </div>
+
+    <!-- Search -->
+    <div class="mb-6">
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        placeholder="Search {{ selectedTab === 'keys' ? 'API keys' : selectedTab === 'endpoints' ? 'endpoints' : 'analytics' }}..."
+        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+    </div>
+
+    <!-- API Keys Tab -->
+    <div *ngIf="selectedTab === 'keys'">
+      <!-- Create API Key Form -->
+      <div *ngIf="showCreateKeyForm" class="pos-card rounded-2xl p-6 mb-6 border-2 border-dashed border-gray-300 dark:border-gray-600">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Create New API Key</h3>
+        <form (ngSubmit)="createKey()" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Key Name</label>
+              <input
+                type="text"
+                [(ngModel)]="newKey.name"
+                name="name"
+                required
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                placeholder="Production API Key">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rate Limit (requests/minute)</label>
+              <input
+                type="number"
+                [(ngModel)]="newKey.rateLimit"
+                name="rateLimit"
+                required
+                min="1"
+                max="10000"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+            </div>
+          </div>
+
+          <!-- Permissions -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Permissions</label>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <label class="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  [checked]="newKey.permissions?.includes('read')"
+                  (change)="newKey.permissions = newKey.permissions || []; newKey.permissions.includes('read') ? newKey.permissions.splice(newKey.permissions.indexOf('read'), 1) : newKey.permissions.push('read')"
+                  class="rounded border-gray-300 dark:border-gray-600">
+                <span class="text-sm text-gray-900 dark:text-white">Read</span>
+              </label>
+              <label class="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  [checked]="newKey.permissions?.includes('write')"
+                  (change)="newKey.permissions = newKey.permissions || []; newKey.permissions.includes('write') ? newKey.permissions.splice(newKey.permissions.indexOf('write'), 1) : newKey.permissions.push('write')"
+                  class="rounded border-gray-300 dark:border-gray-600">
+                <span class="text-sm text-gray-900 dark:text-white">Write</span>
+              </label>
+              <label class="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  [checked]="newKey.permissions?.includes('delete')"
+                  (change)="newKey.permissions = newKey.permissions || []; newKey.permissions.includes('delete') ? newKey.permissions.splice(newKey.permissions.indexOf('delete'), 1) : newKey.permissions.push('delete')"
+                  class="rounded border-gray-300 dark:border-gray-600">
+                <span class="text-sm text-gray-900 dark:text-white">Delete</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="flex justify-end space-x-3">
+            <button
+              type="button"
+              (click)="cancelCreateKey()"
+              class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+              Create API Key
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- API Keys List -->
+      <div class="space-y-4">
+        <div *ngFor="let key of filterKeys()" class="pos-card rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-4">
+              <div class="w-12 h-12 rounded-xl bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center">
+                <i class="fas fa-key text-primary-600 dark:text-primary-400"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-gray-900 dark:text-white">{{ key.name }}</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Created by {{ key.createdBy }}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-3">
+              <span
+                [class]="key.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'"
+                class="px-2 py-1 text-xs rounded-full font-medium">
+                {{ key.status | titlecase }}
+              </span>
+              <div class="flex space-x-2">
+                <button
+                  (click)="copyToClipboard(key.key)"
+                  class="p-2 text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
+                  title="Copy API Key">
+                  <i class="fas fa-copy"></i>
+                </button>
+                <button
+                  (click)="regenerateKey(key)"
+                  class="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+                  title="Regenerate Key">
+                  <i class="fas fa-sync-alt"></i>
+                </button>
+                <button
+                  (click)="revokeKey(key)"
+                  class="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400"
+                  title="Revoke Key">
+                  <i class="fas fa-ban"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+              <div class="text-sm text-gray-500 dark:text-gray-400">Rate Limit</div>
+              <div class="font-medium text-gray-900 dark:text-white">{{ key.rateLimit }}/minute</div>
+            </div>
+            <div>
+              <div class="text-sm text-gray-500 dark:text-gray-400">Usage Today</div>
+              <div class="font-medium text-gray-900 dark:text-white">{{ key.usage.requests }}/{{ key.usage.limit }}</div>
+            </div>
+            <div>
+              <div class="text-sm text-gray-500 dark:text-gray-400">Last Used</div>
+              <div class="font-medium text-gray-900 dark:text-white">
+                {{ key.lastUsed ? formatDate(key.lastUsed) : 'Never' }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Permissions -->
+          <div>
+            <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">Permissions</div>
+            <div class="flex flex-wrap gap-2">
+              <span *ngFor="let permission of key.permissions"
+                    class="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 text-xs rounded-full">
+                {{ permission | titlecase }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Usage Progress Bar -->
+          <div class="mt-4">
+            <div class="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-1">
+              <span>Usage Progress</span>
+              <span>{{ calculateUsagePercentage(key) }}%</span>
+            </div>
+            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <div
+                class="bg-primary-600 h-2 rounded-full"
+                [style.width.%]="(key.usage.requests / key.usage.limit) * 100">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Endpoints Tab -->
+    <div *ngIf="selectedTab === 'endpoints'">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-gray-200 dark:border-gray-700">
+              <th class="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Endpoint</th>
+              <th class="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Method</th>
+              <th class="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Category</th>
+              <th class="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Rate Limit</th>
+              <th class="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Status</th>
+              <th class="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Calls</th>
+              <th class="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Last Called</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let endpoint of filterEndpoints()" class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+              <td class="py-3 px-4">
+                <div class="flex items-center space-x-3">
+                  <div class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                    <i [class]="getCategoryIcon(endpoint.category)" class="text-gray-600 dark:text-gray-300 text-sm"></i>
+                  </div>
+                  <div>
+                    <div class="font-medium text-gray-900 dark:text-white font-mono text-sm">{{ endpoint.path }}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ endpoint.description }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="py-3 px-4">
+                <span
+                  [class]="getMethodColor(endpoint.method)"
+                  class="px-2 py-1 text-xs rounded-full font-medium">
+                  {{ endpoint.method }}
+                </span>
+              </td>
+              <td class="py-3 px-4 text-sm text-gray-900 dark:text-white">{{ endpoint.category | titlecase }}</td>
+              <td class="py-3 px-4 text-sm text-gray-900 dark:text-white">{{ endpoint.rateLimit }}/min</td>
+              <td class="py-3 px-4">
+                <span
+                  [class]="getStatusColor(endpoint.status)"
+                  class="px-2 py-1 text-xs rounded-full font-medium">
+                  {{ endpoint.status | titlecase }}
+                </span>
+              </td>
+              <td class="py-3 px-4 text-sm text-gray-900 dark:text-white">{{ endpoint.callCount.toLocaleString() }}</td>
+              <td class="py-3 px-4 text-sm text-gray-900 dark:text-white">
+                {{ endpoint.lastCalled ? formatDate(endpoint.lastCalled) : 'Never' }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Analytics Tab -->
+    <div *ngIf="selectedTab === 'analytics'">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Top Endpoints -->
+        <div class="pos-card rounded-2xl p-6">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Top Endpoints</h3>
+          <div class="space-y-4">
+            <div *ngFor="let endpoint of metrics.topEndpoints" class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                  <i class="fas fa-code text-primary-600 dark:text-primary-400 text-sm"></i>
+                </div>
+                <span class="text-sm font-medium text-gray-900 dark:text-white">{{ endpoint.endpoint }}</span>
+              </div>
+              <span class="text-sm font-bold text-gray-900 dark:text-white">{{ endpoint.calls.toLocaleString() }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- API Health -->
+        <div class="pos-card rounded-2xl p-6">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">API Health</h3>
+          <div class="space-y-4">
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-gray-600 dark:text-gray-300">Uptime (30 days)</span>
+              <span class="text-sm font-bold text-green-600 dark:text-green-400">{{ metrics.uptime }}%</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-gray-600 dark:text-gray-300">Failed Requests</span>
+              <span class="text-sm font-bold text-red-600 dark:text-red-400">{{ metrics.failedRequests }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-gray-600 dark:text-gray-300">Avg Response Time</span>
+              <span class="text-sm font-bold text-blue-600 dark:text-blue-400">{{ metrics.averageResponseTime }}ms</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-gray-600 dark:text-gray-300">Error Rate</span>
+              <span class="text-sm font-bold text-orange-600 dark:text-orange-400">
+                {{ ((metrics.failedRequests / metrics.totalRequests) * 100).toFixed(2) }}%
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

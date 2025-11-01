@@ -1,0 +1,251 @@
+<!-- Customer Orders Header -->
+<header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700">
+  <div class="px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-lg">
+          <div class="relative"><i class="fas fa-coffee text-white text-lg"></i></div>
+        </div>
+        <div>
+          <h1 class="font-bold text-gray-900 dark:text-white text-lg">Cafe-X POS</h1>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Track your orders</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-3">
+        <button (click)="toggleTheme()" class="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300">
+          <i class="fas fa-moon dark:hidden text-sm"></i>
+          <i class="fas fa-sun hidden dark:inline text-sm"></i>
+        </button>
+        <div class="flex items-center space-x-2">
+          <div class="text-right">
+            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ currentUser?.name }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Customer</p>
+          </div>
+          <div class="relative">
+            <img [src]="currentUser?.avatar" alt="Profile" class="w-10 h-10 rounded-full border-2 border-primary-500 shadow-md hover:shadow-lg transition-shadow cursor-pointer">
+            <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="px-4 py-4 pb-20">
+  <!-- Welcome Banner -->
+  <div class="mb-6 animate__animated animate__fadeInUp">
+    <div class="gradient-bg rounded-2xl p-6 text-white relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+      <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
+      <div class="relative z-10">
+        <h2 class="text-2xl font-bold mb-2">Your Orders 🧾</h2>
+        <p class="text-white/90">Track live status and revisit past orders.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Order -->
+  <section class="mb-8 animate__animated animate__fadeInUp animate__delay-1s" *ngIf="liveOrder">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Live Order</h3>
+      <span class="text-xs text-white bg-primary-500 px-2 py-1 rounded-full">#{{ liveOrder.id.split('-').pop() }}</span>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Estimated ready in</p>
+          <p class="text-xl font-semibold text-gray-900 dark:text-white">{{ liveOrder.estimatedTime }} mins</p>
+        </div>
+        <button (click)="viewOrderDetails(liveOrder)" class="px-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm">
+          View Details
+        </button>
+      </div>
+
+      <!-- Order Progress -->
+      <div class="mt-4">
+        <div class="flex items-center">
+          <div class="step-dot rounded-full bg-primary-500 text-white flex items-center justify-center">
+            <i class="fas fa-fire rounded-full text-xs"></i>
+          </div>
+          <div class="flex-1 h-1 bg-primary-500 mx-2"></div>
+          <div class="step-dot rounded-full bg-primary-500 text-white flex items-center justify-center">
+            <i class="fas fa-clipboard-check text-xs"></i>
+          </div>
+          <div class="flex-1 h-1 bg-primary-300 dark:bg-primary-900/40 mx-2"></div>
+          <div class="step-dot rounded-full bg-gray-200 dark:bg-gray-700 text-gray-400 flex items-center justify-center">
+            <i class="fas fa-concierge-bell text-xs"></i>
+          </div>
+          <div class="flex-1 h-1 bg-gray-200 dark:bg-gray-700 mx-2"></div>
+          <div class="step-dot rounded-full bg-gray-200 dark:bg-gray-700 text-gray-400 flex items-center justify-center">
+            <i class="fas fa-truck text-xs"></i>
+          </div>
+        </div>
+        <div class="mt-3 flex justify-between text-xs text-gray-500 dark:text-gray-400">
+          <span>Preparing</span><span>Ready</span><span>On the way</span><span>Delivered</span>
+        </div>
+      </div>
+
+      <div class="mt-4 flex items-center justify-between">
+        <div class="text-sm text-gray-600 dark:text-gray-300">
+          Items: {{ liveOrder.items.length }} • Amount: <span class="font-semibold text-gray-900 dark:text-white">₹{{ liveOrder.totalAmount }}</span>
+        </div>
+        <div class="space-x-2">
+          <button (click)="helpWithOrder()" class="px-3 py-2 rounded-xl bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-sm text-gray-700 dark:text-gray-200">Help</button>
+          <button (click)="cancelOrder(liveOrder)" class="px-3 py-2 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent Orders -->
+  <section class="mb-8 animate__animated animate__fadeInUp animate__delay-2s">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Recent Orders</h3>
+      <button class="text-primary-500 text-sm font-medium">View All</button>
+    </div>
+    <div class="space-y-3">
+      <div *ngFor="let order of recentOrders"
+           (click)="viewOrderDetails(order)"
+           class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm menu-item-hover">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="font-semibold text-gray-900 dark:text-white">#{{ order.id.split('-').pop() }} • {{ getOrderStatusText(order.status) }}</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{ getOrderItemsText(order.items) }}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ formatOrderDate(order.createdAt) }}</p>
+          </div>
+          <div class="text-right">
+            <p class="font-semibold text-gray-900 dark:text-white">₹{{ order.totalAmount }}</p>
+            <div class="mt-2 space-x-2">
+              <button (click)="viewOrderDetails(order)" class="px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs">View</button>
+              <button (click)="reorder(order)" class="px-3 py-1.5 rounded-full bg-primary-500 text-white text-xs">Reorder</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Helpful Cards -->
+  <section class="mb-8 animate__animated animate__fadeInUp animate__delay-3s">
+    <div class="grid grid-cols-2 gap-4">
+      <div class="gradient-bg rounded-2xl p-4 text-white">
+        <p class="text-sm opacity-90">Need support?</p>
+        <p class="font-semibold mt-1">We're here to help</p>
+        <button (click)="contactSupport()" class="mt-3 px-3 py-1.5 rounded-full bg-white/20 text-white text-xs">Chat now</button>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 text-gray-900 dark:text-white">
+        <p class="text-sm text-gray-500 dark:text-gray-400">Save your favourites</p>
+        <p class="font-semibold mt-1">Quick reorders</p>
+        <button (click)="viewFavorites()" class="mt-3 px-3 py-1.5 rounded-full bg-primary-500 text-white text-xs">Explore</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 z-50">
+  <div class="flex items-center justify-around py-2">
+    <a routerLink="/customer/menu" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
+      <i class="fas fa-home text-xl"></i>
+      <span class="text-xs font-medium">Home</span>
+    </a>
+    <a routerLink="/customer/menu" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
+      <i class="fas fa-utensils text-xl"></i>
+      <span class="text-xs font-medium">Menu</span>
+    </a>
+    <a routerLink="/customer/orders" class="flex flex-col items-center space-y-1 p-2 text-primary-500 relative">
+      <i class="fas fa-receipt text-xl"></i>
+      <span class="text-xs font-medium">Orders</span>
+      <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">{{ pendingOrdersCount }}</span>
+    </a>
+    <a routerLink="/customer/offers" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
+      <i class="fas fa-gift text-xl"></i>
+      <span class="text-xs font-medium">Offers</span>
+    </a>
+    <a routerLink="/customer/profile" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
+      <i class="fas fa-user text-xl"></i>
+      <span class="text-xs font-medium">Profile</span>
+    </a>
+  </div>
+</nav>
+
+<!-- Floating Cart Button -->
+<div class="fixed bottom-24 right-4 z-40">
+  <button (click)="viewCart()"
+          class="w-14 h-14 bg-primary-500 text-white rounded-full shadow-lg hover:bg-primary-600 transition-all duration-300 floating-animation relative">
+    <i class="fas fa-shopping-cart text-xl"></i>
+    <span *ngIf="cartItemCount > 0"
+          class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+      {{ cartItemCount }}
+    </span>
+  </button>
+</div>
+
+<!-- Order Details Modal -->
+<div *ngIf="showOrderDetails && selectedOrder"
+     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Order Details</h3>
+        <button (click)="closeOrderDetails()" class="text-gray-400 hover:text-gray-600">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-gray-500 dark:text-gray-400">Order ID:</span>
+          <span class="font-semibold">#{{ selectedOrder.id.split('-').pop() }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-gray-500 dark:text-gray-400">Status:</span>
+          <span class="px-2 py-1 rounded-full text-xs font-medium"
+                [class]="getOrderStatusBadgeClass(selectedOrder.status)">
+            {{ getOrderStatusText(selectedOrder.status) }}
+          </span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-gray-500 dark:text-gray-400">Date:</span>
+          <span class="text-sm">{{ formatOrderDate(selectedOrder.createdAt) }}</span>
+        </div>
+
+        <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+          <h4 class="font-semibold mb-3">Items Ordered</h4>
+          <div class="space-y-2">
+            <div *ngFor="let item of selectedOrder.items"
+                 class="flex items-center justify-between py-2">
+              <div class="flex-1">
+                <div class="font-medium text-sm">{{ item.quantity }}x {{ item.menuItemName }}</div>
+                <div *ngIf="item.specialInstructions" class="text-xs text-orange-600 dark:text-orange-400">
+                  {{ item.specialInstructions }}
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="font-semibold">₹{{ item.totalPrice }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+          <div class="flex items-center justify-between font-bold">
+            <span>Total Amount:</span>
+            <span>₹{{ selectedOrder.totalAmount }}</span>
+          </div>
+        </div>
+
+        <div class="flex space-x-2 pt-4">
+          <button (click)="reorder(selectedOrder)"
+                  class="flex-1 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-semibold transition-colors">
+            Reorder
+          </button>
+          <button (click)="closeOrderDetails()"
+                  class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg font-semibold transition-colors">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

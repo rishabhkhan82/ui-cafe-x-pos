@@ -1,0 +1,196 @@
+<!-- Admin Login Page - Split Screen Design -->
+<div class="min-h-screen flex">
+  <!-- Left Side - Branding & Features -->
+  <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-red-600 via-red-700 to-red-800 p-12 flex-col justify-between relative overflow-hidden">
+    <!-- Background Pattern -->
+    <div class="absolute inset-0 opacity-5">
+      <div class="absolute top-10 left-10 w-32 h-32 bg-white rounded-full animate-pulse" style="animation-duration: 4s;"></div>
+      <div class="absolute bottom-20 right-20 w-24 h-24 bg-white rounded-full animate-pulse" style="animation-delay: 2s; animation-duration: 4s;"></div>
+      <div class="absolute top-1/2 left-1/4 w-16 h-16 bg-white rounded-full animate-pulse" style="animation-delay: 4s; animation-duration: 4s;"></div>
+    </div>
+
+    <!-- Logo and Title -->
+    <div class="relative z-10">
+      <div class="flex items-center space-x-4 mb-8">
+        <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg">
+          <i class="fas fa-coffee text-red-600 text-2xl"></i>
+        </div>
+        <div>
+          <h1 class="text-4xl font-bold text-white mb-1">Cafe-X POS</h1>
+          <p class="text-red-100 text-base">Multi-Tenant Restaurant Management SaaS System</p>
+        </div>
+      </div>
+
+      <!-- Features List -->
+      <div class="space-y-6">
+        <h2 class="text-2xl font-semibold text-white mb-6">Powerful Features</h2>
+
+        <div class="space-y-4">
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+              <i class="fas fa-bolt text-white text-xl"></i>
+            </div>
+            <div>
+              <h3 class="text-white font-semibold">Real-time Updates</h3>
+              <p class="text-red-100 text-sm">Live order tracking and instant notifications</p>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+              <i class="fas fa-utensils text-white text-xl"></i>
+            </div>
+            <div>
+              <h3 class="text-white font-semibold">Complete Order Management</h3>
+              <p class="text-red-100 text-sm">From order placement to delivery tracking</p>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+              <i class="fas fa-chart-line text-white text-xl"></i>
+            </div>
+            <div>
+              <h3 class="text-white font-semibold">Advanced Analytics</h3>
+              <p class="text-red-100 text-sm">Detailed reports and business insights</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="relative z-10">
+      <p class="text-red-100 text-sm">
+        © 2024 Cafe-X POS. Revolutionizing restaurant operations.
+      </p>
+    </div>
+  </div>
+
+  <!-- Right Side - Login Form -->
+  <div class="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50 dark:bg-gray-900">
+    <div class="w-full max-w-md">
+      <!-- Mobile Logo (shown only on mobile) -->
+      <div class="lg:hidden text-center mb-8">
+        <div class="w-16 h-16 bg-gradient-to-br from-red-600 to-red-700 rounded-2xl flex items-center justify-center shadow-lg mx-auto mb-4">
+          <i class="fas fa-coffee text-white text-2xl"></i>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">Cafe-X POS</h1>
+        <p class="text-gray-600 dark:text-gray-400">Admin Portal</p>
+      </div>
+
+      <!-- Login Form Card -->
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+        <div class="text-center mb-8">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Welcome Back</h2>
+          <p class="text-gray-600 dark:text-gray-400">Sign in to your admin account</p>
+        </div>
+
+        <form (ngSubmit)="onSubmit()" class="space-y-6">
+          <!-- Username Field -->
+          <div>
+            <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Username
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="fas fa-user text-gray-400"></i>
+              </div>
+              <input
+                type="text"
+                id="username"
+                [(ngModel)]="username"
+                name="username"
+                required
+                class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
+                placeholder="Enter your username">
+            </div>
+          </div>
+
+          <!-- Password Field -->
+          <div>
+            <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Password
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="fas fa-lock text-gray-400"></i>
+              </div>
+              <input
+                type="password"
+                id="password"
+                [(ngModel)]="password"
+                name="password"
+                required
+                class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                placeholder="Enter your password">
+            </div>
+          </div>
+
+          <!-- Error Message -->
+          <div *ngIf="errorMessage" class="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-3">
+            <div class="flex items-center">
+              <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
+              <span class="text-red-700 dark:text-red-400 text-sm">{{ errorMessage }}</span>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button
+            type="submit"
+            [disabled]="isLoading"
+            class="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] disabled:hover:scale-100 disabled:cursor-not-allowed shadow-lg">
+            <span *ngIf="!isLoading">Sign In to Dashboard</span>
+            <span *ngIf="isLoading" class="flex items-center justify-center">
+              <i class="fas fa-spinner fa-spin mr-2"></i>
+              Signing In...
+            </span>
+          </button>
+        </form>
+
+        <!-- Demo Credentials -->
+        <!-- <div class="mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <h4 class="text-sm font-medium text-red-800 dark:text-red-200 mb-3">Demo Credentials:</h4>
+          <div class="space-y-2 text-xs">
+            <div class="flex justify-between items-center py-1">
+              <span class="text-red-700 dark:text-red-300 font-medium">Platform Owner:</span>
+              <span class="text-red-600 dark:text-red-400">rishabh&#64;cafex.com</span>
+            </div>
+            <div class="flex justify-between items-center py-1">
+              <span class="text-red-700 dark:text-red-300 font-medium">Restaurant Owner:</span>
+              <span class="text-red-600 dark:text-red-400">owner&#64;restaurant.com</span>
+            </div>
+            <div class="flex justify-between items-center py-1">
+              <span class="text-red-700 dark:text-red-300 font-medium">Restaurant Manager:</span>
+              <span class="text-red-600 dark:text-red-400">manager&#64;restaurant.com</span>
+            </div>
+            <div class="flex justify-between items-center py-1">
+              <span class="text-red-700 dark:text-red-300 font-medium">Kitchen Manager:</span>
+              <span class="text-red-600 dark:text-red-400">kitchen&#64;restaurant.com</span>
+            </div>
+            <div class="flex justify-between items-center py-1">
+              <span class="text-red-700 dark:text-red-300 font-medium">Cashier:</span>
+              <span class="text-red-600 dark:text-red-400">cashier&#64;restaurant.com</span>
+            </div>
+            <div class="flex justify-between items-center py-1">
+              <span class="text-red-700 dark:text-red-300 font-medium">Waiter:</span>
+              <span class="text-red-600 dark:text-red-400">waiter&#64;restaurant.com</span>
+            </div>
+            <div class="text-center mt-2">
+              <span class="text-red-600 dark:text-red-400 font-medium">Password: password</span>
+            </div>
+          </div>
+        </div> -->
+
+        <!-- Customer Login Link -->
+        <div class="mt-6 text-center">
+          <button (click)="navigateToCustomerLogin()" class="text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors">
+            <i class="fas fa-user mr-1"></i>
+            Customer Portal
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

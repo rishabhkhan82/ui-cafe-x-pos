@@ -1,0 +1,101 @@
+/* Recipe Management Component Styles */
+
+/* Custom scrollbar for recipe list */
+.max-h-96::-webkit-scrollbar {
+  width: 6px;
+}
+
+.max-h-96::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.max-h-96::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.max-h-96::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dark mode scrollbar */
+.dark .max-h-96::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.dark .max-h-96::-webkit-scrollbar-thumb {
+  background: #6b7280;
+}
+
+.dark .max-h-96::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Form styling */
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Recipe card hover effects */
+.recipe-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.recipe-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Status badges */
+.status-badge {
+  transition: all 0.2s ease-in-out;
+}
+
+.status-badge:hover {
+  transform: scale(1.05);
+}
+
+/* Loading animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.loading {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Responsive design improvements */
+@media (max-width: 768px) {
+  .grid-cols-1.md\\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .grid-cols-1.md\\:grid-cols-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .flex-col.md\\:flex-row {
+    flex-direction: column;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .bg-white {
+    background: white !important;
+  }
+
+  .text-gray-900 {
+    color: black !important;
+  }
+}

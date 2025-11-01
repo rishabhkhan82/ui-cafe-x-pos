@@ -1,0 +1,549 @@
+<div class="p-6">
+  <div class="mb-6">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Settings & Configuration</h1>
+        <p class="text-gray-600 dark:text-gray-300">Configure restaurant settings, business hours, and operational preferences</p>
+      </div>
+      <button
+        (click)="exportSettings()"
+        class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
+        <i class="fas fa-download"></i>
+        <span>Export Settings</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center">
+          <i class="fas fa-clock text-white"></i>
+        </div>
+        <span class="text-blue-600 dark:text-blue-400 text-sm font-medium">Business Hours</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ getBusinessHoursCount() }}</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">Days Open</div>
+    </div>
+
+    <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-2xl p-6 border border-green-200 dark:border-green-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-green-500 flex items-center justify-center">
+          <i class="fas fa-credit-card text-white"></i>
+        </div>
+        <span class="text-green-600 dark:text-green-400 text-sm font-medium">Payment Methods</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ getPaymentMethodsCount() }}</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">Active Methods</div>
+    </div>
+
+    <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-2xl p-6 border border-purple-200 dark:border-purple-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-purple-500 flex items-center justify-center">
+          <i class="fas fa-utensils text-white"></i>
+        </div>
+        <span class="text-purple-600 dark:text-purple-400 text-sm font-medium">Tables</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ restaurantSettings?.operationalSettings?.tableCount || 0 }}</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">Total Capacity</div>
+    </div>
+
+    <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-2xl p-6 border border-orange-200 dark:border-orange-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center">
+          <i class="fas fa-bell text-white"></i>
+        </div>
+        <span class="text-orange-600 dark:text-orange-400 text-sm font-medium">Notifications</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ getActiveNotificationsCount() }}</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">Active Alerts</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-search mr-2 text-red-500"></i>Search Settings
+        </label>
+        <div class="relative">
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (input)="filterSettings()"
+            placeholder="Search settings..."
+            class="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-tag mr-2 text-blue-500"></i>Category
+        </label>
+        <select
+          [(ngModel)]="selectedCategory"
+          (change)="filterSettings()"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Categories</option>
+          <option value="general">General</option>
+          <option value="hours">Business Hours</option>
+          <option value="payments">Payments</option>
+          <option value="operations">Operations</option>
+          <option value="notifications">Notifications</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-toggle-on mr-2 text-green-500"></i>Status
+        </label>
+        <select
+          [(ngModel)]="selectedStatus"
+          (change)="filterSettings()"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Status</option>
+          <option value="configured">Configured</option>
+          <option value="default">Default</option>
+          <option value="disabled">Disabled</option>
+        </select>
+      </div>
+      <div class="flex items-end">
+        <div class="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 px-4 py-3 rounded-xl border border-red-200 dark:border-red-800">
+          <div class="text-sm text-gray-700 dark:text-gray-300">
+            <span class="font-bold text-red-600 dark:text-red-400">{{ getFilteredSettingsCount() }}</span> settings found
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Quick Actions</h3>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <button (click)="setActiveTab('general')" class="flex flex-col items-center justify-center p-4 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-xl border border-blue-200 dark:border-blue-800 transition-colors">
+        <i class="fas fa-info-circle text-blue-600 dark:text-blue-400 text-2xl mb-2"></i>
+        <span class="text-sm font-semibold text-blue-700 dark:text-blue-300">General Info</span>
+      </button>
+      <button (click)="setActiveTab('hours')" class="flex flex-col items-center justify-center p-4 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-xl border border-green-200 dark:border-green-800 transition-colors">
+        <i class="fas fa-clock text-green-600 dark:text-green-400 text-2xl mb-2"></i>
+        <span class="text-sm font-semibold text-green-700 dark:text-green-300">Business Hours</span>
+      </button>
+      <button (click)="setActiveTab('payments')" class="flex flex-col items-center justify-center p-4 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-xl border border-purple-200 dark:border-purple-800 transition-colors">
+        <i class="fas fa-credit-card text-purple-600 dark:text-purple-400 text-2xl mb-2"></i>
+        <span class="text-sm font-semibold text-purple-700 dark:text-purple-300">Payment Settings</span>
+      </button>
+      <button (click)="setActiveTab('operations')" class="flex flex-col items-center justify-center p-4 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded-xl border border-orange-200 dark:border-orange-800 transition-colors">
+        <i class="fas fa-cogs text-orange-600 dark:text-orange-400 text-2xl mb-2"></i>
+        <span class="text-sm font-semibold text-orange-700 dark:text-orange-300">Operations</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Settings Configuration -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Configuration Settings</h3>
+      <div class="flex space-x-3">
+        <button *ngIf="!isEditing" (click)="startEditing()" class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-semibold transition-colors flex items-center space-x-2">
+          <i class="fas fa-edit"></i>
+          <span>Edit Settings</span>
+        </button>
+        <button *ngIf="isEditing" (click)="saveSettings()" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition-colors flex items-center space-x-2">
+          <i class="fas fa-save"></i>
+          <span>Save Changes</span>
+        </button>
+        <button *ngIf="isEditing" (click)="cancelEditing()" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg font-semibold transition-colors flex items-center space-x-2">
+          <i class="fas fa-times"></i>
+          <span>Cancel</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Settings Tabs -->
+    <div class="border-b border-gray-200 dark:border-gray-700 mb-6">
+      <nav class="flex space-x-8">
+        <button
+          (click)="setActiveTab('general')"
+          [class]="activeTab === 'general' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+          General Information
+        </button>
+        <button
+          (click)="setActiveTab('hours')"
+          [class]="activeTab === 'hours' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+          Business Hours
+        </button>
+        <button
+          (click)="setActiveTab('payments')"
+          [class]="activeTab === 'payments' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+          Payment Settings
+        </button>
+        <button
+          (click)="setActiveTab('operations')"
+          [class]="activeTab === 'operations' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+          Operations
+        </button>
+        <button
+          (click)="setActiveTab('notifications')"
+          [class]="activeTab === 'notifications' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+          Notifications
+        </button>
+      </nav>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="space-y-6">
+      <!-- General Settings -->
+      <div *ngIf="activeTab === 'general'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <i class="fas fa-building mr-2 text-blue-500"></i>Restaurant Name
+          </label>
+          <input
+            [(ngModel)]="restaurantSettings!.name"
+            [disabled]="!isEditing"
+            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 disabled:opacity-50"
+            placeholder="Enter restaurant name">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <i class="fas fa-hashtag mr-2 text-green-500"></i>GST Number
+          </label>
+          <input
+            [(ngModel)]="restaurantSettings!.taxSettings.gstNumber"
+            [disabled]="!isEditing"
+            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 disabled:opacity-50"
+            placeholder="Enter GST number">
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <i class="fas fa-map-marker-alt mr-2 text-red-500"></i>Address
+          </label>
+          <input
+            [(ngModel)]="restaurantSettings!.address.street"
+            [disabled]="!isEditing"
+            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 disabled:opacity-50 mb-3"
+            placeholder="Street address">
+          <div class="grid grid-cols-3 gap-4">
+            <input
+              [(ngModel)]="restaurantSettings!.address.city"
+              [disabled]="!isEditing"
+              class="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 disabled:opacity-50"
+              placeholder="City">
+            <input
+              [(ngModel)]="restaurantSettings!.address.state"
+              [disabled]="!isEditing"
+              class="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 disabled:opacity-50"
+              placeholder="State">
+            <input
+              [(ngModel)]="restaurantSettings!.address.pincode"
+              [disabled]="!isEditing"
+              class="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 disabled:opacity-50"
+              placeholder="PIN Code">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <i class="fas fa-phone mr-2 text-purple-500"></i>Phone Number
+          </label>
+          <input
+            [(ngModel)]="restaurantSettings!.contact.phone"
+            [disabled]="!isEditing"
+            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 disabled:opacity-50"
+            placeholder="Enter phone number">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <i class="fas fa-envelope mr-2 text-indigo-500"></i>Email Address
+          </label>
+          <input
+            [(ngModel)]="restaurantSettings!.contact.email"
+            [disabled]="!isEditing"
+            type="email"
+            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 disabled:opacity-50"
+            placeholder="Enter email address">
+        </div>
+      </div>
+
+      <!-- Business Hours -->
+      <div *ngIf="activeTab === 'hours'" class="space-y-4">
+        <div class="grid grid-cols-1 gap-4">
+          <div *ngFor="let day of ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']"
+               class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-4">
+                <span class="w-24 text-sm font-medium text-gray-900 dark:text-white capitalize">{{ day }}</span>
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    [checked]="getBusinessDayOpen(day)"
+                    (change)="toggleBusinessDay(day)"
+                    [disabled]="!isEditing"
+                    class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 disabled:opacity-50">
+                  <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Open</span>
+                </label>
+              </div>
+              <div class="flex items-center space-x-4" *ngIf="getBusinessDayOpen(day)">
+                <div class="flex items-center space-x-2">
+                  <label class="text-sm text-gray-600 dark:text-gray-400">Open:</label>
+                  <input
+                    type="time"
+                    [value]="getBusinessHour(day, 'open')"
+                    (change)="updateBusinessHour(day, 'open', $any($event.target)?.value || '')"
+                    [disabled]="!isEditing"
+                    class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-600 dark:text-white disabled:opacity-50">
+                </div>
+                <div class="flex items-center space-x-2">
+                  <label class="text-sm text-gray-600 dark:text-gray-400">Close:</label>
+                  <input
+                    type="time"
+                    [value]="getBusinessHour(day, 'close')"
+                    (change)="updateBusinessHour(day, 'close', $any($event.target)?.value || '')"
+                    [disabled]="!isEditing"
+                    class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-600 dark:text-white disabled:opacity-50">
+                </div>
+              </div>
+              <span *ngIf="!getBusinessDayOpen(day)" class="text-sm text-red-600 dark:text-red-400 font-medium">Closed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Settings -->
+      <div *ngIf="activeTab === 'payments'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+            <i class="fas fa-credit-card mr-2 text-blue-500"></i>Accepted Payment Methods
+          </label>
+          <div class="space-y-3">
+            <div *ngFor="let method of ['cash', 'card', 'upi', 'wallet']"
+                 class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <div class="flex items-center">
+                <input
+                  type="checkbox"
+                  [checked]="restaurantSettings?.paymentSettings?.acceptedPayments?.includes(method)"
+                  (change)="restaurantSettings?.paymentSettings?.acceptedPayments?.includes(method) ? removePaymentMethod(method) : addPaymentMethod(method)"
+                  [disabled]="!isEditing"
+                  class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 disabled:opacity-50">
+                <span class="ml-3 text-sm text-gray-900 dark:text-white capitalize font-medium">{{ method }}</span>
+              </div>
+              <span class="text-xs text-gray-500 dark:text-gray-400">{{ getPaymentMethodDescription(method) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-6">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <i class="fas fa-star mr-2 text-yellow-500"></i>Default Payment Method
+            </label>
+            <select
+              [(ngModel)]="restaurantSettings!.paymentSettings.defaultPayment"
+              [disabled]="!isEditing"
+              class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 disabled:opacity-50">
+              <option *ngFor="let method of restaurantSettings?.paymentSettings?.acceptedPayments" [value]="method">
+                {{ method | titlecase }}
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <i class="fas fa-percentage mr-2 text-green-500"></i>GST Percentage (%)
+            </label>
+            <input
+              [(ngModel)]="restaurantSettings!.taxSettings.gstPercentage"
+              [disabled]="!isEditing"
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 disabled:opacity-50"
+              placeholder="Enter GST percentage">
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <i class="fas fa-concierge-bell mr-2 text-purple-500"></i>Service Charge (%)
+            </label>
+            <input
+              [(ngModel)]="restaurantSettings!.taxSettings.serviceChargePercentage"
+              [disabled]="!isEditing"
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 disabled:opacity-50"
+              placeholder="Enter service charge percentage">
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+              <i class="fas fa-hand-holding-heart mr-2 text-pink-500"></i>Tip Options
+            </label>
+            <div class="flex flex-wrap gap-2">
+              <div *ngFor="let tip of [5, 10, 15, 20, 25]" class="flex items-center">
+                <input
+                  type="checkbox"
+                  [checked]="restaurantSettings?.paymentSettings?.tipOptions?.includes(tip)"
+                  (change)="toggleTipOption(tip)"
+                  [disabled]="!isEditing"
+                  class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 disabled:opacity-50">
+                <span class="ml-1 text-sm text-gray-900 dark:text-white">{{ tip }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Operational Settings -->
+      <div *ngIf="activeTab === 'operations'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <i class="fas fa-utensils mr-2 text-blue-500"></i>Number of Tables
+          </label>
+          <input
+            [(ngModel)]="restaurantSettings!.operationalSettings.tableCount"
+            [disabled]="!isEditing"
+            type="number"
+            min="1"
+            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 disabled:opacity-50"
+            placeholder="Enter number of tables">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <i class="fas fa-clock mr-2 text-green-500"></i>Average Service Time (minutes)
+          </label>
+          <input
+            [(ngModel)]="restaurantSettings!.operationalSettings.avgServiceTime"
+            [disabled]="!isEditing"
+            type="number"
+            min="1"
+            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 disabled:opacity-50"
+            placeholder="Enter average service time">
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
+            <i class="fas fa-toggle-on mr-2 text-purple-500"></i>Operational Features
+          </label>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <div>
+                <div class="font-medium text-gray-900 dark:text-white">Table Reservations</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Allow customers to reserve tables</div>
+              </div>
+              <label class="flex items-center">
+                <input
+                  [(ngModel)]="restaurantSettings!.operationalSettings.reservationEnabled"
+                  [disabled]="!isEditing"
+                  type="checkbox"
+                  class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 disabled:opacity-50">
+              </label>
+            </div>
+
+            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <div>
+                <div class="font-medium text-gray-900 dark:text-white">Online Ordering</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Enable online order placement</div>
+              </div>
+              <label class="flex items-center">
+                <input
+                  [(ngModel)]="restaurantSettings!.operationalSettings.onlineOrderingEnabled"
+                  [disabled]="!isEditing"
+                  type="checkbox"
+                  class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 disabled:opacity-50">
+              </label>
+            </div>
+
+            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <div>
+                <div class="font-medium text-gray-900 dark:text-white">Loyalty Program</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Reward repeat customers</div>
+              </div>
+              <label class="flex items-center">
+                <input
+                  [(ngModel)]="restaurantSettings!.operationalSettings.loyaltyProgramEnabled"
+                  [disabled]="!isEditing"
+                  type="checkbox"
+                  class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 disabled:opacity-50">
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notification Settings -->
+      <div *ngIf="activeTab === 'notifications'" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div *ngFor="let notification of [
+            { key: 'lowStockAlerts', label: 'Low Stock Alerts', desc: 'Get notified when inventory items are running low', icon: 'fas fa-exclamation-triangle', color: 'text-orange-500' },
+            { key: 'orderAlerts', label: 'Order Alerts', desc: 'Receive notifications for new orders and order status changes', icon: 'fas fa-receipt', color: 'text-blue-500' },
+            { key: 'paymentAlerts', label: 'Payment Alerts', desc: 'Notifications for payment processing and failures', icon: 'fas fa-credit-card', color: 'text-green-500' },
+            { key: 'staffAlerts', label: 'Staff Alerts', desc: 'Alerts for staff schedule changes and performance issues', icon: 'fas fa-users', color: 'text-purple-500' }
+          ]" class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-lg bg-white dark:bg-gray-600 flex items-center justify-center">
+                  <i [class]="notification.icon + ' ' + notification.color"></i>
+                </div>
+                <div>
+                  <h4 class="font-semibold text-gray-900 dark:text-white">{{ notification.label }}</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">{{ notification.desc }}</p>
+                </div>
+              </div>
+              <label class="flex items-center">
+                <input
+                  type="checkbox"
+                  [checked]="getNotificationValue(notification.key)"
+                  (change)="setNotificationValue(notification.key, $any($event.target)?.checked)"
+                  [disabled]="!isEditing"
+                  class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 disabled:opacity-50">
+                <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Enabled</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+    <div class="flex items-center justify-between">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Additional Actions</h3>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+      <button (click)="fileInput.click()" class="flex flex-col items-center justify-center p-4 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-xl border border-green-200 dark:border-green-800 transition-colors">
+        <input type="file" accept=".json" (change)="importSettings($event)" class="hidden" #fileInput>
+        <i class="fas fa-upload text-green-600 dark:text-green-400 text-2xl mb-2"></i>
+        <span class="text-sm font-semibold text-green-700 dark:text-green-300">Import Settings</span>
+      </button>
+      <button (click)="resetToDefaults()" class="flex flex-col items-center justify-center p-4 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded-xl border border-orange-200 dark:border-orange-800 transition-colors">
+        <i class="fas fa-undo text-orange-600 dark:text-orange-400 text-2xl mb-2"></i>
+        <span class="text-sm font-semibold text-orange-700 dark:text-orange-300">Reset to Defaults</span>
+      </button>
+      <button class="flex flex-col items-center justify-center p-4 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-xl border border-purple-200 dark:border-purple-800 transition-colors">
+        <i class="fas fa-question-circle text-purple-600 dark:text-purple-400 text-2xl mb-2"></i>
+        <span class="text-sm font-semibold text-purple-700 dark:text-purple-300">Help & Support</span>
+      </button>
+      <button (click)="backupSettings()" class="flex flex-col items-center justify-center p-4 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 rounded-xl border border-indigo-200 dark:border-indigo-800 transition-colors">
+        <i class="fas fa-save text-indigo-600 dark:text-indigo-400 text-2xl mb-2"></i>
+        <span class="text-sm font-semibold text-indigo-700 dark:text-indigo-300">Backup Settings</span>
+      </button>
+    </div>
+  </div>
+</div>

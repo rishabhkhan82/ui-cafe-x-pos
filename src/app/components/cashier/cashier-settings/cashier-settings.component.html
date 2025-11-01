@@ -1,0 +1,433 @@
+<div class="p-6">
+  <div class="mb-6">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Cashier Settings</h1>
+        <p class="text-gray-600 dark:text-gray-300">Configure your POS terminal preferences</p>
+      </div>
+      <div class="flex space-x-3">
+        <button (click)="exportSettings()" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex items-center">
+          <i class="fas fa-download mr-2"></i>Export
+        </button>
+        <button (click)="resetToDefaults()" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors flex items-center">
+          <i class="fas fa-undo mr-2"></i>Reset
+        </button>
+        <button (click)="saveSettings()" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors flex items-center">
+          <i class="fas fa-save mr-2"></i>Save Settings
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center">
+          <i class="fas fa-cog text-white"></i>
+        </div>
+        <span class="text-blue-600 dark:text-blue-400 text-sm font-medium">Settings</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">8</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">Categories</div>
+    </div>
+
+    <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-2xl p-6 border border-green-200 dark:border-green-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-green-500 flex items-center justify-center">
+          <i class="fas fa-save text-white"></i>
+        </div>
+        <span class="text-green-600 dark:text-green-400 text-sm font-medium">Saved</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">Local</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">Storage</div>
+    </div>
+
+    <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-2xl p-6 border border-purple-200 dark:border-purple-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-purple-500 flex items-center justify-center">
+          <i class="fas fa-keyboard text-white"></i>
+        </div>
+        <span class="text-purple-600 dark:text-purple-400 text-sm font-medium">Shortcuts</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">12</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">Function Keys</div>
+    </div>
+
+    <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-2xl p-6 border border-orange-200 dark:border-orange-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center">
+          <i class="fas fa-print text-white"></i>
+        </div>
+        <span class="text-orange-600 dark:text-orange-400 text-sm font-medium">Printers</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ availablePrinters.length }}</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">Connected</div>
+    </div>
+  </div>
+
+  <!-- Settings Tabs -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="border-b border-gray-200 dark:border-gray-700">
+      <nav class="-mb-px flex space-x-8 overflow-x-auto">
+        <button
+          *ngFor="let tab of [
+            { id: 'display', name: 'Display', icon: 'fas fa-desktop' },
+            { id: 'cash', name: 'Cash Management', icon: 'fas fa-money-bill-wave' },
+            { id: 'security', name: 'Security', icon: 'fas fa-shield-alt' },
+            { id: 'notifications', name: 'Notifications', icon: 'fas fa-bell' },
+            { id: 'shortcuts', name: 'Shortcuts', icon: 'fas fa-keyboard' }
+          ]"
+          (click)="setActiveTab(tab.id)"
+          [class]="activeTab === tab.id ? 'border-red-500 text-red-600 dark:text-red-400' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'"
+          class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2">
+          <i [class]="tab.icon"></i>
+          <span>{{ tab.name }}</span>
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Display Settings Tab -->
+  <div *ngIf="activeTab === 'display'" class="space-y-6">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+        <i class="fas fa-desktop mr-3 text-red-500"></i>Display Settings
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <i class="fas fa-palette mr-2 text-red-500"></i>Theme
+          </label>
+          <select [(ngModel)]="settings.theme" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+            <option value="auto">Auto (System)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <i class="fas fa-language mr-2 text-blue-500"></i>Language
+          </label>
+          <select [(ngModel)]="settings.language" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+            <option *ngFor="let lang of availableLanguages" [value]="lang.code">{{ lang.name }}</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <i class="fas fa-money-bill-wave mr-2 text-green-500"></i>Currency
+          </label>
+          <select [(ngModel)]="settings.currency" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+            <option *ngFor="let curr of availableCurrencies" [value]="curr.code">{{ curr.symbol }} {{ curr.name }}</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <i class="fas fa-calendar mr-2 text-purple-500"></i>Date Format
+          </label>
+          <select [(ngModel)]="settings.dateFormat" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+            <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+            <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+            <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <i class="fas fa-clock mr-2 text-indigo-500"></i>Time Format
+          </label>
+          <select [(ngModel)]="settings.timeFormat" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+            <option value="12h">12 Hour</option>
+            <option value="24h">24 Hour</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Cash Management Settings Tab -->
+  <div *ngIf="activeTab === 'cash'" class="space-y-6">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+        <i class="fas fa-money-bill-wave mr-3 text-red-500"></i>Cash Management Settings
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <i class="fas fa-plug mr-2 text-blue-500"></i>Cash Drawer Port
+          </label>
+          <select [(ngModel)]="settings.cashDrawerPort" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+            <option value="COM1">COM1</option>
+            <option value="COM2">COM2</option>
+            <option value="COM3">COM3</option>
+            <option value="USB">USB</option>
+          </select>
+          <button (click)="testCashDrawer()" class="mt-2 px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-sm rounded-lg transition-colors">
+            Test Drawer
+          </button>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <i class="fas fa-exclamation-triangle mr-2 text-orange-500"></i>Low Cash Alert Threshold (₹)
+          </label>
+          <input [(ngModel)]="settings.cashAlertThreshold" type="number" min="0" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Show alert when cash in drawer falls below this amount</p>
+        </div>
+
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                <i class="fas fa-cash-register mr-2 text-green-500"></i>Enable Cash Drawer
+              </label>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Connect and control cash drawer</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input [(ngModel)]="settings.enableCashDrawer" type="checkbox" class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+            </label>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div>
+              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                <i class="fas fa-door-open mr-2 text-blue-500"></i>Auto Open Drawer
+              </label>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Automatically open drawer for cash payments</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input [(ngModel)]="settings.autoOpenDrawer" type="checkbox" class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Security Settings Tab -->
+  <div *ngIf="activeTab === 'security'" class="space-y-6">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+        <i class="fas fa-shield-alt mr-3 text-red-500"></i>Security Settings
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <i class="fas fa-clock mr-2 text-blue-500"></i>Session Timeout (minutes)
+          </label>
+          <select [(ngModel)]="settings.sessionTimeout" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+            <option [value]="15">15 minutes</option>
+            <option [value]="30">30 minutes</option>
+            <option [value]="60">1 hour</option>
+            <option [value]="120">2 hours</option>
+          </select>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Automatically log out after period of inactivity</p>
+        </div>
+
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                <i class="fas fa-lock mr-2 text-red-500"></i>Password Required for Settings
+              </label>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Require password to access settings</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input [(ngModel)]="settings.requirePasswordForSettings" type="checkbox" class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+            </label>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div>
+              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                <i class="fas fa-fingerprint mr-2 text-purple-500"></i>Enable Biometric Login
+              </label>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Allow fingerprint/face login</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input [(ngModel)]="settings.enableBiometricLogin" type="checkbox" class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+            </label>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div>
+              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                <i class="fas fa-history mr-2 text-blue-500"></i>Enable Audit Trail
+              </label>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Log all cashier actions for compliance</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input [(ngModel)]="settings.auditTrailEnabled" type="checkbox" class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications Settings Tab -->
+  <div *ngIf="activeTab === 'notifications'" class="space-y-6">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+        <i class="fas fa-bell mr-3 text-red-500"></i>Notification Settings
+      </h3>
+
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              <i class="fas fa-utensils mr-2 text-green-500"></i>Order Ready Sound
+            </label>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Play sound when order is ready for pickup</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input [(ngModel)]="settings.orderReadySound" type="checkbox" class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              <i class="fas fa-check-circle mr-2 text-blue-500"></i>Payment Success Sound
+            </label>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Play sound when payment is processed successfully</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input [(ngModel)]="settings.paymentSuccessSound" type="checkbox" class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              <i class="fas fa-exclamation-triangle mr-2 text-orange-500"></i>Error Alerts
+            </label>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Show alerts for system errors and failed operations</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input [(ngModel)]="settings.errorAlerts" type="checkbox" class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              <i class="fas fa-money-bill-wave mr-2 text-yellow-500"></i>Low Cash Alerts
+            </label>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Alert when cash in drawer is below threshold</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input [(ngModel)]="settings.lowCashAlerts" type="checkbox" class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Keyboard Shortcuts Tab -->
+  <div *ngIf="activeTab === 'shortcuts'" class="space-y-6">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+        <i class="fas fa-keyboard mr-3 text-red-500"></i>Keyboard Shortcuts
+      </h3>
+
+      <div class="mb-6">
+        <p class="text-sm text-gray-600 dark:text-gray-400">Configure function keys for quick access to common POS operations</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div *ngFor="let key of ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12']" class="space-y-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-12 h-10 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-lg border border-red-200 dark:border-red-800 flex items-center justify-center">
+              <span class="text-sm font-bold text-red-600 dark:text-red-400">{{ key }}</span>
+            </div>
+            <div class="flex-1">
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Function Key {{ key }}</label>
+              <select [(ngModel)]="settings.shortcuts[key]" (change)="updateShortcut(key, settings.shortcuts[key])" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                <option value="New Order">New Order</option>
+                <option value="Search Order">Search Order</option>
+                <option value="Payment">Payment</option>
+                <option value="Print Receipt">Print Receipt</option>
+                <option value="Hold Bill">Hold Bill</option>
+                <option value="Void Item">Void Item</option>
+                <option value="Discount">Discount</option>
+                <option value="Split Bill">Split Bill</option>
+                <option value="Manager Override">Manager Override</option>
+                <option value="Cash Management">Cash Management</option>
+                <option value="Settings">Settings</option>
+                <option value="Logout">Logout</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 p-6 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-xl border border-red-200 dark:border-red-800">
+        <div class="flex items-center space-x-3 mb-4">
+          <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center">
+            <i class="fas fa-lightbulb text-white"></i>
+          </div>
+          <h4 class="text-lg font-bold text-gray-900 dark:text-white">Recommended Shortcuts</h4>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <div class="flex items-center space-x-3">
+              <span class="w-8 h-6 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded text-xs font-bold flex items-center justify-center">F1</span>
+              <span class="text-sm text-gray-700 dark:text-gray-300">New Order - Start new transaction</span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <span class="w-8 h-6 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded text-xs font-bold flex items-center justify-center">F2</span>
+              <span class="text-sm text-gray-700 dark:text-gray-300">Search Order - Find existing orders</span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <span class="w-8 h-6 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded text-xs font-bold flex items-center justify-center">F3</span>
+              <span class="text-sm text-gray-700 dark:text-gray-300">Payment - Process payment</span>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <div class="flex items-center space-x-3">
+              <span class="w-8 h-6 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded text-xs font-bold flex items-center justify-center">F4</span>
+              <span class="text-sm text-gray-700 dark:text-gray-300">Print Receipt - Print customer receipt</span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <span class="w-8 h-6 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded text-xs font-bold flex items-center justify-center">F12</span>
+              <span class="text-sm text-gray-700 dark:text-gray-300">Logout - Emergency logout</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import Settings -->
+  <div class="mt-6">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+        <i class="fas fa-upload mr-3 text-red-500"></i>Import Settings
+      </h3>
+      <div class="flex items-center space-x-4">
+        <input type="file" accept=".json" (change)="importSettings($event)" class="hidden" #fileInput>
+        <button (click)="fileInput.click()" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors flex items-center">
+          <i class="fas fa-upload mr-2"></i>Choose File
+        </button>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Import settings from a JSON file</p>
+      </div>
+    </div>
+  </div>
+</div>

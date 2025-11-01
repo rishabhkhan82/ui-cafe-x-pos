@@ -1,0 +1,506 @@
+<div class="p-6">
+  <div class="mb-6">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Offers & Loyalty</h1>
+        <p class="text-gray-600 dark:text-gray-300">Create offers and manage customer loyalty programs</p>
+      </div>
+      <button
+        (click)="createOffer()"
+        class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
+        <i class="fas fa-plus"></i>
+        <span>Create Offer</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/20 rounded-2xl p-6 border border-pink-200 dark:border-pink-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-pink-500 flex items-center justify-center">
+          <i class="fas fa-tags text-white"></i>
+        </div>
+        <span class="text-pink-600 dark:text-pink-400 text-sm font-medium">Active Offers</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ loyaltyStats.activeOffers }}</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">Running Promotions</div>
+    </div>
+
+    <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-2xl p-6 border border-purple-200 dark:border-purple-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-purple-500 flex items-center justify-center">
+          <i class="fas fa-heart text-white"></i>
+        </div>
+        <span class="text-purple-600 dark:text-purple-400 text-sm font-medium">Loyal Customers</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ loyaltyStats.loyalCustomers }}</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">Active Members</div>
+    </div>
+
+    <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-2xl p-6 border border-green-200 dark:border-green-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-green-500 flex items-center justify-center">
+          <i class="fas fa-trophy text-white"></i>
+        </div>
+        <span class="text-green-600 dark:text-green-400 text-sm font-medium">Redemption Rate</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ loyaltyStats.avgRedemption }}%</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">Average Rate</div>
+    </div>
+
+    <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-2xl p-6 border border-orange-200 dark:border-orange-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center">
+          <i class="fas fa-chart-line text-white"></i>
+        </div>
+        <span class="text-orange-600 dark:text-orange-400 text-sm font-medium">Revenue Boost</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">₹{{ loyaltyStats.revenueBoost }}</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">From Offers</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-search mr-2 text-red-500"></i>Search Offers
+        </label>
+        <div class="relative">
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (input)="filterOffers()"
+            placeholder="Search by title or description..."
+            class="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-tag mr-2 text-blue-500"></i>Offer Type
+        </label>
+        <select
+          [(ngModel)]="typeFilter"
+          (change)="filterOffers()"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Types</option>
+          <option value="percentage">Percentage Discount</option>
+          <option value="fixed">Fixed Amount</option>
+          <option value="buy-one-get-one">Buy One Get One</option>
+          <option value="free-item">Free Item</option>
+          <option value="loyalty">Loyalty Bonus</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-play-circle mr-2 text-green-500"></i>Status
+        </label>
+        <select
+          [(ngModel)]="statusFilter"
+          (change)="filterOffers()"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="expired">Expired</option>
+          <option value="draft">Draft</option>
+        </select>
+      </div>
+      <div class="flex items-end">
+        <div class="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 px-4 py-3 rounded-xl border border-red-200 dark:border-red-800">
+          <div class="text-sm text-gray-700 dark:text-gray-300">
+            <span class="font-bold text-red-600 dark:text-red-400">{{ filteredOffers.length }}</span> offers found
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Quick Actions</h3>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <button (click)="manageLoyalty()" class="flex flex-col items-center justify-center p-4 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-xl border border-purple-200 dark:border-purple-800 transition-colors">
+        <i class="fas fa-crown text-purple-600 dark:text-purple-400 text-2xl mb-2"></i>
+        <span class="text-sm font-semibold text-purple-700 dark:text-purple-300">Loyalty Program</span>
+      </button>
+      <button (click)="sendPromotions()" class="flex flex-col items-center justify-center p-4 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-xl border border-green-200 dark:border-green-800 transition-colors">
+        <i class="fas fa-paper-plane text-green-600 dark:text-green-400 text-2xl mb-2"></i>
+        <span class="text-sm font-semibold text-green-700 dark:text-green-300">Send Promotions</span>
+      </button>
+      <button (click)="viewAnalytics()" class="flex flex-col items-center justify-center p-4 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded-xl border border-orange-200 dark:border-orange-800 transition-colors">
+        <i class="fas fa-chart-bar text-orange-600 dark:text-orange-400 text-2xl mb-2"></i>
+        <span class="text-sm font-semibold text-orange-700 dark:text-orange-300">Analytics</span>
+      </button>
+      <button (click)="exportOffers()" class="flex flex-col items-center justify-center p-4 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-xl border border-blue-200 dark:border-blue-800 transition-colors">
+        <i class="fas fa-download text-blue-600 dark:text-blue-400 text-2xl mb-2"></i>
+        <span class="text-sm font-semibold text-blue-700 dark:text-blue-300">Export</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Offers List -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Offers</h3>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div
+        *ngFor="let offer of filteredOffers"
+        class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
+        <div class="flex items-center space-x-4 mb-4">
+          <div class="w-12 h-12 rounded-lg flex items-center justify-center bg-gray-100 dark:bg-gray-700">
+            <i [class]="getOfferIcon(offer.type)" class="text-gray-600 dark:text-gray-300 text-lg"></i>
+          </div>
+          <div class="flex-1">
+            <h3 class="font-bold text-gray-900 dark:text-white text-lg">{{ offer.title }}</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{ getOfferValueDisplay(offer) }}</p>
+          </div>
+          <span
+            [class]="getOfferStatusBadgeClass(offer)"
+            class="px-3 py-1 text-xs rounded-full font-medium">
+            {{ getOfferStatusText(offer) }}
+          </span>
+        </div>
+
+        <div class="space-y-2 text-sm mb-4">
+          <div class="flex justify-between">
+            <span class="text-gray-500 dark:text-gray-400">Type:</span>
+            <span class="text-gray-900 dark:text-white capitalize">{{ offer.type.replace('-', ' ') }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500 dark:text-gray-400">Valid:</span>
+            <span class="text-gray-900 dark:text-white">{{ formatDate(offer.startDate) }} - {{ formatDate(offer.endDate) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500 dark:text-gray-400">Redemptions:</span>
+            <span class="text-gray-900 dark:text-white font-semibold">{{ offer.redemptions || 0 }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500 dark:text-gray-400">Revenue:</span>
+            <span class="text-green-600 dark:text-green-400 font-semibold">₹{{ offer.revenueGenerated || 0 }}</span>
+          </div>
+        </div>
+
+        <p class="text-sm text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">{{ offer.description }}</p>
+
+        <!-- Card Actions -->
+        <div class="flex flex-wrap gap-2">
+          <button
+            (click)="editOffer(offer)"
+            class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30 transition-colors">
+            <i class="fas fa-edit mr-2"></i>
+            Edit
+          </button>
+          <button
+            (click)="duplicateOffer(offer)"
+            class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg text-green-700 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30 transition-colors">
+            <i class="fas fa-copy mr-2"></i>
+            Duplicate
+          </button>
+          <button
+            (click)="toggleOfferStatus(offer)"
+            class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg text-orange-700 bg-orange-50 hover:bg-orange-100 dark:bg-orange-900/20 dark:text-orange-400 dark:hover:bg-orange-900/30 transition-colors">
+            <i class="fas fa-toggle-on mr-2"></i>
+            {{ offer.isActive ? 'Deactivate' : 'Activate' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredOffers.length === 0" class="text-center py-12">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+        <i class="fas fa-tags text-2xl text-gray-400"></i>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No offers found</h3>
+      <p class="text-gray-500 dark:text-gray-400">Try adjusting your filters or create your first offer.</p>
+    </div>
+  </div>
+
+  <!-- Loyalty Program Section -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Loyalty Program</h3>
+      <div class="flex items-center space-x-2">
+        <span class="px-3 py-1 text-xs rounded-full bg-green-100 dark:bg-green-900/30 text-green-600">
+          Active
+        </span>
+        <button (click)="editLoyaltyProgram()" class="px-3 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium transition-colors">
+          Edit Program
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Program Details -->
+      <div>
+        <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Program Settings</h4>
+        <div class="space-y-4">
+          <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Program Name</span>
+            <span class="text-gray-900 dark:text-white font-semibold">{{ loyaltyProgram.name }}</span>
+          </div>
+          <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Points per ₹1</span>
+            <span class="text-gray-900 dark:text-white font-semibold">{{ loyaltyProgram.pointsPerRupee }}</span>
+          </div>
+          <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Points to ₹1</span>
+            <span class="text-gray-900 dark:text-white font-semibold">{{ loyaltyProgram.pointsToRupee }}</span>
+          </div>
+          <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Expiry Days</span>
+            <span class="text-gray-900 dark:text-white font-semibold">{{ loyaltyProgram.expiryDays }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Customers -->
+      <div>
+        <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top Loyalty Customers</h4>
+        <div class="space-y-3">
+          <div *ngFor="let customer of topLoyaltyCustomers" class="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg border border-purple-200 dark:border-purple-800">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-lg bg-purple-500 flex items-center justify-center">
+                <i class="fas fa-crown text-white"></i>
+              </div>
+              <div>
+                <p class="font-semibold text-gray-900 dark:text-white">{{ customer.name }}</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ customer.points }} points</p>
+              </div>
+            </div>
+            <span class="px-3 py-1 text-sm rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 font-medium">
+              #{{ customer.rank }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Recent Activity</h3>
+      <button (click)="viewAllActivity()" class="text-primary-500 text-sm hover:text-primary-600">
+        <i class="fas fa-external-link-alt mr-1"></i>View All
+      </button>
+    </div>
+
+    <div class="space-y-4">
+      <div *ngFor="let activity of recentActivities" class="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-100 dark:bg-blue-900/30">
+            <i [class]="getActivityIcon(activity.type)" class="text-blue-600 dark:text-blue-400"></i>
+          </div>
+          <div>
+            <p class="font-medium text-gray-900 dark:text-white">{{ activity.title }}</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">{{ activity.description }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">{{ formatDateTime(activity.timestamp) }}</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <span class="px-2 py-1 text-xs rounded-full" [class]="getActivityStatusClass(activity.status)">
+            {{ activity.status }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="recentActivities.length === 0" class="text-center py-8">
+      <i class="fas fa-history text-3xl text-gray-400 mb-2"></i>
+      <p class="text-gray-500 dark:text-gray-400">No recent activity. Start creating offers to see activity here!</p>
+    </div>
+  </div>
+</div>
+
+<!-- Create/Edit Offer Modal -->
+<div *ngIf="showOfferModal"
+     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ isEditing ? 'Edit Offer' : 'Create New Offer' }}</h3>
+        <button (click)="closeOfferModal()" class="text-gray-400 hover:text-gray-600">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form (ngSubmit)="saveOffer()" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Basic Info -->
+          <div class="md:col-span-2">
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Offer Title *</label>
+            <input [(ngModel)]="offerForm.title" name="title" type="text" required
+                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Description *</label>
+            <textarea [(ngModel)]="offerForm.description" name="description" rows="3" required
+                      class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600"></textarea>
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Offer Type *</label>
+            <select [(ngModel)]="offerForm.type" name="type" required
+                    class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+              <option value="percentage">Percentage Discount</option>
+              <option value="fixed">Fixed Amount Off</option>
+              <option value="buy-one-get-one">Buy One Get One</option>
+              <option value="free-item">Free Item</option>
+              <option value="loyalty">Loyalty Points Bonus</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Discount Value *</label>
+            <input [(ngModel)]="offerForm.discountValue" name="discountValue" type="number" min="0" step="0.01" required
+                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {{ offerForm.type === 'percentage' ? 'Percentage (e.g., 20 for 20%)' : 'Amount in ₹ (e.g., 50 for ₹50 off)' }}
+            </p>
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Minimum Order Value</label>
+            <input [(ngModel)]="offerForm.minOrderValue" name="minOrderValue" type="number" min="0"
+                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Usage Limit</label>
+            <input [(ngModel)]="offerForm.usageLimit" name="usageLimit" type="number" min="1"
+                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Start Date *</label>
+            <input [(ngModel)]="offerForm.startDate" name="startDate" type="datetime-local" required
+                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">End Date *</label>
+            <input [(ngModel)]="offerForm.endDate" name="endDate" type="datetime-local" required
+                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Applicable Items</label>
+            <select [(ngModel)]="offerForm.applicableItems" name="applicableItems" multiple
+                    class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+              <option value="all">All Items</option>
+              <option value="beverages">Beverages Only</option>
+              <option value="main-course">Main Course</option>
+              <option value="desserts">Desserts</option>
+              <option value="appetizers">Appetizers</option>
+            </select>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Hold Ctrl/Cmd to select multiple items</p>
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="flex items-center space-x-2">
+              <input [(ngModel)]="offerForm.isActive" name="isActive" type="checkbox"
+                     class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-200">Activate offer immediately</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="flex space-x-3 pt-6">
+          <button type="submit" class="flex-1 px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-xl font-semibold transition-colors">
+            {{ isEditing ? 'Update Offer' : 'Create Offer' }}
+          </button>
+          <button type="button" (click)="closeOfferModal()" class="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl font-semibold transition-colors">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Loyalty Program Modal -->
+<div *ngIf="showLoyaltyModal"
+     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Loyalty Program Settings</h3>
+        <button (click)="closeLoyaltyModal()" class="text-gray-400 hover:text-gray-600">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form (ngSubmit)="saveLoyaltyProgram()" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="md:col-span-2">
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Program Name *</label>
+            <input [(ngModel)]="loyaltyForm.name" name="name" type="text" required
+                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Points per ₹1 spent *</label>
+            <input [(ngModel)]="loyaltyForm.pointsPerRupee" name="pointsPerRupee" type="number" min="0.1" step="0.1" required
+                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">How many points customers earn per rupee spent</p>
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Points needed for ₹1 *</label>
+            <input [(ngModel)]="loyaltyForm.pointsToRupee" name="pointsToRupee" type="number" min="1" required
+                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Points required to redeem ₹1</p>
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Points Expiry (days) *</label>
+            <input [(ngModel)]="loyaltyForm.expiryDays" name="expiryDays" type="number" min="30" required
+                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Days until unused points expire</p>
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Welcome Bonus Points</label>
+            <input [(ngModel)]="loyaltyForm.welcomeBonus" name="welcomeBonus" type="number" min="0"
+                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Points awarded to new customers</p>
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="flex items-center space-x-2">
+              <input [(ngModel)]="loyaltyForm.isActive" name="isActive" type="checkbox"
+                     class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-200">Enable loyalty program</span>
+            </label>
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Program Description</label>
+            <textarea [(ngModel)]="loyaltyForm.description" name="description" rows="3"
+                      class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600"
+                      placeholder="Describe your loyalty program benefits..."></textarea>
+          </div>
+        </div>
+
+        <div class="flex space-x-3 pt-6">
+          <button type="submit" class="flex-1 px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-xl font-semibold transition-colors">
+            Save Loyalty Program
+          </button>
+          <button type="button" (click)="closeLoyaltyModal()" class="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl font-semibold transition-colors">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

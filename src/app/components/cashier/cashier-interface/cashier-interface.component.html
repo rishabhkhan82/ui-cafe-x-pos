@@ -1,0 +1,657 @@
+<!-- Order Type Tabs - Fixed to Top -->
+<div class="fixed top-15 left-0 right-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+  <div class="px-4 py-3">
+    <div class="flex space-x-1">
+      <button
+        *ngFor="let tab of orderTypeTabs"
+        (click)="switchOrderType(tab.id)"
+        [class]="tab.active ? 'bg-red-500 text-white shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'"
+        class="flex-1 py-3 px-6 rounded-xl font-bold transition-all flex items-center justify-center space-x-2">
+        <i [class]="tab.icon" class="text-lg"></i>
+        <span>{{ tab.name }}</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Main Three-Panel Layout -->
+<main class="flex h-screen bg-gray-50 dark:bg-gray-900">
+
+  <!-- Dine In Interface -->
+  <div *ngIf="activeOrderType === 'dine_in'" class="flex flex-1">
+
+    <!-- Left Panel: Order Selection -->
+    <div class="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-6 overflow-y-auto">
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+        <i class="fas fa-mobile-alt mr-3 text-blue-500"></i>Ready Orders
+      </h3>
+
+      <div class="space-y-3">
+        <div
+          *ngFor="let order of readyOrders"
+          (click)="selectOrder(order)"
+          [class]="getOrderCardClass(order, selectedOrder)"
+          class="p-4 rounded-xl border-2 cursor-pointer transition-all hover:scale-102">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-bold text-lg">#{{ order.id.split('-').pop() }}</span>
+            <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Ready</span>
+          </div>
+          <div class="text-gray-600 dark:text-gray-300 text-sm mb-2">
+            <div class="font-medium">{{ order.customerName }}</div>
+            <div>Table {{ order.tableNumber }}</div>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-xl font-bold text-green-600">₹{{ order.totalAmount }}</span>
+            <span class="text-xs text-gray-500">{{ order.items.length }} items</span>
+          </div>
+        </div>
+
+        <div *ngIf="readyOrders.length === 0" class="text-center py-12">
+          <i class="fas fa-mobile-alt text-4xl text-gray-300 mb-4"></i>
+          <p class="text-gray-500 dark:text-gray-400">No orders ready</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center Panel: Order Details -->
+    <div class="flex-1 bg-gray-50 dark:bg-gray-900 p-6 overflow-y-auto">
+      <div *ngIf="!selectedOrder" class="text-center py-20">
+        <i class="fas fa-receipt text-6xl text-gray-300 mb-6"></i>
+        <h3 class="text-xl font-bold text-gray-600 dark:text-gray-400 mb-2">Select an Order</h3>
+        <p class="text-gray-500 dark:text-gray-500">Choose an order from the left panel to process payment</p>
+      </div>
+
+      <div *ngIf="selectedOrder" class="max-w-2xl mx-auto space-y-6">
+
+        <!-- Order Header -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white">#{{ selectedOrder.id.split('-').pop() }}</h2>
+              <p class="text-gray-600 dark:text-gray-300">{{ selectedOrder.customerName }} • Table {{ selectedOrder.tableNumber }}</p>
+            </div>
+            <div class="text-right">
+              <div class="text-3xl font-bold text-green-600">₹{{ selectedOrder.totalAmount }}</div>
+              <div class="text-sm text-gray-500">{{ selectedOrder.items.length }} items</div>
+            </div>
+          </div>
+
+          <!-- Order Items -->
+          <div class="space-y-3">
+            <div *ngFor="let item of selectedOrder.items" class="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-600">
+              <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <i class="fas fa-utensils text-blue-600"></i>
+                </div>
+                <div>
+                  <div class="font-bold text-lg">{{ item.menuItemName }}</div>
+                  <div class="text-gray-600 dark:text-gray-300">Quantity: {{ item.quantity }}</div>
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="text-xl font-bold">₹{{ item.totalPrice }}</div>
+                <div class="text-sm text-gray-500">₹{{ item.unitPrice }} each</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Panel -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Payment</h3>
+
+          <!-- Payment Methods -->
+          <div class="grid grid-cols-4 gap-4 mb-6">
+            <button
+              *ngFor="let method of paymentMethods"
+              (click)="selectPaymentMethod(method)"
+              [class]="getPaymentMethodClass(method)"
+              class="p-4 rounded-xl border-2 transition-all hover:scale-105 flex flex-col items-center space-y-2">
+              <i [class]="method.icon" class="text-2xl"></i>
+              <span class="font-semibold text-sm">{{ method.name }}</span>
+            </button>
+          </div>
+
+          <!-- Amount Input -->
+          <div class="mb-6">
+            <label class="block text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Amount Received</label>
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-2xl text-gray-500">₹</span>
+              <input
+                [(ngModel)]="amountReceived"
+                (input)="calculateChange()"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                class="w-full pl-12 pr-4 py-4 text-2xl rounded-xl bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+            </div>
+          </div>
+
+          <!-- Quick Amount Buttons -->
+          <div class="grid grid-cols-5 gap-3 mb-6">
+            <button
+              *ngFor="let amount of quickAmounts"
+              (click)="setQuickAmount(amount)"
+              class="py-3 px-4 text-lg font-bold bg-gray-100 dark:bg-gray-700 hover:bg-blue-500 hover:text-white rounded-xl transition-all hover:scale-105">
+              ₹{{ amount }}
+            </button>
+          </div>
+
+          <!-- Payment Summary -->
+          <div class="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-6 mb-6">
+            <div class="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Bill</div>
+                <div class="text-2xl font-bold text-gray-900 dark:text-white">₹{{ selectedOrder.totalAmount }}</div>
+              </div>
+              <div>
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Received</div>
+                <div class="text-2xl font-bold text-blue-600">₹{{ amountReceived || 0 }}</div>
+              </div>
+              <div>
+                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Change</div>
+                <div class="text-2xl font-bold" [class]="changeAmount >= 0 ? 'text-green-600' : 'text-red-600'">₹{{ changeAmount }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="grid grid-cols-2 gap-4">
+            <button
+              (click)="processPayment()"
+              [disabled]="!canProcessPayment()"
+              class="py-4 px-6 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl font-bold text-xl transition-all hover:scale-105 flex items-center justify-center space-x-2">
+              <i class="fas fa-check text-2xl"></i>
+              <span>Process Payment</span>
+            </button>
+
+            <button
+              (click)="printReceipt()"
+              class="py-4 px-6 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold text-xl transition-all hover:scale-105 flex items-center justify-center space-x-2">
+              <i class="fas fa-print text-2xl"></i>
+              <span>Print Receipt</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel: Functions -->
+    <div class="w-64 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 p-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Functions</h3>
+
+      <div class="space-y-3">
+        <button class="w-full py-3 px-4 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-semibold transition-all hover:scale-105 flex items-center space-x-2">
+          <i class="fas fa-save"></i>
+          <span>Hold Bill</span>
+        </button>
+
+        <button class="w-full py-3 px-4 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold transition-all hover:scale-105 flex items-center space-x-2">
+          <i class="fas fa-times"></i>
+          <span>Void Item</span>
+        </button>
+
+        <button class="w-full py-3 px-4 bg-purple-500 hover:bg-purple-600 text-white rounded-xl font-semibold transition-all hover:scale-105 flex items-center space-x-2">
+          <i class="fas fa-percentage"></i>
+          <span>Discount</span>
+        </button>
+
+        <button class="w-full py-3 px-4 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-semibold transition-all hover:scale-105 flex items-center space-x-2">
+          <i class="fas fa-split"></i>
+          <span>Split Bill</span>
+        </button>
+
+        <button class="w-full py-3 px-4 bg-pink-500 hover:bg-pink-600 text-white rounded-xl font-semibold transition-all hover:scale-105 flex items-center space-x-2">
+          <i class="fas fa-user-shield"></i>
+          <span>Manager</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dine Direct Interface -->
+  <div *ngIf="activeOrderType === 'dine_direct'" class="flex flex-1">
+
+    <!-- Left Panel: Menu Categories -->
+    <div class="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-6 overflow-y-auto">
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+        <i class="fas fa-th-large mr-3 text-green-500"></i>Menu Categories
+      </h3>
+
+      <div class="grid grid-cols-2 gap-3">
+        <button
+          *ngFor="let category of menuCategories"
+          (click)="selectCategory(category.id)"
+          [class]="selectedCategory === category.id ? 'ring-2 ring-green-500 bg-green-50 dark:bg-green-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700'"
+          class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 transition-all hover:scale-105 flex flex-col items-center space-y-2">
+          <div [class]="category.color + ' w-12 h-12 rounded-xl flex items-center justify-center'">
+            <i [class]="category.icon" class="text-white text-xl"></i>
+          </div>
+          <span class="font-semibold text-center">{{ category.name }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Center Panel: Menu Items -->
+    <div class="flex-1 bg-gray-50 dark:bg-gray-900 p-6 overflow-y-auto">
+      <div class="max-w-4xl mx-auto">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Menu Items</h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <button
+              *ngFor="let item of getMenuItemsByCategory()"
+              (click)="addItemToOrder(item)"
+              class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all hover:scale-105 text-left">
+              <div class="flex items-center justify-between">
+                <div class="flex-1">
+                  <div class="font-bold text-lg">{{ item.name }}</div>
+                  <div class="text-gray-600 dark:text-gray-300 text-sm">{{ item.description }}</div>
+                  <div class="flex items-center space-x-4 mt-2">
+                    <span class="text-green-600 font-bold text-xl">₹{{ item.price }}</span>
+                    <div class="flex items-center space-x-1">
+                      <span *ngIf="item.isVegetarian" class="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                        <i class="fas fa-leaf text-white text-xs"></i>
+                      </span>
+                      <span *ngIf="item.isSpicy" class="text-red-500">
+                        <i class="fas fa-fire"></i>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
+                  <i class="fas fa-plus text-white"></i>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel: Current Order -->
+    <div class="w-80 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 p-6 overflow-y-auto">
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Current Order</h3>
+
+      <div *ngIf="currentOrder && currentOrder.items.length === 0" class="text-center py-12">
+        <i class="fas fa-shopping-cart text-4xl text-gray-300 mb-4"></i>
+        <p class="text-gray-500 dark:text-gray-400">No items added</p>
+      </div>
+
+      <div *ngIf="currentOrder && currentOrder.items.length > 0" class="space-y-3">
+        <div class="max-h-64 overflow-y-auto space-y-2">
+          <div *ngFor="let item of currentOrder.items" class="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-600">
+            <div class="flex items-center space-x-3 flex-1">
+              <div class="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                <i class="fas fa-utensils text-green-600"></i>
+              </div>
+              <div class="flex-1">
+                <div class="font-medium text-sm">{{ item.menuItemName }}</div>
+                <div class="flex items-center space-x-2 mt-1">
+                  <button (click)="updateItemQuantity(item.id, item.quantity - 1)" class="w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-xs">-</button>
+                  <span class="font-bold text-sm">{{ item.quantity }}</span>
+                  <button (click)="updateItemQuantity(item.id, item.quantity + 1)" class="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center text-xs">+</button>
+                </div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="font-bold text-sm">₹{{ item.totalPrice }}</div>
+              <button (click)="removeItemFromOrder(item.id)" class="text-red-500 hover:text-red-700 mt-1">
+                <i class="fas fa-trash text-xs"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-200 dark:border-gray-600 pt-4">
+          <div class="flex items-center justify-between text-lg font-bold">
+            <span>Total:</span>
+            <span class="text-green-600">₹{{ currentOrder.totalAmount }}</span>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <button class="w-full py-3 px-4 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-bold transition-all hover:scale-105">
+            <i class="fas fa-save mr-2"></i>Save Order
+          </button>
+          <button class="w-full py-3 px-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold transition-all hover:scale-105">
+            <i class="fas fa-credit-card mr-2"></i>Process Payment
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Takeaway Interface -->
+  <div *ngIf="activeOrderType === 'takeaway'" class="flex flex-1">
+
+    <!-- Left Panel: Customer Info -->
+    <div class="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-6">
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+        <i class="fas fa-shopping-bag mr-3 text-orange-500"></i>Customer Info
+      </h3>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Customer Name</label>
+          <input type="text" class="w-full px-4 py-3 text-lg rounded-xl bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 focus:border-orange-500 focus:ring-2 focus:ring-orange-200">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Phone Number</label>
+          <input type="tel" class="w-full px-4 py-3 text-lg rounded-xl bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 focus:border-orange-500 focus:ring-2 focus:ring-orange-200">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Pickup Time</label>
+          <select class="w-full px-4 py-3 text-lg rounded-xl bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 focus:border-orange-500 focus:ring-2 focus:ring-orange-200">
+            <option>ASAP</option>
+            <option>15 minutes</option>
+            <option>30 minutes</option>
+            <option>45 minutes</option>
+            <option>1 hour</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center Panel: Order Building -->
+    <div class="flex-1 bg-gray-50 dark:bg-gray-900 p-6 overflow-y-auto">
+      <div class="max-w-4xl mx-auto space-y-6">
+
+        <!-- Menu Categories -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Menu Categories</h3>
+          <div class="grid grid-cols-4 gap-4">
+            <button
+              *ngFor="let category of menuCategories"
+              (click)="selectCategory(category.id)"
+              [class]="selectedCategory === category.id ? 'ring-2 ring-orange-500 bg-orange-50 dark:bg-orange-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700'"
+              class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 transition-all hover:scale-105 flex flex-col items-center space-y-2">
+              <div [class]="category.color + ' w-12 h-12 rounded-xl flex items-center justify-center'">
+                <i [class]="category.icon" class="text-white text-xl"></i>
+              </div>
+              <span class="font-semibold text-center">{{ category.name }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Menu Items -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Menu Items</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <button
+              *ngFor="let item of getMenuItemsByCategory()"
+              (click)="addItemToOrder(item)"
+              class="p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 hover:border-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-all hover:scale-105 text-left">
+              <div class="flex items-center justify-between">
+                <div class="flex-1">
+                  <div class="font-bold text-lg">{{ item.name }}</div>
+                  <div class="text-gray-600 dark:text-gray-300 text-sm">{{ item.description }}</div>
+                  <div class="flex items-center space-x-4 mt-2">
+                    <span class="text-green-600 font-bold text-xl">₹{{ item.price }}</span>
+                    <div class="flex items-center space-x-1">
+                      <span *ngIf="item.isVegetarian" class="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                        <i class="fas fa-leaf text-white text-xs"></i>
+                      </span>
+                      <span *ngIf="item.isSpicy" class="text-red-500">
+                        <i class="fas fa-fire"></i>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center">
+                  <i class="fas fa-plus text-white"></i>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel: Current Order -->
+    <div class="w-80 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 p-6 overflow-y-auto">
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Current Order</h3>
+
+      <div *ngIf="currentOrder && currentOrder.items.length === 0" class="text-center py-12">
+        <i class="fas fa-shopping-cart text-4xl text-gray-300 mb-4"></i>
+        <p class="text-gray-500 dark:text-gray-400">No items added</p>
+      </div>
+
+      <div *ngIf="currentOrder && currentOrder.items.length > 0" class="space-y-3">
+        <div class="max-h-64 overflow-y-auto space-y-2">
+          <div *ngFor="let item of currentOrder.items" class="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-600">
+            <div class="flex items-center space-x-3 flex-1">
+              <div class="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                <i class="fas fa-utensils text-orange-600"></i>
+              </div>
+              <div class="flex-1">
+                <div class="font-medium text-sm">{{ item.menuItemName }}</div>
+                <div class="flex items-center space-x-2 mt-1">
+                  <button (click)="updateItemQuantity(item.id, item.quantity - 1)" class="w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-xs">-</button>
+                  <span class="font-bold text-sm">{{ item.quantity }}</span>
+                  <button (click)="updateItemQuantity(item.id, item.quantity + 1)" class="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center text-xs">+</button>
+                </div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="font-bold text-sm">₹{{ item.totalPrice }}</div>
+              <button (click)="removeItemFromOrder(item.id)" class="text-red-500 hover:text-red-700 mt-1">
+                <i class="fas fa-trash text-xs"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-200 dark:border-gray-600 pt-4">
+          <div class="flex items-center justify-between text-lg font-bold">
+            <span>Total:</span>
+            <span class="text-green-600">₹{{ currentOrder.totalAmount }}</span>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <button class="w-full py-3 px-4 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-bold transition-all hover:scale-105">
+            <i class="fas fa-save mr-2"></i>Save Order
+          </button>
+          <button class="w-full py-3 px-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold transition-all hover:scale-105">
+            <i class="fas fa-credit-card mr-2"></i>Process Payment
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Online Interface -->
+  <div *ngIf="activeOrderType === 'online'" class="flex flex-1">
+
+    <!-- Left Panel: Order Entry -->
+    <div class="w-96 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-6 overflow-y-auto">
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+        <i class="fas fa-globe mr-3 text-purple-500"></i>Order Entry
+      </h3>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Platform</label>
+          <select [(ngModel)]="onlineOrderEntry.platform" class="w-full px-4 py-3 text-lg rounded-xl bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 focus:border-purple-500 focus:ring-2 focus:ring-purple-200">
+            <option value="zomato">Zomato</option>
+            <option value="swiggy">Swiggy</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Order ID</label>
+          <input [(ngModel)]="onlineOrderEntry.orderId" type="text" placeholder="ZOM-12345" class="w-full px-4 py-3 text-lg rounded-xl bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 focus:border-purple-500 focus:ring-2 focus:ring-purple-200">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Customer Name</label>
+          <input [(ngModel)]="onlineOrderEntry.customerName" type="text" class="w-full px-4 py-3 text-lg rounded-xl bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 focus:border-purple-500 focus:ring-2 focus:ring-purple-200">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Phone</label>
+          <input [(ngModel)]="onlineOrderEntry.phone" type="tel" class="w-full px-4 py-3 text-lg rounded-xl bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 focus:border-purple-500 focus:ring-2 focus:ring-purple-200">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Delivery Address</label>
+          <textarea [(ngModel)]="onlineOrderEntry.address" rows="4" class="w-full px-4 py-3 text-lg rounded-xl bg-gray-50 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center Panel: Items Entry -->
+    <div class="flex-1 bg-gray-50 dark:bg-gray-900 p-6 overflow-y-auto">
+      <div class="max-w-4xl mx-auto space-y-6">
+
+        <!-- Items Entry -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Order Items</h3>
+
+          <div class="space-y-3 mb-6">
+            <div *ngFor="let item of onlineOrderEntry.items; let i = index" class="flex items-center space-x-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+              <div class="flex-1 grid grid-cols-3 gap-3">
+                <input [(ngModel)]="item.menuItemName" placeholder="Item name" class="px-3 py-2 rounded-lg bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 text-sm">
+                <input [(ngModel)]="item.quantity" type="number" placeholder="Qty" class="px-3 py-2 rounded-lg bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 text-sm">
+                <input [(ngModel)]="item.totalPrice" type="number" placeholder="Price" (input)="calculateOnlineOrderTotal()" class="px-3 py-2 rounded-lg bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 text-sm">
+              </div>
+              <button (click)="removeOnlineOrderItem(i)" class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+
+          <button (click)="addOnlineOrderItem()" class="w-full py-3 px-6 bg-purple-500 hover:bg-purple-600 text-white rounded-xl font-bold transition-all hover:scale-105 mb-6">
+            <i class="fas fa-plus mr-2"></i>Add Item
+          </button>
+
+          <!-- Total Display -->
+          <div class="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-6">
+            <div class="flex items-center justify-between text-2xl font-bold">
+              <span>Total Amount:</span>
+              <span class="text-purple-600">₹{{ onlineOrderEntry.total }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-2 gap-6">
+          <button (click)="saveOnlineOrder()" class="py-4 px-6 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-xl transition-all hover:scale-105 flex items-center justify-center space-x-2">
+            <i class="fas fa-save text-2xl"></i>
+            <span>Save Order</span>
+          </button>
+
+          <button class="py-4 px-6 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold text-xl transition-all hover:scale-105 flex items-center justify-center space-x-2">
+            <i class="fas fa-print text-2xl"></i>
+            <span>Print Receipt</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel: Order Summary -->
+    <div class="w-80 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 p-6 overflow-y-auto">
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Order Summary</h3>
+
+      <div *ngIf="onlineOrderEntry.items.length === 0" class="text-center py-12">
+        <i class="fas fa-shopping-cart text-4xl text-gray-300 mb-4"></i>
+        <p class="text-gray-500 dark:text-gray-400">No items added</p>
+      </div>
+
+      <div *ngIf="onlineOrderEntry.items.length > 0" class="space-y-3">
+        <div class="max-h-64 overflow-y-auto space-y-2">
+          <div *ngFor="let item of onlineOrderEntry.items" class="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-600">
+            <div class="flex-1">
+              <div class="font-medium">{{ item.menuItemName }}</div>
+              <div class="text-sm text-gray-500">Qty: {{ item.quantity }}</div>
+            </div>
+            <div class="text-right">
+              <div class="font-bold">₹{{ item.totalPrice }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-200 dark:border-gray-600 pt-4 space-y-3">
+          <div class="flex items-center justify-between text-lg font-bold">
+            <span>Items:</span>
+            <span>{{ onlineOrderEntry.items.length }}</span>
+          </div>
+          <div class="flex items-center justify-between text-xl font-bold">
+            <span>Total:</span>
+            <span class="text-green-600">₹{{ onlineOrderEntry.total }}</span>
+          </div>
+        </div>
+
+        <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+          <div class="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+            <div><strong>Platform:</strong> {{ onlineOrderEntry.platform | titlecase }}</div>
+            <div><strong>Order ID:</strong> {{ onlineOrderEntry.orderId }}</div>
+            <div><strong>Customer:</strong> {{ onlineOrderEntry.customerName }}</div>
+            <div><strong>Phone:</strong> {{ onlineOrderEntry.phone }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Touch Screen Number Pad -->
+  <div class="fixed bottom-10 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg">
+    <div class="p-4">
+      <div class="max-w-6xl mx-auto">
+        <!-- <div class="grid grid-cols-12 gap-2 mb-4">
+          <button *ngFor="let num of [1,2,3,4,5,6,7,8,9,'⌫',0,'C']" class="aspect-square bg-gray-100 dark:bg-gray-700 hover:bg-blue-500 hover:text-white rounded-lg font-bold text-xl transition-all hover:scale-105 flex items-center justify-center shadow-sm">
+            {{ num }}
+          </button>
+        </div> -->
+
+        <div class="grid grid-cols-6 gap-2">
+          <button class="py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-bold transition-all hover:scale-105 flex items-center justify-center space-x-1 text-sm">
+            <i class="fas fa-save"></i>
+            <span>Save</span>
+          </button>
+          <button class="py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-bold transition-all hover:scale-105 flex items-center justify-center space-x-1 text-sm">
+            <i class="fas fa-times"></i>
+            <span>Void</span>
+          </button>
+          <button class="py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-bold transition-all hover:scale-105 flex items-center justify-center space-x-1 text-sm">
+            <i class="fas fa-percentage"></i>
+            <span>Disc</span>
+          </button>
+          <button class="py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold transition-all hover:scale-105 flex items-center justify-center space-x-1 text-sm">
+            <i class="fas fa-credit-card"></i>
+            <span>Pay</span>
+          </button>
+          <button class="py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-bold transition-all hover:scale-105 flex items-center justify-center space-x-1 text-sm">
+            <i class="fas fa-print"></i>
+            <span>Print</span>
+          </button>
+          <button class="py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-bold transition-all hover:scale-105 flex items-center justify-center space-x-1 text-sm">
+            <i class="fas fa-split"></i>
+            <span>Split</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Success Modal -->
+  <div *ngIf="showPaymentSuccess" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
+      <div class="w-20 h-20 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-6">
+        <i class="fas fa-check text-3xl"></i>
+      </div>
+      <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Payment Successful!</h3>
+      <p class="text-gray-600 dark:text-gray-300 mb-6 text-lg">
+        Order #{{ (selectedOrder?.id || '').split('-').pop() }} has been paid successfully.
+      </p>
+      <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 mb-6">
+        <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">Payment Details</div>
+        <div class="space-y-1">
+          <div>Amount Paid: ₹{{ amountReceived }}</div>
+          <div>Change: ₹{{ changeAmount }}</div>
+        </div>
+      </div>
+      <button (click)="closePaymentSuccess()" class="w-full py-4 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold text-lg transition-all hover:scale-105">
+        Continue
+      </button>
+    </div>
+  </div>
+</main>

@@ -1,0 +1,364 @@
+<div class="p-6">
+  <div class="mb-6">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Order Processing</h1>
+        <p class="text-gray-600 dark:text-gray-300">Monitor and manage restaurant orders efficiently</p>
+      </div>
+      <button
+        (click)="refreshOrders()"
+        class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
+        <i class="fas fa-sync-alt"></i>
+        <span>Refresh</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center">
+          <i class="fas fa-list text-white"></i>
+        </div>
+        <span class="text-blue-600 dark:text-blue-400 text-sm font-medium">Total Orders</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ orderStats.total }}</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">All Time</div>
+    </div>
+
+    <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 rounded-2xl p-6 border border-yellow-200 dark:border-yellow-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-yellow-500 flex items-center justify-center">
+          <i class="fas fa-clock text-white"></i>
+        </div>
+        <span class="text-yellow-600 dark:text-yellow-400 text-sm font-medium">Pending</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ orderStats.pending }}</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">Awaiting Action</div>
+    </div>
+
+    <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-2xl p-6 border border-orange-200 dark:border-orange-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center">
+          <i class="fas fa-fire text-white"></i>
+        </div>
+        <span class="text-orange-600 dark:text-orange-400 text-sm font-medium">Processing</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ orderStats.processing }}</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">In Progress</div>
+    </div>
+
+    <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-2xl p-6 border border-green-200 dark:border-green-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-green-500 flex items-center justify-center">
+          <i class="fas fa-check-circle text-white"></i>
+        </div>
+        <span class="text-green-600 dark:text-green-400 text-sm font-medium">Completed</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ orderStats.completed }}</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">Today</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-search mr-2 text-red-500"></i>Search Orders
+        </label>
+        <div class="relative">
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (input)="filterOrders()"
+            placeholder="Search by order ID, customer..."
+            class="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-filter mr-2 text-blue-500"></i>Status Filter
+        </label>
+        <select
+          [(ngModel)]="statusFilter"
+          (change)="filterOrders()"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Orders</option>
+          <option value="placed">Placed</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="preparing">Preparing</option>
+          <option value="ready">Ready</option>
+          <option value="served">Served</option>
+          <option value="paid">Paid</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-sort mr-2 text-green-500"></i>Sort By
+        </label>
+        <select
+          [(ngModel)]="sortBy"
+          (change)="filterOrders()"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="amount-high">Amount: High to Low</option>
+          <option value="amount-low">Amount: Low to High</option>
+        </select>
+      </div>
+      <div class="flex items-end">
+        <div class="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 px-4 py-3 rounded-xl border border-red-200 dark:border-red-800">
+          <div class="text-sm text-gray-700 dark:text-gray-300">
+            <span class="font-bold text-red-600 dark:text-red-400">{{ filteredOrders.length }}</span> orders found
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Quick Actions</h3>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <button (click)="bulkConfirmOrders()" class="flex flex-col items-center justify-center p-4 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-xl border border-blue-200 dark:border-blue-800 transition-colors">
+        <i class="fas fa-check text-blue-600 dark:text-blue-400 text-2xl mb-2"></i>
+        <span class="text-sm font-semibold text-blue-700 dark:text-blue-300">Confirm Pending</span>
+      </button>
+      <button (click)="bulkMarkPreparing()" class="flex flex-col items-center justify-center p-4 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded-xl border border-orange-200 dark:border-orange-800 transition-colors">
+        <i class="fas fa-fire text-orange-600 dark:text-orange-400 text-2xl mb-2"></i>
+        <span class="text-sm font-semibold text-orange-700 dark:text-orange-300">Start Cooking</span>
+      </button>
+      <button (click)="bulkMarkReady()" class="flex flex-col items-center justify-center p-4 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-xl border border-green-200 dark:border-green-800 transition-colors">
+        <i class="fas fa-utensils text-green-600 dark:text-green-400 text-2xl mb-2"></i>
+        <span class="text-sm font-semibold text-green-700 dark:text-green-300">Mark Ready</span>
+      </button>
+      <button (click)="exportOrders()" class="flex flex-col items-center justify-center p-4 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-xl border border-purple-200 dark:border-purple-800 transition-colors">
+        <i class="fas fa-download text-purple-600 dark:text-purple-400 text-2xl mb-2"></i>
+        <span class="text-sm font-semibold text-purple-700 dark:text-purple-300">Export Data</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Orders List -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Orders</h3>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div
+        *ngFor="let order of filteredOrders"
+        class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
+        <div class="flex items-center space-x-4 mb-4">
+          <div class="w-12 h-12 rounded-lg flex items-center justify-center bg-gray-100 dark:bg-gray-700">
+            <i [class]="getOrderIcon(order.status)" class="text-gray-600 dark:text-gray-300 text-lg"></i>
+          </div>
+          <div class="flex-1">
+            <h3 class="font-bold text-gray-900 dark:text-white text-lg">Order #{{ order.id.split('-').pop() }}</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{ order.customerName }} • Table {{ order.tableNumber }}</p>
+          </div>
+          <span
+            [class]="getOrderStatusBadgeClass(order.status)"
+            class="px-3 py-1 text-xs rounded-full font-medium">
+            {{ getOrderStatusText(order.status) }}
+          </span>
+        </div>
+
+        <div class="space-y-2 text-sm mb-4">
+          <div class="flex justify-between">
+            <span class="text-gray-500 dark:text-gray-400">Items:</span>
+            <span class="text-gray-900 dark:text-white font-semibold">{{ order.items.length }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500 dark:text-gray-400">Total:</span>
+            <span class="text-gray-900 dark:text-white font-semibold">₹{{ order.totalAmount }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500 dark:text-gray-400">Time:</span>
+            <span class="text-gray-900 dark:text-white">{{ formatOrderTime(order.createdAt) }}</span>
+          </div>
+        </div>
+
+        <p class="text-sm text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">
+          {{ getOrderItemsSummary(order) }}
+        </p>
+
+        <!-- Card Actions -->
+        <div class="flex flex-wrap gap-2">
+          <button
+            (click)="viewOrderDetails(order)"
+            class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30 transition-colors">
+            <i class="fas fa-eye mr-2"></i>
+            View Details
+          </button>
+          <button
+            *ngIf="canConfirmOrder(order)"
+            (click)="confirmOrder(order)"
+            class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg text-green-700 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30 transition-colors">
+            <i class="fas fa-check mr-2"></i>
+            Confirm
+          </button>
+          <button
+            *ngIf="canCancelOrder(order)"
+            (click)="cancelOrder(order)"
+            class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors">
+            <i class="fas fa-times mr-2"></i>
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredOrders.length === 0" class="text-center py-12">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+        <i class="fas fa-receipt text-2xl text-gray-400"></i>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No orders found</h3>
+      <p class="text-gray-500 dark:text-gray-400">Try adjusting your filters or check back later for new orders.</p>
+    </div>
+  </div>
+
+  <!-- Order Details Modal -->
+  <div *ngIf="selectedOrder" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-100 dark:bg-blue-900/30">
+            <i class="fas fa-receipt text-blue-600 dark:text-blue-400 text-xl"></i>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">Order Details</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Order #{{ selectedOrder.id.split('-').pop() }}</p>
+          </div>
+        </div>
+        <button
+          (click)="closeOrderDetails()"
+          class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+          <i class="fas fa-times text-gray-500 dark:text-gray-400"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-red-500 scrollbar-track-gray-100 dark:scrollbar-track-gray-700">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <!-- Order Info -->
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-user mr-2 text-blue-500"></i>Customer Information
+              </label>
+              <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
+                <p class="font-medium text-gray-900 dark:text-white">{{ selectedOrder.customerName }}</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Table {{ selectedOrder.tableNumber }}</p>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-clock mr-2 text-green-500"></i>Order Timeline
+              </label>
+              <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
+                <p class="text-sm text-gray-600 dark:text-gray-400">Ordered: {{ formatDateTime(selectedOrder.createdAt) }}</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Status: {{ getOrderStatusText(selectedOrder.status) }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Order Summary -->
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-shopping-cart mr-2 text-purple-500"></i>Order Summary
+              </label>
+              <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-sm text-gray-600 dark:text-gray-400">Items:</span>
+                  <span class="font-medium text-gray-900 dark:text-white">{{ selectedOrder.items.length }}</span>
+                </div>
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-sm text-gray-600 dark:text-gray-400">Payment:</span>
+                  <span class="px-2 py-1 text-xs rounded-full" [class]="selectedOrder.paymentStatus === 'paid' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'">
+                    {{ selectedOrder.paymentStatus === 'paid' ? 'Paid' : 'Pending' }}
+                  </span>
+                </div>
+                <div class="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-600">
+                  <span class="font-semibold text-gray-900 dark:text-white">Total:</span>
+                  <span class="font-bold text-lg text-gray-900 dark:text-white">₹{{ selectedOrder.totalAmount }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="mb-6">
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+            <i class="fas fa-utensils mr-2 text-orange-500"></i>Order Items
+          </label>
+          <div class="space-y-3">
+            <div *ngFor="let item of selectedOrder.items"
+                 class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+              <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-lg bg-white dark:bg-gray-600 flex items-center justify-center">
+                  <i class="fas fa-utensils text-gray-400"></i>
+                </div>
+                <div>
+                  <div class="font-medium text-gray-900 dark:text-white">{{ item.quantity }}x {{ item.menuItemName }}</div>
+                  <div class="text-sm text-gray-600 dark:text-gray-400">₹{{ item.unitPrice }} each</div>
+                  <div *ngIf="item.specialInstructions" class="text-xs text-orange-600 dark:text-orange-400 mt-1 bg-orange-50 dark:bg-orange-900/20 p-1 rounded">
+                    {{ item.specialInstructions }}
+                  </div>
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="font-semibold text-gray-900 dark:text-white">₹{{ item.totalPrice }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Special Instructions -->
+        <div *ngIf="selectedOrder.specialInstructions" class="mb-6">
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <i class="fas fa-sticky-note mr-2 text-yellow-500"></i>Special Instructions
+          </label>
+          <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 p-4 rounded-lg">
+            <p class="text-yellow-700 dark:text-yellow-300">{{ selectedOrder.specialInstructions }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <button
+          type="button"
+          (click)="closeOrderDetails()"
+          class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          Close
+        </button>
+        <button
+          type="button"
+          *ngIf="canConfirmOrder(selectedOrder)"
+          (click)="confirmOrder(selectedOrder)"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          Confirm Order
+        </button>
+        <button
+          type="button"
+          *ngIf="canCancelOrder(selectedOrder)"
+          (click)="cancelOrder(selectedOrder)"
+          class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+          Cancel Order
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

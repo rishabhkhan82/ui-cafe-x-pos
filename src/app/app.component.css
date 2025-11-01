@@ -1,0 +1,39 @@
+
+
+/* Smooth transitions for interactive elements */
+button, .btn, [role="button"] {
+  transition: all 0.2s ease;
+}
+
+input, select, textarea {
+  transition: all 0.2s ease;
+}
+
+/* Subtle hover effects */
+button:hover, .btn:hover {
+  transform: translateY(-1px);
+}
+
+button:active, .btn:active {
+  transform: translateY(0);
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.fa-spinner {
+  animation: spin 1s linear infinite;
+}
+
+/* Card hover effects - subtle */
+.card, .bg-white, .bg-gray-800 {
+  transition: all 0.2s ease;
+}
+
+.card:hover, .bg-gray-800:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}

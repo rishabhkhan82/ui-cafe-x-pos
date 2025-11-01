@@ -1,0 +1,406 @@
+<div class="p-6">
+  <div class="mb-6">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Cash Management</h1>
+        <p class="text-gray-600 dark:text-gray-300">Monitor cash drawer, deposits, and shift reconciliation</p>
+      </div>
+      <div class="flex items-center space-x-3">
+        <div class="text-right">
+          <div class="text-sm text-gray-500 dark:text-gray-400">Current Balance</div>
+          <div class="text-2xl font-bold text-green-600">{{ formatCurrency(cashDrawer.currentBalance) }}</div>
+        </div>
+        <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+          <i class="fas fa-money-bill-wave text-white text-xl"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cash Drawer Status -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-2xl p-6 border border-green-200 dark:border-green-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-green-500 flex items-center justify-center">
+          <i class="fas fa-coins text-white"></i>
+        </div>
+        <span class="text-green-600 dark:text-green-400 text-sm font-medium">Current Balance</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ formatCurrency(cashDrawer.currentBalance) }}</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">Available in drawer</div>
+    </div>
+
+    <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center">
+          <i class="fas fa-play-circle text-white"></i>
+        </div>
+        <span class="text-blue-600 dark:text-blue-400 text-sm font-medium">Starting Float</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ formatCurrency(cashDrawer.startingFloat) }}</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">Shift start amount</div>
+    </div>
+
+    <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-2xl p-6 border border-orange-200 dark:border-orange-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center">
+          <i class="fas fa-lock text-white"></i>
+        </div>
+        <span class="text-orange-600 dark:text-orange-400 text-sm font-medium">Safe Deposits</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ formatCurrency(getTotalDeposits()) }}</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">Deposited today</div>
+    </div>
+
+    <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-2xl p-6 border border-purple-200 dark:border-purple-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-purple-500 flex items-center justify-center">
+          <i class="fas fa-plus-circle text-white"></i>
+        </div>
+        <span class="text-purple-600 dark:text-purple-400 text-sm font-medium">Change Funds</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ formatCurrency(getTotalWithdrawals()) }}</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">Added today</div>
+    </div>
+  </div>
+
+  <!-- Cash Operations -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
+    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Cash Operations</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <button
+        (click)="openDepositModal()"
+        class="p-4 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold transition-all hover:scale-105 flex items-center justify-center space-x-2">
+        <i class="fas fa-lock text-xl"></i>
+        <span>Safe Deposit</span>
+      </button>
+
+      <button
+        (click)="openWithdrawalModal()"
+        class="p-4 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition-all hover:scale-105 flex items-center justify-center space-x-2">
+        <i class="fas fa-coins text-xl"></i>
+        <span>Add Change</span>
+      </button>
+
+      <button
+        (click)="openReconciliationModal()"
+        class="p-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-semibold transition-all hover:scale-105 flex items-center justify-center space-x-2">
+        <i class="fas fa-calculator text-xl"></i>
+        <span>Reconcile</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Shift Reconciliation Status -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Shift Reconciliation</h3>
+      <span [class]="currentReconciliation.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'"
+            class="px-3 py-1 rounded-full text-sm font-medium">
+        {{ currentReconciliation.status | titlecase }}
+      </span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="text-center">
+        <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Starting Float</div>
+        <div class="text-xl font-bold text-gray-900 dark:text-white">{{ formatCurrency(currentReconciliation.startingFloat) }}</div>
+      </div>
+      <div class="text-center">
+        <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Cash Sales</div>
+        <div class="text-xl font-bold text-green-600">{{ formatCurrency(currentReconciliation.cashSales) }}</div>
+      </div>
+      <div class="text-center">
+        <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Expected Balance</div>
+        <div class="text-xl font-bold text-blue-600">{{ formatCurrency(currentReconciliation.expectedEndingBalance) }}</div>
+      </div>
+      <div class="text-center">
+        <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Variance</div>
+        <div [class]="getVarianceColor(currentReconciliation.variance)" class="text-xl font-bold">
+          {{ formatCurrency(currentReconciliation.variance) }}
+        </div>
+        <div class="text-xs text-gray-500">{{ getVarianceLabel(currentReconciliation.variance) }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transaction History -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Transaction History</h3>
+    <div class="space-y-3 max-h-96 overflow-y-auto">
+      <div
+        *ngFor="let transaction of transactions"
+        (click)="showTransactionDetails(transaction)"
+        class="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center"
+               [class]="getTransactionColor(transaction.type) + ' bg-opacity-20'">
+            <i [class]="getTransactionIcon(transaction.type)"></i>
+          </div>
+          <div>
+            <div class="font-medium text-gray-900 dark:text-white">{{ transaction.description }}</div>
+            <div class="text-sm text-gray-500 dark:text-gray-400">
+              {{ formatDate(transaction.timestamp) }} • {{ transaction.cashierName }}
+            </div>
+          </div>
+        </div>
+        <div class="text-right">
+          <div [class]="transaction.amount < 0 ? 'text-red-600' : 'text-green-600'" class="font-semibold">
+            {{ formatCurrency(transaction.amount < 0 ? -transaction.amount : transaction.amount) }}
+          </div>
+          <div class="text-xs text-gray-500">{{ getTransactionTypeLabel(transaction.type) }}</div>
+        </div>
+      </div>
+
+      <div *ngIf="transactions.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
+        <i class="fas fa-history text-3xl mb-2"></i>
+        <p>No transactions yet</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Safe Deposit Modal -->
+<div *ngIf="showDepositModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full">
+    <div class="p-6">
+      <div class="flex items-center space-x-3 mb-4">
+        <div class="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center">
+          <i class="fas fa-lock text-red-600"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white">Safe Deposit</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400">Deposit excess cash to safe</p>
+        </div>
+      </div>
+
+      <div class="space-y-4 mb-6">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Deposit Amount</label>
+          <input
+            [(ngModel)]="depositAmount"
+            type="number"
+            placeholder="Enter amount"
+            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Reason</label>
+          <input
+            [(ngModel)]="depositReason"
+            type="text"
+            placeholder="e.g., Excess cash from busy period"
+            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Manager PIN</label>
+          <input
+            [(ngModel)]="managerPin"
+            type="password"
+            placeholder="Enter manager PIN"
+            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+        </div>
+      </div>
+
+      <div class="flex space-x-3">
+        <button (click)="closeDepositModal()" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          Cancel
+        </button>
+        <button (click)="processDeposit()" class="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-colors">
+          Deposit to Safe
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Change Modal -->
+<div *ngIf="showWithdrawalModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full">
+    <div class="p-6">
+      <div class="flex items-center space-x-3 mb-4">
+        <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+          <i class="fas fa-coins text-blue-600"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white">Add Change</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400">Add additional change to drawer</p>
+        </div>
+      </div>
+
+      <div class="space-y-4 mb-6">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Amount</label>
+          <input
+            [(ngModel)]="withdrawalAmount"
+            type="number"
+            placeholder="Enter amount"
+            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Reason</label>
+          <input
+            [(ngModel)]="withdrawalReason"
+            type="text"
+            placeholder="e.g., Low change in drawer"
+            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Manager PIN</label>
+          <input
+            [(ngModel)]="managerPin"
+            type="password"
+            placeholder="Enter manager PIN"
+            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+        </div>
+      </div>
+
+      <div class="flex space-x-3">
+        <button (click)="closeWithdrawalModal()" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          Cancel
+        </button>
+        <button (click)="processWithdrawal()" class="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors">
+          Add Change
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reconciliation Modal -->
+<div *ngIf="showReconciliationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full">
+    <div class="p-6">
+      <div class="flex items-center space-x-3 mb-4">
+        <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+          <i class="fas fa-calculator text-green-600"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white">Shift Reconciliation</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400">Count cash and reconcile drawer</p>
+        </div>
+      </div>
+
+      <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 mb-6">
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between">
+            <span>Starting Float:</span>
+            <span class="font-medium">{{ formatCurrency(currentReconciliation.startingFloat) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Cash Sales:</span>
+            <span class="font-medium text-green-600">{{ formatCurrency(currentReconciliation.cashSales) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Net Transactions:</span>
+            <span class="font-medium">{{ formatCurrency(getNetTransactions()) }}</span>
+          </div>
+          <div class="flex justify-between font-bold border-t pt-2">
+            <span>Expected Balance:</span>
+            <span class="text-blue-600">{{ formatCurrency(currentReconciliation.expectedEndingBalance) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-4 mb-6">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Actual Cash Count</label>
+          <input
+            [(ngModel)]="actualCashCount"
+            (input)="calculateVariance()"
+            type="number"
+            step="0.01"
+            placeholder="Count all cash in drawer"
+            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+        </div>
+
+        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+          <div class="flex justify-between items-center">
+            <span class="font-medium">Variance:</span>
+            <span [class]="getVarianceColor(currentReconciliation.variance)" class="font-bold text-lg">
+              {{ formatCurrency(currentReconciliation.variance) }}
+            </span>
+          </div>
+          <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ getVarianceLabel(currentReconciliation.variance) }}</div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Manager PIN</label>
+          <input
+            [(ngModel)]="managerPin"
+            type="password"
+            placeholder="Enter manager PIN"
+            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+        </div>
+      </div>
+
+      <div class="flex space-x-3">
+        <button (click)="closeReconciliationModal()" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          Cancel
+        </button>
+        <button (click)="processReconciliation()" class="flex-1 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition-colors">
+          Complete Reconciliation
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Transaction Details Modal -->
+<div *ngIf="showTransactionModal && selectedTransaction" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full">
+    <div class="p-6">
+      <div class="flex items-center space-x-3 mb-4">
+        <div class="w-10 h-10 rounded-lg flex items-center justify-center"
+             [class]="getTransactionColor(selectedTransaction.type) + ' bg-opacity-20'">
+          <i [class]="getTransactionIcon(selectedTransaction.type)"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white">Transaction Details</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400">{{ getTransactionTypeLabel(selectedTransaction.type) }}</p>
+        </div>
+      </div>
+
+      <div class="space-y-4 mb-6">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Amount</label>
+            <div [class]="selectedTransaction.amount < 0 ? 'text-red-600' : 'text-green-600'" class="text-xl font-bold">
+              {{ formatCurrency(selectedTransaction.amount < 0 ? -selectedTransaction.amount : selectedTransaction.amount) }}
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Type</label>
+            <div class="text-gray-900 dark:text-white font-medium">{{ getTransactionTypeLabel(selectedTransaction.type) }}</div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</label>
+          <div class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-xl">
+            <p class="text-gray-900 dark:text-white">{{ selectedTransaction.description }}</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Cashier</label>
+            <div class="text-gray-900 dark:text-white">{{ selectedTransaction.cashierName }}</div>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Time</label>
+            <div class="text-gray-900 dark:text-white text-sm">{{ formatDate(selectedTransaction.timestamp) }}</div>
+          </div>
+        </div>
+
+        <div *ngIf="selectedTransaction.approvedBy">
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Approved By</label>
+          <div class="text-green-600 font-medium">{{ selectedTransaction.approvedBy }}</div>
+        </div>
+      </div>
+
+      <button (click)="closeTransactionModal()" class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-semibold transition-colors">
+        Close
+      </button>
+    </div>
+  </div>
+</div>

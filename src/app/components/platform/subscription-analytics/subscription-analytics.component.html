@@ -1,0 +1,185 @@
+<div class="p-6">
+  <div class="mb-6">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Subscription Analytics</h1>
+        <p class="text-gray-600 dark:text-gray-300">Comprehensive insights into subscription performance and revenue metrics</p>
+      </div>
+      <div class="flex space-x-3">
+        <button
+          (click)="refreshData()"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
+          <i class="fas fa-sync-alt"></i>
+          <span>Refresh</span>
+        </button>
+        <button
+          (click)="exportData()"
+          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2">
+          <i class="fas fa-download"></i>
+          <span>Export</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Metrics Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="pos-card rounded-2xl p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Monthly Recurring Revenue</p>
+          <h3 class="text-2xl font-bold text-gray-900 dark:text-white">{{ formatCurrency(metrics.monthlyRecurringRevenue) }}</h3>
+          <p class="text-sm text-green-600 dark:text-green-400">+12.5% from last month</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-green-50 dark:bg-green-900/30 flex items-center justify-center text-green-500">
+          <i class="fas fa-indian-rupee-sign text-xl"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="pos-card rounded-2xl p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Active Subscribers</p>
+          <h3 class="text-2xl font-bold text-gray-900 dark:text-white">{{ metrics.activeSubscribers }}</h3>
+          <p class="text-sm text-green-600 dark:text-green-400">{{ formatPercentage((metrics.activeSubscribers / metrics.totalSubscribers) * 100) }} of total</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-500">
+          <i class="fas fa-users text-xl"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="pos-card rounded-2xl p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Churn Rate</p>
+          <h3 class="text-2xl font-bold text-gray-900 dark:text-white">{{ formatPercentage(metrics.churnRate) }}</h3>
+          <p class="text-sm text-red-600 dark:text-red-400">-2.1% from last month</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-red-50 dark:bg-red-900/30 flex items-center justify-center text-red-500">
+          <i class="fas fa-chart-line text-xl"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="pos-card rounded-2xl p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Average Revenue Per User</p>
+          <h3 class="text-2xl font-bold text-gray-900 dark:text-white">{{ formatCurrency(metrics.averageRevenuePerUser) }}</h3>
+          <p class="text-sm text-green-600 dark:text-green-400">+8.3% from last month</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center text-purple-500">
+          <i class="fas fa-calculator text-xl"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="pos-card rounded-2xl p-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Revenue Trend</h3>
+      <div class="h-64">
+        <canvas id="revenueChart"></canvas>
+      </div>
+    </div>
+
+    <div class="pos-card rounded-2xl p-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Subscriber Growth</h3>
+      <div class="h-64">
+        <canvas id="subscriberChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan Analytics -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="pos-card rounded-2xl p-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Plan Distribution</h3>
+      <div class="h-64">
+        <canvas id="planDistributionChart"></canvas>
+      </div>
+    </div>
+
+    <div class="pos-card rounded-2xl p-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Churn Rate by Plan</h3>
+      <div class="h-64">
+        <canvas id="churnChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan Performance Table -->
+  <div class="pos-card rounded-2xl p-6 mb-8">
+    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Plan Performance Details</h3>
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b border-gray-200 dark:border-gray-700">
+            <th class="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Plan Name</th>
+            <th class="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Subscribers</th>
+            <th class="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Revenue</th>
+            <th class="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Churn Rate</th>
+            <th class="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Growth Rate</th>
+            <th class="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Avg Tenure</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let plan of planAnalytics" class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+            <td class="py-3 px-4">
+              <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                  <i class="fas fa-crown text-primary-600 dark:text-primary-400 text-sm"></i>
+                </div>
+                <span class="font-medium text-gray-900 dark:text-white">{{ plan.planName }}</span>
+              </div>
+            </td>
+            <td class="py-3 px-4 text-gray-900 dark:text-white">{{ plan.subscriberCount }}</td>
+            <td class="py-3 px-4 text-gray-900 dark:text-white font-medium">{{ formatCurrency(plan.revenue) }}</td>
+            <td class="py-3 px-4">
+              <span class="px-2 py-1 text-xs rounded-full"
+                    [class]="plan.churnRate > 10 ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' : plan.churnRate > 5 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'">
+                {{ formatPercentage(plan.churnRate) }}
+              </span>
+            </td>
+            <td class="py-3 px-4">
+              <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                +{{ formatPercentage(plan.growthRate) }}
+              </span>
+            </td>
+            <td class="py-3 px-4 text-gray-900 dark:text-white">{{ plan.averageTenure }} months</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Additional Metrics -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="pos-card rounded-2xl p-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Lifetime Value</h3>
+      <div class="text-center">
+        <div class="text-3xl font-bold text-primary-600 dark:text-primary-400 mb-2">{{ formatCurrency(metrics.lifetimeValue) }}</div>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Average customer lifetime value</p>
+      </div>
+    </div>
+
+    <div class="pos-card rounded-2xl p-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Conversion Rate</h3>
+      <div class="text-center">
+        <div class="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">{{ formatPercentage(metrics.conversionRate) }}</div>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Trial to paid conversion</p>
+      </div>
+    </div>
+
+    <div class="pos-card rounded-2xl p-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Annual Recurring Revenue</h3>
+      <div class="text-center">
+        <div class="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">{{ formatCurrency(metrics.annualRecurringRevenue) }}</div>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Projected annual revenue</p>
+      </div>
+    </div>
+  </div>
+</div>

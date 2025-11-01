@@ -1,0 +1,422 @@
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { Subscription, interval } from 'rxjs';
+import { MockDataService, Order, User } from '../../../services/mock-data.service';
+import { RealtimeService } from '../../../services/realtime.service';
+
+interface KitchenStats {
+  preparing: number;
+  ready: number;
+  avgPrepTime: number;
+}
+
+interface StaffMember {
+  name: string;
+  role: string;
+  icon: string;
+  status: 'active' | 'off_duty';
+}
+
+interface Performance {
+  orderCompletion: number;
+  customerSatisfaction: number;
+  staffEfficiency: number;
+}
+
+interface Table {
+  id: number;
+  status: 'available' | 'occupied' | 'reserved' | 'cleaning';
+  capacity: number;
+  currentOrderId?: string;
+  estimatedFreeTime?: number; // minutes until free
+  server?: string;
+}
+
+interface TableOverview {
+  totalTables: number;
+  availableTables: number;
+  occupiedTables: number;
+  reservedTables: number;
+  cleaningTables: number;
+  tablesFreeSoon: Table[]; // tables that will be free in next 15 minutes
+}
+
+@Component({
+  selector: 'app-restaurant-manager-dashboard',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './restaurant-manager-dashboard.component.html',
+  styleUrl: './restaurant-manager-dashboard.component.css'
+})
+export class RestaurantManagerDashboardComponent implements OnInit, OnDestroy {
+  private mockDataService = inject(MockDataService);
+  private realtimeService = inject(RealtimeService);
+  private router = inject(Router);
+  private subscriptions: Subscription[] = [];
+
+  // Component state
+  currentUser: User | null = null;
+  activeOrders: Order[] = [];
+  filteredOrders: Order[] = [];
+  activeOrdersCount: number = 0;
+  todaysRevenue: number = 0;
+  avgOrderTime: number = 0;
+  staffOnDuty: number = 0;
+
+  // Filters
+  searchQuery: string = '';
+  statusFilter: string = 'all';
+  timeFilter: string = 'all';
+
+  // Kitchen stats
+  kitchenStats: KitchenStats = {
+    preparing: 0,
+    ready: 0,
+    avgPrepTime: 14
+  };
+
+  // Staff data
+  todaysStaff: StaffMember[] = [
+    { name: 'Chef Kumar', role: 'Kitchen Manager', icon: 'fas fa-user-chef', status: 'active' },
+    { name: 'Rahul Singh', role: 'Cashier', icon: 'fas fa-cash-register', status: 'active' },
+    { name: 'Arjun Patel', role: 'Waiter', icon: 'fas fa-user-tie', status: 'active' },
+    { name: 'Priya Sharma', role: 'Manager', icon: 'fas fa-user-gear', status: 'active' }
+  ];
+
+  // Performance metrics
+  performance: Performance = {
+    orderCompletion: 96,
+    customerSatisfaction: 94,
+    staffEfficiency: 92
+  };
+
+  // Table overview
+  tables: Table[] = [
+    { id: 1, status: 'occupied', capacity: 4, currentOrderId: 'ORD-001', estimatedFreeTime: 25, server: 'Arjun' },
+    { id: 2, status: 'available', capacity: 2 },
+    { id: 3, status: 'occupied', capacity: 6, currentOrderId: 'ORD-002', estimatedFreeTime: 45, server: 'Priya' },
+    { id: 4, status: 'reserved', capacity: 4 },
+    { id: 5, status: 'available', capacity: 4 },
+    { id: 6, status: 'cleaning', capacity: 2 },
+    { id: 7, status: 'occupied', capacity: 2, currentOrderId: 'ORD-003', estimatedFreeTime: 12, server: 'Arjun' },
+    { id: 8, status: 'available', capacity: 6 },
+    { id: 9, status: 'occupied', capacity: 4, currentOrderId: 'ORD-004', estimatedFreeTime: 35, server: 'Priya' },
+    { id: 10, status: 'available', capacity: 2 }
+  ];
+
+  tableOverview: TableOverview = {
+    totalTables: 0,
+    availableTables: 0,
+    occupiedTables: 0,
+    reservedTables: 0,
+    cleaningTables: 0,
+    tablesFreeSoon: []
+  };
+
+  ngOnInit(): void {
+    this.initializeData();
+    this.setupRealtimeSubscriptions();
+    this.updateStats();
+    this.initializeFilters();
+    this.updateTableOverview();
+  }
+
+  private initializeFilters(): void {
+    this.filteredOrders = [...this.activeOrders];
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  private initializeData(): void {
+    this.currentUser = this.mockDataService.getUserByRole('restaurant_manager') || null;
+    this.loadActiveOrders();
+  }
+
+  private setupRealtimeSubscriptions(): void {
+    // Subscribe to new orders
+    const newOrderSub = this.realtimeService.newOrder$.subscribe(order => {
+      if (order) {
+        this.activeOrders.unshift(order);
+        this.updateStats();
+      }
+    });
+    this.subscriptions.push(newOrderSub);
+
+    // Subscribe to order updates
+    const orderUpdateSub = this.realtimeService.orderUpdate$.subscribe(order => {
+      if (order) {
+        const index = this.activeOrders.findIndex(o => o.id === order.id);
+        if (index !== -1) {
+          this.activeOrders[index] = order;
+          this.updateStats();
+        }
+      }
+    });
+    this.subscriptions.push(orderUpdateSub);
+
+    // Update stats every minute
+    const statsSub = interval(60000).subscribe(() => {
+      this.updateStats();
+    });
+    this.subscriptions.push(statsSub);
+  }
+
+  private loadActiveOrders(): void {
+    // Get active orders from mock data
+    this.mockDataService.getOrders().subscribe(orders => {
+      this.activeOrders = orders.filter(order =>
+        ['confirmed', 'preparing', 'ready'].includes(order.status)
+      ).slice(0, 5); // Show only first 5
+      this.updateStats();
+    });
+  }
+
+  private updateStats(): void {
+    this.activeOrdersCount = this.activeOrders.length;
+
+    // Calculate today's revenue
+    this.todaysRevenue = this.activeOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+
+    // Calculate average order time (mock)
+    this.avgOrderTime = 12;
+
+    // Count staff on duty
+    this.staffOnDuty = this.todaysStaff.filter(staff => staff.status === 'active').length;
+
+    // Update kitchen stats
+    this.kitchenStats.preparing = this.activeOrders.filter(order => order.status === 'preparing').length;
+    this.kitchenStats.ready = this.activeOrders.filter(order => order.status === 'ready').length;
+  }
+
+  private updateTableOverview(): void {
+    this.tableOverview.totalTables = this.tables.length;
+    this.tableOverview.availableTables = this.tables.filter(t => t.status === 'available').length;
+    this.tableOverview.occupiedTables = this.tables.filter(t => t.status === 'occupied').length;
+    this.tableOverview.reservedTables = this.tables.filter(t => t.status === 'reserved').length;
+    this.tableOverview.cleaningTables = this.tables.filter(t => t.status === 'cleaning').length;
+
+    // Tables that will be free in next 15 minutes
+    this.tableOverview.tablesFreeSoon = this.tables.filter(t =>
+      t.status === 'occupied' && t.estimatedFreeTime && t.estimatedFreeTime <= 15
+    );
+  }
+
+  getTimeOfDay(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Morning';
+    if (hour < 17) return 'Afternoon';
+    return 'Evening';
+  }
+
+  toggleTheme(): void {
+    const html = document.documentElement;
+    html.classList.toggle('dark');
+    const newTheme = html.classList.contains('dark') ? 'dark' : 'light';
+    localStorage.setItem('theme', newTheme);
+  }
+
+  // Navigation methods
+  viewAllOrders(): void {
+    this.router.navigate(['/restaurant/orders']);
+  }
+
+  viewOrderDetails(order: Order): void {
+    this.router.navigate(['/restaurant/orders', order.id]);
+  }
+
+  viewKitchen(): void {
+    this.router.navigate(['/kitchen/display']);
+  }
+
+  manageStaff(): void {
+    this.router.navigate(['/restaurant/staff']);
+  }
+
+  createNewOrder(): void {
+    this.router.navigate(['/restaurant/orders/new']);
+  }
+
+  manageMenu(): void {
+    this.router.navigate(['/restaurant/menu']);
+  }
+
+  viewReports(): void {
+    this.router.navigate(['/restaurant/reports']);
+  }
+
+  // Helper methods
+  formatOrderTime(createdAt: Date | string): string {
+    const now = new Date();
+    const created = new Date(createdAt);
+    const diffMinutes = Math.floor((now.getTime() - created.getTime()) / (1000 * 60));
+
+    if (diffMinutes < 1) return 'Just now';
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+
+    const diffHours = Math.floor(diffMinutes / 60);
+    return `${diffHours}h ago`;
+  }
+
+  getOrderStatusText(status: string): string {
+    const statusMap: { [key: string]: string } = {
+      'confirmed': 'Confirmed',
+      'preparing': 'Preparing',
+      'ready': 'Ready',
+      'served': 'Served',
+      'completed': 'Completed'
+    };
+    return statusMap[status] || status;
+  }
+
+  getOrderStatusBadgeClass(status: string): string {
+    const classMap: { [key: string]: string } = {
+      'confirmed': 'bg-blue-100 dark:bg-blue-900/30 text-blue-600',
+      'preparing': 'bg-orange-100 dark:bg-orange-900/30 text-orange-600',
+      'ready': 'bg-green-100 dark:bg-green-900/30 text-green-600',
+      'served': 'bg-purple-100 dark:bg-purple-900/30 text-purple-600',
+      'completed': 'bg-gray-100 dark:bg-gray-700 text-gray-600'
+    };
+    return classMap[status] || 'bg-gray-100 dark:bg-gray-700 text-gray-600';
+  }
+
+  // Filtering methods
+  filterOrders(): void {
+    let filtered = [...this.activeOrders];
+
+    // Status filter
+    if (this.statusFilter !== 'all') {
+      filtered = filtered.filter(order => order.status === this.statusFilter);
+    }
+
+    // Search filter
+    if (this.searchQuery.trim()) {
+      const query = this.searchQuery.toLowerCase();
+      filtered = filtered.filter(order =>
+        order.id.toLowerCase().includes(query) ||
+        order.tableNumber.toString().includes(query) ||
+        order.customerName?.toLowerCase().includes(query)
+      );
+    }
+
+    // Time filter
+    if (this.timeFilter !== 'all') {
+      const now = new Date();
+      filtered = filtered.filter(order => {
+        const orderTime = new Date(order.createdAt);
+        switch (this.timeFilter) {
+          case 'today':
+            return orderTime.toDateString() === now.toDateString();
+          case 'hour':
+            const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+            return orderTime >= oneHourAgo;
+          case 'shift':
+            const shiftStart = new Date(now);
+            shiftStart.setHours(9, 0, 0, 0); // Assuming 9 AM shift start
+            return orderTime >= shiftStart;
+          default:
+            return true;
+        }
+      });
+    }
+
+    this.filteredOrders = filtered;
+  }
+
+  // Order management
+  canUpdateOrderStatus(order: Order): boolean {
+    return ['confirmed', 'preparing', 'ready'].includes(order.status);
+  }
+
+  updateOrderStatus(order: Order): void {
+    const statusFlow = {
+      'confirmed': 'preparing',
+      'preparing': 'ready',
+      'ready': 'served'
+    };
+
+    const newStatus = statusFlow[order.status as keyof typeof statusFlow];
+    if (newStatus) {
+      order.status = newStatus as any;
+      this.filterOrders();
+      this.updateStats();
+      alert(`Order ${order.id.split('-').pop()} status updated to ${newStatus}`);
+    }
+  }
+
+  // Staff icon helpers
+  getStaffIconBg(icon: string): string {
+    const bgMap: { [key: string]: string } = {
+      'fas fa-user-chef': 'bg-orange-100 dark:bg-orange-900/30',
+      'fas fa-cash-register': 'bg-green-100 dark:bg-green-900/30',
+      'fas fa-user-tie': 'bg-blue-100 dark:bg-blue-900/30',
+      'fas fa-user-gear': 'bg-purple-100 dark:bg-purple-900/30'
+    };
+    return bgMap[icon] || 'bg-gray-100 dark:bg-gray-700';
+  }
+
+  getStaffIconColor(icon: string): string {
+    const colorMap: { [key: string]: string } = {
+      'fas fa-user-chef': 'text-orange-600 dark:text-orange-400',
+      'fas fa-cash-register': 'text-green-600 dark:text-green-400',
+      'fas fa-user-tie': 'text-blue-600 dark:text-blue-400',
+      'fas fa-user-gear': 'text-purple-600 dark:text-purple-400'
+    };
+    return colorMap[icon] || 'text-gray-600 dark:text-gray-400';
+  }
+
+  // Table helpers
+  getTableStatusClass(status: string): string {
+    const classMap: { [key: string]: string } = {
+      'available': 'bg-green-100 dark:bg-green-900/30 text-green-600',
+      'occupied': 'bg-red-100 dark:bg-red-900/30 text-red-600',
+      'reserved': 'bg-blue-100 dark:bg-blue-900/30 text-blue-600',
+      'cleaning': 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600'
+    };
+    return classMap[status] || 'bg-gray-100 dark:bg-gray-700 text-gray-600';
+  }
+
+  getTableStatusText(status: string): string {
+    const textMap: { [key: string]: string } = {
+      'available': 'Available',
+      'occupied': 'Occupied',
+      'reserved': 'Reserved',
+      'cleaning': 'Cleaning'
+    };
+    return textMap[status] || status;
+  }
+
+  getTableIcon(status: string): string {
+    const iconMap: { [key: string]: string } = {
+      'available': 'fas fa-check-circle',
+      'occupied': 'fas fa-users',
+      'reserved': 'fas fa-calendar-check',
+      'cleaning': 'fas fa-broom'
+    };
+    return iconMap[status] || 'fas fa-question-circle';
+  }
+
+  // Table management methods
+  viewAllTables(): void {
+    alert('Opening table management view...');
+  }
+
+  viewTableDetails(table: Table): void {
+    alert(`Opening details for Table ${table.id} (${this.getTableStatusText(table.status)})`);
+  }
+
+  reserveTable(): void {
+    alert('Opening table reservation dialog...');
+  }
+
+  markTableCleaning(): void {
+    alert('Opening table cleaning assignment...');
+  }
+
+  viewTableHistory(): void {
+    alert('Opening table usage history...');
+  }
+}

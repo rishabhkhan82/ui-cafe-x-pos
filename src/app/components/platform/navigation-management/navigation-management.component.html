@@ -1,0 +1,429 @@
+<div class="p-6">
+  <!-- Header -->
+  <div class="mb-6">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Navigation Management</h1>
+        <p class="text-gray-600 dark:text-gray-300">Manage platform navigation menus and access controls</p>
+      </div>
+      <button
+        (click)="showAddMenuForm()"
+        class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
+        <i class="fas fa-plus"></i>
+        <span>Add Menu</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <!-- Search -->
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-search mr-2 text-red-500"></i>Search Menus
+        </label>
+        <div class="relative">
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            (input)="onFilterChange()"
+            placeholder="Search by name or path..."
+            class="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+        </div>
+      </div>
+
+      <!-- Role Filter -->
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-user mr-2 text-blue-500"></i>Role Filter
+        </label>
+        <select
+          [(ngModel)]="selectedRole"
+          (change)="onFilterChange()"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="">All Roles</option>
+          <option *ngFor="let role of roles" [value]="role">{{ getRoleDisplayName(role) }}</option>
+        </select>
+      </div>
+
+      <!-- Status Filter -->
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-toggle-on mr-2 text-green-500"></i>Status Filter
+        </label>
+        <select
+          [(ngModel)]="selectedStatus"
+          (change)="onFilterChange()"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="">All Status</option>
+          <option *ngFor="let status of statuses" [value]="status">{{ status.charAt(0).toUpperCase() + status.slice(1) }}</option>
+        </select>
+      </div>
+
+      <!-- Parent Filter -->
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-folder mr-2 text-purple-500"></i>Parent Menu
+        </label>
+        <select
+          [(ngModel)]="selectedParent"
+          (change)="onFilterChange()"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="">All Parents</option>
+          <option *ngFor="let parent of parentMenus" [value]="parent.id">{{ parent.name }}</option>
+        </select>
+      </div>
+
+      <!-- Clear Filters -->
+      <div class="flex items-end">
+        <button
+          (click)="clearFilters()"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          Clear Filters
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Navigation Menus Table -->
+  <div class="pos-card rounded-2xl p-6">
+    <!-- Header with Compact Pagination -->
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Navigation Menus</h3>
+      <div *ngIf="filteredMenus.length > itemsPerPage" class="flex items-center space-x-1">
+        <span class="text-xs text-gray-500 dark:text-gray-400 mr-2">
+          {{ currentPage }} of {{ totalPages }} pages ({{ itemsPerPage }} menus per page)
+        </span>
+        <button
+          (click)="changePage(1)"
+          [disabled]="currentPage === 1"
+          class="p-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          title="First Page">
+          <i class="fas fa-angle-double-left"></i>
+        </button>
+        <button
+          (click)="changePage(currentPage - 1)"
+          [disabled]="currentPage === 1"
+          class="p-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          title="Previous Page">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <span class="px-2 py-1 text-xs text-gray-700 dark:text-gray-300">
+          {{ currentPage }} / {{ totalPages }}
+        </span>
+        <button
+          (click)="changePage(currentPage + 1)"
+          [disabled]="currentPage === totalPages"
+          class="p-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          title="Next Page">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+        <button
+          (click)="changePage(totalPages)"
+          [disabled]="currentPage === totalPages"
+          class="p-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          title="Last Page">
+          <i class="fas fa-angle-double-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal for Add/Edit Menu -->
+    <div *ngIf="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center">
+              <i class="fas fa-bars text-white"></i>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ isEditing ? 'Edit Menu' : 'Add New Menu' }}</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400">{{ isEditing ? 'Update menu information' : 'Create a new menu item' }}</p>
+            </div>
+          </div>
+          <button
+            (click)="closeModal()"
+            class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+            <i class="fas fa-times text-gray-500 dark:text-gray-400"></i>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-red-500 scrollbar-track-gray-100 dark:scrollbar-track-gray-700">
+          <form (ngSubmit)="isEditing ? saveMenu() : addMenu()" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Menu Name -->
+              <div class="md:col-span-2">
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-tag mr-2 text-red-500"></i>Menu Name
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="currentMenu.name"
+                  name="menuName"
+                  required
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                  placeholder="Enter menu name">
+              </div>
+
+              <!-- Roles (Multiselect) -->
+              <div class="md:col-span-2">
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-users mr-2 text-blue-500"></i>Roles (Select multiple)
+                </label>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <div *ngFor="let role of roles" class="flex items-center">
+                    <div class="flex items-center">
+                      <input
+                        type="checkbox"
+                        [id]="'role-' + role"
+                        [checked]="isRoleSelected(role)"
+                        (change)="toggleRole(role)"
+                        class="form-checkbox">
+                      <label [for]="'role-' + role" class="ml-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                        {{ getRoleDisplayName(role) }}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Parent Menu -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-folder mr-2 text-purple-500"></i>Parent Menu
+                </label>
+                <select
+                  [(ngModel)]="currentMenu.parentId"
+                  name="menuParentId"
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                  <option value="">No Parent (Root Menu)</option>
+                  <option *ngFor="let parent of parentMenus" [value]="parent.id">{{ parent.name }}</option>
+                </select>
+              </div>
+
+              <!-- Path -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-link mr-2 text-green-500"></i>Path
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="currentMenu.path"
+                  name="menuPath"
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                  placeholder="/example/path">
+              </div>
+
+              <!-- Icon -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-icons mr-2 text-yellow-500"></i>Icon
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="currentMenu.icon"
+                  name="menuIcon"
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                  placeholder="fas fa-icon">
+              </div>
+
+              <!-- Menu Type -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-list mr-2 text-indigo-500"></i>Menu Type
+                </label>
+                <select
+                  [(ngModel)]="currentMenu.type"
+                  name="menuType"
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                  <option value="action">Action Menu</option>
+                  <option value="parent">Parent Menu</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Access Permissions per Role -->
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-6" *ngIf="currentMenu.rolePermissions && getSelectedRoles().length > 0">
+              <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <i class="fas fa-shield-alt mr-3 text-red-500"></i>Access Permissions per Role
+              </h4>
+              <div class="space-y-6">
+                <div *ngFor="let role of getSelectedRoles()" class="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                  <h5 class="text-md font-medium text-gray-900 dark:text-white mb-3 flex items-center">
+                    <i class="fas fa-user mr-2 text-blue-500"></i>{{ getRoleDisplayName(role) }}
+                  </h5>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="flex items-center">
+                      <input
+                        type="checkbox"
+                        [ngModel]="currentMenu.rolePermissions![role]?.canView"
+                        (ngModelChange)="updateRolePermission(role, 'canView', $event)"
+                        [name]="'canView-' + role"
+                        [id]="'canView-' + role"
+                        class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
+                      <label [for]="'canView-' + role" class="ml-2 text-sm text-gray-700 dark:text-gray-300">Can View</label>
+                    </div>
+                    <div class="flex items-center">
+                      <input
+                        type="checkbox"
+                        [ngModel]="currentMenu.rolePermissions![role]?.canEdit"
+                        (ngModelChange)="updateRolePermission(role, 'canEdit', $event)"
+                        [name]="'canEdit-' + role"
+                        [id]="'canEdit-' + role"
+                        class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
+                      <label [for]="'canEdit-' + role" class="ml-2 text-sm text-gray-700 dark:text-gray-300">Can Edit</label>
+                    </div>
+                    <div class="flex items-center">
+                      <input
+                        type="checkbox"
+                        [ngModel]="currentMenu.rolePermissions![role]?.canCreate"
+                        (ngModelChange)="updateRolePermission(role, 'canCreate', $event)"
+                        [name]="'canCreate-' + role"
+                        [id]="'canCreate-' + role"
+                        class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
+                      <label [for]="'canCreate-' + role" class="ml-2 text-sm text-gray-700 dark:text-gray-300">Can Create</label>
+                    </div>
+                    <div class="flex items-center">
+                      <input
+                        type="checkbox"
+                        [ngModel]="currentMenu.rolePermissions![role]?.canDelete"
+                        (ngModelChange)="updateRolePermission(role, 'canDelete', $event)"
+                        [name]="'canDelete-' + role"
+                        [id]="'canDelete-' + role"
+                        class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
+                      <label [for]="'canDelete-' + role" class="ml-2 text-sm text-gray-700 dark:text-gray-300">Can Delete</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="flex justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+          <button
+            type="button"
+            (click)="closeModal()"
+            class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            (click)="isEditing ? saveMenu() : addMenu()"
+            class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+            {{ isEditing ? 'Save Changes' : 'Add Menu' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modern Card-Based Table Layout -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div *ngFor="let menu of paginatedMenus"
+           class="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700 overflow-hidden group relative">
+        <!-- Card Header -->
+        <div class="p-6 border-b border-gray-100 dark:border-gray-700">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center space-x-4">
+              <div class="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center text-white text-xl">
+                <i [class]="menu.icon || 'fas fa-circle'"></i>
+              </div>
+              <div class="flex-1">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">{{ menu.name }}</h4>
+                <div *ngIf="menu.parentId" class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                  <i class="fas fa-level-up-alt mr-1"></i>
+                  <span>{{ getParentName(menu.parentId) }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex-shrink-0">
+              <span [class]="menu.isActive
+                           ? 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                           : 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'">
+                <i [class]="menu.isActive ? 'fas fa-check-circle mr-1' : 'fas fa-times-circle mr-1'"></i>
+                {{ menu.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="p-6">
+          <div class="grid grid-cols-1 gap-4">
+            <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+              <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Roles</label>
+              <div class="flex flex-wrap gap-1">
+                <span *ngFor="let role of getMenuRoles(menu)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                  {{ getRoleDisplayName(role) }}
+                </span>
+              </div>
+            </div>
+            <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+              <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Path</label>
+              <span class="text-sm text-gray-900 dark:text-white font-mono">{{ menu.path || 'No path' }}</span>
+            </div>
+            <div class="flex justify-between items-center py-2">
+              <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Type</label>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                    [class]="menu.type === 'parent'
+                           ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+                           : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'">
+                <i [class]="menu.type === 'parent' ? 'fas fa-folder mr-1' : 'fas fa-link mr-1'"></i>
+                {{ menu.type === 'parent' ? 'Parent' : 'Action' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Actions -->
+        <div class="px-6 pb-6">
+          <div class="flex flex-wrap gap-2">
+            <button
+              (click)="toggleMenuStatus(menu)"
+              [class]="menu.isActive
+                       ? 'inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors'
+                       : 'inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg text-green-700 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30 transition-colors'"
+              title="{{ menu.isActive ? 'Deactivate' : 'Activate' }}">
+              <i [class]="menu.isActive ? 'fas fa-toggle-on mr-2' : 'fas fa-toggle-off mr-2'"></i>
+              {{ menu.isActive ? 'Deactivate' : 'Activate' }}
+            </button>
+            <button
+              (click)="openEditModal(menu)"
+              class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30 transition-colors"
+              title="Edit">
+              <i class="fas fa-edit mr-2"></i>
+              Edit
+            </button>
+            <button
+              (click)="deleteMenu(menu)"
+              class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors"
+              title="Delete">
+              <i class="fas fa-trash mr-2"></i>
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <!-- Card Hover Overlay -->
+        <div class="absolute inset-0 bg-gradient-to-r from-primary-500/10 to-primary-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl flex items-center justify-center">
+          <div class="text-center">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredMenus.length === 0" class="text-center py-12">
+      <i class="fas fa-search text-gray-400 text-4xl mb-4"></i>
+      <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No menus found</h3>
+      <p class="text-gray-500 dark:text-gray-400">Try adjusting your filters or add a new menu.</p>
+    </div>
+
+  </div>
+</div>

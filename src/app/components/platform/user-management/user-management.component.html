@@ -1,0 +1,397 @@
+<div class="p-6">
+  <div class="mb-6">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">User Management</h1>
+        <p class="text-gray-600 dark:text-gray-300">Manage all users across the platform</p>
+      </div>
+      <button
+        (click)="showAddUserForm()"
+        class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
+        <i class="fas fa-plus"></i>
+        <span>Add User</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-search mr-2 text-red-500"></i>Search Users
+        </label>
+        <div class="relative">
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            (input)="filterUsers()"
+            placeholder="Search by name, email, or phone..."
+            class="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-user mr-2 text-blue-500"></i>Role Filter
+        </label>
+        <select
+          [(ngModel)]="roleFilter"
+          (change)="filterUsers()"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Roles</option>
+          <option value="platform_owner">Platform Owner</option>
+          <option value="restaurant_owner">Restaurant Owner</option>
+          <option value="restaurant_manager">Restaurant Manager</option>
+          <option value="cashier">Cashier</option>
+          <option value="kitchen_manager">Kitchen Manager</option>
+          <option value="waiter">Waiter</option>
+          <option value="customer">Customer</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-toggle-on mr-2 text-green-500"></i>Status Filter
+        </label>
+        <select
+          [(ngModel)]="statusFilter"
+          (change)="filterUsers()"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+      <div class="flex items-end">
+        <div class="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 px-4 py-3 rounded-xl border border-red-200 dark:border-red-800">
+          <div class="text-sm text-gray-700 dark:text-gray-300">
+            <span class="font-bold text-red-600 dark:text-red-400">{{ filteredUsers.length }}</span> users found
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit User Modal -->
+  <div *ngIf="showAddForm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center">
+            <i [class]="newUser.name ? 'fas fa-user-edit' : 'fas fa-user-plus'" class="text-white"></i>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ newUser.name ? 'Edit User' : 'Add New User' }}</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">{{ newUser.name ? 'Update user information' : 'Create a new user account' }}</p>
+          </div>
+        </div>
+        <button
+          (click)="cancelAdd()"
+          class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+          <i class="fas fa-times text-gray-500 dark:text-gray-400"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-red-500 scrollbar-track-gray-100 dark:scrollbar-track-gray-700">
+        <form (ngSubmit)="selectedUser ? addUser() : addUser()" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Full Name -->
+            <div class="md:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-user mr-2 text-red-500"></i>Full Name
+              </label>
+              <input
+                type="text"
+                [(ngModel)]="newUser.name"
+                name="name"
+                required
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                placeholder="Enter full name">
+            </div>
+
+            <!-- Email -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-envelope mr-2 text-blue-500"></i>Email Address
+              </label>
+              <input
+                type="email"
+                [(ngModel)]="newUser.email"
+                name="email"
+                required
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                placeholder="user@example.com">
+            </div>
+
+            <!-- Phone -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-phone mr-2 text-green-500"></i>Phone Number
+              </label>
+              <input
+                type="tel"
+                [(ngModel)]="newUser.phone"
+                name="phone"
+                required
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                placeholder="+91 98765 43210">
+            </div>
+
+            <!-- Role -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-shield-alt mr-2 text-purple-500"></i>User Role
+              </label>
+              <select
+                [(ngModel)]="newUser.role"
+                name="role"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                <option value="customer">Customer</option>
+                <option value="waiter">Waiter</option>
+                <option value="cashier">Cashier</option>
+                <option value="kitchen_manager">Kitchen Manager</option>
+                <option value="restaurant_manager">Restaurant Manager</option>
+                <option value="restaurant_owner">Restaurant Owner</option>
+                <option value="platform_owner">Platform Owner</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <button
+          type="button"
+          (click)="cancelAdd()"
+          class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          Cancel
+        </button>
+        <button
+          type="submit"
+          (click)="addUser()"
+          class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+          {{ newUser.name ? 'Update User' : 'Add User' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Users Grid -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <!-- Header with Compact Pagination -->
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Users</h3>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div
+        *ngFor="let user of filteredUsers"
+        class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
+      <div class="flex items-center space-x-4 mb-4">
+        <img
+          [src]="user.avatar"
+          [alt]="user.name"
+          class="w-12 h-12 rounded-full object-cover">
+        <div class="flex-1">
+          <h3 class="font-bold text-gray-900 dark:text-white">{{ user.name }}</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400">{{ user.email }}</p>
+        </div>
+        <span
+          [class]="getRoleColor(user.role)"
+          class="px-2 py-1 text-xs rounded-full font-medium">
+          {{ getRoleDisplayName(user.role) }}
+        </span>
+      </div>
+
+      <div class="space-y-2 text-sm mb-4">
+        <div class="flex justify-between">
+          <span class="text-gray-500 dark:text-gray-400">Phone:</span>
+          <span class="text-gray-900 dark:text-white">{{ user.phone }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-500 dark:text-gray-400">Role:</span>
+          <span class="text-gray-900 dark:text-white">{{ getRoleDisplayName(user.role) }}</span>
+        </div>
+        <div *ngIf="user.restaurantId" class="flex justify-between">
+          <span class="text-gray-500 dark:text-gray-400">Restaurant:</span>
+          <span class="text-gray-900 dark:text-white">{{ user.restaurantId }}</span>
+        </div>
+        <div *ngIf="user.memberSince" class="flex justify-between">
+          <span class="text-gray-500 dark:text-gray-400">Member Since:</span>
+          <span class="text-gray-900 dark:text-white">{{ formatDate(user.memberSince) }}</span>
+        </div>
+      </div>
+
+      <!-- Card Actions -->
+      <div class="flex flex-wrap gap-2">
+        <button
+          (click)="selectUser(user)"
+          class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30 transition-colors">
+          <i class="fas fa-eye mr-2"></i>
+          View
+        </button>
+        <button
+          (click)="showAddUserForm(); newUser.name = user.name; newUser.email = user.email; newUser.phone = user.phone; newUser.role = user.role"
+          class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg text-green-700 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30 transition-colors">
+          <i class="fas fa-edit mr-2"></i>
+          Edit
+        </button>
+        <button
+          (click)="deleteUser(user)"
+          class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors">
+          <i class="fas fa-trash mr-2"></i>
+          Delete
+        </button>
+      </div>
+
+      <!-- Card Hover Overlay -->
+      <div class="absolute inset-0 bg-gradient-to-r from-primary-500/10 to-primary-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl flex items-center justify-center">
+        <div class="text-center">
+        </div>
+      </div>
+    </div>
+
+  <!-- User Details Modal -->
+  <div *ngIf="selectedUser" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-red-500 scrollbar-track-gray-100 dark:scrollbar-track-gray-700">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center space-x-4">
+          <img
+            [src]="selectedUser.avatar"
+            [alt]="selectedUser.name"
+            class="w-12 h-12 rounded-full object-cover">
+          <div>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ selectedUser.name }}</h2>
+            <p class="text-gray-600 dark:text-gray-300">{{ selectedUser.email }}</p>
+          </div>
+        </div>
+        <div class="flex space-x-2">
+          <button
+            (click)="deleteUser(selectedUser)"
+            class="px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
+            <i class="fas fa-trash mr-2"></i>Delete User
+          </button>
+          <button
+            (click)="selectedUser = null"
+            class="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors text-gray-600 dark:text-gray-400">
+            <i class="fas fa-times text-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Content -->
+      <div class="p-6">
+    <div class="flex justify-between items-start mb-6">
+      <div class="flex items-center space-x-4">
+        <img
+          [src]="selectedUser.avatar"
+          [alt]="selectedUser.name"
+          class="w-16 h-16 rounded-full object-cover">
+        <div>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ selectedUser.name }}</h2>
+          <p class="text-gray-600 dark:text-gray-300">{{ selectedUser.email }}</p>
+          <span
+            [class]="getRoleColor(selectedUser.role)"
+            class="inline-block px-3 py-1 text-sm rounded-full font-medium mt-2">
+            {{ getRoleDisplayName(selectedUser.role) }}
+          </span>
+        </div>
+      </div>
+      <div class="flex space-x-2">
+        <button
+          (click)="deleteUser(selectedUser)"
+          class="px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
+          Delete User
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div>
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Contact Information</h3>
+        <div class="space-y-3">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-envelope text-gray-400 w-5"></i>
+            <span class="text-gray-900 dark:text-white">{{ selectedUser.email }}</span>
+          </div>
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-phone text-gray-400 w-5"></i>
+            <span class="text-gray-900 dark:text-white">{{ selectedUser.phone }}</span>
+          </div>
+          <div *ngIf="selectedUser.restaurantId" class="flex items-center space-x-3">
+            <i class="fas fa-utensils text-gray-400 w-5"></i>
+            <span class="text-gray-900 dark:text-white">Restaurant ID: {{ selectedUser.restaurantId }}</span>
+          </div>
+          <div *ngIf="selectedUser.memberSince" class="flex items-center space-x-3">
+            <i class="fas fa-calendar text-gray-400 w-5"></i>
+            <span class="text-gray-900 dark:text-white">Member since {{ formatDate(selectedUser.memberSince) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Role Management</h3>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Change Role</label>
+            <select
+              [value]="selectedUser.role"
+              (change)="updateUserRole(selectedUser, $any($event.target).value)"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+              <option value="customer">Customer</option>
+              <option value="waiter">Waiter</option>
+              <option value="cashier">Cashier</option>
+              <option value="kitchen_manager">Kitchen Manager</option>
+              <option value="restaurant_manager">Restaurant Manager</option>
+              <option value="restaurant_owner">Restaurant Owner</option>
+              <option value="platform_owner">Platform Owner</option>
+            </select>
+          </div>
+          <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <h4 class="font-medium text-blue-900 dark:text-blue-100 mb-1">Role Permissions</h4>
+            <p class="text-sm text-blue-700 dark:text-blue-300">
+              {{ getRoleDisplayName(selectedUser.role) }} has access to {{ getRolePermissions(selectedUser.role) }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <button class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors text-left">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-envelope text-blue-500"></i>
+            <div>
+              <div class="font-medium text-gray-900 dark:text-white">Send Message</div>
+              <div class="text-sm text-gray-500 dark:text-gray-400">Contact this user</div>
+            </div>
+          </div>
+        </button>
+        <button class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors text-left">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-history text-green-500"></i>
+            <div>
+              <div class="font-medium text-gray-900 dark:text-white">View Activity</div>
+              <div class="text-sm text-gray-500 dark:text-gray-400">Check user logs</div>
+            </div>
+          </div>
+        </button>
+        <button class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors text-left">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-shield-alt text-purple-500"></i>
+            <div>
+              <div class="font-medium text-gray-900 dark:text-white">Security</div>
+              <div class="text-sm text-gray-500 dark:text-gray-400">Manage permissions</div>
+            </div>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

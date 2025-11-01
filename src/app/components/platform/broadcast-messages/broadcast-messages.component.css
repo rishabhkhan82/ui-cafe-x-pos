@@ -1,0 +1,150 @@
+/* Broadcast Messages Component Animations - Professional and Subtle */
+
+/* Page header fade in */
+.p-6 > .mb-6 {
+  animation: fadeInDown 0.6s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Filters section slide in */
+.bg-white.dark\:bg-gray-800.rounded-2xl.shadow-lg.border.mb-8 {
+  animation: slideInRight 0.8s ease-out 0.2s both;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Broadcast cards staggered animation */
+.grid.grid-cols-1.md\:grid-cols-2.xl\:grid-cols-3 > div {
+  animation: fadeInUp 0.6s ease-out both;
+}
+
+.grid.grid-cols-1.md\:grid-cols-2.xl\:grid-cols-3 > div:nth-child(1) { animation-delay: 0.4s; }
+.grid.grid-cols-1.md\:grid-cols-2.xl\:grid-cols-3 > div:nth-child(2) { animation-delay: 0.5s; }
+.grid.grid-cols-1.md\:grid-cols-2.xl\:grid-cols-3 > div:nth-child(3) { animation-delay: 0.6s; }
+.grid.grid-cols-1.md\:grid-cols-2.xl\:grid-cols-3 > div:nth-child(4) { animation-delay: 0.7s; }
+.grid.grid-cols-1.md\:grid-cols-2.xl\:grid-cols-3 > div:nth-child(5) { animation-delay: 0.8s; }
+.grid.grid-cols-1.md\:grid-cols-2.xl\:grid-cols-3 > div:nth-child(6) { animation-delay: 0.9s; }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Modal animations */
+.fixed.inset-0.bg-black.bg-opacity-50 {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.bg-white.dark\:bg-gray-800.rounded-2xl.shadow-2xl {
+  animation: modalSlideIn 0.4s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Form elements subtle focus animations */
+input:focus, select:focus, textarea:focus {
+  transform: scale(1.01);
+  transition: all 0.2s ease;
+}
+
+/* Button hover effects */
+button:hover {
+  transform: translateY(-1px);
+  transition: all 0.2s ease;
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* Status badges gentle pulse */
+.px-3.py-1.text-xs.rounded-full {
+  animation: gentlePulse 3s ease-in-out infinite;
+}
+
+@keyframes gentlePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+/* Card hover effects */
+.hover\:shadow-xl {
+  transition: all 0.3s ease;
+}
+
+.group:hover .absolute.inset-0 {
+  animation: overlayFade 0.3s ease-out;
+}
+
+@keyframes overlayFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Loading states */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.loading-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Statistics cards hover lift */
+.bg-gradient-to-br.rounded-xl {
+  transition: all 0.2s ease;
+}
+
+.bg-gradient-to-br.rounded-xl:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}

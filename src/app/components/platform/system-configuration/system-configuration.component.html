@@ -1,0 +1,373 @@
+<div class="p-6">
+  <div class="mb-6">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">System Configuration</h1>
+        <p class="text-gray-600 dark:text-gray-300">Configure global system settings and preferences</p>
+      </div>
+      <div class="flex space-x-3">
+        <button
+          (click)="exportSettings()"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
+          <i class="fas fa-download"></i>
+          <span>Export</span>
+        </button>
+        <button
+          (click)="importSettings()"
+          class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center space-x-2">
+          <i class="fas fa-upload"></i>
+          <span>Import</span>
+        </button>
+        <button
+          *ngIf="hasUnsavedChanges"
+          (click)="saveSettings()"
+          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2">
+          <i class="fas fa-save"></i>
+          <span>Save Changes</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Banner -->
+  <div *ngIf="hasUnsavedChanges" class="pos-card rounded-2xl p-4 mb-6 border-l-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20">
+    <div class="flex items-center space-x-3">
+      <i class="fas fa-exclamation-triangle text-yellow-600 dark:text-yellow-400"></i>
+      <div>
+        <h4 class="font-medium text-yellow-900 dark:text-yellow-100">Unsaved Changes</h4>
+        <p class="text-sm text-yellow-700 dark:text-yellow-300">You have unsaved configuration changes. Click "Save Changes" to apply them.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="pos-card rounded-2xl p-6 mb-6">
+    <div class="flex flex-wrap gap-4 items-center">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
+        <select
+          [(ngModel)]="selectedCategory"
+          (change)="filterSettings()"
+          class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+          <option value="all">All Categories</option>
+          <option value="general">General</option>
+          <option value="performance">Performance</option>
+          <option value="security">Security</option>
+          <option value="notifications">Notifications</option>
+          <option value="integrations">Integrations</option>
+        </select>
+      </div>
+
+      <div class="flex-1 min-w-64">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search Settings</label>
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          (input)="filterSettings()"
+          placeholder="Search settings..."
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+      </div>
+
+      <div class="flex items-end">
+        <button
+          (click)="resetAllSettings()"
+          class="px-4 py-2 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+          Reset All
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings by Category -->
+  <div class="space-y-8">
+    <!-- General Settings -->
+    <div *ngIf="selectedCategory === 'all' || selectedCategory === 'general'" class="pos-card rounded-2xl p-6">
+      <div class="flex items-center space-x-3 mb-6">
+        <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+          <i class="fas fa-cog text-blue-600 dark:text-blue-400"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white">General Settings</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300">Basic platform configuration</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div *ngFor="let setting of getSettingsByCategory('general')" class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            {{ setting.name }}
+            <span *ngIf="setting.requiresRestart" class="ml-2 px-2 py-1 text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-400 rounded-full">
+              Requires Restart
+            </span>
+          </label>
+          <p class="text-xs text-gray-500 dark:text-gray-400">{{ setting.description }}</p>
+
+          <!-- Text Input -->
+          <input
+            *ngIf="setting.type === 'text'"
+            type="text"
+            [value]="setting.value"
+            (input)="updateSetting(setting, $any($event.target).value)"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+
+          <!-- Number Input -->
+          <input
+            *ngIf="setting.type === 'number'"
+            type="number"
+            [value]="setting.value"
+            (input)="updateSetting(setting, +$any($event.target).value)"
+            [min]="setting.validation?.min"
+            [max]="setting.validation?.max"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+
+          <!-- Select Input -->
+          <select
+            *ngIf="setting.type === 'select'"
+            [value]="setting.value"
+            (change)="updateSetting(setting, $any($event.target).value)"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+            <option *ngFor="let option of setting.options" [value]="option">{{ option }}</option>
+          </select>
+
+          <!-- Boolean Toggle -->
+          <label *ngIf="setting.type === 'boolean'" class="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              [checked]="setting.value"
+              (change)="updateSetting(setting, $any($event.target).checked)"
+              class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+            <span class="ml-3 text-sm font-medium text-gray-900 dark:text-white">
+              {{ setting.value ? 'Enabled' : 'Disabled' }}
+            </span>
+          </label>
+
+          <!-- Textarea -->
+          <textarea
+            *ngIf="setting.type === 'textarea'"
+            [value]="setting.value"
+            (input)="updateSetting(setting, $any($event.target).value)"
+            rows="3"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white"></textarea>
+
+          <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+            <span>Default: {{ setting.defaultValue }}</span>
+            <button
+              (click)="resetSetting(setting)"
+              class="text-primary-600 dark:text-primary-400 hover:underline">
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Performance Settings -->
+    <div *ngIf="selectedCategory === 'all' || selectedCategory === 'performance'" class="pos-card rounded-2xl p-6">
+      <div class="flex items-center space-x-3 mb-6">
+        <div class="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+          <i class="fas fa-tachometer-alt text-green-600 dark:text-green-400"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white">Performance Settings</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300">Optimize system performance and resource usage</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div *ngFor="let setting of getSettingsByCategory('performance')" class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            {{ setting.name }}
+            <span *ngIf="setting.requiresRestart" class="ml-2 px-2 py-1 text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-400 rounded-full">
+              Requires Restart
+            </span>
+          </label>
+          <p class="text-xs text-gray-500 dark:text-gray-400">{{ setting.description }}</p>
+
+          <input
+            *ngIf="setting.type === 'number'"
+            type="number"
+            [value]="setting.value"
+            (input)="updateSetting(setting, +$any($event.target).value)"
+            [min]="setting.validation?.min"
+            [max]="setting.validation?.max"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+
+          <label *ngIf="setting.type === 'boolean'" class="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              [checked]="setting.value"
+              (change)="updateSetting(setting, $any($event.target).checked)"
+              class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+            <span class="ml-3 text-sm font-medium text-gray-900 dark:text-white">
+              {{ setting.value ? 'Enabled' : 'Disabled' }}
+            </span>
+          </label>
+
+          <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+            <span>Default: {{ setting.defaultValue }}</span>
+            <button
+              (click)="resetSetting(setting)"
+              class="text-primary-600 dark:text-primary-400 hover:underline">
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Settings -->
+    <div *ngIf="selectedCategory === 'all' || selectedCategory === 'security'" class="pos-card rounded-2xl p-6">
+      <div class="flex items-center space-x-3 mb-6">
+        <div class="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+          <i class="fas fa-shield-alt text-red-600 dark:text-red-400"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white">Security Settings</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300">Configure security policies and authentication</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div *ngFor="let setting of getSettingsByCategory('security')" class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            {{ setting.name }}
+            <span *ngIf="setting.requiresRestart" class="ml-2 px-2 py-1 text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-400 rounded-full">
+              Requires Restart
+            </span>
+          </label>
+          <p class="text-xs text-gray-500 dark:text-gray-400">{{ setting.description }}</p>
+
+          <input
+            *ngIf="setting.type === 'number'"
+            type="number"
+            [value]="setting.value"
+            (input)="updateSetting(setting, +$any($event.target).value)"
+            [min]="setting.validation?.min"
+            [max]="setting.validation?.max"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+
+          <label *ngIf="setting.type === 'boolean'" class="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              [checked]="setting.value"
+              (change)="updateSetting(setting, $any($event.target).checked)"
+              class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+            <span class="ml-3 text-sm font-medium text-gray-900 dark:text-white">
+              {{ setting.value ? 'Enabled' : 'Disabled' }}
+            </span>
+          </label>
+
+          <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+            <span>Default: {{ setting.defaultValue }}</span>
+            <button
+              (click)="resetSetting(setting)"
+              class="text-primary-600 dark:text-primary-400 hover:underline">
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Settings -->
+    <div *ngIf="selectedCategory === 'all' || selectedCategory === 'notifications'" class="pos-card rounded-2xl p-6">
+      <div class="flex items-center space-x-3 mb-6">
+        <div class="w-10 h-10 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+          <i class="fas fa-bell text-yellow-600 dark:text-yellow-400"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white">Notification Settings</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300">Configure notification delivery and preferences</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div *ngFor="let setting of getSettingsByCategory('notifications')" class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            {{ setting.name }}
+            <span *ngIf="setting.requiresRestart" class="ml-2 px-2 py-1 text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-400 rounded-full">
+              Requires Restart
+            </span>
+          </label>
+          <p class="text-xs text-gray-500 dark:text-gray-400">{{ setting.description }}</p>
+
+          <input
+            *ngIf="setting.type === 'number'"
+            type="number"
+            [value]="setting.value"
+            (input)="updateSetting(setting, +$any($event.target).value)"
+            [min]="setting.validation?.min"
+            [max]="setting.validation?.max"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+
+          <label *ngIf="setting.type === 'boolean'" class="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              [checked]="setting.value"
+              (change)="updateSetting(setting, $any($event.target).checked)"
+              class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+            <span class="ml-3 text-sm font-medium text-gray-900 dark:text-white">
+              {{ setting.value ? 'Enabled' : 'Disabled' }}
+            </span>
+          </label>
+
+          <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+            <span>Default: {{ setting.defaultValue }}</span>
+            <button
+              (click)="resetSetting(setting)"
+              class="text-primary-600 dark:text-primary-400 hover:underline">
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Integration Settings -->
+    <div *ngIf="selectedCategory === 'all' || selectedCategory === 'integrations'" class="pos-card rounded-2xl p-6">
+      <div class="flex items-center space-x-3 mb-6">
+        <div class="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+          <i class="fas fa-plug text-purple-600 dark:text-purple-400"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white">Integration Settings</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300">Configure API limits and webhook settings</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div *ngFor="let setting of getSettingsByCategory('integrations')" class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            {{ setting.name }}
+            <span *ngIf="setting.requiresRestart" class="ml-2 px-2 py-1 text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-400 rounded-full">
+              Requires Restart
+            </span>
+          </label>
+          <p class="text-xs text-gray-500 dark:text-gray-400">{{ setting.description }}</p>
+
+          <input
+            *ngIf="setting.type === 'number'"
+            type="number"
+            [value]="setting.value"
+            (input)="updateSetting(setting, +$any($event.target).value)"
+            [min]="setting.validation?.min"
+            [max]="setting.validation?.max"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+
+          <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+            <span>Default: {{ setting.defaultValue }}</span>
+            <button
+              (click)="resetSetting(setting)"
+              class="text-primary-600 dark:text-primary-400 hover:underline">
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

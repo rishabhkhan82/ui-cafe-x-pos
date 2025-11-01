@@ -1,0 +1,117 @@
+<div class="p-6">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Platform Dashboard</h1>
+    <p class="text-gray-600 dark:text-gray-300">Multi-tenant SaaS platform overview</p>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="pos-card kpi-card rounded-2xl p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Total Restaurants</p>
+          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">24</h3>
+          <p class="text-sm text-green-600 dark:text-green-400">+3 this month</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-500">
+          <i class="fas fa-utensils text-xl"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="pos-card kpi-card rounded-2xl p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Active Subscriptions</p>
+          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">18</h3>
+          <p class="text-sm text-green-600 dark:text-green-400">75% active rate</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-green-50 dark:bg-green-900/30 flex items-center justify-center text-green-500">
+          <i class="fas fa-credit-card text-xl"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="pos-card kpi-card rounded-2xl p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Total Revenue</p>
+          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">₹45,600</h3>
+          <p class="text-sm text-green-600 dark:text-green-400">+12% this month</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-primary-50 dark:bg-red-900/30 flex items-center justify-center text-primary-500">
+          <i class="fas fa-indian-rupee-sign text-xl"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="pos-card kpi-card rounded-2xl p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Platform Uptime</p>
+          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">99.9%</h3>
+          <p class="text-sm text-green-600 dark:text-green-400">Last 30 days</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center text-purple-500">
+          <i class="fas fa-server text-xl"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="pos-card rounded-2xl p-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Revenue Trend</h3>
+      <div class="h-64">
+        <canvas id="revenueChart"></canvas>
+      </div>
+    </div>
+
+    <div class="pos-card rounded-2xl p-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Subscription Distribution</h3>
+      <div class="h-64">
+        <canvas id="subscriptionChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="pos-card rounded-2xl p-6">
+    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Recent Activity</h3>
+    <div class="space-y-4">
+      <div class="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+        <div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+          <i class="fas fa-plus text-green-600 dark:text-green-400"></i>
+        </div>
+        <div class="flex-1">
+          <p class="text-sm font-medium text-gray-900 dark:text-white">New restaurant onboarded</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Blue Mug Café joined the platform</p>
+        </div>
+        <span class="text-xs text-gray-400">2 hours ago</span>
+      </div>
+
+      <div class="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+        <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+          <i class="fas fa-credit-card text-blue-600 dark:text-blue-400"></i>
+        </div>
+        <div class="flex-1">
+          <p class="text-sm font-medium text-gray-900 dark:text-white">Subscription upgraded</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Bean & Barrel upgraded to Pro plan</p>
+        </div>
+        <span class="text-xs text-gray-400">5 hours ago</span>
+      </div>
+
+      <div class="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+        <div class="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+          <i class="fas fa-exclamation-triangle text-yellow-600 dark:text-yellow-400"></i>
+        </div>
+        <div class="flex-1">
+          <p class="text-sm font-medium text-gray-900 dark:text-white">System maintenance</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Scheduled maintenance completed successfully</p>
+        </div>
+        <span class="text-xs text-gray-400">1 day ago</span>
+      </div>
+    </div>
+  </div>
+</div>

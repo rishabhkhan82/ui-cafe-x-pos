@@ -1,0 +1,371 @@
+<!-- Kitchen Manager Header -->
+<header class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700">
+  <div class="px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
+          <div class="relative"><i class="fas fa-utensils text-white text-lg"></i></div>
+        </div>
+        <div>
+          <h1 class="font-bold text-gray-900 dark:text-white text-lg">Cafe-X POS</h1>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Kitchen Manager</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-3">
+        <button (click)="toggleTheme()" class="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300">
+          <i class="fas fa-moon dark:hidden text-sm"></i>
+          <i class="fas fa-sun hidden dark:inline text-sm"></i>
+        </button>
+        <div class="flex items-center space-x-2">
+          <div class="text-right">
+            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ currentUser?.name }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Kitchen Manager</p>
+          </div>
+          <div class="relative">
+            <img [src]="currentUser?.avatar" alt="Profile" class="w-10 h-10 rounded-full border-2 border-orange-500 shadow-md hover:shadow-lg transition-shadow cursor-pointer">
+            <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="px-4 py-4 pb-20">
+  <!-- Welcome Banner -->
+  <div class="mb-6 animate__animated animate__fadeInUp">
+    <div class="gradient-bg rounded-2xl p-6 text-white relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+      <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
+      <div class="relative z-10">
+        <h2 class="text-2xl font-bold mb-2">Kitchen Control Center 🔥</h2>
+        <p class="text-white/90">Manage orders, track preparation, and keep the kitchen running smoothly.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kitchen Stats -->
+  <section class="mb-6 animate__animated animate__fadeInUp animate__delay-1s">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Orders in Queue</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ kitchenStats.totalOrders }}</p>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center">
+            <i class="fas fa-list"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Preparing</p>
+            <p class="text-2xl font-bold text-orange-600">{{ kitchenStats.preparing }}</p>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-900/30 text-orange-600 flex items-center justify-center">
+            <i class="fas fa-fire"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Ready</p>
+            <p class="text-2xl font-bold text-green-600">{{ kitchenStats.ready }}</p>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/30 text-green-600 flex items-center justify-center">
+            <i class="fas fa-check-circle"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Avg Prep Time</p>
+            <p class="text-2xl font-bold text-purple-600">{{ kitchenStats.avgPrepTime }}m</p>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 flex items-center justify-center">
+            <i class="fas fa-clock"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Order Filters -->
+  <section class="mb-6 animate__animated animate__fadeInUp animate__delay-2s">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Order Filters</h3>
+        <button (click)="clearFilters()" class="text-primary-500 text-sm">Clear All</button>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button (click)="setStatusFilter('all')"
+                [class]="getFilterButtonClass('all')">
+          All Orders
+        </button>
+        <button (click)="setStatusFilter('preparing')"
+                [class]="getFilterButtonClass('preparing')">
+          Preparing
+        </button>
+        <button (click)="setStatusFilter('ready')"
+                [class]="getFilterButtonClass('ready')">
+          Ready
+        </button>
+        <button (click)="setStatusFilter('urgent')"
+                [class]="getFilterButtonClass('urgent')">
+          Urgent
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Orders Queue -->
+  <section class="mb-6 animate__animated animate__fadeInUp animate__delay-3s">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Orders Queue</h3>
+      <div class="flex items-center space-x-2">
+        <button (click)="toggleAutoRefresh()" class="px-3 py-1.5 rounded-full text-xs"
+                [class]="autoRefresh ? 'bg-green-100 dark:bg-green-900/30 text-green-600' : 'bg-gray-100 dark:bg-gray-700 text-gray-600'">
+          <i class="fas fa-sync mr-1" [class]="autoRefresh ? 'fa-spin' : ''"></i>
+          Auto
+        </button>
+        <button (click)="refreshOrders()" class="px-3 py-1.5 rounded-full bg-primary-500 text-white text-xs">
+          <i class="fas fa-refresh mr-1"></i>
+          Refresh
+        </button>
+      </div>
+    </div>
+
+    <div class="space-y-4">
+      <div *ngFor="let order of filteredOrders; trackBy: trackByOrderId"
+           class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border-l-4"
+           [class]="getOrderBorderClass(order)">
+        <div class="flex items-start justify-between">
+          <div class="flex-1">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center space-x-2">
+                <h4 class="font-bold text-gray-900 dark:text-white">#{{ order.id.split('-').pop() }}</h4>
+                <span class="px-2 py-1 rounded-full text-xs font-medium"
+                      [class]="getOrderStatusBadgeClass(order.status)">
+                  {{ getOrderStatusText(order.status) }}
+                </span>
+                <span *ngIf="order.priority === 'high'" class="px-2 py-1 rounded-full text-xs bg-red-100 dark:bg-red-900/30 text-red-600">
+                  <i class="fas fa-exclamation-triangle mr-1"></i>High Priority
+                </span>
+              </div>
+              <div class="text-right">
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ formatOrderTime(order.createdAt) }}</p>
+                <p class="text-xs text-gray-400 dark:text-gray-500">Table {{ order.tableNumber }}</p>
+              </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="space-y-2 mb-3">
+              <div *ngFor="let item of order.items"
+                   class="flex items-center justify-between py-1">
+                <div class="flex items-center space-x-2">
+                  <span class="text-sm font-medium text-gray-900 dark:text-white">{{ item.quantity }}x</span>
+                  <span class="text-sm text-gray-600 dark:text-gray-300">{{ item.menuItemName }}</span>
+                  <span *ngIf="item.specialInstructions" class="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 px-2 py-1 rounded-full">
+                    Special
+                  </span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <span class="text-xs text-gray-500 dark:text-gray-400">{{ getItemStatusText(item.status) }}</span>
+                  <div class="w-2 h-2 rounded-full" [class]="getItemStatusDotClass(item.status)"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Special Instructions -->
+            <div *ngIf="order.specialInstructions" class="mb-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+              <p class="text-sm text-yellow-700 dark:text-yellow-300">
+                <i class="fas fa-sticky-note mr-1"></i>{{ order.specialInstructions }}
+              </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <button *ngIf="canStartPreparing(order)"
+                        (click)="startPreparing(order)"
+                        class="px-3 py-1.5 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold transition-colors">
+                  <i class="fas fa-play mr-1"></i>Start
+                </button>
+                <button *ngIf="canMarkReady(order)"
+                        (click)="markAsReady(order)"
+                        class="px-3 py-1.5 rounded-full bg-green-500 hover:bg-green-600 text-white text-xs font-semibold transition-colors">
+                  <i class="fas fa-check mr-1"></i>Ready
+                </button>
+                <button (click)="viewOrderDetails(order)"
+                        class="px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs">
+                  Details
+                </button>
+              </div>
+              <div class="text-right">
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">₹{{ order.totalAmount }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ order.items.length }} items</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredOrders.length === 0"
+         class="text-center py-12">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+        <i class="fas fa-utensils text-2xl text-gray-400"></i>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No orders in queue</h3>
+      <p class="text-gray-500 dark:text-gray-400">All caught up! New orders will appear here automatically.</p>
+    </div>
+  </section>
+
+  <!-- Kitchen Staff -->
+  <section class="mb-8 animate__animated animate__fadeInUp animate__delay-4s">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Kitchen Staff</h3>
+      <button (click)="manageStaff()" class="text-primary-500 text-sm">Manage</button>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div *ngFor="let staff of kitchenStaff"
+           class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <img [src]="staff.avatar" alt="Staff" class="w-10 h-10 rounded-full">
+            <div>
+              <p class="font-semibold text-gray-900 dark:text-white">{{ staff.name }}</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400">{{ staff.role }}</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="px-2 py-1 rounded-full text-xs"
+                  [class]="staff.status === 'active' ? 'bg-green-100 dark:bg-green-900/30 text-green-600' : 'bg-gray-100 dark:bg-gray-700 text-gray-600'">
+              {{ staff.status === 'active' ? 'Active' : 'Break' }}
+            </span>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ staff.currentTask }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 z-50">
+  <div class="flex items-center justify-around py-2">
+    <a routerLink="/kitchen/manager" class="flex flex-col items-center space-y-1 p-2 text-primary-500">
+      <i class="fas fa-utensils text-xl"></i>
+      <span class="text-xs font-medium">Orders</span>
+    </a>
+    <a routerLink="/kitchen/staff" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
+      <i class="fas fa-users text-xl"></i>
+      <span class="text-xs font-medium">Staff</span>
+    </a>
+    <a routerLink="/kitchen/inventory" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
+      <i class="fas fa-boxes text-xl"></i>
+      <span class="text-xs font-medium">Inventory</span>
+    </a>
+    <a routerLink="/kitchen/reports" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
+      <i class="fas fa-chart-bar text-xl"></i>
+      <span class="text-xs font-medium">Reports</span>
+    </a>
+  </div>
+</nav>
+
+<!-- Order Details Modal -->
+<div *ngIf="selectedOrder"
+     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Order Details</h3>
+        <button (click)="closeOrderDetails()" class="text-gray-400 hover:text-gray-600">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-gray-600 dark:text-gray-400">Order ID:</span>
+          <span class="font-semibold">#{{ selectedOrder.id.split('-').pop() }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-gray-600 dark:text-gray-400">Table:</span>
+          <span class="font-semibold">{{ selectedOrder.tableNumber }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-gray-600 dark:text-gray-400">Status:</span>
+          <span class="px-2 py-1 rounded-full text-xs font-medium"
+                [class]="getOrderStatusBadgeClass(selectedOrder.status)">
+            {{ getOrderStatusText(selectedOrder.status) }}
+          </span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-gray-600 dark:text-gray-400">Time:</span>
+          <span class="text-sm">{{ formatOrderTime(selectedOrder.createdAt) }}</span>
+        </div>
+
+        <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+          <h4 class="font-semibold mb-3">Items</h4>
+          <div class="space-y-2">
+            <div *ngFor="let item of selectedOrder.items"
+                 class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
+              <div class="flex-1">
+                <div class="font-medium text-sm">{{ item.quantity }}x {{ item.menuItemName }}</div>
+                <div *ngIf="item.specialInstructions" class="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                  {{ item.specialInstructions }}
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="text-sm font-semibold">₹{{ item.totalPrice }}</div>
+                <div class="text-xs" [class]="getItemStatusTextClass(item.status)">
+                  {{ getItemStatusText(item.status) }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="selectedOrder.specialInstructions" class="border-t border-gray-200 dark:border-gray-700 pt-4">
+          <h4 class="font-semibold mb-2">Special Instructions</h4>
+          <p class="text-sm text-gray-600 dark:text-gray-300 bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg">
+            {{ selectedOrder.specialInstructions }}
+          </p>
+        </div>
+
+        <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+          <div class="flex items-center justify-between font-bold">
+            <span>Total Amount:</span>
+            <span>₹{{ selectedOrder.totalAmount }}</span>
+          </div>
+        </div>
+
+        <div class="flex space-x-2 pt-4">
+          <button *ngIf="canStartPreparing(selectedOrder)"
+                  (click)="startPreparing(selectedOrder)"
+                  class="flex-1 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition-colors">
+            Start Preparing
+          </button>
+          <button *ngIf="canMarkReady(selectedOrder)"
+                  (click)="markAsReady(selectedOrder)"
+                  class="flex-1 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition-colors">
+            Mark as Ready
+          </button>
+          <button (click)="closeOrderDetails()"
+                  class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg font-semibold transition-colors">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

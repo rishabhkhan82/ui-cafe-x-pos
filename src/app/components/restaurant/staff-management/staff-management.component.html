@@ -1,0 +1,444 @@
+<div class="p-6">
+  <div class="mb-6">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Staff Management</h1>
+        <p class="text-gray-600 dark:text-gray-300">Manage restaurant staff, schedules, and performance tracking</p>
+      </div>
+      <button
+        (click)="addNewStaff()"
+        class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
+        <i class="fas fa-plus"></i>
+        <span>Add Staff</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center">
+          <i class="fas fa-users text-white"></i>
+        </div>
+        <span class="text-blue-600 dark:text-blue-400 text-sm font-medium">Total Staff</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ staffMembers.length }}</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">Active Members</div>
+    </div>
+
+    <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-2xl p-6 border border-green-200 dark:border-green-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-green-500 flex items-center justify-center">
+          <i class="fas fa-user-check text-white"></i>
+        </div>
+        <span class="text-green-600 dark:text-green-400 text-sm font-medium">Active Today</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ getActiveStaffCount() }}</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">On Duty</div>
+    </div>
+
+    <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-2xl p-6 border border-purple-200 dark:border-purple-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-purple-500 flex items-center justify-center">
+          <i class="fas fa-star text-white"></i>
+        </div>
+        <span class="text-purple-600 dark:text-purple-400 text-sm font-medium">Avg Rating</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ getAverageRating() }}/5</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">Performance Score</div>
+    </div>
+
+    <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-2xl p-6 border border-orange-200 dark:border-orange-800">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center">
+          <i class="fas fa-calendar-check text-white"></i>
+        </div>
+        <span class="text-orange-600 dark:text-orange-400 text-sm font-medium">Scheduled</span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ getTodaysSchedulesCount() }}</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">Today's Shifts</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-search mr-2 text-red-500"></i>Search Staff
+        </label>
+        <div class="relative">
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (input)="filterStaff()"
+            placeholder="Search by name, email, or phone..."
+            class="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-user-tag mr-2 text-blue-500"></i>Role
+        </label>
+        <select
+          [(ngModel)]="selectedRole"
+          (change)="filterStaff()"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="">All Roles</option>
+          <option value="restaurant_manager">Restaurant Manager</option>
+          <option value="kitchen_manager">Kitchen Manager</option>
+          <option value="cashier">Cashier</option>
+          <option value="waiter">Waiter</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-toggle-on mr-2 text-green-500"></i>Status
+        </label>
+        <select
+          [(ngModel)]="selectedStatus"
+          (change)="filterStaff()"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="on_leave">On Leave</option>
+        </select>
+      </div>
+      <div class="flex items-end">
+        <div class="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 px-4 py-3 rounded-xl border border-red-200 dark:border-red-800">
+          <div class="text-sm text-gray-700 dark:text-gray-300">
+            <span class="font-bold text-red-600 dark:text-red-400">{{ filteredStaff.length }}</span> staff members found
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Quick Actions</h3>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <button (click)="showScheduleModal = true" class="flex flex-col items-center justify-center p-4 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-xl border border-blue-200 dark:border-blue-800 transition-colors">
+        <i class="fas fa-calendar-plus text-blue-600 dark:text-blue-400 text-2xl mb-2"></i>
+        <span class="text-sm font-semibold text-blue-700 dark:text-blue-300">Schedule Shift</span>
+      </button>
+      <button (click)="viewPerformance()" class="flex flex-col items-center justify-center p-4 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-xl border border-purple-200 dark:border-purple-800 transition-colors">
+        <i class="fas fa-chart-line text-purple-600 dark:text-purple-400 text-2xl mb-2"></i>
+        <span class="text-sm font-semibold text-purple-700 dark:text-purple-300">Performance</span>
+      </button>
+      <button (click)="exportStaffData()" class="flex flex-col items-center justify-center p-4 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-xl border border-green-200 dark:border-green-800 transition-colors">
+        <i class="fas fa-file-export text-green-600 dark:text-green-400 text-2xl mb-2"></i>
+        <span class="text-sm font-semibold text-green-700 dark:text-green-300">Export Data</span>
+      </button>
+      <button (click)="manageAttendance()" class="flex flex-col items-center justify-center p-4 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded-xl border border-orange-200 dark:border-orange-800 transition-colors">
+        <i class="fas fa-clock text-orange-600 dark:text-orange-400 text-2xl mb-2"></i>
+        <span class="text-sm font-semibold text-orange-700 dark:text-orange-300">Attendance</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Staff Members -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Staff Members</h3>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div
+        *ngFor="let staff of filteredStaff"
+        class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
+        <div class="flex items-center space-x-4 mb-4">
+          <img
+            [src]="staff.avatar"
+            [alt]="staff.name"
+            class="w-12 h-12 rounded-full object-cover">
+          <div class="flex-1">
+            <h3 class="font-bold text-gray-900 dark:text-white text-lg">{{ staff.name }}</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{ staff.email }}</p>
+          </div>
+          <span
+            [class]="getStatusBadgeClass(staff.status)"
+            class="px-3 py-1 text-xs rounded-full font-medium">
+            {{ getStatusDisplayText(staff.status) }}
+          </span>
+        </div>
+
+        <div class="space-y-2 text-sm mb-4">
+          <div class="flex justify-between">
+            <span class="text-gray-500 dark:text-gray-400">Role:</span>
+            <span class="text-gray-900 dark:text-white capitalize">{{ staff.role.replace('_', ' ') }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500 dark:text-gray-400">Phone:</span>
+            <span class="text-gray-900 dark:text-white">{{ staff.phone }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500 dark:text-gray-400">Shift:</span>
+            <span class="text-gray-900 dark:text-white capitalize">{{ staff.shift }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500 dark:text-gray-400">Salary:</span>
+            <span class="text-gray-900 dark:text-white">₹{{ staff.salary | number }}</span>
+          </div>
+        </div>
+
+        <!-- Performance Rating -->
+        <div class="mb-4">
+          <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+            <span>Performance Rating</span>
+            <span>{{ staff.performanceRating }}/5</span>
+          </div>
+          <div class="flex items-center space-x-1">
+            <div *ngFor="let star of [1,2,3,4,5]" class="text-yellow-400">
+              <i [class]="star <= staff.performanceRating ? 'fas fa-star' : 'far fa-star'"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Actions -->
+        <div class="flex flex-wrap gap-2">
+          <button
+            (click)="selectStaff(staff)"
+            class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30 transition-colors">
+            <i class="fas fa-eye mr-2"></i>
+            View Details
+          </button>
+          <button
+            (click)="editStaff(staff)"
+            class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg text-green-700 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30 transition-colors">
+            <i class="fas fa-edit mr-2"></i>
+            Edit
+          </button>
+          <button
+            (click)="scheduleShift(staff)"
+            class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg text-purple-700 bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/20 dark:text-purple-400 dark:hover:bg-purple-900/30 transition-colors">
+            <i class="fas fa-calendar-plus mr-2"></i>
+            Schedule
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredStaff.length === 0" class="text-center py-12">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+        <i class="fas fa-users text-2xl text-gray-400"></i>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No staff members found</h3>
+      <p class="text-gray-500 dark:text-gray-400">Try adjusting your filters or add new staff members.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Staff Modal -->
+<div *ngIf="showStaffModal"
+     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ isEditing ? 'Edit Staff Member' : 'Add New Staff Member' }}</h3>
+        <button (click)="closeStaffModal()" class="text-gray-400 hover:text-gray-600">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form (ngSubmit)="saveStaff()" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Basic Info -->
+          <div class="md:col-span-2">
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Full Name *</label>
+            <input [(ngModel)]="staffForm.name" name="name" type="text" required
+                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Email *</label>
+            <input [(ngModel)]="staffForm.email" name="email" type="email" required
+                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Phone *</label>
+            <input [(ngModel)]="staffForm.phone" name="phone" type="tel" required
+                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Role *</label>
+            <select [(ngModel)]="staffForm.role" name="role" required
+                    class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+              <option value="waiter">Waiter</option>
+              <option value="cashier">Cashier</option>
+              <option value="kitchen_manager">Kitchen Manager</option>
+              <option value="restaurant_manager">Restaurant Manager</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Shift *</label>
+            <select [(ngModel)]="staffForm.shift" name="shift" required
+                    class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+              <option value="morning">Morning (9 AM - 5 PM)</option>
+              <option value="afternoon">Afternoon (2 PM - 10 PM)</option>
+              <option value="evening">Evening (6 PM - 2 AM)</option>
+              <option value="night">Night (10 PM - 6 AM)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Monthly Salary (₹) *</label>
+            <input [(ngModel)]="staffForm.salary" name="salary" type="number" min="0" required
+                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Status *</label>
+            <select [(ngModel)]="staffForm.status" name="status" required
+                    class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="on_leave">On Leave</option>
+            </select>
+          </div>
+
+          <!-- Emergency Contact -->
+          <div class="md:col-span-2">
+            <h4 class="text-md font-semibold text-gray-900 dark:text-white mb-3">Emergency Contact</h4>
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Contact Name</label>
+            <input [(ngModel)]="staffForm.emergencyContact!.name" name="emergencyName" type="text"
+                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Contact Phone</label>
+            <input [(ngModel)]="staffForm.emergencyContact!.phone" name="emergencyPhone" type="tel"
+                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+          </div>
+
+          <!-- Address -->
+          <div class="md:col-span-2">
+            <h4 class="text-md font-semibold text-gray-900 dark:text-white mb-3">Address</h4>
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Street Address</label>
+            <input [(ngModel)]="staffForm.address!.street" name="street" type="text"
+                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">City</label>
+            <input [(ngModel)]="staffForm.address!.city" name="city" type="text"
+                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">State</label>
+            <input [(ngModel)]="staffForm.address!.state" name="state" type="text"
+                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">PIN Code</label>
+            <input [(ngModel)]="staffForm.address!.pincode" name="pincode" type="text"
+                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+          </div>
+        </div>
+
+        <div class="flex space-x-3 pt-6">
+          <button type="submit" class="flex-1 px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-xl font-semibold transition-colors">
+            {{ isEditing ? 'Update Staff Member' : 'Add Staff Member' }}
+          </button>
+          <button type="button" (click)="closeStaffModal()" class="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl font-semibold transition-colors">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Schedule Shift Modal -->
+<div *ngIf="showScheduleModal"
+     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full">
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Schedule Shift</h3>
+        <button (click)="closeScheduleModal()" class="text-gray-400 hover:text-gray-600">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form (ngSubmit)="saveSchedule()" class="space-y-4">
+        <div>
+          <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Staff Member</label>
+          <select [(ngModel)]="scheduleForm.staffId" name="staffId" required (change)="onStaffChange()"
+                  class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+            <option value="">Select Staff Member</option>
+            <option *ngFor="let staff of staffMembers" [value]="staff.id">{{ staff.name }} ({{ staff.role }})</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Date</label>
+          <input [(ngModel)]="scheduleForm.date" name="date" type="date" required
+                 class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Shift</label>
+          <select [(ngModel)]="scheduleForm.shift" name="shift" required (change)="onShiftChange()"
+                  class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+            <option value="morning">Morning (9 AM - 5 PM)</option>
+            <option value="afternoon">Afternoon (2 PM - 10 PM)</option>
+            <option value="evening">Evening (6 PM - 2 AM)</option>
+            <option value="night">Night (10 PM - 6 AM)</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Start Time</label>
+            <input [(ngModel)]="scheduleForm.startTime" name="startTime" type="time" required
+                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-200">End Time</label>
+            <input [(ngModel)]="scheduleForm.endTime" name="endTime" type="time" required
+                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+          </div>
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Status</label>
+          <select [(ngModel)]="scheduleForm.status" name="status" required
+                  class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
+            <option value="scheduled">Scheduled</option>
+            <option value="completed">Completed</option>
+            <option value="absent">Absent</option>
+            <option value="late">Late</option>
+          </select>
+        </div>
+
+        <div class="flex space-x-3 pt-4">
+          <button type="submit" class="flex-1 px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-xl font-semibold transition-colors">
+            Schedule Shift
+          </button>
+          <button type="button" (click)="closeScheduleModal()" class="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl font-semibold transition-colors">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
