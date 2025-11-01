@@ -1,1 +1,0 @@
-import{Za as a,_a as o,ba as n,kb as m,ub as p}from"./chunk-QF7ULWVN.js";var i=class t{static \u0275fac=function(e){return new(e||t)};static \u0275cmp=n({type:t,selectors:[["app-receipt-management"]],standalone:!0,features:[p],decls:2,vars:0,template:function(e,r){e&1&&(a(0,"p"),m(1,"receipt-management works!"),o())}})};export{i as ReceiptManagementComponent};
