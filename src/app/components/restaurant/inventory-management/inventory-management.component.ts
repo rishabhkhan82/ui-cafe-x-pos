@@ -1,60 +1,9 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MockDataService, User } from '../../../services/mock-data.service';
-
-interface InventoryStats {
-  totalItems: number;
-  lowStock: number;
-  outOfStock: number;
-  totalValue: number;
-}
-
-interface InventoryItem {
-  id: string;
-  name: string;
-  sku: string;
-  category: string;
-  unit: string;
-  currentStock: number;
-  minStockLevel: number;
-  maxStockLevel?: number;
-  unitCost: number;
-  supplier?: string;
-  description?: string;
-  icon: string;
-  lastUpdated: Date;
-}
-
-interface LowStockAlert {
-  id: string;
-  itemName: string;
-  currentStock: number;
-  minStock: number;
-  unit: string;
-  category: string;
-}
-
-interface ItemForm {
-  name: string;
-  sku: string;
-  category: string;
-  unit: string;
-  unitCost: number;
-  currentStock: number;
-  minStockLevel: number;
-  maxStockLevel?: number;
-  supplier?: string;
-  description?: string;
-}
-
-interface StockAdjustment {
-  type: string;
-  quantity: number;
-  reason: string;
-  notes?: string;
-}
+import { Subscription } from 'rxjs';
+import { InventoryItem, InventoryStats, ItemForm, LowStockAlert, MockDataService, StockAdjustment, User } from '../../../services/mock-data.service';
 
 @Component({
   selector: 'app-inventory-management',
@@ -63,9 +12,12 @@ interface StockAdjustment {
   templateUrl: './inventory-management.component.html',
   styleUrl: './inventory-management.component.css'
 })
-export class InventoryManagementComponent implements OnInit {
-  private mockDataService = inject(MockDataService);
-  private router = inject(Router);
+export class InventoryManagementComponent implements OnInit, OnDestroy {
+
+  private inventorySubscription?: Subscription;
+
+  constructor(public mockDataService: MockDataService, public router: Router) {
+  }
 
   // Component state
   currentUser: User | null = null;
@@ -125,111 +77,25 @@ export class InventoryManagementComponent implements OnInit {
     this.generateLowStockAlerts();
   }
 
+  ngOnDestroy(): void {
+    if (this.inventorySubscription) {
+      this.inventorySubscription.unsubscribe();
+    }
+  }
+
   private initializeData(): void {
     // Initialize with mock data for restaurant owner
     this.currentUser = this.mockDataService.getUserByRole('restaurant_owner') || null;
-    this.initializeInventory();
-  }
-
-  private initializeInventory(): void {
-    this.inventory = [
-      {
-        id: '1',
-        name: 'Tomatoes',
-        sku: 'VEG-001',
-        category: 'vegetables',
-        unit: 'kg',
-        currentStock: 25,
-        minStockLevel: 10,
-        maxStockLevel: 50,
-        unitCost: 40,
-        supplier: 'supplier1',
-        description: 'Fresh red tomatoes',
-        icon: 'fas fa-circle',
-        lastUpdated: new Date()
-      },
-      {
-        id: '2',
-        name: 'Onions',
-        sku: 'VEG-002',
-        category: 'vegetables',
-        unit: 'kg',
-        currentStock: 5,
-        minStockLevel: 15,
-        maxStockLevel: 40,
-        unitCost: 30,
-        supplier: 'supplier1',
-        description: 'Red onions',
-        icon: 'fas fa-circle',
-        lastUpdated: new Date()
-      },
-      {
-        id: '3',
-        name: 'Milk',
-        sku: 'DAI-001',
-        category: 'dairy',
-        unit: 'l',
-        currentStock: 20,
-        minStockLevel: 8,
-        maxStockLevel: 30,
-        unitCost: 60,
-        supplier: 'supplier2',
-        description: 'Fresh cow milk',
-        icon: 'fas fa-glass-whiskey',
-        lastUpdated: new Date()
-      },
-      {
-        id: '4',
-        name: 'Chicken Breast',
-        sku: 'MEA-001',
-        category: 'meat',
-        unit: 'kg',
-        currentStock: 0,
-        minStockLevel: 5,
-        maxStockLevel: 15,
-        unitCost: 250,
-        supplier: 'supplier4',
-        description: 'Fresh chicken breast',
-        icon: 'fas fa-drumstick-bite',
-        lastUpdated: new Date()
-      },
-      {
-        id: '5',
-        name: 'Margherita Pizza Base',
-        sku: 'BAK-001',
-        category: 'bakery',
-        unit: 'pcs',
-        currentStock: 8,
-        minStockLevel: 12,
-        maxStockLevel: 25,
-        unitCost: 25,
-        supplier: 'supplier1',
-        description: 'Ready-made pizza bases',
-        icon: 'fas fa-pizza-slice',
-        lastUpdated: new Date()
-      },
-      {
-        id: '6',
-        name: 'Cumin Powder',
-        sku: 'SPI-001',
-        category: 'spices',
-        unit: 'g',
-        currentStock: 200,
-        minStockLevel: 100,
-        maxStockLevel: 500,
-        unitCost: 5,
-        supplier: 'supplier3',
-        description: 'Ground cumin powder',
-        icon: 'fas fa-pepper-hot',
-        lastUpdated: new Date()
-      }
-    ];
-    this.filteredInventory = [...this.inventory];
   }
 
   private loadInventoryData(): void {
-    // In a real app, this would load from the backend
-    // For now, we use the initialized data
+    // Subscribe to inventory data from service
+    this.inventorySubscription = this.mockDataService.getInventory().subscribe(inventory => {
+      this.inventory = inventory;
+      this.filteredInventory = [...this.inventory];
+      this.calculateStats();
+      this.generateLowStockAlerts();
+    });
   }
 
   private calculateStats(): void {
@@ -402,7 +268,7 @@ export class InventoryManagementComponent implements OnInit {
       unitCost: this.itemForm.unitCost,
       supplier: this.itemForm.supplier,
       description: this.itemForm.description,
-      icon: this.getItemIcon(this.itemForm.category),
+      icon: this.mockDataService.getItemIcon(this.itemForm.category),
       lastUpdated: new Date()
     };
 
@@ -492,16 +358,4 @@ export class InventoryManagementComponent implements OnInit {
     return 'bg-green-500';
   }
 
-  private getItemIcon(category: string): string {
-    const icons: { [key: string]: string } = {
-      'vegetables': 'fas fa-carrot',
-      'fruits': 'fas fa-apple-alt',
-      'dairy': 'fas fa-glass-whiskey',
-      'meat': 'fas fa-drumstick-bite',
-      'spices': 'fas fa-pepper-hot',
-      'beverages': 'fas fa-coffee',
-      'bakery': 'fas fa-bread-slice'
-    };
-    return icons[category] || 'fas fa-box';
-  }
 }

@@ -3,49 +3,7 @@ import { Observable, of, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { CrudService } from './crud.service';
 import { NotificationService } from './notification.service';
-
-export interface UploadConfig {
-  maxFileSize: number; // in bytes
-  allowedTypes: string[];
-  maxFiles: number;
-  chunkSize?: number; // for large file uploads
-  enableCompression: boolean;
-}
-
-export interface UploadProgress {
-  fileName: string;
-  progress: number; // 0-100
-  loaded: number;
-  total: number;
-  speed?: number; // bytes per second
-  remainingTime?: number; // in seconds
-}
-
-export interface UploadResult {
-  success: boolean;
-  fileId?: string;
-  fileName: string;
-  fileUrl?: string;
-  fileSize: number;
-  mimeType: string;
-  uploadedAt: Date;
-  error?: string;
-}
-
-export interface FileMetadata {
-  id: string;
-  name: string;
-  originalName: string;
-  size: number;
-  mimeType: string;
-  url: string;
-  thumbnailUrl?: string;
-  uploadedBy: string;
-  uploadedAt: Date;
-  category: 'menu_image' | 'receipt' | 'profile' | 'document' | 'report';
-  entityId?: string; // ID of related entity (menu item, order, etc.)
-  tags?: string[];
-}
+import { UploadConfig, FileMetadata, UploadProgress, UploadResult } from './mock-data.service';
 
 @Injectable({
   providedIn: 'root'

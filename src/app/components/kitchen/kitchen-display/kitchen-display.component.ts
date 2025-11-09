@@ -1,16 +1,9 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { interval, Subscription } from 'rxjs';
-import { Order } from '../../../services/mock-data.service';
+import { Order, OrderStatus } from '../../../services/mock-data.service';
 import { RealtimeService } from '../../../services/realtime.service';
 import { MockDataService } from '../../../services/mock-data.service';
-
-interface OrderStatus {
-  key: string;
-  label: string;
-  icon: string;
-  color: string;
-}
 
 @Component({
   selector: 'app-kitchen-display',
@@ -66,8 +59,7 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
 
   private loadOrders(): void {
     // Load orders from mock data service
-    // For now, we'll simulate with some sample orders
-    this.orders = this.getSampleOrders();
+    this.orders = this.mockDataService.getKitchenDisplayOrders();
     this.filterOrders();
   }
 
@@ -94,91 +86,6 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
     this.subscriptions.push(orderUpdateSub);
   }
 
-  private getSampleOrders(): Order[] {
-    const now = new Date();
-    return [
-      {
-        id: 'ORD-2025-1045',
-        customerId: 'user-1',
-        customerName: 'Amit Patil',
-        tableNumber: 'T-07',
-        items: [
-          {
-            id: 'order-item-1',
-            menuItemId: 'item-1',
-            menuItemName: 'Hyderabadi Biryani',
-            quantity: 2,
-            unitPrice: 280,
-            totalPrice: 560,
-            status: 'preparing'
-          },
-          {
-            id: 'order-item-2',
-            menuItemId: 'item-2',
-            menuItemName: 'Margherita Pizza',
-            quantity: 1,
-            unitPrice: 250,
-            totalPrice: 250,
-            status: 'preparing'
-          }
-        ],
-        status: 'preparing',
-        orderType: 'dine_in',
-        paymentStatus: 'paid',
-        totalAmount: 810,
-        createdAt: new Date(now.getTime() - 2 * 60 * 60 * 1000),
-        updatedAt: new Date(now.getTime() - 30 * 60 * 1000),
-        estimatedReadyTime: new Date(now.getTime() + 15 * 60 * 1000)
-      },
-      {
-        id: 'ORD-2025-1044',
-        customerId: 'user-2',
-        customerName: 'Sarah Johnson',
-        tableNumber: 'T-12',
-        items: [
-          {
-            id: 'order-item-3',
-            menuItemId: 'item-2',
-            menuItemName: 'Margherita Pizza',
-            quantity: 2,
-            unitPrice: 250,
-            totalPrice: 500,
-            status: 'ready'
-          }
-        ],
-        status: 'ready',
-        orderType: 'dine_in',
-        paymentStatus: 'paid',
-        totalAmount: 500,
-        createdAt: new Date(now.getTime() - 3 * 60 * 60 * 1000),
-        updatedAt: new Date(now.getTime() - 45 * 60 * 1000),
-        estimatedReadyTime: new Date(now.getTime() - 10 * 60 * 1000)
-      },
-      {
-        id: 'ORD-2025-1043',
-        customerId: 'user-3',
-        customerName: 'Raj Kumar',
-        tableNumber: 'T-05',
-        items: [
-          {
-            id: 'order-item-4',
-            menuItemId: 'item-3',
-            menuItemName: 'Butter Chicken',
-            quantity: 1,
-            unitPrice: 320,
-            totalPrice: 320,
-            status: 'confirmed'
-          }
-        ],
-        status: 'confirmed',
-        orderType: 'dine_in',
-        paymentStatus: 'pending',
-        totalAmount: 320,
-        createdAt: new Date(now.getTime() - 10 * 60 * 1000),
-        updatedAt: new Date(now.getTime() - 5 * 60 * 1000)
-      }
-    ];
-  }
 
   setActiveStatus(status: string): void {
     this.activeStatus = status;

@@ -2,38 +2,9 @@ import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Chart, registerables } from 'chart.js';
+import { SubscriptionMetrics, PlanAnalytics, RevenueData, MockDataService } from '../../../services/mock-data.service';
 
 Chart.register(...registerables);
-
-interface SubscriptionMetrics {
-  totalRevenue: number;
-  monthlyRecurringRevenue: number;
-  annualRecurringRevenue: number;
-  totalSubscribers: number;
-  activeSubscribers: number;
-  churnRate: number;
-  averageRevenuePerUser: number;
-  lifetimeValue: number;
-  conversionRate: number;
-}
-
-interface PlanAnalytics {
-  planId: string;
-  planName: string;
-  subscriberCount: number;
-  revenue: number;
-  churnRate: number;
-  growthRate: number;
-  averageTenure: number;
-}
-
-interface RevenueData {
-  month: string;
-  revenue: number;
-  newSubscribers: number;
-  churnedSubscribers: number;
-  planBreakdown: { [planId: string]: number };
-}
 
 @Component({
   selector: 'app-subscription-analytics',
@@ -55,52 +26,29 @@ export class SubscriptionAnalyticsComponent implements OnInit, AfterViewInit {
     conversionRate: 67.3
   };
 
-  planAnalytics: PlanAnalytics[] = [
-    {
-      planId: 'starter',
-      planName: 'Starter Plan',
-      subscriberCount: 45,
-      revenue: 44555,
-      churnRate: 12.5,
-      growthRate: 8.2,
-      averageTenure: 8.5
-    },
-    {
-      planId: 'professional',
-      planName: 'Professional Plan',
-      subscriberCount: 28,
-      revenue: 69720,
-      churnRate: 5.2,
-      growthRate: 15.8,
-      averageTenure: 12.3
-    },
-    {
-      planId: 'enterprise',
-      planName: 'Enterprise Plan',
-      subscriberCount: 8,
-      revenue: 39920,
-      churnRate: 2.1,
-      growthRate: 22.4,
-      averageTenure: 18.7
-    }
-  ];
+  planAnalytics: PlanAnalytics[] = [];
 
-  revenueData: RevenueData[] = [
-    { month: 'Jan', revenue: 32000, newSubscribers: 8, churnedSubscribers: 2, planBreakdown: { starter: 8000, professional: 16000, enterprise: 8000 } },
-    { month: 'Feb', revenue: 35000, newSubscribers: 12, churnedSubscribers: 3, planBreakdown: { starter: 10000, professional: 18000, enterprise: 7000 } },
-    { month: 'Mar', revenue: 38000, newSubscribers: 15, churnedSubscribers: 4, planBreakdown: { starter: 12000, professional: 20000, enterprise: 6000 } },
-    { month: 'Apr', revenue: 42000, newSubscribers: 18, churnedSubscribers: 3, planBreakdown: { starter: 14000, professional: 22000, enterprise: 6000 } },
-    { month: 'May', revenue: 45000, newSubscribers: 20, churnedSubscribers: 5, planBreakdown: { starter: 15000, professional: 24000, enterprise: 6000 } },
-    { month: 'Jun', revenue: 45600, newSubscribers: 8, churnedSubscribers: 2, planBreakdown: { starter: 15600, professional: 24000, enterprise: 6000 } }
-  ];
+  revenueData: RevenueData[] = [];
 
   selectedTimeframe = '6months';
   selectedMetric = 'revenue';
 
-  constructor() {}
+  constructor(private mockDataService: MockDataService) {}
 
   ngOnInit(): void {
-    // Component initialization
+    this.mockDataService.getSubscriptionMetrics().subscribe(metrics => {
+      if (metrics) {
+        this.metrics = metrics;
+      }
+    });
+
+    this.mockDataService.getPlanAnalytics().subscribe(planAnalytics => {
+      this.planAnalytics = planAnalytics;
+    });
+
+    this.mockDataService.getRevenueData().subscribe(revenueData => {
+      this.revenueData = revenueData;
+    });
   }
 
   ngAfterViewInit(): void {

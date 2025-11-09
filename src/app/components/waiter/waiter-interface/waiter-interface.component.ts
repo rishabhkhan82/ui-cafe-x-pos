@@ -3,32 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
-import { MockDataService, Order, User, MenuItem } from '../../../services/mock-data.service';
+import { MockDataService, Order, User, MenuItem, CartItem, Customer, Table } from '../../../services/mock-data.service';
 import { RealtimeService } from '../../../services/realtime.service';
-
-interface Table {
-  id: string;
-  number: number;
-  status: 'available' | 'occupied' | 'reserved' | 'needs_cleaning';
-  capacity: number;
-  currentOrder?: Order;
-  lastActivity?: Date;
-}
-
-interface CartItem {
-  menuItem: MenuItem;
-  quantity: number;
-  specialInstructions?: string;
-  totalPrice: number;
-}
-
-interface Customer {
-  id?: string;
-  name?: string;
-  phone?: string;
-  email?: string;
-  isGuest: boolean;
-}
 
 @Component({
   selector: 'app-waiter-interface',
@@ -90,25 +66,36 @@ export class WaiterInterfaceComponent implements OnInit, OnDestroy {
   }
 
   private initializeTables(): void {
-    // Create 10 tables for demo with different capacities
-    this.tables = Array.from({ length: 10 }, (_, i) => ({
-      id: `table-${i + 1}`,
-      number: i + 1,
-      capacity: i < 5 ? 2 : i < 10 ? 4 : 6, // Mix of 2, 4, and 6-seater tables
-      status: this.getRandomTableStatus(),
-      lastActivity: new Date()
-    }));
+    // Create 10 tables with different capacities and predetermined statuses
+    this.tables = Array.from({ length: 10 }, (_, i) => {
+      let status: Table['status'];
+      // Deliberate status distribution for better demo experience
+      if (i === 0 || i === 1) status = 'available'; // Tables 1-2: Available (green)
+      else if (i === 2 || i === 3) status = 'occupied'; // Tables 3-4: Occupied (blue)
+      else if (i === 4 || i === 5) status = 'reserved'; // Tables 5-6: Reserved (purple)
+      else if (i === 6 || i === 7) status = 'needs_cleaning'; // Tables 7-8: Needs cleaning (red)
+      else status = 'available'; // Tables 9-10: Available (green)
 
-    // Assign some orders to tables
+      return {
+        id: `table-${i + 1}`,
+        number: i + 1,
+        capacity: i < 5 ? 2 : i < 10 ? 4 : 6, // Mix of 2, 4, and 6-seater tables
+        status: status,
+        lastActivity: new Date()
+      };
+    });
+
+    // Assign some orders to occupied tables
     this.mockDataService.getOrders().subscribe(orders => {
       const activeOrders = orders.filter(order =>
         ['confirmed', 'preparing', 'ready', 'on_the_way', 'served'].includes(order.status)
       );
 
+      // Only assign orders to tables that are already marked as occupied
+      const occupiedTables = this.tables.filter(table => table.status === 'occupied');
       activeOrders.forEach((order, index) => {
-        if (index < this.tables.length) {
-          this.tables[index].currentOrder = order;
-          this.tables[index].status = 'occupied';
+        if (index < occupiedTables.length) {
+          occupiedTables[index].currentOrder = order;
         }
       });
     });
@@ -193,7 +180,7 @@ export class WaiterInterfaceComponent implements OnInit, OnDestroy {
     const html = document.documentElement;
     html.classList.toggle('dark');
     const newTheme = html.classList.contains('dark') ? 'dark' : 'light';
-    localStorage.setItem('theme', newTheme);
+    sessionStorage.setItem('theme', newTheme);
   }
 
   // Navigation methods

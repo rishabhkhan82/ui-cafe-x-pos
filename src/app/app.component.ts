@@ -40,7 +40,7 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {
     // Load theme preference
-    const savedTheme = localStorage.getItem('theme');
+    const savedTheme = sessionStorage.getItem('theme');
     if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.documentElement.classList.add('dark');
     }
@@ -77,7 +77,7 @@ export class AppComponent implements OnInit {
   }
 
   private initializeAuthState(): void {
-    // Check if user is already logged in from localStorage
+    // Check if user is already logged in from sessionStorage
     const currentUser = this.authService.getCurrentUser();
     if (currentUser) {
       this.isLoggedIn = true;
@@ -154,10 +154,10 @@ export class AppComponent implements OnInit {
 
     if (isDark) {
       html.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
+      sessionStorage.setItem('theme', 'light');
     } else {
       html.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
+      sessionStorage.setItem('theme', 'dark');
     }
   }
 

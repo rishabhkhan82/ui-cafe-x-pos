@@ -1,8 +1,20 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { MockDataService, StaffMember, ShiftSchedule, User } from '../../../services/mock-data.service';
+import { Subscription } from 'rxjs';
+import {
+  MockDataService,
+  StaffMember,
+  ShiftSchedule,
+  User,
+  StaffFormDefaults,
+  ScheduleFormDefaults,
+  ShiftTimeConfig,
+  BadgeClassConfig,
+  DisplayTextConfig,
+  SelectOption
+} from '../../../services/mock-data.service';
 import { AuthService } from '../../../services/auth.service';
 
 @Component({
@@ -12,7 +24,9 @@ import { AuthService } from '../../../services/auth.service';
   templateUrl: './staff-management.component.html',
   styleUrls: ['./staff-management.component.css']
 })
-export class StaffManagementComponent implements OnInit {
+export class StaffManagementComponent implements OnInit, OnDestroy {
+  private subscriptions: Subscription = new Subscription();
+
   currentUser: any;
   staffMembers: StaffMember[] = [];
   filteredStaff: StaffMember[] = [];
@@ -27,22 +41,22 @@ export class StaffManagementComponent implements OnInit {
   isEditing = false;
   currentDate = new Date();
 
-  // Form data
-  staffForm: Partial<StaffMember> = {
-    role: 'waiter',
-    status: 'active',
-    shift: 'morning',
-    skills: [],
-    emergencyContact: { name: '', phone: '', relationship: '' },
-    address: { street: '', city: '', state: '', pincode: '' }
-  };
+  // Configuration data from service
+  staffFormDefaults: StaffFormDefaults | null = null;
+  scheduleFormDefaults: ScheduleFormDefaults | null = null;
+  shiftTimeConfigs: ShiftTimeConfig[] = [];
+  statusBadgeClasses: BadgeClassConfig[] = [];
+  roleBadgeClasses: BadgeClassConfig[] = [];
+  statusDisplayTexts: DisplayTextConfig[] = [];
+  roleOptions: SelectOption[] = [];
+  statusOptions: SelectOption[] = [];
+  shiftOptions: SelectOption[] = [];
+  scheduleStatusOptions: SelectOption[] = [];
+  defaultAvatarUrl = '';
 
-  scheduleForm: Partial<ShiftSchedule> = {
-    shift: 'morning',
-    startTime: '09:00',
-    endTime: '17:00',
-    status: 'scheduled'
-  };
+  // Form data
+  staffForm: Partial<StaffMember> = {};
+  scheduleForm: Partial<ShiftSchedule> = {};
 
   constructor(
     private mockDataService: MockDataService,
@@ -54,8 +68,102 @@ export class StaffManagementComponent implements OnInit {
       this.currentUser = user || undefined;
     });
 
+    this.loadConfigurationData();
     this.loadStaff();
     this.loadSchedules();
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
+
+  loadConfigurationData(): void {
+    // Load staff form defaults
+    this.subscriptions.add(
+      this.mockDataService.getStaffFormDefaults().subscribe(defaults => {
+        this.staffFormDefaults = defaults;
+        this.initializeStaffForm();
+      })
+    );
+
+    // Load schedule form defaults
+    this.subscriptions.add(
+      this.mockDataService.getScheduleFormDefaults().subscribe(defaults => {
+        this.scheduleFormDefaults = defaults;
+        this.initializeScheduleForm();
+      })
+    );
+
+    // Load shift time configurations
+    this.subscriptions.add(
+      this.mockDataService.getShiftTimeConfigs().subscribe(configs => {
+        this.shiftTimeConfigs = configs;
+      })
+    );
+
+    // Load badge class configurations
+    this.subscriptions.add(
+      this.mockDataService.getStatusBadgeClasses().subscribe(classes => {
+        this.statusBadgeClasses = classes;
+      })
+    );
+
+    this.subscriptions.add(
+      this.mockDataService.getRoleBadgeClasses().subscribe(classes => {
+        this.roleBadgeClasses = classes;
+      })
+    );
+
+    // Load display text configurations
+    this.subscriptions.add(
+      this.mockDataService.getStatusDisplayTexts().subscribe(texts => {
+        this.statusDisplayTexts = texts;
+      })
+    );
+
+    // Load select options
+    this.subscriptions.add(
+      this.mockDataService.getRoleOptions().subscribe(options => {
+        this.roleOptions = options;
+      })
+    );
+
+    this.subscriptions.add(
+      this.mockDataService.getStatusOptions().subscribe(options => {
+        this.statusOptions = options;
+      })
+    );
+
+    this.subscriptions.add(
+      this.mockDataService.getShiftOptions().subscribe(options => {
+        this.shiftOptions = options;
+      })
+    );
+
+    this.subscriptions.add(
+      this.mockDataService.getScheduleStatusOptions().subscribe(options => {
+        this.scheduleStatusOptions = options;
+      })
+    );
+
+    // Load default avatar URL
+    this.subscriptions.add(
+      this.mockDataService.getDefaultAvatarUrl().subscribe(url => {
+        this.defaultAvatarUrl = url;
+      })
+    );
+  }
+
+  initializeStaffForm(): void {
+    if (this.staffFormDefaults) {
+      this.staffForm = { ...this.staffFormDefaults };
+    }
+  }
+
+  initializeScheduleForm(): void {
+    if (this.scheduleFormDefaults) {
+      this.scheduleForm = { ...this.scheduleFormDefaults };
+    }
   }
 
   loadStaff(): void {
@@ -87,14 +195,7 @@ export class StaffManagementComponent implements OnInit {
 
   addNewStaff(): void {
     this.isEditing = false;
-    this.staffForm = {
-      role: 'waiter',
-      status: 'active',
-      shift: 'morning',
-      skills: [],
-      emergencyContact: { name: '', phone: '', relationship: '' },
-      address: { street: '', city: '', state: '', pincode: '' }
-    };
+    this.initializeStaffForm();
     this.showStaffModal = true;
   }
 
@@ -119,7 +220,7 @@ export class StaffManagementComponent implements OnInit {
         email: this.staffForm.email || '',
         phone: this.staffForm.phone || '',
         role: this.staffForm.role || 'waiter',
-        avatar: this.staffForm.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face',
+        avatar: this.staffForm.avatar || this.defaultAvatarUrl,
         restaurantId: this.currentUser?.restaurantId || '',
         hireDate: new Date(),
         salary: this.staffForm.salary || 0,
@@ -172,42 +273,19 @@ export class StaffManagementComponent implements OnInit {
   }
 
   getShiftStartTime(shift: string): string {
-    switch (shift) {
-      case 'morning': return '09:00';
-      case 'afternoon': return '14:00';
-      case 'evening': return '18:00';
-      case 'night': return '22:00';
-      default: return '09:00';
-    }
+    return this.mockDataService.getShiftStartTime(shift as StaffMember['shift']);
   }
 
   getShiftEndTime(shift: string): string {
-    switch (shift) {
-      case 'morning': return '17:00';
-      case 'afternoon': return '22:00';
-      case 'evening': return '02:00';
-      case 'night': return '06:00';
-      default: return '17:00';
-    }
+    return this.mockDataService.getShiftEndTime(shift as StaffMember['shift']);
   }
 
   getStatusBadgeClass(status: string): string {
-    switch (status) {
-      case 'active': return 'bg-green-100 dark:bg-green-900/30 text-green-600';
-      case 'inactive': return 'bg-gray-100 dark:bg-gray-700 text-gray-600';
-      case 'on_leave': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600';
-      default: return 'bg-gray-100 dark:bg-gray-700 text-gray-600';
-    }
+    return this.mockDataService.getStatusBadgeClass(status as StaffMember['status']);
   }
 
   getRoleBadgeClass(role: string): string {
-    switch (role) {
-      case 'restaurant_manager': return 'bg-purple-100 dark:bg-purple-900/30 text-purple-600';
-      case 'kitchen_manager': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-600';
-      case 'cashier': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-600';
-      case 'waiter': return 'bg-green-100 dark:bg-green-900/30 text-green-600';
-      default: return 'bg-gray-100 dark:bg-gray-700 text-gray-600';
-    }
+    return this.mockDataService.getRoleBadgeClass(role as StaffMember['role']);
   }
 
   closeStaffModal(): void {
@@ -253,12 +331,7 @@ export class StaffManagementComponent implements OnInit {
   }
 
   getStatusDisplayText(status: string): string {
-    switch (status) {
-      case 'active': return 'Active';
-      case 'inactive': return 'Inactive';
-      case 'on_leave': return 'On Leave';
-      default: return status;
-    }
+    return this.mockDataService.getStatusDisplayText(status as StaffMember['status']);
   }
 
   viewPerformance(): void {

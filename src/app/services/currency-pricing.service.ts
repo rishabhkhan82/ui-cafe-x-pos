@@ -1,40 +1,5 @@
 import { Injectable } from '@angular/core';
-
-export interface PriceBreakdown {
-  basePrice: number;
-  taxAmount: number;
-  serviceCharge: number;
-  discountAmount: number;
-  finalPrice: number;
-  savings: number;
-}
-
-export interface TaxCalculation {
-  cgst: number;
-  sgst: number;
-  igst: number;
-  totalGST: number;
-  cess?: number;
-}
-
-export interface DiscountRule {
-  type: 'percentage' | 'fixed' | 'buy_one_get_one' | 'loyalty_points';
-  value: number;
-  minOrderValue?: number;
-  applicableItems?: string[];
-  applicableCategories?: string[];
-  maxDiscount?: number;
-}
-
-export interface PricingConfig {
-  currency: string;
-  currencySymbol: string;
-  gstPercentage: number;
-  serviceChargePercentage: number;
-  roundToNearest: number; // Round to nearest rupee/paise
-  enableLoyaltyDiscounts: boolean;
-  enableBulkDiscounts: boolean;
-}
+import { PricingConfig, DiscountRule, PriceBreakdown, TaxCalculation } from './mock-data.service';
 
 @Injectable({
   providedIn: 'root'

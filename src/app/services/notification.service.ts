@@ -1,21 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, timer } from 'rxjs';
-
-export interface NotificationMessage {
-  id: string;
-  type: 'success' | 'error' | 'warning' | 'info' | 'order' | 'payment' | 'inventory' | 'staff';
-  title: string;
-  message: string;
-  timestamp: Date;
-  duration?: number; // in milliseconds, 0 = persistent
-  action?: {
-    label: string;
-    callback: () => void;
-  };
-  icon?: string;
-  sound?: boolean;
-  persistent?: boolean;
-}
+import { NotificationMessage } from './mock-data.service';
 
 @Injectable({
   providedIn: 'root'

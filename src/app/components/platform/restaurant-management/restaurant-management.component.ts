@@ -1,24 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MockDataService, User } from '../../../services/mock-data.service';
-
-interface Restaurant {
-  id: string;
-  name: string;
-  ownerId: string;
-  ownerName: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  status: 'active' | 'inactive' | 'suspended';
-  subscriptionPlan: string;
-  totalOrders: number;
-  totalRevenue: number;
-  createdAt: Date;
-  lastActive: Date;
-}
+import { MockDataService, Restaurant, User } from '../../../services/mock-data.service';
 
 @Component({
   selector: 'app-restaurant-management',
@@ -59,26 +42,8 @@ export class RestaurantManagementComponent implements OnInit {
   }
 
   loadRestaurants(): void {
-    // In a real app, this would fetch from API
-    // For now, we'll create mock restaurant data based on users
-    this.mockDataService.getUsers().subscribe(users => {
-      const restaurantOwners = users.filter(user => user.role === 'restaurant_owner');
-      this.restaurants = restaurantOwners.map(owner => ({
-        id: owner.restaurantId || `rest-${owner.id}`,
-        name: owner.name === 'Rishabh Khandekar' ? "RK's Cafe" : `${owner.name}'s Restaurant`,
-        ownerId: owner.id,
-        ownerName: owner.name,
-        email: owner.email,
-        phone: owner.phone,
-        address: '123 Main Street',
-        city: 'Mumbai',
-        status: 'active' as const,
-        subscriptionPlan: 'Pro Plan',
-        totalOrders: Math.floor(Math.random() * 1000) + 100,
-        totalRevenue: Math.floor(Math.random() * 50000) + 10000,
-        createdAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000),
-        lastActive: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000)
-      }));
+    this.mockDataService.getRestaurants().subscribe(restaurants => {
+      this.restaurants = restaurants;
       this.filteredRestaurants = [...this.restaurants];
     });
   }

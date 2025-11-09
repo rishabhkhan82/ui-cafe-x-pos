@@ -1,33 +1,9 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MockDataService, User } from '../../../services/mock-data.service';
-
-interface RestaurantNotification {
-  id: string;
-  title: string;
-  message: string;
-  type: 'order' | 'payment' | 'inventory' | 'staff' | 'system' | 'activity';
-  status: 'sent' | 'delivered' | 'read' | 'failed';
-  timestamp: Date;
-  recipients: number;
-  sentBy: string;
-  targetRoles: User['role'][];
-  readCount?: number;
-  isRead: boolean;
-  priority?: 'low' | 'medium' | 'high';
-}
-
-interface AlertRule {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  recipients: string;
-  frequency: string;
-  enabled: boolean;
-}
+import { Subscription } from 'rxjs';
+import { AlertRule, MockDataService, RestaurantNotification, User } from '../../../services/mock-data.service';
 
 @Component({
   selector: 'app-notifications',
@@ -36,9 +12,15 @@ interface AlertRule {
   templateUrl: './notifications.component.html',
   styleUrl: './notifications.component.css'
 })
-export class NotificationsComponent implements OnInit {
-  private mockDataService = inject(MockDataService);
-  private router = inject(Router);
+export class NotificationsComponent implements OnInit, OnDestroy {
+  private mockDataService: MockDataService;
+  private router: Router;
+  private subscriptions: Subscription = new Subscription();
+
+  constructor(mockDataService: MockDataService, router: Router) {
+    this.mockDataService = mockDataService;
+    this.router = router;
+  }
 
   // Component state
   currentUser: User | null = null;
@@ -54,171 +36,36 @@ export class NotificationsComponent implements OnInit {
   filteredNotifications: RestaurantNotification[] = [];
 
   // Alert rules
-  alertRules: AlertRule[] = [
-    {
-      id: '1',
-      name: 'New Order Alerts',
-      description: 'Notify kitchen when new orders are placed',
-      icon: 'fas fa-utensils',
-      recipients: 'Kitchen Staff',
-      frequency: 'Real-time',
-      enabled: true
-    },
-    {
-      id: '2',
-      name: 'Payment Failures',
-      description: 'Alert managers about failed payment attempts',
-      icon: 'fas fa-credit-card',
-      recipients: 'Managers',
-      frequency: 'Immediate',
-      enabled: true
-    },
-    {
-      id: '3',
-      name: 'Low Inventory',
-      description: 'Warn about items running low in stock',
-      icon: 'fas fa-boxes',
-      recipients: 'Managers',
-      frequency: 'Daily',
-      enabled: false
-    },
-    {
-      id: '4',
-      name: 'Staff Shift Reminders',
-      description: 'Send shift start/end reminders to staff',
-      icon: 'fas fa-clock',
-      recipients: 'All Staff',
-      frequency: '15 min before',
-      enabled: true
-    }
-  ];
+  alertRules: AlertRule[] = [];
 
   ngOnInit(): void {
     this.initializeData();
+    this.loadAlertRules();
     this.loadNotifications();
     this.filterNotifications();
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 
   private initializeData(): void {
     this.currentUser = this.mockDataService.getUserByRole('restaurant_owner') || null;
   }
 
+  private loadAlertRules(): void {
+    const subscription = this.mockDataService.getAlertRules().subscribe(rules => {
+      this.alertRules = rules;
+    });
+    this.subscriptions.add(subscription);
+  }
+
   private loadNotifications(): void {
-    // Mock data for restaurant notifications received by restaurant owner
-    this.allNotifications = [
-      {
-        id: 'notif-1',
-        title: 'New Order Received',
-        message: 'Order #ORD-2025-1045 for Hyderabadi Biryani has been placed. Please confirm preparation.',
-        type: 'order',
-        status: 'delivered',
-        timestamp: new Date(Date.now() - 5 * 60 * 1000),
-        recipients: 1,
-        sentBy: 'System',
-        targetRoles: ['restaurant_owner'],
-        readCount: 1,
-        isRead: false,
-        priority: 'high'
-      },
-      {
-        id: 'notif-2',
-        title: 'Payment Failed Alert',
-        message: 'Card payment of ₹760 failed for Order #ORD-2025-1044. Customer needs to retry payment.',
-        type: 'payment',
-        status: 'sent',
-        timestamp: new Date(Date.now() - 15 * 60 * 1000),
-        recipients: 1,
-        sentBy: 'Payment Gateway',
-        targetRoles: ['restaurant_owner'],
-        readCount: 1,
-        isRead: false,
-        priority: 'high'
-      },
-      {
-        id: 'notif-3',
-        title: 'Low Inventory Alert',
-        message: 'Margherita Pizza base running low (5 units remaining). Consider reordering soon.',
-        type: 'inventory',
-        status: 'read',
-        timestamp: new Date(Date.now() - 30 * 60 * 1000),
-        recipients: 1,
-        sentBy: 'Inventory System',
-        targetRoles: ['restaurant_owner'],
-        readCount: 1,
-        isRead: true,
-        priority: 'medium'
-      },
-      {
-        id: 'notif-4',
-        title: 'Staff Shift Update',
-        message: 'Emma Thompson started her evening shift at 6:00 PM. All staff are now present.',
-        type: 'staff',
-        status: 'delivered',
-        timestamp: new Date(Date.now() - 45 * 60 * 1000),
-        recipients: 1,
-        sentBy: 'Staff Management',
-        targetRoles: ['restaurant_owner'],
-        readCount: 1,
-        isRead: true,
-        priority: 'low'
-      },
-      {
-        id: 'notif-5',
-        title: 'Menu Item Updated',
-        message: 'You successfully updated the price of Chicken Biryani from ₹250 to ₹280.',
-        type: 'activity',
-        status: 'delivered',
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        recipients: 1,
-        sentBy: 'Menu Management',
-        targetRoles: ['restaurant_owner'],
-        readCount: 1,
-        isRead: true,
-        priority: 'low'
-      },
-      {
-        id: 'notif-6',
-        title: 'System Maintenance Scheduled',
-        message: 'Scheduled maintenance will occur tonight from 2-4 AM. System may be temporarily unavailable.',
-        type: 'system',
-        status: 'failed',
-        timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
-        recipients: 1,
-        sentBy: 'Platform Admin',
-        targetRoles: ['restaurant_owner'],
-        readCount: 1,
-        isRead: false,
-        priority: 'medium'
-      },
-      {
-        id: 'notif-7',
-        title: 'Daily Sales Report',
-        message: 'Today\'s sales: ₹12,450 with 45 orders. 15% increase from yesterday.',
-        type: 'activity',
-        status: 'delivered',
-        timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
-        recipients: 1,
-        sentBy: 'Reports System',
-        targetRoles: ['restaurant_owner'],
-        readCount: 1,
-        isRead: true,
-        priority: 'low'
-      },
-      {
-        id: 'notif-8',
-        title: 'New Customer Registration',
-        message: 'John Doe registered as a new customer and placed their first order.',
-        type: 'activity',
-        status: 'sent',
-        timestamp: new Date(Date.now() - 18 * 60 * 60 * 1000),
-        recipients: 1,
-        sentBy: 'Customer System',
-        targetRoles: ['restaurant_owner'],
-        readCount: 1,
-        isRead: false,
-        priority: 'low'
-      }
-    ];
+    const subscription = this.mockDataService.getRestaurantNotifications().subscribe(notifications => {
+      this.allNotifications = notifications;
+      this.filterNotifications();
+    });
+    this.subscriptions.add(subscription);
   }
 
   // Filter notifications

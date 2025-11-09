@@ -134,18 +134,14 @@ export class RecipeManagementComponent implements OnInit {
       this.newRecipe.updatedAt = new Date();
       this.calculateCost();
 
-      // In a real app, this would call an API
       if (this.newRecipe.id) {
         // Update existing recipe
-        const index = this.recipes.findIndex(r => r.id === this.newRecipe.id);
-        if (index !== -1) {
-          this.recipes[index] = { ...this.newRecipe };
-        }
+        this.mockDataService.updateRecipe({ ...this.newRecipe });
       } else {
         // Create new recipe
         this.newRecipe.id = 'recipe-' + Date.now();
         this.newRecipe.createdAt = new Date();
-        this.recipes.push({ ...this.newRecipe });
+        this.mockDataService.addRecipe({ ...this.newRecipe });
       }
 
       this.filterRecipes();
@@ -196,7 +192,7 @@ export class RecipeManagementComponent implements OnInit {
 
   deleteRecipe(recipe: Recipe): void {
     if (confirm(`Are you sure you want to delete "${recipe.name}"?`)) {
-      this.recipes = this.recipes.filter(r => r.id !== recipe.id);
+      this.mockDataService.deleteRecipe(recipe.id);
       this.filterRecipes();
       if (this.selectedRecipe?.id === recipe.id) {
         this.selectedRecipe = null;
@@ -245,9 +241,7 @@ export class RecipeManagementComponent implements OnInit {
   }
 
   toggleRecipeStatus(recipe: Recipe): void {
-    recipe.isActive = !recipe.isActive;
-    recipe.updatedAt = new Date();
-    // In a real app, this would call an API
+    this.mockDataService.toggleRecipeStatus(recipe.id);
   }
 
   getRecipeTypeLabel(type: string): string {

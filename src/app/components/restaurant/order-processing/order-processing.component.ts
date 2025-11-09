@@ -3,15 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
-import { MockDataService, Order, User } from '../../../services/mock-data.service';
+import { MockDataService, Order, OrderStats, User, OrderStatusConfig, OrderFilterOption, OrderSortOption } from '../../../services/mock-data.service';
 import { RealtimeService } from '../../../services/realtime.service';
 
-interface OrderStats {
-  total: number;
-  pending: number;
-  processing: number;
-  completed: number;
-}
+
 
 @Component({
   selector: 'app-order-processing',
@@ -21,9 +16,9 @@ interface OrderStats {
   styleUrl: './order-processing.component.css'
 })
 export class OrderProcessingComponent implements OnInit, OnDestroy {
-  private mockDataService = inject(MockDataService);
-  private realtimeService = inject(RealtimeService);
-  private router = inject(Router);
+  private mockDataService: MockDataService;
+  private realtimeService: RealtimeService;
+  private router: Router;
   private subscriptions: Subscription[] = [];
 
   // Component state
@@ -35,12 +30,29 @@ export class OrderProcessingComponent implements OnInit, OnDestroy {
   statusFilter: string = 'all';
   sortBy: string = 'newest';
 
+  // Configuration data from service
+  orderStatusConfigs: OrderStatusConfig[] = [];
+  orderFilterOptions: OrderFilterOption[] = [];
+  orderSortOptions: OrderSortOption[] = [];
+
+  constructor(
+    mockDataService: MockDataService,
+    realtimeService: RealtimeService,
+    router: Router
+  ) {
+    this.mockDataService = mockDataService;
+    this.realtimeService = realtimeService;
+    this.router = router;
+  }
+
   // Stats
   orderStats: OrderStats = {
-    total: 0,
-    pending: 0,
+    totalOrders: 0,
+    pendingOrders: 0,
     processing: 0,
-    completed: 0
+    completedOrders: 0,
+    avgPrepTime: 0,
+    totalRevenue: 0
   };
 
   ngOnInit(): void {
@@ -56,6 +68,22 @@ export class OrderProcessingComponent implements OnInit, OnDestroy {
 
   private initializeData(): void {
     this.currentUser = this.mockDataService.getUserByRole('restaurant_owner') || null;
+
+    // Load configuration data from service
+    const statusConfigSub = this.mockDataService.getOrderStatusConfigs().subscribe(configs => {
+      this.orderStatusConfigs = configs;
+    });
+    this.subscriptions.push(statusConfigSub);
+
+    const filterOptionsSub = this.mockDataService.getOrderFilterOptions().subscribe(options => {
+      this.orderFilterOptions = options;
+    });
+    this.subscriptions.push(filterOptionsSub);
+
+    const sortOptionsSub = this.mockDataService.getOrderSortOptions().subscribe(options => {
+      this.orderSortOptions = options;
+    });
+    this.subscriptions.push(sortOptionsSub);
   }
 
   private setupRealtimeSubscriptions(): void {
@@ -101,10 +129,12 @@ export class OrderProcessingComponent implements OnInit, OnDestroy {
 
   private updateStats(): void {
     this.orderStats = {
-      total: this.allOrders.length,
-      pending: this.allOrders.filter(o => ['placed', 'confirmed'].includes(o.status)).length,
+      totalOrders: this.allOrders.length,
+      pendingOrders: this.allOrders.filter(o => ['placed', 'confirmed'].includes(o.status)).length,
       processing: this.allOrders.filter(o => ['preparing', 'ready', 'on_the_way'].includes(o.status)).length,
-      completed: this.allOrders.filter(o => ['served', 'completed'].includes(o.status)).length
+      completedOrders: this.allOrders.filter(o => ['served', 'completed'].includes(o.status)).length,
+      avgPrepTime: 0,
+      totalRevenue: 0
     };
   }
 
@@ -112,7 +142,7 @@ export class OrderProcessingComponent implements OnInit, OnDestroy {
     const html = document.documentElement;
     html.classList.toggle('dark');
     const newTheme = html.classList.contains('dark') ? 'dark' : 'light';
-    localStorage.setItem('theme', newTheme);
+    sessionStorage.setItem('theme', newTheme);
   }
 
   // Filter and Search
@@ -278,46 +308,23 @@ export class OrderProcessingComponent implements OnInit, OnDestroy {
     return `${baseClass} bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600`;
   }
 
+  getOrderStatusConfig(status: string): OrderStatusConfig | undefined {
+    return this.orderStatusConfigs.find(config => config.status === status);
+  }
+
   getOrderBorderClass(order: Order): string {
-    switch (order.status) {
-      case 'pending': return 'border-yellow-500';
-      case 'confirmed': return 'border-blue-500';
-      case 'preparing': return 'border-orange-500';
-      case 'ready': return 'border-green-500';
-      case 'on_the_way': return 'border-purple-500';
-      case 'served': return 'border-indigo-500';
-      case 'completed': return 'border-gray-500';
-      case 'cancelled': return 'border-red-500';
-      default: return 'border-gray-300 dark:border-gray-600';
-    }
+    const config = this.getOrderStatusConfig(order.status);
+    return config ? config.borderClass : 'border-gray-300 dark:border-gray-600';
   }
 
   getOrderStatusBadgeClass(status: string): string {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600';
-      case 'confirmed': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-600';
-      case 'preparing': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-600';
-      case 'ready': return 'bg-green-100 dark:bg-green-900/30 text-green-600';
-      case 'on_the_way': return 'bg-purple-100 dark:bg-purple-900/30 text-purple-600';
-      case 'served': return 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600';
-      case 'completed': return 'bg-gray-100 dark:bg-gray-700 text-gray-600';
-      case 'cancelled': return 'bg-red-100 dark:bg-red-900/30 text-red-600';
-      default: return 'bg-gray-100 dark:bg-gray-700 text-gray-600';
-    }
+    const config = this.getOrderStatusConfig(status);
+    return config ? config.badgeClass : 'bg-gray-100 dark:bg-gray-700 text-gray-600';
   }
 
   getOrderStatusText(status: string): string {
-    switch (status) {
-      case 'pending': return 'Pending';
-      case 'confirmed': return 'Confirmed';
-      case 'preparing': return 'Preparing';
-      case 'ready': return 'Ready';
-      case 'on_the_way': return 'On the Way';
-      case 'served': return 'Served';
-      case 'completed': return 'Completed';
-      case 'cancelled': return 'Cancelled';
-      default: return status;
-    }
+    const config = this.getOrderStatusConfig(status);
+    return config ? config.text : status;
   }
 
   formatOrderTime(createdAt: Date | string): string {
@@ -346,16 +353,8 @@ export class OrderProcessingComponent implements OnInit, OnDestroy {
   }
 
   getOrderIcon(status: string): string {
-    switch (status) {
-      case 'placed': return 'fas fa-clock';
-      case 'confirmed': return 'fas fa-check-circle';
-      case 'preparing': return 'fas fa-fire';
-      case 'ready': return 'fas fa-utensils';
-      case 'served': return 'fas fa-check-double';
-      case 'paid': return 'fas fa-credit-card';
-      case 'cancelled': return 'fas fa-times-circle';
-      default: return 'fas fa-receipt';
-    }
+    const config = this.getOrderStatusConfig(status);
+    return config ? config.icon : 'fas fa-receipt';
   }
 
   getOrderItemsSummary(order: Order): string {

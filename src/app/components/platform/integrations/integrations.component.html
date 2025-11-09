@@ -20,8 +20,8 @@
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm text-gray-500 dark:text-gray-400">Total Integrations</p>
-          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ metrics.totalIntegrations }}</h3>
-          <p class="text-sm text-green-600 dark:text-green-400">{{ metrics.activeIntegrations }} active</p>
+          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ metrics?.totalIntegrations }}</h3>
+          <p class="text-sm text-green-600 dark:text-green-400">{{ metrics?.activeIntegrations }} active</p>
         </div>
         <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-500">
           <i class="fas fa-plug text-xl"></i>
@@ -33,7 +33,7 @@
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm text-gray-500 dark:text-gray-400">Active Connections</p>
-          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ metrics.activeIntegrations }}</h3>
+          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ metrics?.activeIntegrations }}</h3>
           <p class="text-sm text-green-600 dark:text-green-400">{{ calculateSuccessRate() }}% success rate</p>
         </div>
         <div class="w-12 h-12 rounded-xl bg-green-50 dark:bg-green-900/30 flex items-center justify-center text-green-500">
@@ -46,7 +46,7 @@
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm text-gray-500 dark:text-gray-400">Failed Syncs</p>
-          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ metrics.failedSyncs }}</h3>
+          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ metrics?.failedSyncs }}</h3>
           <p class="text-sm text-red-600 dark:text-red-400">Last 24 hours</p>
         </div>
         <div class="w-12 h-12 rounded-xl bg-red-50 dark:bg-red-900/30 flex items-center justify-center text-red-500">
@@ -59,7 +59,7 @@
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm text-gray-500 dark:text-gray-400">Data Transferred</p>
-          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ formatBytes(metrics.dataTransferred) }}</h3>
+          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ metrics ? formatBytes(metrics.dataTransferred) : '0 B' }}</h3>
           <p class="text-sm text-blue-600 dark:text-blue-400">This month</p>
         </div>
         <div class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center text-purple-500">

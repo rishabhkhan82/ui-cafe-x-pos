@@ -3,45 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
-import { MockDataService, Order, User } from '../../../services/mock-data.service';
+import { KitchenStats, MockDataService, Order, StaffMember, Table, TableOverview, User, Performance } from '../../../services/mock-data.service';
 import { RealtimeService } from '../../../services/realtime.service';
-
-interface KitchenStats {
-  preparing: number;
-  ready: number;
-  avgPrepTime: number;
-}
-
-interface StaffMember {
-  name: string;
-  role: string;
-  icon: string;
-  status: 'active' | 'off_duty';
-}
-
-interface Performance {
-  orderCompletion: number;
-  customerSatisfaction: number;
-  staffEfficiency: number;
-}
-
-interface Table {
-  id: number;
-  status: 'available' | 'occupied' | 'reserved' | 'cleaning';
-  capacity: number;
-  currentOrderId?: string;
-  estimatedFreeTime?: number; // minutes until free
-  server?: string;
-}
-
-interface TableOverview {
-  totalTables: number;
-  availableTables: number;
-  occupiedTables: number;
-  reservedTables: number;
-  cleaningTables: number;
-  tablesFreeSoon: Table[]; // tables that will be free in next 15 minutes
-}
 
 @Component({
   selector: 'app-restaurant-manager-dashboard',
@@ -79,10 +42,114 @@ export class RestaurantManagerDashboardComponent implements OnInit, OnDestroy {
 
   // Staff data
   todaysStaff: StaffMember[] = [
-    { name: 'Chef Kumar', role: 'Kitchen Manager', icon: 'fas fa-user-chef', status: 'active' },
-    { name: 'Rahul Singh', role: 'Cashier', icon: 'fas fa-cash-register', status: 'active' },
-    { name: 'Arjun Patel', role: 'Waiter', icon: 'fas fa-user-tie', status: 'active' },
-    { name: 'Priya Sharma', role: 'Manager', icon: 'fas fa-user-gear', status: 'active' }
+    {
+      id: 'staff-1',
+      name: 'Chef Kumar',
+      email: 'chef.kumar@restaurant.com',
+      phone: '+91 98765 43210',
+      role: 'kitchen_manager',
+      avatar: 'fas fa-user-chef',
+      restaurantId: 'restaurant-1',
+      hireDate: new Date('2024-01-15'),
+      salary: 35000,
+      status: 'active',
+      shift: 'morning',
+      skills: ['Food Preparation', 'Kitchen Management', 'Quality Control'],
+      performanceRating: 4.8,
+      lastLogin: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      emergencyContact: {
+        name: 'Priya Kumar',
+        phone: '+91 98765 43211',
+        relationship: 'Wife'
+      },
+      address: {
+        street: '123 MG Road',
+        city: 'Pune',
+        state: 'Maharashtra',
+        pincode: '411001'
+      }
+    },
+    {
+      id: 'staff-2',
+      name: 'Rahul Singh',
+      email: 'rahul.singh@restaurant.com',
+      phone: '+91 98765 43212',
+      role: 'cashier',
+      avatar: 'fas fa-cash-register',
+      restaurantId: 'restaurant-1',
+      hireDate: new Date('2024-02-01'),
+      salary: 25000,
+      status: 'active',
+      shift: 'morning',
+      skills: ['POS System', 'Customer Service', 'Cash Handling'],
+      performanceRating: 4.5,
+      lastLogin: new Date(Date.now() - 1 * 60 * 60 * 1000),
+      emergencyContact: {
+        name: 'Sunita Singh',
+        phone: '+91 98765 43213',
+        relationship: 'Mother'
+      },
+      address: {
+        street: '456 FC Road',
+        city: 'Pune',
+        state: 'Maharashtra',
+        pincode: '411005'
+      }
+    },
+    {
+      id: 'staff-3',
+      name: 'Arjun Patel',
+      email: 'arjun.patel@restaurant.com',
+      phone: '+91 98765 43214',
+      role: 'waiter',
+      avatar: 'fas fa-user-tie',
+      restaurantId: 'restaurant-1',
+      hireDate: new Date('2024-03-10'),
+      salary: 20000,
+      status: 'active',
+      shift: 'morning',
+      skills: ['Customer Service', 'Order Taking', 'Table Management'],
+      performanceRating: 4.2,
+      lastLogin: new Date(Date.now() - 3 * 60 * 60 * 1000),
+      emergencyContact: {
+        name: 'Raj Patel',
+        phone: '+91 98765 43215',
+        relationship: 'Father'
+      },
+      address: {
+        street: '789 JM Road',
+        city: 'Pune',
+        state: 'Maharashtra',
+        pincode: '411004'
+      }
+    },
+    {
+      id: 'staff-4',
+      name: 'Priya Sharma',
+      email: 'priya.sharma@restaurant.com',
+      phone: '+91 98765 43216',
+      role: 'restaurant_manager',
+      avatar: 'fas fa-user-gear',
+      restaurantId: 'restaurant-1',
+      hireDate: new Date('2024-01-01'),
+      salary: 45000,
+      status: 'active',
+      shift: 'morning',
+      skills: ['Management', 'Operations', 'Staff Supervision', 'Customer Relations'],
+      performanceRating: 4.9,
+      lastLogin: new Date(Date.now() - 30 * 60 * 1000),
+      emergencyContact: {
+        name: 'Amit Sharma',
+        phone: '+91 98765 43217',
+        relationship: 'Husband'
+      },
+      address: {
+        street: '321 Station Road',
+        city: 'Pune',
+        state: 'Maharashtra',
+        pincode: '411002'
+      }
+    }
   ];
 
   // Performance metrics
@@ -94,16 +161,94 @@ export class RestaurantManagerDashboardComponent implements OnInit, OnDestroy {
 
   // Table overview
   tables: Table[] = [
-    { id: 1, status: 'occupied', capacity: 4, currentOrderId: 'ORD-001', estimatedFreeTime: 25, server: 'Arjun' },
-    { id: 2, status: 'available', capacity: 2 },
-    { id: 3, status: 'occupied', capacity: 6, currentOrderId: 'ORD-002', estimatedFreeTime: 45, server: 'Priya' },
-    { id: 4, status: 'reserved', capacity: 4 },
-    { id: 5, status: 'available', capacity: 4 },
-    { id: 6, status: 'cleaning', capacity: 2 },
-    { id: 7, status: 'occupied', capacity: 2, currentOrderId: 'ORD-003', estimatedFreeTime: 12, server: 'Arjun' },
-    { id: 8, status: 'available', capacity: 6 },
-    { id: 9, status: 'occupied', capacity: 4, currentOrderId: 'ORD-004', estimatedFreeTime: 35, server: 'Priya' },
-    { id: 10, status: 'available', capacity: 2 }
+    {
+      id: 'table-1',
+      number: 1,
+      status: 'occupied',
+      capacity: 4,
+      currentOrder: undefined, // Would need to be populated from orders service
+      lastActivity: new Date(Date.now() - 25 * 60 * 1000),
+      estimatedFreeTime: 25,
+      server: 'Arjun'
+    },
+    {
+      id: 'table-2',
+      number: 2,
+      status: 'available',
+      capacity: 2,
+      lastActivity: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      estimatedFreeTime: undefined
+    },
+    {
+      id: 'table-3',
+      number: 3,
+      status: 'occupied',
+      capacity: 6,
+      currentOrder: undefined, // Would need to be populated from orders service
+      lastActivity: new Date(Date.now() - 45 * 60 * 1000),
+      estimatedFreeTime: 45,
+      server: 'Priya'
+    },
+    {
+      id: 'table-4',
+      number: 4,
+      status: 'reserved',
+      capacity: 4,
+      lastActivity: new Date(Date.now() - 30 * 60 * 1000),
+      estimatedFreeTime: undefined
+    },
+    {
+      id: 'table-5',
+      number: 5,
+      status: 'available',
+      capacity: 4,
+      lastActivity: new Date(Date.now() - 1 * 60 * 60 * 1000),
+      estimatedFreeTime: undefined
+    },
+    {
+      id: 'table-6',
+      number: 6,
+      status: 'needs_cleaning',
+      capacity: 2,
+      lastActivity: new Date(Date.now() - 15 * 60 * 1000),
+      estimatedFreeTime: undefined
+    },
+    {
+      id: 'table-7',
+      number: 7,
+      status: 'occupied',
+      capacity: 2,
+      currentOrder: undefined, // Would need to be populated from orders service
+      lastActivity: new Date(Date.now() - 12 * 60 * 1000),
+      estimatedFreeTime: 12,
+      server: 'Arjun'
+    },
+    {
+      id: 'table-8',
+      number: 8,
+      status: 'available',
+      capacity: 6,
+      lastActivity: new Date(Date.now() - 3 * 60 * 60 * 1000),
+      estimatedFreeTime: undefined
+    },
+    {
+      id: 'table-9',
+      number: 9,
+      status: 'occupied',
+      capacity: 4,
+      currentOrder: undefined, // Would need to be populated from orders service
+      lastActivity: new Date(Date.now() - 35 * 60 * 1000),
+      estimatedFreeTime: 35,
+      server: 'Priya'
+    },
+    {
+      id: 'table-10',
+      number: 10,
+      status: 'available',
+      capacity: 2,
+      lastActivity: new Date(Date.now() - 45 * 60 * 1000),
+      estimatedFreeTime: undefined
+    }
   ];
 
   tableOverview: TableOverview = {
@@ -216,7 +361,7 @@ export class RestaurantManagerDashboardComponent implements OnInit, OnDestroy {
     const html = document.documentElement;
     html.classList.toggle('dark');
     const newTheme = html.classList.contains('dark') ? 'dark' : 'light';
-    localStorage.setItem('theme', newTheme);
+    sessionStorage.setItem('theme', newTheme);
   }
 
   // Navigation methods

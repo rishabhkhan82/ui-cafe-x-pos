@@ -2,35 +2,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { MockDataService, Order, User } from '../../../services/mock-data.service';
+import { CashierStats, MockDataService, Order, QuickAction, RecentTransaction, User } from '../../../services/mock-data.service';
 import { RealtimeService } from '../../../services/realtime.service';
-
-interface CashierStats {
-  todaysSales: number;
-  pendingBills: number;
-  activeTables: number;
-  shiftHours: number;
-  transactionsToday: number;
-  avgTransactionValue: number;
-}
-
-interface QuickAction {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-  action: string;
-}
-
-interface RecentTransaction {
-  id: string;
-  orderId: string;
-  customerName: string;
-  amount: number;
-  paymentMethod: string;
-  timestamp: Date;
-  status: 'success' | 'failed' | 'pending';
-}
 
 @Component({
   selector: 'app-cashier-dashboard',
@@ -54,50 +27,7 @@ export class CashierDashboardComponent implements OnInit, OnDestroy {
   };
 
   // Quick actions
-  quickActions: QuickAction[] = [
-    {
-      id: 'new-bill',
-      name: 'New Bill',
-      icon: 'fas fa-plus',
-      color: 'bg-blue-500 hover:bg-blue-600',
-      action: 'newBill'
-    },
-    {
-      id: 'search-order',
-      name: 'Find Order',
-      icon: 'fas fa-search',
-      color: 'bg-green-500 hover:bg-green-600',
-      action: 'searchOrder'
-    },
-    {
-      id: 'split-bill',
-      name: 'Split Bill',
-      icon: 'fas fa-code-branch',
-      color: 'bg-purple-500 hover:bg-purple-600',
-      action: 'splitBill'
-    },
-    {
-      id: 'cash-drawer',
-      name: 'Cash Drawer',
-      icon: 'fas fa-cash-register',
-      color: 'bg-yellow-500 hover:bg-yellow-600',
-      action: 'openCashDrawer'
-    },
-    {
-      id: 'shift-report',
-      name: 'Shift Report',
-      icon: 'fas fa-file-alt',
-      color: 'bg-red-500 hover:bg-red-600',
-      action: 'shiftReport'
-    },
-    {
-      id: 'manager-override',
-      name: 'Manager Override',
-      icon: 'fas fa-user-shield',
-      color: 'bg-indigo-500 hover:bg-indigo-600',
-      action: 'managerOverride'
-    }
-  ];
+  quickActions: QuickAction[] = [];
 
   // Recent transactions
   recentTransactions: RecentTransaction[] = [];
@@ -122,7 +52,25 @@ export class CashierDashboardComponent implements OnInit, OnDestroy {
 
   private initializeData(): void {
     this.currentUser = this.mockDataService.getUserByRole('cashier') || null;
-    this.loadRecentTransactions();
+
+    // Subscribe to quick actions
+    this.mockDataService.getQuickActions().subscribe(actions => {
+      this.quickActions = actions;
+    });
+
+    // Subscribe to recent transactions
+    this.mockDataService.getRecentTransactions().subscribe(transactions => {
+      this.recentTransactions = transactions;
+      this.calculateStats();
+    });
+
+    // Subscribe to cashier stats
+    this.mockDataService.getCashierStats().subscribe(stats => {
+      if (stats.length > 0) {
+        this.stats = { ...this.stats, ...stats[0] };
+      }
+    });
+
     this.loadPendingOrders();
   }
 
@@ -146,38 +94,6 @@ export class CashierDashboardComponent implements OnInit, OnDestroy {
     this.subscriptions.push(orderUpdateSub);
   }
 
-  private loadRecentTransactions(): void {
-    // Mock recent transactions - in real app, fetch from API
-    this.recentTransactions = [
-      {
-        id: 'txn-1',
-        orderId: 'ORD-2025-1045',
-        customerName: 'Amit Patil',
-        amount: 483,
-        paymentMethod: 'UPI',
-        timestamp: new Date(Date.now() - 5 * 60 * 1000),
-        status: 'success'
-      },
-      {
-        id: 'txn-2',
-        orderId: 'ORD-2025-1044',
-        customerName: 'Sarah Johnson',
-        amount: 250,
-        paymentMethod: 'Card',
-        timestamp: new Date(Date.now() - 15 * 60 * 1000),
-        status: 'success'
-      },
-      {
-        id: 'txn-3',
-        orderId: 'ORD-2025-1043',
-        customerName: 'Raj Kumar',
-        amount: 380,
-        paymentMethod: 'Cash',
-        timestamp: new Date(Date.now() - 30 * 60 * 1000),
-        status: 'success'
-      }
-    ];
-  }
 
   private loadPendingOrders(): void {
     this.mockDataService.getOrders().subscribe(orders => {
@@ -205,14 +121,17 @@ export class CashierDashboardComponent implements OnInit, OnDestroy {
       }
     });
 
+    // Update stats with calculated values, keeping existing values for activeTables and shiftHours
     this.stats = {
+      ...this.stats,
       todaysSales: todaysSales,
       pendingBills: this.pendingOrders.length,
-      activeTables: 12, // Mock data - would come from table management
-      shiftHours: 6.5, // Mock data - would come from shift tracking
       transactionsToday: todaysTransactions,
       avgTransactionValue: todaysTransactions > 0 ? todaysSales / todaysTransactions : 0
     };
+
+    // Update the service with new stats
+    this.mockDataService.updateCashierStats(this.stats);
   }
 
   // Action handlers

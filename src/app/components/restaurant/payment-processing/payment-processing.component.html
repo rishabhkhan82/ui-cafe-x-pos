@@ -23,7 +23,7 @@
         </div>
         <span class="text-green-600 dark:text-green-400 text-sm font-medium">Today's Revenue</span>
       </div>
-      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">₹{{ paymentStats.todayRevenue }}</div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">₹{{ paymentStats?.todayRevenue }}</div>
       <div class="text-sm text-gray-600 dark:text-gray-400">Total Revenue</div>
     </div>
 
@@ -34,7 +34,7 @@
         </div>
         <span class="text-blue-600 dark:text-blue-400 text-sm font-medium">Success Rate</span>
       </div>
-      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ paymentStats.successRate }}%</div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ paymentStats?.successRate }}%</div>
       <div class="text-sm text-gray-600 dark:text-gray-400">Transaction Success</div>
     </div>
 
@@ -45,7 +45,7 @@
         </div>
         <span class="text-red-600 dark:text-red-400 text-sm font-medium">Failed Payments</span>
       </div>
-      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ paymentStats.failedPayments }}</div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ paymentStats?.failedPayments }}</div>
       <div class="text-sm text-gray-600 dark:text-gray-400">Failed Transactions</div>
     </div>
 
@@ -56,7 +56,7 @@
         </div>
         <span class="text-purple-600 dark:text-purple-400 text-sm font-medium">Avg. Transaction</span>
       </div>
-      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">₹{{ paymentStats.avgTransaction }}</div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">₹{{ paymentStats?.avgTransaction }}</div>
       <div class="text-sm text-gray-600 dark:text-gray-400">Average Amount</div>
     </div>
   </div>
@@ -326,29 +326,3 @@
     </div>
   </div>
 </div>
-
-<!-- Bottom Navigation -->
-<nav class="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 z-50">
-  <div class="flex items-center justify-around py-2">
-    <a routerLink="/restaurant/dashboard" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
-      <i class="fas fa-chart-pie text-xl"></i>
-      <span class="text-xs font-medium">Dashboard</span>
-    </a>
-    <a routerLink="/restaurant/orders" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
-      <i class="fas fa-receipt text-xl"></i>
-      <span class="text-xs font-medium">Orders</span>
-    </a>
-    <a routerLink="/restaurant/menu" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
-      <i class="fas fa-utensils text-xl"></i>
-      <span class="text-xs font-medium">Menu</span>
-    </a>
-    <a routerLink="/restaurant/payment-processing" class="flex flex-col items-center space-y-1 p-2 text-green-500">
-      <i class="fas fa-credit-card text-xl"></i>
-      <span class="text-xs font-medium">Payments</span>
-    </a>
-    <a routerLink="/restaurant/settings" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
-      <i class="fas fa-cog text-xl"></i>
-      <span class="text-xs font-medium">Settings</span>
-    </a>
-  </div>
-</nav>

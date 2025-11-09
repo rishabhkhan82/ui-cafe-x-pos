@@ -1,51 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MockDataService, User } from '../../../services/mock-data.service';
-
-interface ShiftReport {
-  id: string;
-  cashierId: string;
-  cashierName: string;
-  shiftStart: Date;
-  shiftEnd: Date;
-  reportType: 'X' | 'Z';
-  totalSales: number;
-  cashSales: number;
-  cardSales: number;
-  upiSales: number;
-  walletSales: number;
-  totalTransactions: number;
-  averageTransaction: number;
-  openingCash: number;
-  cashReceived: number;
-  cashPaidOut: number;
-  expectedCash: number;
-  actualCash: number;
-  cashDifference: number;
-  voidedItems: number;
-  voidedAmount: number;
-  discountsApplied: number;
-  discountAmount: number;
-  refundsProcessed: number;
-  refundAmount: number;
-  status: 'open' | 'closed' | 'reconciled';
-  generatedAt: Date;
-}
-
-interface PaymentMethodSummary {
-  method: string;
-  amount: number;
-  percentage: number;
-  transactions: number;
-  color: string;
-}
-
-interface HourlySalesData {
-  hour: string;
-  sales: number;
-  transactions: number;
-}
+import { CashierShiftReport, HourlySalesData, MockDataService, PaymentMethodSummary, User } from '../../../services/mock-data.service';
 
 @Component({
   selector: 'app-cashier-shift-reports',
@@ -56,8 +12,8 @@ interface HourlySalesData {
 })
 export class CashierShiftReportsComponent implements OnInit {
   currentUser: User | null = null;
-  currentShiftReport: ShiftReport | null = null;
-  previousReports: ShiftReport[] = [];
+  currentShiftReport: CashierShiftReport | null = null;
+  previousReports: CashierShiftReport[] = [];
   paymentMethodSummary: PaymentMethodSummary[] = [];
   hourlySalesData: HourlySalesData[] = [];
   showCashReconciliation = false;
@@ -71,167 +27,44 @@ export class CashierShiftReportsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCurrentUser();
-    this.loadCurrentShiftReport();
-    this.loadPreviousReports();
-    this.generatePaymentSummary();
-    this.generateHourlySalesData();
+    this.loadShiftReportData();
   }
 
   private loadCurrentUser(): void {
     this.currentUser = this.mockDataService.getUserByRole('cashier') || null;
   }
 
-  private loadCurrentShiftReport(): void {
-    // Simulate current shift data
-    const now = new Date();
-    const shiftStart = new Date(now.getTime() - 8 * 60 * 60 * 1000); // 8 hours ago
+  private loadShiftReportData(): void {
+    // Load current shift report
+    this.mockDataService.getCurrentShiftReport().subscribe(report => {
+      this.currentShiftReport = report;
+    });
 
-    this.currentShiftReport = {
-      id: 'SHIFT-' + Date.now(),
-      cashierId: this.currentUser?.id || 'cashier-1',
-      cashierName: this.currentUser?.name || 'John Doe',
-      shiftStart: shiftStart,
-      shiftEnd: now,
-      reportType: 'X',
-      totalSales: 45280,
-      cashSales: 15848,
-      cardSales: 20416,
-      upiSales: 6792,
-      walletSales: 2264,
-      totalTransactions: 127,
-      averageTransaction: 356,
-      openingCash: 5000,
-      cashReceived: 15848,
-      cashPaidOut: 1200,
-      expectedCash: 19648,
-      actualCash: 0,
-      cashDifference: 0,
-      voidedItems: 3,
-      voidedAmount: 480,
-      discountsApplied: 5,
-      discountAmount: 1200,
-      refundsProcessed: 1,
-      refundAmount: 250,
-      status: 'open',
-      generatedAt: now
-    };
-  }
+    // Load previous reports
+    this.mockDataService.getPreviousShiftReports().subscribe(reports => {
+      this.previousReports = reports;
+    });
 
-  private loadPreviousReports(): void {
-    // Simulate previous shift reports
-    const now = new Date();
-    this.previousReports = [
-      {
-        id: 'SHIFT-20241201-001',
-        cashierId: 'cashier-1',
-        cashierName: 'John Doe',
-        shiftStart: new Date(now.getTime() - 24 * 60 * 60 * 1000),
-        shiftEnd: new Date(now.getTime() - 16 * 60 * 60 * 1000),
-        reportType: 'Z',
-        totalSales: 38750,
-        cashSales: 13512,
-        cardSales: 17538,
-        upiSales: 5812,
-        walletSales: 1888,
-        totalTransactions: 98,
-        averageTransaction: 395,
-        openingCash: 5000,
-        cashReceived: 13512,
-        cashPaidOut: 800,
-        expectedCash: 17712,
-        actualCash: 17712,
-        cashDifference: 0,
-        voidedItems: 2,
-        voidedAmount: 320,
-        discountsApplied: 4,
-        discountAmount: 950,
-        refundsProcessed: 0,
-        refundAmount: 0,
-        status: 'closed',
-        generatedAt: new Date(now.getTime() - 16 * 60 * 60 * 1000)
-      },
-      {
-        id: 'SHIFT-20241130-002',
-        cashierId: 'cashier-1',
-        cashierName: 'John Doe',
-        shiftStart: new Date(now.getTime() - 48 * 60 * 60 * 1000),
-        shiftEnd: new Date(now.getTime() - 40 * 60 * 60 * 1000),
-        reportType: 'Z',
-        totalSales: 42100,
-        cashSales: 14735,
-        cardSales: 19040,
-        upiSales: 6310,
-        walletSales: 2015,
-        totalTransactions: 112,
-        averageTransaction: 376,
-        openingCash: 5000,
-        cashReceived: 14735,
-        cashPaidOut: 950,
-        expectedCash: 18785,
-        actualCash: 18785,
-        cashDifference: 0,
-        voidedItems: 1,
-        voidedAmount: 180,
-        discountsApplied: 6,
-        discountAmount: 1350,
-        refundsProcessed: 1,
-        refundAmount: 320,
-        status: 'closed',
-        generatedAt: new Date(now.getTime() - 40 * 60 * 60 * 1000)
-      }
-    ];
-  }
+    // Load payment method summary
+    this.mockDataService.getPaymentMethodSummary().subscribe(summary => {
+      this.paymentMethodSummary = summary;
+    });
 
-  private generatePaymentSummary(): void {
-    if (!this.currentShiftReport) return;
-
-    this.paymentMethodSummary = [
-      {
-        method: 'Card',
-        amount: this.currentShiftReport.cardSales,
-        percentage: (this.currentShiftReport.cardSales / this.currentShiftReport.totalSales) * 100,
-        transactions: Math.round(this.currentShiftReport.totalTransactions * 0.45),
-        color: 'bg-blue-500'
-      },
-      {
-        method: 'Cash',
-        amount: this.currentShiftReport.cashSales,
-        percentage: (this.currentShiftReport.cashSales / this.currentShiftReport.totalSales) * 100,
-        transactions: Math.round(this.currentShiftReport.totalTransactions * 0.35),
-        color: 'bg-yellow-500'
-      },
-      {
-        method: 'UPI',
-        amount: this.currentShiftReport.upiSales,
-        percentage: (this.currentShiftReport.upiSales / this.currentShiftReport.totalSales) * 100,
-        transactions: Math.round(this.currentShiftReport.totalTransactions * 0.15),
-        color: 'bg-purple-500'
-      },
-      {
-        method: 'Wallet',
-        amount: this.currentShiftReport.walletSales,
-        percentage: (this.currentShiftReport.walletSales / this.currentShiftReport.totalSales) * 100,
-        transactions: Math.round(this.currentShiftReport.totalTransactions * 0.05),
-        color: 'bg-green-500'
-      }
-    ];
-  }
-
-  private generateHourlySalesData(): void {
-    // Simulate hourly sales data for the current shift
-    const hours = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
-    this.hourlySalesData = hours.map(hour => ({
-      hour,
-      sales: Math.floor(Math.random() * 5000) + 2000,
-      transactions: Math.floor(Math.random() * 15) + 5
-    }));
+    // Load hourly sales data
+    this.mockDataService.getHourlySalesData().subscribe(data => {
+      this.hourlySalesData = data;
+    });
   }
 
   generateReport(type: 'X' | 'Z'): void {
     this.reportType = type;
     if (this.currentShiftReport) {
-      this.currentShiftReport.reportType = type;
-      this.currentShiftReport.generatedAt = new Date();
+      const updatedReport = {
+        ...this.currentShiftReport,
+        reportType: type,
+        generatedAt: new Date()
+      };
+      this.mockDataService.updateCurrentShiftReport(updatedReport);
       this.showReportModal = true;
     }
   }
@@ -260,9 +93,13 @@ export class CashierShiftReportsComponent implements OnInit {
 
   reconcileCash(): void {
     if (this.currentShiftReport) {
-      this.currentShiftReport.actualCash = this.actualCashCount;
-      this.currentShiftReport.cashDifference = this.actualCashCount - this.currentShiftReport.expectedCash;
-      this.currentShiftReport.status = 'reconciled';
+      const updatedReport = {
+        ...this.currentShiftReport,
+        actualCash: this.actualCashCount,
+        cashDifference: this.actualCashCount - this.currentShiftReport.expectedCash,
+        status: 'reconciled' as const
+      };
+      this.mockDataService.updateCurrentShiftReport(updatedReport);
       this.closeCashReconciliation();
       alert('Cash reconciliation completed!');
     }
@@ -272,9 +109,41 @@ export class CashierShiftReportsComponent implements OnInit {
     if (confirm('Are you sure you want to end the current shift? This will generate a final Z-report.')) {
       this.generateReport('Z');
       if (this.currentShiftReport) {
-        this.currentShiftReport.status = 'closed';
-        this.previousReports.unshift({ ...this.currentShiftReport });
-        this.loadCurrentShiftReport(); // Start new shift
+        const closedReport = { ...this.currentShiftReport, status: 'closed' as const };
+        this.mockDataService.addPreviousShiftReport(closedReport);
+        // Start new shift - create a new current shift report
+        const now = new Date();
+        const shiftStart = new Date(now.getTime() - 8 * 60 * 60 * 1000);
+        const newShiftReport: CashierShiftReport = {
+          id: 'SHIFT-' + Date.now(),
+          cashierId: this.currentUser?.id || '5',
+          cashierName: this.currentUser?.name || 'Amit Kumar',
+          shiftStart: shiftStart,
+          shiftEnd: now,
+          reportType: 'X',
+          totalSales: 0,
+          cashSales: 0,
+          cardSales: 0,
+          upiSales: 0,
+          walletSales: 0,
+          totalTransactions: 0,
+          averageTransaction: 0,
+          openingCash: closedReport.expectedCash,
+          cashReceived: 0,
+          cashPaidOut: 0,
+          expectedCash: closedReport.expectedCash,
+          actualCash: 0,
+          cashDifference: 0,
+          voidedItems: 0,
+          voidedAmount: 0,
+          discountsApplied: 0,
+          discountAmount: 0,
+          refundsProcessed: 0,
+          refundAmount: 0,
+          status: 'open',
+          generatedAt: now
+        };
+        this.mockDataService.updateCurrentShiftReport(newShiftReport);
       }
     }
   }

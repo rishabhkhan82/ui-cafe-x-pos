@@ -170,7 +170,7 @@ export class CustomerOffersComponent implements OnInit {
     const html = document.documentElement;
     html.classList.toggle('dark');
     const newTheme = html.classList.contains('dark') ? 'dark' : 'light';
-    localStorage.setItem('theme', newTheme);
+    sessionStorage.setItem('theme', newTheme);
   }
 
   applyOffer(offer: CustomerOffer): void {

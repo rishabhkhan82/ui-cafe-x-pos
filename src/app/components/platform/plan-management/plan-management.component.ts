@@ -1,33 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-interface SubscriptionPlan {
-  id: string;
-  name: string;
-  displayName: string;
-  description: string;
-  price: number;
-  currency: string;
-  billingCycle: 'monthly' | 'yearly';
-  maxRestaurants: number;
-  maxUsers: number;
-  features: string[];
-  isActive: boolean;
-  isPopular?: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  subscriberCount: number;
-  revenue: number;
-}
-
-interface PlanFeature {
-  id: string;
-  name: string;
-  description: string;
-  category: 'core' | 'advanced' | 'premium';
-  isEnabled: boolean;
-}
+import { SubscriptionPlan, PlanFeature, MockDataService } from '../../../services/mock-data.service';
 
 @Component({
   selector: 'app-plan-management',
@@ -64,7 +38,7 @@ export class PlanManagementComponent implements OnInit {
     revenue: 0
   };
 
-  constructor() {}
+  constructor(private mockDataService: MockDataService) {}
 
   ngOnInit(): void {
     this.loadPlans();
@@ -72,79 +46,16 @@ export class PlanManagementComponent implements OnInit {
   }
 
   loadPlans(): void {
-    // Mock subscription plans
-    this.plans = [
-      {
-        id: 'starter',
-        name: 'starter',
-        displayName: 'Starter Plan',
-        description: 'Perfect for small restaurants getting started with digital transformation',
-        price: 999,
-        currency: 'INR',
-        billingCycle: 'monthly',
-        maxRestaurants: 1,
-        maxUsers: 5,
-        features: ['basic_pos', 'menu_management', 'order_management', 'basic_reports'],
-        isActive: true,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date(),
-        subscriberCount: 45,
-        revenue: 44555
-      },
-      {
-        id: 'professional',
-        name: 'professional',
-        displayName: 'Professional Plan',
-        description: 'Advanced features for growing restaurants with multiple locations',
-        price: 2499,
-        currency: 'INR',
-        billingCycle: 'monthly',
-        maxRestaurants: 5,
-        maxUsers: 25,
-        features: ['basic_pos', 'menu_management', 'order_management', 'advanced_reports', 'inventory_management', 'staff_management', 'customer_loyalty'],
-        isActive: true,
-        isPopular: true,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date(),
-        subscriberCount: 28,
-        revenue: 69720
-      },
-      {
-        id: 'enterprise',
-        name: 'enterprise',
-        displayName: 'Enterprise Plan',
-        description: 'Complete solution for large restaurant chains with advanced analytics',
-        price: 4999,
-        currency: 'INR',
-        billingCycle: 'monthly',
-        maxRestaurants: -1, // unlimited
-        maxUsers: -1, // unlimited
-        features: ['basic_pos', 'menu_management', 'order_management', 'advanced_reports', 'inventory_management', 'staff_management', 'customer_loyalty', 'advanced_analytics', 'api_access', 'white_label', 'priority_support'],
-        isActive: true,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date(),
-        subscriberCount: 8,
-        revenue: 39920
-      }
-    ];
-    this.filteredPlans = [...this.plans];
+    this.mockDataService.getSubscriptionPlans().subscribe(plans => {
+      this.plans = plans;
+      this.filteredPlans = [...this.plans];
+    });
   }
 
   loadAvailableFeatures(): void {
-    this.availableFeatures = [
-      { id: 'basic_pos', name: 'Basic POS System', description: 'Essential point of sale functionality', category: 'core', isEnabled: true },
-      { id: 'menu_management', name: 'Menu Management', description: 'Digital menu creation and management', category: 'core', isEnabled: true },
-      { id: 'order_management', name: 'Order Management', description: 'Online and offline order processing', category: 'core', isEnabled: true },
-      { id: 'basic_reports', name: 'Basic Reports', description: 'Essential sales and performance reports', category: 'core', isEnabled: true },
-      { id: 'advanced_reports', name: 'Advanced Reports', description: 'Detailed analytics and custom reports', category: 'advanced', isEnabled: true },
-      { id: 'inventory_management', name: 'Inventory Management', description: 'Stock tracking and supplier management', category: 'advanced', isEnabled: true },
-      { id: 'staff_management', name: 'Staff Management', description: 'Employee scheduling and performance tracking', category: 'advanced', isEnabled: true },
-      { id: 'customer_loyalty', name: 'Customer Loyalty', description: 'Loyalty programs and customer insights', category: 'advanced', isEnabled: true },
-      { id: 'advanced_analytics', name: 'Advanced Analytics', description: 'AI-powered insights and predictions', category: 'premium', isEnabled: true },
-      { id: 'api_access', name: 'API Access', description: 'Full API access for integrations', category: 'premium', isEnabled: true },
-      { id: 'white_label', name: 'White Label Solution', description: 'Custom branding and white-label options', category: 'premium', isEnabled: true },
-      { id: 'priority_support', name: 'Priority Support', description: '24/7 priority customer support', category: 'premium', isEnabled: true }
-    ];
+    this.mockDataService.getPlanFeatures().subscribe(features => {
+      this.availableFeatures = features;
+    });
   }
 
   filterPlans(): void {
@@ -294,11 +205,11 @@ export class PlanManagementComponent implements OnInit {
   }
 
   getFeatureById(featureId: string): PlanFeature | undefined {
-    return this.availableFeatures.find(f => f.id === featureId);
+    return this.mockDataService.getFeatureById(featureId);
   }
 
   getFeaturesByCategory(category: string): PlanFeature[] {
-    return this.availableFeatures.filter(f => f.category === category);
+    return this.mockDataService.getFeaturesByCategory(category);
   }
 
   formatCurrency(amount: number, currency: string = 'INR'): string {

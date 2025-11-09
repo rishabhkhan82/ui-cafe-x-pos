@@ -1,8 +1,9 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MockDataService, User, MenuItem } from '../../../services/mock-data.service';
+import { Subscription } from 'rxjs';
+import { MockDataService, User, MenuItem, FoodMenuCategory } from '../../../services/mock-data.service';
 
 interface MenuStats {
   totalItems: number;
@@ -25,14 +26,6 @@ interface ItemForm {
   image?: string;
 }
 
-interface MenuCategory {
-  key: string;
-  name: string;
-  icon: string;
-  isActive: boolean;
-  items: MenuItem[];
-}
-
 interface CategoryForm {
   name: string;
   icon: string;
@@ -45,13 +38,19 @@ interface CategoryForm {
   templateUrl: './menu-management.component.html',
   styleUrl: './menu-management.component.css'
 })
-export class MenuManagementComponent implements OnInit {
-  private mockDataService = inject(MockDataService);
-  private router = inject(Router);
+export class MenuManagementComponent implements OnInit, OnDestroy {
+  private mockDataService: MockDataService;
+  private router: Router;
+  private subscriptions: Subscription = new Subscription();
+
+  constructor(mockDataService: MockDataService, router: Router) {
+    this.mockDataService = mockDataService;
+    this.router = router;
+  }
 
   // Component state
   currentUser: User | null = null;
-  menuCategories: MenuCategory[] = [];
+  menuCategories: FoodMenuCategory[] = [];
   filteredItems: MenuItem[] = [];
   menuStats: MenuStats = {
     totalItems: 0,
@@ -99,221 +98,22 @@ export class MenuManagementComponent implements OnInit {
     this.initializeFilters();
   }
 
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
+
   private initializeData(): void {
     this.currentUser = this.mockDataService.getUserByRole('restaurant_owner') || null;
   }
 
   private loadMenuData(): void {
-    // Enhanced mock data for comprehensive menu management
-    this.menuCategories = [
-      {
-        key: 'appetizers',
-        name: 'Appetizers',
-        icon: 'fas fa-cookie-bite',
-        isActive: true,
-        items: [
-          {
-            id: '1',
-            name: 'Chicken 65',
-            description: 'Spicy, deep-fried chicken bites marinated in red chili, garlic, and ginger',
-            price: 220,
-            category: 'appetizers',
-            image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop',
-            isAvailable: true,
-            isVegetarian: false,
-            isVeg: false,
-            isSpicy: true,
-            isPopular: true,
-            preparationTime: 15,
-            isActive: true
-          },
-          {
-            id: '2',
-            name: 'Paneer Tikka',
-            description: 'Marinated cottage cheese cubes grilled to perfection with spices',
-            price: 240,
-            category: 'appetizers',
-            image: 'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400&h=300&fit=crop',
-            isAvailable: true,
-            isVegetarian: true,
-            isVeg: true,
-            isSpicy: true,
-            isPopular: true,
-            preparationTime: 20,
-            isActive: true
-          }
-        ]
-      },
-      {
-        key: 'main_course',
-        name: 'Main Course',
-        icon: 'fas fa-utensils',
-        isActive: true,
-        items: [
-          {
-            id: '3',
-            name: 'Hyderabadi Biryani',
-            description: 'Aromatic basmati rice cooked with tender meat, saffron, and traditional spices',
-            price: 280,
-            category: 'main_course',
-            image: 'https://images.unsplash.com/photo-1551782450-17144efb9c50?w=400&h=300&fit=crop',
-            isAvailable: true,
-            isVegetarian: false,
-            isVeg: false,
-            isSpicy: true,
-            isPopular: true,
-            preparationTime: 25,
-            isActive: true
-          },
-          {
-            id: '4',
-            name: 'Paneer Butter Masala',
-            description: 'Creamy tomato-based curry with soft paneer cubes and aromatic spices',
-            price: 260,
-            category: 'main_course',
-            image: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400&h=300&fit=crop',
-            isAvailable: true,
-            isVegetarian: true,
-            isVeg: true,
-            isSpicy: false,
-            isPopular: true,
-            preparationTime: 20,
-            isActive: true
-          },
-          {
-            id: '5',
-            name: 'Margherita Pizza',
-            description: 'Classic pizza with tomato sauce, mozzarella cheese, and fresh basil',
-            price: 250,
-            category: 'main_course',
-            image: 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400&h=300&fit=crop',
-            isAvailable: true,
-            isVegetarian: true,
-            isVeg: true,
-            isSpicy: false,
-            isPopular: false,
-            preparationTime: 15,
-            isActive: true
-          }
-        ]
-      },
-      {
-        key: 'salads',
-        name: 'Salads',
-        icon: 'fas fa-leaf',
-        isActive: true,
-        items: [
-          {
-            id: '6',
-            name: 'Caesar Salad',
-            description: 'Crisp romaine lettuce with parmesan cheese and croutons',
-            price: 180,
-            category: 'salads',
-            image: 'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=400&h=300&fit=crop',
-            isAvailable: true,
-            isVegetarian: true,
-            isVeg: true,
-            isSpicy: false,
-            isPopular: false,
-            preparationTime: 10,
-            isActive: true
-          },
-          {
-            id: '7',
-            name: 'Greek Salad',
-            description: 'Fresh cucumbers, tomatoes, olives, and feta cheese with olive oil dressing',
-            price: 200,
-            category: 'salads',
-            image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&h=300&fit=crop',
-            isAvailable: true,
-            isVegetarian: true,
-            isVeg: true,
-            isSpicy: false,
-            isPopular: false,
-            preparationTime: 8,
-            isActive: true
-          }
-        ]
-      },
-      {
-        key: 'beverages',
-        name: 'Beverages',
-        icon: 'fas fa-coffee',
-        isActive: true,
-        items: [
-          {
-            id: '8',
-            name: 'Fresh Orange Juice',
-            description: 'Freshly squeezed orange juice made from premium oranges',
-            price: 120,
-            category: 'beverages',
-            image: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=400&h=300&fit=crop',
-            isAvailable: true,
-            isVegetarian: true,
-            isVeg: true,
-            isSpicy: false,
-            isPopular: true,
-            preparationTime: 5,
-            isActive: true
-          },
-          {
-            id: '9',
-            name: 'Masala Chai',
-            description: 'Traditional Indian spiced tea with aromatic herbs and spices',
-            price: 80,
-            category: 'beverages',
-            image: 'https://images.unsplash.com/photo-1571934811353-2d716770f8c3?w=400&h=300&fit=crop',
-            isAvailable: true,
-            isVegetarian: true,
-            isVeg: true,
-            isSpicy: false,
-            isPopular: true,
-            preparationTime: 10,
-            isActive: true
-          }
-        ]
-      },
-      {
-        key: 'desserts',
-        name: 'Desserts',
-        icon: 'fas fa-ice-cream',
-        isActive: true,
-        items: [
-          {
-            id: '10',
-            name: 'Ras Malai',
-            description: 'Soft cheese dumplings soaked in sweetened cardamom-flavored milk',
-            price: 150,
-            category: 'desserts',
-            image: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400&h=300&fit=crop',
-            isAvailable: true,
-            isVegetarian: true,
-            isVeg: true,
-            isSpicy: false,
-            isPopular: true,
-            preparationTime: 5,
-            isActive: true
-          },
-          {
-            id: '11',
-            name: 'Chocolate Brownie',
-            description: 'Rich, fudgy chocolate brownie served with vanilla ice cream',
-            price: 180,
-            category: 'desserts',
-            image: 'https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=400&h=300&fit=crop',
-            isAvailable: true,
-            isVegetarian: true,
-            isVeg: true,
-            isSpicy: false,
-            isPopular: false,
-            preparationTime: 5,
-            isActive: true
-          }
-        ]
-      }
-    ];
-    this.calculateStats();
-    this.initializeFilters();
+    // Subscribe to food menu categories from service
+    const subscription = this.mockDataService.getFoodMenuCategories().subscribe(categories => {
+      this.menuCategories = categories;
+      this.calculateStats();
+      this.initializeFilters();
+    });
+    this.subscriptions.add(subscription);
   }
 
   private calculateStats(): void {
@@ -447,17 +247,17 @@ export class MenuManagementComponent implements OnInit {
   }
 
   // Category Actions
-  editCategory(category: MenuCategory): void {
+  editCategory(category: FoodMenuCategory): void {
     alert(`Edit category: ${category.name}`);
   }
 
-  toggleCategory(category: MenuCategory): void {
+  toggleCategory(category: FoodMenuCategory): void {
     category.isActive = !category.isActive;
     // In real app, this would update the backend
     alert(`${category.name} is now ${category.isActive ? 'visible' : 'hidden'} to customers`);
   }
 
-  addItemToCategory(category: MenuCategory): void {
+  addItemToCategory(category: FoodMenuCategory): void {
     this.isEditing = false;
     this.itemForm.category = category.key;
     this.showItemModal = true;
@@ -589,7 +389,7 @@ export class MenuManagementComponent implements OnInit {
       return;
     }
 
-    const newCategory: MenuCategory = {
+    const newCategory: FoodMenuCategory = {
       key: this.categoryForm.name.toLowerCase().replace(/\s+/g, '_'),
       name: this.categoryForm.name,
       icon: this.categoryForm.icon,

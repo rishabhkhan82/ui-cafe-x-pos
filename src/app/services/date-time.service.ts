@@ -1,28 +1,5 @@
 import { Injectable } from '@angular/core';
-
-export interface DateTimeFormat {
-  date: string;
-  time: string;
-  datetime: string;
-  relative: string;
-  iso: string;
-}
-
-export interface BusinessHours {
-  day: string;
-  open: string;
-  close: string;
-  closed: boolean;
-  currentStatus: 'open' | 'closed' | 'opening_soon' | 'closing_soon';
-}
-
-export interface ShiftInfo {
-  name: string;
-  startTime: string;
-  endTime: string;
-  duration: number; // in hours
-  isActive: boolean;
-}
+import { DateTimeFormat, BusinessHours, ShiftInfo } from './mock-data.service';
 
 @Injectable({
   providedIn: 'root'

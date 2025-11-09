@@ -1,0 +1,51 @@
+AWS setup
+
+1 - sign in to the aws account.
+2 - Host your Angular app in S3.
+3 - Set up your Java backend on EC2.
+4 - Set up MySQL database on RDS.
+
+---------------------------------------------------------------------------------------------
+
+🧭 OVERVIEW
+
+Here’s what we’ll build:
+
+Frontend (Angular) → Hosted on Amazon S3 as a static website
+Backend (Java Spring Boot, for example) → Running on an EC2 instance
+Database (MySQL) → Hosted in Amazon RDS
+The frontend will call the backend API, and the backend will connect to RDS.
+
+------------------------------------------------------------
+
+online db provider - Aiven (free package)
+
+Aiven mysql service name - mysql-db-cafe-x-pos
+db name - db-cafe-x-pos
+id - cafexpos@gmail.com
+password - Khan9511#
+
+Service URI
+mysql://
+CLICK_TO:REVEAL_PASSWORD
+@mysql-db-cafe-x-pos-db-cafe-x-pos.i.aivencloud.com:24532/defaultdb?ssl-mode=REQUIRED
+
+Database name
+defaultdb
+
+Host
+mysql-db-cafe-x-pos-db-cafe-x-pos.i.aivencloud.com
+
+Port
+24532
+
+User
+avnadmin
+
+Password
+AVNS_Y5-1K_WBIkCWaTsizh9
+
+
+
+SSL mode
+REQUIRED

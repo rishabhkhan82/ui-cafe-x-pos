@@ -1,56 +1,9 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MockDataService, User } from '../../../services/mock-data.service';
-
-interface PaymentStats {
-  todayRevenue: number;
-  successRate: number;
-  failedPayments: number;
-  avgTransaction: number;
-}
-
-interface PaymentGateway {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  fee: string;
-  settlement: string;
-  status: string;
-  enabled: boolean;
-}
-
-interface PaymentMethods {
-  cards: boolean;
-  upi: boolean;
-  cash: boolean;
-  wallets: boolean;
-}
-
-interface RecentTransaction {
-  id: string;
-  description: string;
-  customerName: string;
-  amount: number;
-  icon: string;
-  timestamp: Date;
-  status: string;
-  gateway?: string;
-}
-
-interface PaymentMethod {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  iconBg: string;
-  iconColor: string;
-  fee: string;
-  settlement: string;
-  enabled: boolean;
-}
+import { Subscription } from 'rxjs';
+import { MockDataService, PaymentMethod, PaymentMethods, PaymentStatsData, PaymentGatewayConfig, PaymentStatusConfig, RecentCustomerTransaction, User } from '../../../services/mock-data.service';
 
 @Component({
   selector: 'app-payment-processing',
@@ -59,9 +12,10 @@ interface PaymentMethod {
   templateUrl: './payment-processing.component.html',
   styleUrl: './payment-processing.component.css'
 })
-export class PaymentProcessingComponent implements OnInit {
-  private mockDataService = inject(MockDataService);
-  private router = inject(Router);
+export class PaymentProcessingComponent implements OnInit, OnDestroy {
+  private mockDataService: MockDataService;
+  private router: Router;
+  private subscriptions: Subscription[] = [];
 
   // Component state
   currentUser: User | null = null;
@@ -70,178 +24,77 @@ export class PaymentProcessingComponent implements OnInit {
   searchQuery: string = '';
   statusFilter: string = 'all';
   dateFilter: string = 'today';
-  filteredTransactions: RecentTransaction[] = [];
+  filteredTransactions: RecentCustomerTransaction[] = [];
 
-  // Payment statistics
-  paymentStats: PaymentStats = {
-    todayRevenue: 45280,
-    successRate: 97,
-    failedPayments: 3,
-    avgTransaction: 144
-  };
+  // Configuration data from service
+  paymentStats: PaymentStatsData | null = null;
+  paymentGateways: PaymentGatewayConfig[] = [];
+  paymentMethods: PaymentMethods = { cards: true, upi: true, cash: true, wallets: false };
+  recentTransactions: RecentCustomerTransaction[] = [];
+  paymentMethodsList: PaymentMethod[] = [];
+  paymentStatusConfigs: PaymentStatusConfig[] = [];
 
-  // Payment gateways
-  paymentGateways: PaymentGateway[] = [
-    {
-      id: 'razorpay',
-      name: 'Razorpay',
-      description: 'Popular Indian payment gateway',
-      icon: 'fab fa-ravelry',
-      fee: '2.0% + ₹3',
-      settlement: 'T+1',
-      status: 'Active',
-      enabled: true
-    },
-    {
-      id: 'payu',
-      name: 'PayU',
-      description: 'Global payment processing',
-      icon: 'fas fa-credit-card',
-      fee: '2.5% + ₹3',
-      settlement: 'T+2',
-      status: 'Active',
-      enabled: false
-    },
-    {
-      id: 'stripe',
-      name: 'Stripe',
-      description: 'International payments',
-      icon: 'fab fa-stripe-s',
-      fee: '2.9% + ₹30',
-      settlement: 'T+7',
-      status: 'Inactive',
-      enabled: false
-    },
-    {
-      id: 'cashfree',
-      name: 'Cashfree',
-      description: 'Complete payment solution',
-      icon: 'fas fa-university',
-      fee: '2.0% + ₹3',
-      settlement: 'T+1',
-      status: 'Active',
-      enabled: true
-    }
-  ];
-
-  // Payment methods
-  paymentMethods: PaymentMethods = {
-    cards: true,
-    upi: true,
-    cash: true,
-    wallets: false
-  };
-
-  // Recent transactions
-  recentTransactions: RecentTransaction[] = [
-    {
-      id: '1',
-      description: 'Order #ORD-2025-1045',
-      customerName: 'Amit Patil',
-      amount: 1264,
-      icon: 'fas fa-utensils',
-      timestamp: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes ago
-      status: 'Success',
-      gateway: 'Razorpay'
-    },
-    {
-      id: '2',
-      description: 'Order #ORD-2025-1044',
-      customerName: 'Sarah Johnson',
-      amount: 760,
-      icon: 'fas fa-utensils',
-      timestamp: new Date(Date.now() - 15 * 60 * 1000), // 15 minutes ago
-      status: 'Success',
-      gateway: 'Cashfree'
-    },
-    {
-      id: '3',
-      description: 'Order #ORD-2025-1043',
-      customerName: 'Ravi Kumar',
-      amount: 1980,
-      icon: 'fas fa-utensils',
-      timestamp: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
-      status: 'Failed',
-      gateway: 'Razorpay'
-    },
-    {
-      id: '4',
-      description: 'Order #ORD-2025-1042',
-      customerName: 'Emma Thompson',
-      amount: 450,
-      icon: 'fas fa-utensils',
-      timestamp: new Date(Date.now() - 45 * 60 * 1000), // 45 minutes ago
-      status: 'Success',
-      gateway: 'Cash'
-    }
-  ];
-
-  // Payment methods list
-  paymentMethodsList: PaymentMethod[] = [
-    {
-      id: 'cards',
-      name: 'Credit/Debit Cards',
-      description: 'Visa, Mastercard, RuPay',
-      icon: 'fab fa-cc-visa',
-      iconBg: 'bg-blue-100 dark:bg-blue-900/30',
-      iconColor: 'text-blue-600 dark:text-blue-400',
-      fee: '2.5% + ₹3',
-      settlement: 'T+1',
-      enabled: true
-    },
-    {
-      id: 'upi',
-      name: 'UPI',
-      description: 'Google Pay, PhonePe, Paytm',
-      icon: 'fas fa-mobile-alt',
-      iconBg: 'bg-green-100 dark:bg-green-900/30',
-      iconColor: 'text-green-600 dark:text-green-400',
-      fee: '1.5% + ₹2',
-      settlement: 'Instant',
-      enabled: true
-    },
-    {
-      id: 'cash',
-      name: 'Cash',
-      description: 'Physical currency',
-      icon: 'fas fa-money-bill-wave',
-      iconBg: 'bg-yellow-100 dark:bg-yellow-900/30',
-      iconColor: 'text-yellow-600 dark:text-yellow-400',
-      fee: '₹0',
-      settlement: 'Instant',
-      enabled: true
-    },
-    {
-      id: 'wallets',
-      name: 'Digital Wallets',
-      description: 'Paytm, Mobikwik, Ola Money',
-      icon: 'fas fa-wallet',
-      iconBg: 'bg-purple-100 dark:bg-purple-900/30',
-      iconColor: 'text-purple-600 dark:text-purple-400',
-      fee: '2.0% + ₹2',
-      settlement: 'T+1',
-      enabled: false
-    }
-  ];
+  constructor(
+    mockDataService: MockDataService,
+    router: Router
+  ) {
+    this.mockDataService = mockDataService;
+    this.router = router;
+  }
 
   ngOnInit(): void {
     this.initializeData();
-    this.initializeFilters();
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  private initializeData(): void {
+    this.currentUser = this.mockDataService.getUserByRole('restaurant_owner') || null;
+
+    // Load configuration data from service
+    const statsSub = this.mockDataService.getPaymentStatsData().subscribe(stats => {
+      this.paymentStats = stats;
+    });
+    this.subscriptions.push(statsSub);
+
+    const gatewaysSub = this.mockDataService.getPaymentGateways().subscribe(gateways => {
+      this.paymentGateways = gateways;
+    });
+    this.subscriptions.push(gatewaysSub);
+
+    const methodsSub = this.mockDataService.getPaymentMethodSettings().subscribe(methods => {
+      this.paymentMethods = methods;
+    });
+    this.subscriptions.push(methodsSub);
+
+    const transactionsSub = this.mockDataService.getRecentCustomerTransactions().subscribe(transactions => {
+      this.recentTransactions = transactions;
+      this.initializeFilters(); // Re-initialize filters when transactions change
+    });
+    this.subscriptions.push(transactionsSub);
+
+    const methodsListSub = this.mockDataService.getPaymentMethods().subscribe(methods => {
+      this.paymentMethodsList = methods;
+    });
+    this.subscriptions.push(methodsListSub);
+
+    const statusConfigsSub = this.mockDataService.getPaymentStatusConfigs().subscribe(configs => {
+      this.paymentStatusConfigs = configs;
+    });
+    this.subscriptions.push(statusConfigsSub);
   }
 
   private initializeFilters(): void {
     this.filteredTransactions = [...this.recentTransactions];
   }
 
-  private initializeData(): void {
-    this.currentUser = this.mockDataService.getUserByRole('restaurant_owner') || null;
-  }
-
   toggleTheme(): void {
     const html = document.documentElement;
     html.classList.toggle('dark');
     const newTheme = html.classList.contains('dark') ? 'dark' : 'light';
-    localStorage.setItem('theme', newTheme);
+    sessionStorage.setItem('theme', newTheme);
   }
 
   // Quick Actions
@@ -310,7 +163,7 @@ export class PaymentProcessingComponent implements OnInit {
   }
 
   // Gateway Management
-  toggleGateway(gateway: PaymentGateway): void {
+  toggleGateway(gateway: PaymentGatewayConfig): void {
     gateway.enabled = !gateway.enabled;
     alert(`${gateway.name} ${gateway.enabled ? 'enabled' : 'disabled'} successfully`);
   }
@@ -322,15 +175,15 @@ export class PaymentProcessingComponent implements OnInit {
   }
 
   // Transaction Management
-  viewTransactionDetails(transaction: RecentTransaction): void {
+  viewTransactionDetails(transaction: RecentCustomerTransaction): void {
     alert(`View details for transaction ${transaction.id} - would open detailed transaction modal`);
   }
 
-  canRefundTransaction(transaction: RecentTransaction): boolean {
+  canRefundTransaction(transaction: RecentCustomerTransaction): boolean {
     return transaction.status === 'Success' && transaction.gateway !== 'Cash';
   }
 
-  processRefund(transaction: RecentTransaction): void {
+  processRefund(transaction: RecentCustomerTransaction): void {
     alert(`Process refund for transaction ${transaction.id} - would open refund form`);
   }
 
@@ -339,11 +192,11 @@ export class PaymentProcessingComponent implements OnInit {
     alert('Add new payment gateway - would open gateway setup wizard');
   }
 
-  configureGatewaySettings(gateway: PaymentGateway): void {
+  configureGatewaySettings(gateway: PaymentGatewayConfig): void {
     alert(`Configure ${gateway.name} settings - would open gateway configuration modal`);
   }
 
-  testGateway(gateway: PaymentGateway): void {
+  testGateway(gateway: PaymentGatewayConfig): void {
     alert(`Test ${gateway.name} connection - would perform gateway connectivity test`);
   }
 
@@ -359,33 +212,13 @@ export class PaymentProcessingComponent implements OnInit {
 
   // Helper methods
   getStatusBadgeClass(status: string): string {
-    switch (status.toLowerCase()) {
-      case 'active':
-        return 'bg-green-100 dark:bg-green-900/30 text-green-600';
-      case 'inactive':
-        return 'bg-gray-100 dark:bg-gray-700 text-gray-600';
-      case 'pending':
-        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600';
-      case 'error':
-        return 'bg-red-100 dark:bg-red-900/30 text-red-600';
-      default:
-        return 'bg-gray-100 dark:bg-gray-700 text-gray-600';
-    }
+    const config = this.paymentStatusConfigs.find(c => c.status === status.toLowerCase());
+    return config ? config.badgeClass : 'bg-gray-100 dark:bg-gray-700 text-gray-600';
   }
 
   getTransactionStatusBadgeClass(status: string): string {
-    switch (status.toLowerCase()) {
-      case 'success':
-        return 'bg-green-100 dark:bg-green-900/30 text-green-600';
-      case 'failed':
-        return 'bg-red-100 dark:bg-red-900/30 text-red-600';
-      case 'pending':
-        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600';
-      case 'refunded':
-        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-600';
-      default:
-        return 'bg-gray-100 dark:bg-gray-700 text-gray-600';
-    }
+    const config = this.paymentStatusConfigs.find(c => c.status === status.toLowerCase());
+    return config ? config.badgeClass : 'bg-gray-100 dark:bg-gray-700 text-gray-600';
   }
 
   formatDateTime(date: Date): string {
@@ -403,7 +236,7 @@ export class PaymentProcessingComponent implements OnInit {
   }
 
   // Gateway toggle handlers (for future use)
-  onGatewayToggle(gateway: PaymentGateway): void {
+  onGatewayToggle(gateway: PaymentGatewayConfig): void {
     // In a real app, this would save the gateway preferences
     console.log(`${gateway.name} gateway toggled:`, gateway.enabled);
   }

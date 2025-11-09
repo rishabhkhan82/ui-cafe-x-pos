@@ -1,46 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MockDataService, User } from '../../../services/mock-data.service';
-
-interface CashTransaction {
-  id: string;
-  type: 'deposit' | 'withdrawal' | 'float_start' | 'float_end' | 'safe_deposit' | 'change_fund';
-  amount: number;
-  description: string;
-  timestamp: Date;
-  cashierId: string;
-  cashierName: string;
-  approvedBy?: string;
-  reference?: string;
-}
-
-interface CashDrawer {
-  id: string;
-  cashierId: string;
-  cashierName: string;
-  startingFloat: number;
-  currentBalance: number;
-  lastUpdated: Date;
-  status: 'active' | 'reconciled' | 'closed';
-}
-
-interface ShiftReconciliation {
-  id: string;
-  shiftId: string;
-  cashierId: string;
-  cashierName: string;
-  date: Date;
-  startingFloat: number;
-  cashSales: number;
-  expectedEndingBalance: number;
-  actualCount: number;
-  variance: number;
-  status: 'pending' | 'approved' | 'rejected';
-  reconciledBy?: string;
-  reconciledAt?: Date;
-  notes?: string;
-}
+import { MockDataService, User, CashDrawer, CashTransaction, ShiftReconciliation } from '../../../services/mock-data.service';
 
 @Component({
   selector: 'app-cash-management',
@@ -53,62 +14,13 @@ export class CashManagementComponent implements OnInit {
   currentUser: User | null = null;
 
   // Cash Drawer Status
-  cashDrawer: CashDrawer = {
-    id: 'drawer-1',
-    cashierId: '3',
-    cashierName: 'Amit Kumar',
-    startingFloat: 2000,
-    currentBalance: 2450,
-    lastUpdated: new Date(),
-    status: 'active'
-  };
+  cashDrawer: CashDrawer | null = null;
 
   // Transactions
-  transactions: CashTransaction[] = [
-    {
-      id: 'txn-1',
-      type: 'float_start',
-      amount: 2000,
-      description: 'Starting float for morning shift',
-      timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
-      cashierId: '3',
-      cashierName: 'Amit Kumar'
-    },
-    {
-      id: 'txn-2',
-      type: 'safe_deposit',
-      amount: -5000,
-      description: 'Safe deposit - excess cash',
-      timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-      cashierId: '3',
-      cashierName: 'Amit Kumar',
-      approvedBy: 'Manager'
-    },
-    {
-      id: 'txn-3',
-      type: 'change_fund',
-      amount: 200,
-      description: 'Additional change fund',
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      cashierId: '3',
-      cashierName: 'Amit Kumar'
-    }
-  ];
+  transactions: CashTransaction[] = [];
 
   // Shift Reconciliation
-  currentReconciliation: ShiftReconciliation = {
-    id: 'recon-1',
-    shiftId: 'shift-1',
-    cashierId: '3',
-    cashierName: 'Amit Kumar',
-    date: new Date(),
-    startingFloat: 2000,
-    cashSales: 8500,
-    expectedEndingBalance: 2450,
-    actualCount: 0,
-    variance: 0,
-    status: 'pending'
-  };
+  currentReconciliation: ShiftReconciliation | null = null;
 
   // UI State
   showDepositModal = false;
@@ -131,7 +43,24 @@ export class CashManagementComponent implements OnInit {
 
   ngOnInit(): void {
     this.currentUser = this.mockDataService.getUserByRole('cashier') || null;
-    this.calculateExpectedBalance();
+
+    // Subscribe to cash drawer data
+    this.mockDataService.getCashDrawers().subscribe(drawers => {
+      this.cashDrawer = drawers.find(drawer => drawer.cashierId === this.currentUser?.id) || null;
+    });
+
+    // Subscribe to cash transactions
+    this.mockDataService.getCashTransactions().subscribe(transactions => {
+      this.transactions = transactions.filter(txn => txn.cashierId === this.currentUser?.id);
+    });
+
+    // Subscribe to shift reconciliations
+    this.mockDataService.getShiftReconciliations().subscribe(reconciliations => {
+      this.currentReconciliation = reconciliations.find(recon => recon.cashierId === this.currentUser?.id) || null;
+      if (this.currentReconciliation) {
+        this.calculateExpectedBalance();
+      }
+    });
   }
 
   // Cash Operations
@@ -163,6 +92,11 @@ export class CashManagementComponent implements OnInit {
       return;
     }
 
+    if (!this.cashDrawer) {
+      alert('Cash drawer not found');
+      return;
+    }
+
     const transaction: CashTransaction = {
       id: `txn-${Date.now()}`,
       type: 'safe_deposit',
@@ -174,9 +108,11 @@ export class CashManagementComponent implements OnInit {
       approvedBy: 'Manager'
     };
 
-    this.transactions.unshift(transaction);
-    this.cashDrawer.currentBalance -= this.depositAmount;
-    this.cashDrawer.lastUpdated = new Date();
+    this.mockDataService.addCashTransaction(transaction);
+    this.mockDataService.updateCashDrawer(this.cashDrawer.id, {
+      currentBalance: this.cashDrawer.currentBalance - this.depositAmount,
+      lastUpdated: new Date()
+    });
 
     this.closeDepositModal();
   }
@@ -184,6 +120,11 @@ export class CashManagementComponent implements OnInit {
   processWithdrawal(): void {
     if (!this.validateManagerPin()) {
       alert('Invalid manager PIN');
+      return;
+    }
+
+    if (!this.cashDrawer) {
+      alert('Cash drawer not found');
       return;
     }
 
@@ -198,9 +139,11 @@ export class CashManagementComponent implements OnInit {
       approvedBy: 'Manager'
     };
 
-    this.transactions.unshift(transaction);
-    this.cashDrawer.currentBalance += this.withdrawalAmount;
-    this.cashDrawer.lastUpdated = new Date();
+    this.mockDataService.addCashTransaction(transaction);
+    this.mockDataService.updateCashDrawer(this.cashDrawer.id, {
+      currentBalance: this.cashDrawer.currentBalance + this.withdrawalAmount,
+      lastUpdated: new Date()
+    });
 
     this.closeWithdrawalModal();
   }
@@ -217,6 +160,8 @@ export class CashManagementComponent implements OnInit {
   }
 
   calculateExpectedBalance(): void {
+    if (!this.currentReconciliation) return;
+
     this.currentReconciliation.expectedEndingBalance =
       this.currentReconciliation.startingFloat +
       this.currentReconciliation.cashSales +
@@ -224,6 +169,8 @@ export class CashManagementComponent implements OnInit {
   }
 
   calculateVariance(): void {
+    if (!this.currentReconciliation) return;
+
     this.currentReconciliation.variance =
       this.actualCashCount - this.currentReconciliation.expectedEndingBalance;
   }
@@ -234,15 +181,23 @@ export class CashManagementComponent implements OnInit {
       return;
     }
 
+    if (!this.currentReconciliation || !this.cashDrawer) {
+      alert('Reconciliation or cash drawer data not found');
+      return;
+    }
+
     this.calculateVariance();
 
-    this.currentReconciliation.actualCount = this.actualCashCount;
-    this.currentReconciliation.status = 'approved';
-    this.currentReconciliation.reconciledBy = 'Manager';
-    this.currentReconciliation.reconciledAt = new Date();
+    this.mockDataService.updateShiftReconciliation(this.currentReconciliation.id, {
+      actualCount: this.actualCashCount,
+      status: 'approved',
+      reconciledBy: 'Manager',
+      reconciledAt: new Date()
+    });
 
-    // Close the drawer
-    this.cashDrawer.status = 'reconciled';
+    this.mockDataService.updateCashDrawer(this.cashDrawer.id, {
+      status: 'reconciled'
+    });
 
     this.closeReconciliationModal();
   }

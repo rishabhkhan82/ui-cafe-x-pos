@@ -1,18 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MockDataService, Notification, User } from '../../../services/mock-data.service';
-
-interface UserNotification extends Notification {
-  targetUsers: string[]; // User IDs
-  targetRoles: User['role'][];
-  sentBy: string;
-  deliveryStatus: 'pending' | 'sent' | 'delivered' | 'failed';
-  readCount: number;
-  totalRecipients: number;
-  scheduledFor?: Date;
-  expiresAt?: Date;
-}
+import { MockDataService, Notification, User, UserNotification } from '../../../services/mock-data.service';
 
 @Component({
   selector: 'app-user-notifications',
@@ -58,57 +47,10 @@ export class UserNotificationsComponent implements OnInit {
   }
 
   loadNotifications(): void {
-    // In a real app, this would fetch user notifications from API
-    // For now, we'll create mock user notifications
-    this.notifications = [
-      {
-        id: 'notif-1',
-        title: 'New Menu Item Available',
-        message: 'Butter Chicken has been added to the menu. Check it out in your restaurant dashboard.',
-        type: 'staff',
-        priority: 'medium',
-        status: 'unread',
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        targetUsers: [],
-        targetRoles: ['restaurant_owner', 'restaurant_manager'],
-        sentBy: 'Platform Admin',
-        deliveryStatus: 'delivered',
-        readCount: 3,
-        totalRecipients: 5
-      },
-      {
-        id: 'notif-2',
-        title: 'Payment Processing Update',
-        message: 'Your payment gateway has been updated. Please verify your integration settings.',
-        type: 'staff',
-        priority: 'high',
-        status: 'read',
-        timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
-        targetUsers: ['1'], // Specific user ID
-        targetRoles: [],
-        sentBy: 'System Admin',
-        deliveryStatus: 'delivered',
-        readCount: 1,
-        totalRecipients: 1
-      },
-      {
-        id: 'notif-3',
-        title: 'Training Session Reminder',
-        message: 'Staff training session scheduled for tomorrow at 10 AM. All restaurant managers must attend.',
-        type: 'staff',
-        priority: 'high',
-        status: 'unread',
-        timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
-        targetUsers: [],
-        targetRoles: ['restaurant_manager'],
-        sentBy: 'HR Department',
-        deliveryStatus: 'sent',
-        readCount: 2,
-        totalRecipients: 4,
-        scheduledFor: new Date(Date.now() + 12 * 60 * 60 * 1000)
-      }
-    ];
-    this.filteredNotifications = [...this.notifications];
+    this.mockDataService.getUserNotifications().subscribe(notifications => {
+      this.notifications = notifications;
+      this.filteredNotifications = [...this.notifications];
+    });
   }
 
   filterNotifications(): void {
@@ -207,16 +149,7 @@ export class UserNotificationsComponent implements OnInit {
   }
 
   getRoleDisplayName(role: string): string {
-    const roleNames: { [key: string]: string } = {
-      'platform_owner': 'Platform Owner',
-      'restaurant_owner': 'Restaurant Owner',
-      'restaurant_manager': 'Restaurant Manager',
-      'cashier': 'Cashier',
-      'kitchen_manager': 'Kitchen Manager',
-      'waiter': 'Waiter',
-      'customer': 'Customer'
-    };
-    return roleNames[role] || role;
+    return this.mockDataService.getRoleDisplayName(role);
   }
 
   getUserById(id: string): User | undefined {

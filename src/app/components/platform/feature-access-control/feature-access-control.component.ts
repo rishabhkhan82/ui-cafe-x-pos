@@ -1,36 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-interface Feature {
-  id: string;
-  name: string;
-  description: string;
-  category: 'core' | 'advanced' | 'premium';
-  module: string;
-  isEnabled: boolean;
-  requiresPlan: string[];
-  dependencies?: string[];
-  restrictions?: {
-    maxUsage?: number;
-    timeLimit?: number;
-    userLimit?: number;
-  };
-}
-
-interface PlanFeatureAccess {
-  planId: string;
-  planName: string;
-  features: { [featureId: string]: boolean };
-  limits: { [featureId: string]: any };
-}
-
-interface RoleFeatureAccess {
-  roleId: string;
-  roleName: string;
-  features: { [featureId: string]: boolean };
-  permissions: { [featureId: string]: string[] };
-}
+import { Subscription } from 'rxjs';
+import { Feature, PlanFeatureAccess, RoleFeatureAccess, MockDataService } from '../../../services/mock-data.service';
 
 @Component({
   selector: 'app-feature-access-control',
@@ -39,191 +11,49 @@ interface RoleFeatureAccess {
   templateUrl: './feature-access-control.component.html',
   styleUrl: './feature-access-control.component.css'
 })
-export class FeatureAccessControlComponent implements OnInit {
-  features: Feature[] = [
-    {
-      id: 'basic_pos',
-      name: 'Basic POS System',
-      description: 'Essential point of sale functionality with order processing',
-      category: 'core',
-      module: 'POS',
-      isEnabled: true,
-      requiresPlan: ['starter', 'professional', 'enterprise']
-    },
-    {
-      id: 'menu_management',
-      name: 'Menu Management',
-      description: 'Create and manage digital menus with categories and pricing',
-      category: 'core',
-      module: 'Menu',
-      isEnabled: true,
-      requiresPlan: ['starter', 'professional', 'enterprise']
-    },
-    {
-      id: 'inventory_management',
-      name: 'Inventory Management',
-      description: 'Track stock levels, suppliers, and automatic reorder alerts',
-      category: 'advanced',
-      module: 'Inventory',
-      isEnabled: true,
-      requiresPlan: ['professional', 'enterprise'],
-      restrictions: { maxUsage: 1000 }
-    },
-    {
-      id: 'staff_management',
-      name: 'Staff Management',
-      description: 'Employee scheduling, time tracking, and performance analytics',
-      category: 'advanced',
-      module: 'Staff',
-      isEnabled: true,
-      requiresPlan: ['professional', 'enterprise'],
-      restrictions: { userLimit: 25 }
-    },
-    {
-      id: 'customer_loyalty',
-      name: 'Customer Loyalty Program',
-      description: 'Loyalty points, rewards, and customer retention tools',
-      category: 'advanced',
-      module: 'CRM',
-      isEnabled: true,
-      requiresPlan: ['professional', 'enterprise']
-    },
-    {
-      id: 'advanced_analytics',
-      name: 'Advanced Analytics',
-      description: 'AI-powered insights, predictive analytics, and custom reports',
-      category: 'premium',
-      module: 'Analytics',
-      isEnabled: true,
-      requiresPlan: ['enterprise'],
-      dependencies: ['basic_reports']
-    },
-    {
-      id: 'api_access',
-      name: 'API Access',
-      description: 'Full REST API access for custom integrations',
-      category: 'premium',
-      module: 'Integration',
-      isEnabled: true,
-      requiresPlan: ['enterprise']
-    },
-    {
-      id: 'white_label',
-      name: 'White Label Solution',
-      description: 'Custom branding, domain, and white-label options',
-      category: 'premium',
-      module: 'Branding',
-      isEnabled: true,
-      requiresPlan: ['enterprise']
-    }
-  ];
-
-  planAccess: PlanFeatureAccess[] = [
-    {
-      planId: 'starter',
-      planName: 'Starter Plan',
-      features: {
-        basic_pos: true,
-        menu_management: true,
-        inventory_management: false,
-        staff_management: false,
-        customer_loyalty: false,
-        advanced_analytics: false,
-        api_access: false,
-        white_label: false
-      },
-      limits: {}
-    },
-    {
-      planId: 'professional',
-      planName: 'Professional Plan',
-      features: {
-        basic_pos: true,
-        menu_management: true,
-        inventory_management: true,
-        staff_management: true,
-        customer_loyalty: true,
-        advanced_analytics: false,
-        api_access: false,
-        white_label: false
-      },
-      limits: {
-        inventory_management: { maxUsage: 1000 },
-        staff_management: { userLimit: 25 }
-      }
-    },
-    {
-      planId: 'enterprise',
-      planName: 'Enterprise Plan',
-      features: {
-        basic_pos: true,
-        menu_management: true,
-        inventory_management: true,
-        staff_management: true,
-        customer_loyalty: true,
-        advanced_analytics: true,
-        api_access: true,
-        white_label: true
-      },
-      limits: {}
-    }
-  ];
-
-  roleAccess: RoleFeatureAccess[] = [
-    {
-      roleId: 'platform_owner',
-      roleName: 'Platform Owner',
-      features: {
-        basic_pos: true,
-        menu_management: true,
-        inventory_management: true,
-        staff_management: true,
-        customer_loyalty: true,
-        advanced_analytics: true,
-        api_access: true,
-        white_label: true
-      },
-      permissions: {
-        basic_pos: ['create', 'read', 'update', 'delete'],
-        menu_management: ['create', 'read', 'update', 'delete'],
-        inventory_management: ['create', 'read', 'update', 'delete'],
-        staff_management: ['create', 'read', 'update', 'delete'],
-        customer_loyalty: ['create', 'read', 'update', 'delete'],
-        advanced_analytics: ['read'],
-        api_access: ['create', 'read', 'update', 'delete'],
-        white_label: ['create', 'read', 'update', 'delete']
-      }
-    },
-    {
-      roleId: 'restaurant_owner',
-      roleName: 'Restaurant Owner',
-      features: {
-        basic_pos: true,
-        menu_management: true,
-        inventory_management: true,
-        staff_management: true,
-        customer_loyalty: true,
-        advanced_analytics: false,
-        api_access: false,
-        white_label: false
-      },
-      permissions: {
-        basic_pos: ['create', 'read', 'update', 'delete'],
-        menu_management: ['create', 'read', 'update', 'delete'],
-        inventory_management: ['create', 'read', 'update', 'delete'],
-        staff_management: ['create', 'read', 'update', 'delete'],
-        customer_loyalty: ['create', 'read', 'update', 'delete']
-      }
-    }
-  ];
+export class FeatureAccessControlComponent implements OnInit, OnDestroy {
+  features: Feature[] = [];
+  planAccess: PlanFeatureAccess[] = [];
+  roleAccess: RoleFeatureAccess[] = [];
 
   selectedView = 'plans';
   selectedCategory = 'all';
   searchTerm = '';
 
-  constructor() {}
+  private subscriptions: Subscription[] = [];
 
-  ngOnInit(): void {}
+  constructor(private mockDataService: MockDataService) {}
+
+  ngOnInit(): void {
+    this.loadFeatures();
+    this.loadPlanAccess();
+    this.loadRoleAccess();
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  loadFeatures(): void {
+    const subscription = this.mockDataService.getFeatures().subscribe(features => {
+      this.features = features;
+    });
+    this.subscriptions.push(subscription);
+  }
+
+  loadPlanAccess(): void {
+    const subscription = this.mockDataService.getPlanFeatureAccess().subscribe(planAccess => {
+      this.planAccess = planAccess;
+    });
+    this.subscriptions.push(subscription);
+  }
+
+  loadRoleAccess(): void {
+    const subscription = this.mockDataService.getRoleFeatureAccess().subscribe(roleAccess => {
+      this.roleAccess = roleAccess;
+    });
+    this.subscriptions.push(subscription);
+  }
 
   getFilteredFeatures(): Feature[] {
     return this.features.filter(feature => {
@@ -247,15 +77,15 @@ export class FeatureAccessControlComponent implements OnInit {
   }
 
   togglePlanFeatureAccess(planAccess: PlanFeatureAccess, featureId: string): void {
-    planAccess.features[featureId] = !planAccess.features[featureId];
-    // In a real app, this would call an API to update feature access
-    console.log('Updated plan feature access:', planAccess.planId, featureId, planAccess.features[featureId]);
+    const newValue = !planAccess.features[featureId];
+    this.mockDataService.updatePlanFeatureAccess(planAccess.planId, featureId, newValue);
+    console.log('Updated plan feature access:', planAccess.planId, featureId, newValue);
   }
 
   toggleRoleFeatureAccess(roleAccess: RoleFeatureAccess, featureId: string): void {
-    roleAccess.features[featureId] = !roleAccess.features[featureId];
-    // In a real app, this would call an API to update role access
-    console.log('Updated role feature access:', roleAccess.roleId, featureId, roleAccess.features[featureId]);
+    const newValue = !roleAccess.features[featureId];
+    this.mockDataService.updateRoleFeatureAccess(roleAccess.roleId, featureId, newValue);
+    console.log('Updated role feature access:', roleAccess.roleId, featureId, newValue);
   }
 
   getCategoryColor(category: string): string {

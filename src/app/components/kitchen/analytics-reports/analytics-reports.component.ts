@@ -1,43 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MockDataService, Order, MenuItem } from '../../../services/mock-data.service';
-
-interface AnalyticsData {
-  totalOrders: number;
-  totalRevenue: number;
-  avgOrderValue: number;
-  avgPrepTime: number;
-  popularItems: PopularItem[];
-  hourlyDistribution: HourlyData[];
-  dailyTrends: DailyData[];
-  statusDistribution: StatusData[];
-}
-
-interface PopularItem {
-  name: string;
-  count: number;
-  revenue: number;
-  percentage: number;
-}
-
-interface HourlyData {
-  hour: number;
-  orders: number;
-  revenue: number;
-}
-
-interface DailyData {
-  date: string;
-  orders: number;
-  revenue: number;
-}
-
-interface StatusData {
-  status: string;
-  count: number;
-  percentage: number;
-}
+import { MockDataService, Order, MenuItem, AnalyticsData, DailyData, HourlyData, PopularItem, StatusData } from '../../../services/mock-data.service';
 
 @Component({
   selector: 'app-analytics-reports',
@@ -136,7 +100,12 @@ export class AnalyticsReportsComponent implements OnInit {
       popularItems,
       hourlyDistribution,
       dailyTrends,
-      statusDistribution
+      statusDistribution,
+      customerSatisfaction : 0, // Placeholder
+      revenueGrowth: 0,
+      ordersGrowth: 0,
+      aovGrowth: 0,
+      satisfactionGrowth: 0
     };
 
     this.prepareChartData();

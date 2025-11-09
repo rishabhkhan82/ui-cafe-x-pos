@@ -202,7 +202,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
     const html = document.documentElement;
     html.classList.toggle('dark');
     const isDark = html.classList.contains('dark');
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    sessionStorage.setItem('theme', isDark ? 'dark' : 'light');
   }
 
   // Category filtering

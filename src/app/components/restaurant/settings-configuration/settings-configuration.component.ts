@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { MockDataService, RestaurantSettings, User } from '../../../services/mock-data.service';
+import { Subscription } from 'rxjs';
+import { MockDataService, RestaurantSettings, User, SettingsFilterOption, PaymentMethodDescription, NotificationConfig } from '../../../services/mock-data.service';
 import { AuthService } from '../../../services/auth.service';
 
 @Component({
@@ -12,7 +13,9 @@ import { AuthService } from '../../../services/auth.service';
   templateUrl: './settings-configuration.component.html',
   styleUrls: ['./settings-configuration.component.css']
 })
-export class SettingsConfigurationComponent implements OnInit {
+export class SettingsConfigurationComponent implements OnInit, OnDestroy {
+  private subscriptions: Subscription[] = [];
+
   currentUser: any;
   restaurantSettings: RestaurantSettings | null = null;
   activeTab = 'general';
@@ -22,6 +25,14 @@ export class SettingsConfigurationComponent implements OnInit {
   searchQuery = '';
   selectedCategory = 'all';
   selectedStatus = 'all';
+
+  // Configuration data from service
+  settingsFilterCategories: SettingsFilterOption[] = [];
+  settingsFilterStatuses: SettingsFilterOption[] = [];
+  paymentMethodDescriptions: PaymentMethodDescription[] = [];
+  notificationConfigs: NotificationConfig[] = [];
+  businessDays: string[] = [];
+  tipOptions: number[] = [];
 
   constructor(
     private mockDataService: MockDataService,
@@ -34,6 +45,44 @@ export class SettingsConfigurationComponent implements OnInit {
     });
 
     this.loadSettings();
+    this.loadConfigurationData();
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  private loadConfigurationData(): void {
+    // Load configuration data from service
+    const categoriesSub = this.mockDataService.getSettingsFilterCategories().subscribe(categories => {
+      this.settingsFilterCategories = categories;
+    });
+    this.subscriptions.push(categoriesSub);
+
+    const statusesSub = this.mockDataService.getSettingsFilterStatuses().subscribe(statuses => {
+      this.settingsFilterStatuses = statuses;
+    });
+    this.subscriptions.push(statusesSub);
+
+    const descriptionsSub = this.mockDataService.getPaymentMethodDescriptions().subscribe(descriptions => {
+      this.paymentMethodDescriptions = descriptions;
+    });
+    this.subscriptions.push(descriptionsSub);
+
+    const notificationsSub = this.mockDataService.getNotificationConfigs().subscribe(configs => {
+      this.notificationConfigs = configs;
+    });
+    this.subscriptions.push(notificationsSub);
+
+    const businessDaysSub = this.mockDataService.getBusinessDays().subscribe(days => {
+      this.businessDays = days;
+    });
+    this.subscriptions.push(businessDaysSub);
+
+    const tipOptionsSub = this.mockDataService.getTipOptions().subscribe(options => {
+      this.tipOptions = options;
+    });
+    this.subscriptions.push(tipOptionsSub);
   }
 
   loadSettings(): void {
@@ -178,8 +227,7 @@ export class SettingsConfigurationComponent implements OnInit {
   getBusinessHoursCount(): number {
     if (!this.restaurantSettings?.businessHours) return 0;
     let count = 0;
-    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-    days.forEach(day => {
+    this.businessDays.forEach(day => {
       if (this.getBusinessDayOpen(day)) count++;
     });
     return count;
@@ -192,9 +240,8 @@ export class SettingsConfigurationComponent implements OnInit {
   getActiveNotificationsCount(): number {
     if (!this.restaurantSettings?.notifications) return 0;
     let count = 0;
-    const notifications = ['lowStockAlerts', 'orderAlerts', 'paymentAlerts', 'staffAlerts'];
-    notifications.forEach(key => {
-      if (this.getNotificationValue(key)) count++;
+    this.notificationConfigs.forEach(config => {
+      if (this.getNotificationValue(config.key)) count++;
     });
     return count;
   }
@@ -205,18 +252,12 @@ export class SettingsConfigurationComponent implements OnInit {
   }
 
   getFilteredSettingsCount(): number {
-    // Return count of filtered settings - for now return total settings
-    return 25; // Placeholder - would calculate based on actual filtering
+    // Return count of filtered settings - calculate based on actual filtering
+    return this.settingsFilterCategories.length + this.settingsFilterStatuses.length + this.notificationConfigs.length;
   }
 
   getPaymentMethodDescription(method: string): string {
-    const descriptions: { [key: string]: string } = {
-      'cash': 'Physical currency payments',
-      'card': 'Credit/Debit card payments',
-      'upi': 'UPI digital payments',
-      'wallet': 'Digital wallet payments'
-    };
-    return descriptions[method] || 'Payment method';
+    return this.mockDataService.getPaymentMethodDescription(method);
   }
 
   backupSettings(): void {

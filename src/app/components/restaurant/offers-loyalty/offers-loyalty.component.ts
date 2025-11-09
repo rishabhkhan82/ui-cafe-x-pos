@@ -1,68 +1,9 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MockDataService, User, Offer } from '../../../services/mock-data.service';
-
-interface LoyaltyStats {
-  activeOffers: number;
-  loyalCustomers: number;
-  avgRedemption: number;
-  revenueBoost: number;
-}
-
-interface OfferForm {
-  title: string;
-  description: string;
-  type: string;
-  discountValue: number;
-  minOrderValue: number;
-  usageLimit: number;
-  startDate: string;
-  endDate: string;
-  applicableItems: string[];
-  isActive: boolean;
-}
-
-interface LoyaltyProgram {
-  name: string;
-  pointsPerRupee: number;
-  pointsToRupee: number;
-  expiryDays: number;
-  welcomeBonus: number;
-  isActive: boolean;
-  description: string;
-}
-
-interface LoyaltyCustomer {
-  id: string;
-  name: string;
-  points: number;
-  totalSpent: number;
-  rank: number;
-}
-
-interface Redemption {
-  id: string;
-  customerId: string;
-  customerName: string;
-  pointsUsed: number;
-  reward: string;
-  date: Date;
-  offerTitle: string;
-  timestamp: Date;
-  amount: number;
-}
-
-interface LoyaltyForm {
-  name: string;
-  pointsPerRupee: number;
-  pointsToRupee: number;
-  expiryDays: number;
-  welcomeBonus: number;
-  isActive: boolean;
-  description: string;
-}
+import { Subscription } from 'rxjs';
+import { MockDataService, User, Offer, LoyaltyCustomer, LoyaltyForm, LoyaltyProgram, LoyaltyStatsManage, OfferForm } from '../../../services/mock-data.service';
 
 @Component({
   selector: 'app-offers-loyalty',
@@ -71,28 +12,26 @@ interface LoyaltyForm {
   templateUrl: './offers-loyalty.component.html',
   styleUrl: './offers-loyalty.component.css'
 })
-export class OffersLoyaltyComponent implements OnInit {
-  private mockDataService = inject(MockDataService);
-  private router = inject(Router);
+export class OffersLoyaltyComponent implements OnInit, OnDestroy {
+  private mockDataService: MockDataService;
+  private router: Router;
+  private subscriptions: Subscription = new Subscription();
+
+  constructor(mockDataService: MockDataService, router: Router) {
+    this.mockDataService = mockDataService;
+    this.router = router;
+  }
 
   // Component state
   currentUser: User | null = null;
   offers: Offer[] = [];
   filteredOffers: Offer[] = [];
-  loyaltyProgram: LoyaltyProgram = {
-    name: 'Cafe-X Loyalty Club',
-    pointsPerRupee: 1,
-    pointsToRupee: 100,
-    expiryDays: 365,
-    welcomeBonus: 50,
-    isActive: true,
-    description: 'Earn points on every purchase and redeem for great rewards!'
-  };
+  loyaltyProgram: LoyaltyProgram | null = null;
   topLoyaltyCustomers: LoyaltyCustomer[] = [];
   recentActivities: any[] = [];
 
   // Stats
-  loyaltyStats: LoyaltyStats = {
+  loyaltyStats: LoyaltyStatsManage = {
     activeOffers: 0,
     loyalCustomers: 0,
     avgRedemption: 0,
@@ -143,6 +82,10 @@ export class OffersLoyaltyComponent implements OnInit {
     this.calculateStats();
   }
 
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
+
   private initializeData(): void {
     this.currentUser = this.mockDataService.getUserByRole('restaurant_owner') || null;
   }
@@ -156,71 +99,45 @@ export class OffersLoyaltyComponent implements OnInit {
   }
 
   private loadLoyaltyData(): void {
-    // Load loyalty program settings (mock data)
-    // In a real app, this would come from the service
-    // For now, we'll use the default values set in the component
+    // Load loyalty program settings from service
+    const programSub = this.mockDataService.getLoyaltyProgram().subscribe(program => {
+      this.loyaltyProgram = program;
+    });
+    this.subscriptions.add(programSub);
 
-    // Load top customers (mock data)
-    this.topLoyaltyCustomers = [
-      {
-        id: '6',
-        name: 'Amit Patil',
-        points: 240,
-        totalSpent: 12400,
-        rank: 1
-      },
-      {
-        id: '7',
-        name: 'Sarah Johnson',
-        points: 180,
-        totalSpent: 8900,
-        rank: 2
-      }
-    ];
+    // Load top customers from service
+    const customersSub = this.mockDataService.getLoyaltyCustomers().subscribe(customers => {
+      this.topLoyaltyCustomers = customers;
+      this.calculateStats(); // Recalculate stats when customers change
+    });
+    this.subscriptions.add(customersSub);
 
-    // Load recent activities (mock data)
-    this.recentActivities = [
-      {
-        id: '1',
-        title: 'Offer Created',
-        description: '20% off on all beverages created successfully',
-        type: 'offer',
-        status: 'active',
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000)
-      },
-      {
-        id: '2',
-        title: 'Points Redeemed',
-        description: 'Amit Patil redeemed 100 points for ₹100 cashback',
-        type: 'redemption',
-        status: 'completed',
-        timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000)
-      },
-      {
-        id: '3',
-        title: 'Loyalty Member Added',
-        description: 'New customer Sarah Johnson joined loyalty program',
-        type: 'customer',
-        status: 'active',
-        timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000)
-      }
-    ];
+    // Load recent activities from service
+    const activitiesSub = this.mockDataService.getRecentActivities().subscribe(activities => {
+      this.recentActivities = activities;
+    });
+    this.subscriptions.add(activitiesSub);
   }
 
   private calculateStats(): void {
-    this.loyaltyStats = {
-      activeOffers: this.offers.filter(offer => offer.isActive).length,
-      loyalCustomers: this.topLoyaltyCustomers.length,
-      avgRedemption: 68, // Mock data
-      revenueBoost: 15000 // Mock data
-    };
+    // Subscribe to loyalty stats from service
+    const statsSub = this.mockDataService.getLoyaltyStatsManage().subscribe(stats => {
+      if (stats) {
+        this.loyaltyStats = {
+          ...stats,
+          activeOffers: this.offers.filter(offer => offer.isActive).length,
+          loyalCustomers: this.topLoyaltyCustomers.length
+        };
+      }
+    });
+    this.subscriptions.add(statsSub);
   }
 
   toggleTheme(): void {
     const html = document.documentElement;
     html.classList.toggle('dark');
     const newTheme = html.classList.contains('dark') ? 'dark' : 'light';
-    localStorage.setItem('theme', newTheme);
+    sessionStorage.setItem('theme', newTheme);
   }
 
   // Quick Actions
@@ -242,16 +159,18 @@ export class OffersLoyaltyComponent implements OnInit {
   }
 
   manageLoyalty(): void {
-    this.loyaltyForm = {
-      name: this.loyaltyProgram.name,
-      pointsPerRupee: this.loyaltyProgram.pointsPerRupee,
-      pointsToRupee: this.loyaltyProgram.pointsToRupee,
-      expiryDays: this.loyaltyProgram.expiryDays,
-      welcomeBonus: this.loyaltyProgram.welcomeBonus,
-      isActive: this.loyaltyProgram.isActive,
-      description: this.loyaltyProgram.description
-    };
-    this.showLoyaltyModal = true;
+    if (this.loyaltyProgram) {
+      this.loyaltyForm = {
+        name: this.loyaltyProgram.name,
+        pointsPerRupee: this.loyaltyProgram.pointsPerRupee,
+        pointsToRupee: this.loyaltyProgram.pointsToRupee,
+        expiryDays: this.loyaltyProgram.expiryDays,
+        welcomeBonus: this.loyaltyProgram.welcomeBonus,
+        isActive: this.loyaltyProgram.isActive,
+        description: this.loyaltyProgram.description
+      };
+      this.showLoyaltyModal = true;
+    }
   }
 
   sendPromotions(): void {

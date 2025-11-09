@@ -1,22 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
-
-export interface CacheEntry<T = any> {
-  data: T;
-  timestamp: number;
-  expiry: number;
-  key: string;
-  hits: number;
-  lastAccessed: number;
-}
-
-export interface CacheConfig {
-  defaultTtl: number; // Time to live in milliseconds
-  maxEntries: number; // Maximum number of entries
-  enableCompression: boolean;
-  storageType: 'memory' | 'localStorage' | 'sessionStorage';
-}
+import { CacheEntry, CacheConfig } from './mock-data.service';
 
 @Injectable({
   providedIn: 'root'

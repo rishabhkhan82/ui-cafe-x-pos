@@ -3,61 +3,7 @@ import { Observable, of, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { CrudService } from './crud.service';
 import { NotificationService } from './notification.service';
-
-export interface ExportConfig {
-  format: 'csv' | 'excel' | 'pdf' | 'json';
-  includeHeaders: boolean;
-  dateRange?: {
-    start: Date;
-    end: Date;
-  };
-  filters?: Record<string, any>;
-  columns?: string[];
-}
-
-export interface ExportResult {
-  success: boolean;
-  fileName: string;
-  fileUrl?: string;
-  fileSize?: number;
-  exportedAt: Date;
-  recordCount: number;
-  error?: string;
-}
-
-export interface ImportConfig {
-  format: 'csv' | 'excel' | 'json';
-  hasHeaders: boolean;
-  skipDuplicates: boolean;
-  updateExisting: boolean;
-  validateData: boolean;
-  batchSize: number;
-}
-
-export interface ImportResult {
-  success: boolean;
-  totalRecords: number;
-  importedRecords: number;
-  skippedRecords: number;
-  failedRecords: number;
-  errors: ImportError[];
-  importedAt: Date;
-}
-
-export interface ImportError {
-  row: number;
-  field?: string;
-  value?: any;
-  message: string;
-}
-
-export interface DataMapping {
-  sourceField: string;
-  targetField: string;
-  transform?: (value: any) => any;
-  required: boolean;
-  defaultValue?: any;
-}
+import { ExportConfig, ExportResult, ImportConfig, DataMapping, ImportResult } from './mock-data.service';
 
 @Injectable({
   providedIn: 'root'

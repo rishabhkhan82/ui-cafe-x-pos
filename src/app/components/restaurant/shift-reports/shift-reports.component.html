@@ -72,11 +72,7 @@
           [(ngModel)]="selectedPeriod"
           (change)="onPeriodChange()"
           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
-          <option value="today">Today</option>
-          <option value="week">This Week</option>
-          <option value="month">This Month</option>
-          <option value="quarter">This Quarter</option>
-          <option value="custom">Custom Range</option>
+          <option *ngFor="let period of periodFilterOptions" [value]="period.value">{{ period.label }}</option>
         </select>
       </div>
       <div>
@@ -88,10 +84,7 @@
           (change)="filterReports()"
           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
           <option value="">All Shifts</option>
-          <option value="morning">Morning</option>
-          <option value="afternoon">Afternoon</option>
-          <option value="evening">Evening</option>
-          <option value="night">Night</option>
+          <option *ngFor="let shift of shiftFilterOptions" [value]="shift.value">{{ shift.label }}</option>
         </select>
       </div>
       <div *ngIf="selectedPeriod === 'custom'">
@@ -393,29 +386,3 @@
     </div>
   </div>
 </div>
-
-<!-- Bottom Navigation -->
-<nav class="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 z-50">
-  <div class="flex items-center justify-around py-2">
-    <a routerLink="/restaurant/dashboard" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
-      <i class="fas fa-chart-pie text-xl"></i>
-      <span class="text-xs font-medium">Dashboard</span>
-    </a>
-    <a routerLink="/restaurant/orders" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
-      <i class="fas fa-receipt text-xl"></i>
-      <span class="text-xs font-medium">Orders</span>
-    </a>
-    <a routerLink="/restaurant/staff" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
-      <i class="fas fa-users text-xl"></i>
-      <span class="text-xs font-medium">Staff</span>
-    </a>
-    <a routerLink="/restaurant/reports" class="flex flex-col items-center space-y-1 p-2 text-primary-500">
-      <i class="fas fa-file-alt text-xl"></i>
-      <span class="text-xs font-medium">Reports</span>
-    </a>
-    <a routerLink="/restaurant/settings" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
-      <i class="fas fa-cog text-xl"></i>
-      <span class="text-xs font-medium">Settings</span>
-    </a>
-  </div>
-</nav>

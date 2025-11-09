@@ -1,38 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-interface SecurityPolicy {
-  id: string;
-  name: string;
-  description: string;
-  category: 'authentication' | 'authorization' | 'encryption' | 'monitoring' | 'compliance';
-  enabled: boolean;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  lastUpdated: Date;
-  violations?: number;
-}
-
-interface SecurityLog {
-  id: string;
-  timestamp: Date;
-  event: string;
-  user: string;
-  ipAddress: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  status: 'success' | 'failure' | 'warning';
-  details: string;
-}
-
-interface SecurityMetrics {
-  totalUsers: number;
-  activeSessions: number;
-  failedLoginAttempts: number;
-  blockedIPs: number;
-  securityAlerts: number;
-  lastSecurityScan: Date;
-  complianceScore: number;
-}
+import { SecurityPolicy, SecurityLog, SecurityMetrics, MockDataService } from '../../../services/mock-data.service';
 
 @Component({
   selector: 'app-security-settings',
@@ -66,152 +35,24 @@ export class SecuritySettingsComponent implements OnInit {
     severity: 'medium'
   };
 
-  constructor() {}
+  constructor(private mockDataService: MockDataService) {}
 
   ngOnInit(): void {
-    this.loadSecurityPolicies();
-    this.loadSecurityLogs();
+    this.mockDataService.getSecurityPolicies().subscribe(policies => {
+      this.policies = policies;
+    });
+
+    this.mockDataService.getSecurityLogs().subscribe(logs => {
+      this.securityLogs = logs;
+    });
+
+    this.mockDataService.getSecurityMetrics().subscribe(metrics => {
+      if (metrics) {
+        this.metrics = metrics;
+      }
+    });
   }
 
-  loadSecurityPolicies(): void {
-    this.policies = [
-      {
-        id: 'password_policy',
-        name: 'Password Policy',
-        description: 'Enforce strong password requirements and regular changes',
-        category: 'authentication',
-        enabled: true,
-        severity: 'high',
-        lastUpdated: new Date(),
-        violations: 0
-      },
-      {
-        id: 'two_factor_auth',
-        name: 'Two-Factor Authentication',
-        description: 'Require 2FA for all administrative accounts',
-        category: 'authentication',
-        enabled: true,
-        severity: 'critical',
-        lastUpdated: new Date(),
-        violations: 2
-      },
-      {
-        id: 'session_management',
-        name: 'Session Management',
-        description: 'Automatic session timeout and concurrent session limits',
-        category: 'authentication',
-        enabled: true,
-        severity: 'medium',
-        lastUpdated: new Date(),
-        violations: 0
-      },
-      {
-        id: 'role_based_access',
-        name: 'Role-Based Access Control',
-        description: 'Enforce role-based permissions and access restrictions',
-        category: 'authorization',
-        enabled: true,
-        severity: 'high',
-        lastUpdated: new Date(),
-        violations: 1
-      },
-      {
-        id: 'data_encryption',
-        name: 'Data Encryption',
-        description: 'Encrypt sensitive data at rest and in transit',
-        category: 'encryption',
-        enabled: true,
-        severity: 'critical',
-        lastUpdated: new Date(),
-        violations: 0
-      },
-      {
-        id: 'audit_logging',
-        name: 'Audit Logging',
-        description: 'Log all security-relevant events and activities',
-        category: 'monitoring',
-        enabled: true,
-        severity: 'high',
-        lastUpdated: new Date(),
-        violations: 0
-      },
-      {
-        id: 'intrusion_detection',
-        name: 'Intrusion Detection',
-        description: 'Monitor and detect suspicious activities',
-        category: 'monitoring',
-        enabled: true,
-        severity: 'high',
-        lastUpdated: new Date(),
-        violations: 3
-      },
-      {
-        id: 'gdpr_compliance',
-        name: 'GDPR Compliance',
-        description: 'Ensure compliance with data protection regulations',
-        category: 'compliance',
-        enabled: true,
-        severity: 'critical',
-        lastUpdated: new Date(),
-        violations: 0
-      }
-    ];
-  }
-
-  loadSecurityLogs(): void {
-    this.securityLogs = [
-      {
-        id: '1',
-        timestamp: new Date(Date.now() - 5 * 60 * 1000),
-        event: 'Failed Login Attempt',
-        user: 'unknown',
-        ipAddress: '192.168.1.100',
-        severity: 'medium',
-        status: 'failure',
-        details: 'Multiple failed login attempts from IP address'
-      },
-      {
-        id: '2',
-        timestamp: new Date(Date.now() - 15 * 60 * 1000),
-        event: 'Password Changed',
-        user: 'admin@cafex.com',
-        ipAddress: '10.0.0.1',
-        severity: 'low',
-        status: 'success',
-        details: 'User password successfully updated'
-      },
-      {
-        id: '3',
-        timestamp: new Date(Date.now() - 30 * 60 * 1000),
-        event: 'Suspicious Activity',
-        user: 'user@restaurant.com',
-        ipAddress: '203.0.113.1',
-        severity: 'high',
-        status: 'warning',
-        details: 'Unusual login pattern detected'
-      },
-      {
-        id: '4',
-        timestamp: new Date(Date.now() - 45 * 60 * 1000),
-        event: 'Role Permission Changed',
-        user: 'admin@cafex.com',
-        ipAddress: '10.0.0.1',
-        severity: 'medium',
-        status: 'success',
-        details: 'User role permissions updated'
-      },
-      {
-        id: '5',
-        timestamp: new Date(Date.now() - 60 * 60 * 1000),
-        event: 'Security Scan Completed',
-        user: 'system',
-        ipAddress: '127.0.0.1',
-        severity: 'low',
-        status: 'success',
-        details: 'Automated security scan completed successfully'
-      }
-    ];
-  }
 
   filterPolicies(): SecurityPolicy[] {
     return this.policies.filter(policy => {
@@ -260,8 +101,7 @@ export class SecuritySettingsComponent implements OnInit {
       console.log('Adding new policy:', this.newPolicy);
       this.showAddPolicyForm = false;
       this.newPolicy = {};
-      // Reload policies
-      this.loadSecurityPolicies();
+      // Reload policies - data will be updated through the service subscription
     }
   }
 

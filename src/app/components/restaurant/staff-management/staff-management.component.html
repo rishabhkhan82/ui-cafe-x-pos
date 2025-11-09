@@ -87,10 +87,7 @@
           (change)="filterStaff()"
           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
           <option value="">All Roles</option>
-          <option value="restaurant_manager">Restaurant Manager</option>
-          <option value="kitchen_manager">Kitchen Manager</option>
-          <option value="cashier">Cashier</option>
-          <option value="waiter">Waiter</option>
+          <option *ngFor="let role of roleOptions" [value]="role.value">{{ role.label }}</option>
         </select>
       </div>
       <div>
@@ -102,9 +99,7 @@
           (change)="filterStaff()"
           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
           <option value="">All Status</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-          <option value="on_leave">On Leave</option>
+          <option *ngFor="let status of statusOptions" [value]="status.value">{{ status.label }}</option>
         </select>
       </div>
       <div class="flex items-end">
@@ -272,10 +267,7 @@
             <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Role *</label>
             <select [(ngModel)]="staffForm.role" name="role" required
                     class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
-              <option value="waiter">Waiter</option>
-              <option value="cashier">Cashier</option>
-              <option value="kitchen_manager">Kitchen Manager</option>
-              <option value="restaurant_manager">Restaurant Manager</option>
+              <option *ngFor="let role of roleOptions" [value]="role.value">{{ role.label }}</option>
             </select>
           </div>
 
@@ -283,10 +275,7 @@
             <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Shift *</label>
             <select [(ngModel)]="staffForm.shift" name="shift" required
                     class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
-              <option value="morning">Morning (9 AM - 5 PM)</option>
-              <option value="afternoon">Afternoon (2 PM - 10 PM)</option>
-              <option value="evening">Evening (6 PM - 2 AM)</option>
-              <option value="night">Night (10 PM - 6 AM)</option>
+              <option *ngFor="let shift of shiftOptions" [value]="shift.value">{{ shift.label }}</option>
             </select>
           </div>
 
@@ -300,9 +289,7 @@
             <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Status *</label>
             <select [(ngModel)]="staffForm.status" name="status" required
                     class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="on_leave">On Leave</option>
+              <option *ngFor="let status of statusOptions" [value]="status.value">{{ status.label }}</option>
             </select>
           </div>
 
@@ -398,10 +385,7 @@
           <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Shift</label>
           <select [(ngModel)]="scheduleForm.shift" name="shift" required (change)="onShiftChange()"
                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
-            <option value="morning">Morning (9 AM - 5 PM)</option>
-            <option value="afternoon">Afternoon (2 PM - 10 PM)</option>
-            <option value="evening">Evening (6 PM - 2 AM)</option>
-            <option value="night">Night (10 PM - 6 AM)</option>
+            <option *ngFor="let shift of shiftOptions" [value]="shift.value">{{ shift.label }}</option>
           </select>
         </div>
 
@@ -423,10 +407,7 @@
           <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Status</label>
           <select [(ngModel)]="scheduleForm.status" name="status" required
                   class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600">
-            <option value="scheduled">Scheduled</option>
-            <option value="completed">Completed</option>
-            <option value="absent">Absent</option>
-            <option value="late">Late</option>
+            <option *ngFor="let status of scheduleStatusOptions" [value]="status.value">{{ status.label }}</option>
           </select>
         </div>
 

@@ -8,10 +8,6 @@
 export const environment = {
   production: false,
   name: 'local',
-
-  // ============================================
-  // APPLICATION CONFIGURATION
-  // ============================================
   app: {
     name: 'Cafe-X POS',
     version: '1.0.0',
@@ -19,39 +15,27 @@ export const environment = {
     debug: true,
     logLevel: 'debug'
   },
-
-  // ============================================
-  // API CONFIGURATION
-  // ============================================
   api: {
-    baseUrl: 'http://localhost:3000/api',
+    baseUrl: 'http://localhost:8080/api',
     timeout: 30000,
     retryAttempts: 3,
     retryDelay: 1000
   },
-
-  // ============================================
-  // DATABASE CONFIGURATION
-  // ============================================
   database: {
-    type: 'sqlite',
+    type: 'mysql',
     host: 'localhost',
-    port: 3306,
-    database: 'cafe_x_pos_dev',
+    port: 3307,
+    database: 'cafe_x_pos',
     username: 'root',
-    password: '',
+    password: 'CafeX_POS_2024!',
     synchronize: true,
     logging: true,
     entities: ['src/**/*.entity{.ts,.js}'],
     migrations: ['src/migrations/*{.ts,.js}'],
     subscribers: ['src/subscribers/*{.ts,.js}']
   },
-
-  // ============================================
-  // AUTHENTICATION & SECURITY
-  // ============================================
   auth: {
-    jwtSecret: 'cafe-x-pos-dev-jwt-secret-key-2024',
+    jwtSecret: 'db-cafe-x-pos-jwt-secret-key-2025',
     jwtExpiresIn: '24h',
     refreshTokenExpiresIn: '7d',
     bcryptRounds: 10,
@@ -59,10 +43,6 @@ export const environment = {
     maxLoginAttempts: 5,
     lockoutDuration: 900000 // 15 minutes in milliseconds
   },
-
-  // ============================================
-  // PAYMENT GATEWAYS
-  // ============================================
   payment: {
     stripe: {
       publishableKey: 'pk_test_cafe_x_pos_stripe_key',
@@ -77,10 +57,6 @@ export const environment = {
     defaultGateway: 'razorpay',
     testMode: true
   },
-
-  // ============================================
-  // EMAIL SERVICE CONFIGURATION
-  // ============================================
   email: {
     provider: 'sendgrid',
     apiKey: 'SG.cafe_x_pos_dev_email_key',
@@ -92,10 +68,6 @@ export const environment = {
       welcomeEmail: 'd-cafe-x-welcome'
     }
   },
-
-  // ============================================
-  // FILE UPLOAD CONFIGURATION
-  // ============================================
   upload: {
     maxFileSize: 5242880, // 5MB in bytes
     allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
@@ -103,10 +75,6 @@ export const environment = {
     menuImagesPath: './uploads/menu',
     profileImagesPath: './uploads/profiles'
   },
-
-  // ============================================
-  // EXTERNAL SERVICE INTEGRATIONS
-  // ============================================
   integrations: {
     zomato: {
       apiKey: 'cafe_x_pos_zomato_dev_key',
@@ -119,93 +87,26 @@ export const environment = {
       webhookUrl: 'http://localhost:3000/webhooks/swiggy'
     }
   },
-
-  // ============================================
-  // CACHE & PERFORMANCE
-  // ============================================
   cache: {
     enabled: false,
     ttl: 300, // 5 minutes
     maxItems: 1000
   },
-
-  // ============================================
-  // MONITORING & LOGGING
-  // ============================================
   monitoring: {
     enabled: false,
     sentry: {
       dsn: 'https://cafe-x-pos-dev-sentry-dsn@sentry.io/project-id'
     }
   },
-
-  // ============================================
-  // BUSINESS RULES
-  // ============================================
-  business: {
-    minimumOrderValue: 50,
-    freeDeliveryThreshold: 300,
-    serviceChargePercentage: 5,
-    gstPercentage: 18,
-    maxDiscountPercentage: 50,
-    loyaltyPointsPerRupee: 1,
-    reservationAdvanceHours: 2,
-    tableTurnoverTime: 45 // minutes
+  backup: {
+    enabled: true,
+    frequency: 'daily',
+    retention: 30, // days
+    s3: {
+      bucket: 'cafex-pos-backups',
+      region: 'us-east-1',
+      // accessKeyId: process.env['AWS_ACCESS_KEY_ID'] || '',
+      // secretAccessKey: process.env['AWS_SECRET_ACCESS_KEY'] || ''
+    }
   },
-
-  // ============================================
-  // FEATURE FLAGS
-  // ============================================
-  features: {
-    onlineOrdering: true,
-    loyaltyProgram: true,
-    reservations: true,
-    analytics: true,
-    multiLanguage: false,
-    darkMode: true,
-    notifications: true,
-    integrations: false
-  }
 };
-
-// extra details
-
-//  Recommended Installation:
-// Install Java JDK 17 (download from oracle.com or adoptium.net)
-// Install MySQL Server (mysql.com/downloads/mysql/)
-// Use MySQL Workbench to create your cafe_x_pos database
-// Start Spring Boot development
-
-// C:\Program Files\Java\jdk-17\
-
-// https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html
-
-// https://dev.mysql.com/downloads/mysql/
-
-// Mysql Server - Set root password: CafeX_POS_2024! (or your choice)   
-
-// ------------------------------------------
-
-// backend/
-// ├── pom.xml                           ✅ Enterprise dependencies
-// ├── src/main/java/com/cafex/pos/
-// │   ├── CafeXPosBackendApplication.java ✅ Main application
-// │   ├── config/
-// │   │   ├── CorsConfig.java          ✅ CORS configuration
-// │   │   ├── SecurityConfig.java      ✅ Spring Security
-// │   │   └── JwtAuthenticationFilter.java ✅ JWT filter
-// │   ├── controller/
-// │   │   └── AuthController.java      ✅ Authentication API
-// │   ├── entity/
-// │   │   └── User.java               ✅ User JPA entity
-// │   ├── repository/
-// │   │   └── UserRepository.java     ✅ Data access layer
-// │   ├── service/
-// │   │   └── AuthService.java        ✅ Business logic
-// │   └── dto/
-// │       ├── LoginRequest.java       ✅ Request DTO
-// │       └── LoginResponse.java      ✅ Response DTO
-// ├── src/main/resources/
-// │   ├── application.properties       ✅ Database & app config
-// │   └── data.sql                    ✅ Initial test data
-// └── README.md                       ✅ Complete documentation 

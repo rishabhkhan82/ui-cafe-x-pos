@@ -8,10 +8,6 @@
 export const environment = {
   production: true,
   name: 'production',
-
-  // ============================================
-  // APPLICATION CONFIGURATION
-  // ============================================
   app: {
     name: 'Cafe-X POS',
     version: '1.0.0',
@@ -19,29 +15,20 @@ export const environment = {
     debug: false,
     logLevel: 'error'
   },
-
-  // ============================================
-  // API CONFIGURATION
-  // ============================================
   api: {
-    baseUrl: 'https://api.cafexpos.com/api',
+    baseUrl: 'http://localhost:8080/api',
     timeout: 15000,
     retryAttempts: 2,
     retryDelay: 2000
   },
-
-  // ============================================
-  // DATABASE CONFIGURATION
-  // ============================================
   database: {
-    type: 'postgres',
-    host: process.env['DB_HOST'] || 'cafex-prod-db.cluster-xyz.us-east-1.rds.amazonaws.com',
-    port: 5432,
-    database: process.env['DB_NAME'] || 'cafe_x_pos_prod',
-    username: process.env['DB_USERNAME'] || 'cafex_prod_user',
-    password: process.env['DB_PASSWORD'] || '',
-    synchronize: false,
-    logging: false,
+    type: 'mysql',
+    host: 'mysql-db-cafe-x-pos-db-cafe-x-pos.i.aivencloud.com',
+    port: 24532,
+    database: 'db-cafe-x-pos',
+    password: 'AVNS_Y5-1K_WBIkCWaTsizh9',
+    synchronize: true,
+    logging: true,
     entities: ['dist/**/*.entity{.ts,.js}'],
     migrations: ['dist/migrations/*{.ts,.js}'],
     subscribers: ['dist/subscribers/*{.ts,.js}'],
@@ -52,23 +39,15 @@ export const environment = {
       }
     }
   },
-
-  // ============================================
-  // AUTHENTICATION & SECURITY
-  // ============================================
   auth: {
-    jwtSecret: process.env['JWT_SECRET'] || 'cafe-x-pos-prod-jwt-secret-key-2024',
-    jwtExpiresIn: '12h',
+    jwtSecret: process.env['JWT_SECRET'] || 'db-cafe-x-pos-jwt-secret-key-2025',
+    jwtExpiresIn: '24h',
     refreshTokenExpiresIn: '30d',
     bcryptRounds: 12,
     sessionTimeout: 7200000, // 2 hours in milliseconds
     maxLoginAttempts: 3,
     lockoutDuration: 1800000 // 30 minutes in milliseconds
   },
-
-  // ============================================
-  // PAYMENT GATEWAYS
-  // ============================================
   payment: {
     stripe: {
       publishableKey: process.env['STRIPE_PUBLISHABLE_KEY'] || '',
@@ -83,10 +62,6 @@ export const environment = {
     defaultGateway: 'razorpay',
     testMode: false
   },
-
-  // ============================================
-  // EMAIL SERVICE CONFIGURATION
-  // ============================================
   email: {
     provider: 'sendgrid',
     apiKey: process.env['SENDGRID_API_KEY'] || '',
@@ -98,21 +73,13 @@ export const environment = {
       welcomeEmail: 'p-cafe-x-welcome'
     }
   },
-
-  // ============================================
-  // FILE UPLOAD CONFIGURATION
-  // ============================================
   upload: {
-    maxFileSize: 10485760, // 10MB in bytes
+    maxFileSize: 5242880, // 5MB in bytes
     allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
-    uploadPath: '/var/www/cafex/uploads',
-    menuImagesPath: '/var/www/cafex/uploads/menu',
-    profileImagesPath: '/var/www/cafex/uploads/profiles'
+    uploadPath: './uploads',
+    menuImagesPath: './uploads/menu',
+    profileImagesPath: './uploads/profiles'
   },
-
-  // ============================================
-  // EXTERNAL SERVICE INTEGRATIONS
-  // ============================================
   integrations: {
     zomato: {
       apiKey: process.env['ZOMATO_API_KEY'] || '',
@@ -125,10 +92,6 @@ export const environment = {
       webhookUrl: 'https://api.cafexpos.com/webhooks/swiggy'
     }
   },
-
-  // ============================================
-  // CACHE & PERFORMANCE
-  // ============================================
   cache: {
     enabled: true,
     ttl: 1800, // 30 minutes
@@ -140,10 +103,6 @@ export const environment = {
       db: 0
     }
   },
-
-  // ============================================
-  // MONITORING & LOGGING
-  // ============================================
   monitoring: {
     enabled: true,
     sentry: {
@@ -154,48 +113,6 @@ export const environment = {
       appKey: process.env['DATADOG_APP_KEY'] || ''
     }
   },
-
-  // ============================================
-  // BUSINESS RULES
-  // ============================================
-  business: {
-    minimumOrderValue: 100,
-    freeDeliveryThreshold: 500,
-    serviceChargePercentage: 5,
-    gstPercentage: 18,
-    maxDiscountPercentage: 30,
-    loyaltyPointsPerRupee: 1,
-    reservationAdvanceHours: 4,
-    tableTurnoverTime: 60 // minutes
-  },
-
-  // ============================================
-  // FEATURE FLAGS
-  // ============================================
-  features: {
-    onlineOrdering: true,
-    loyaltyProgram: true,
-    reservations: true,
-    analytics: true,
-    multiLanguage: true,
-    darkMode: true,
-    notifications: true,
-    integrations: true
-  },
-
-  // ============================================
-  // CDN & STATIC ASSETS
-  // ============================================
-  cdn: {
-    enabled: true,
-    baseUrl: 'https://cdn.cafexpos.com',
-    imageOptimization: true,
-    regions: ['us-east-1', 'eu-west-1', 'ap-south-1']
-  },
-
-  // ============================================
-  // BACKUP & DISASTER RECOVERY
-  // ============================================
   backup: {
     enabled: true,
     frequency: 'daily',
@@ -207,13 +124,4 @@ export const environment = {
       secretAccessKey: process.env['AWS_SECRET_ACCESS_KEY'] || ''
     }
   },
-
-  // ============================================
-  // RATE LIMITING
-  // ============================================
-  rateLimit: {
-    windowMs: 900000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
-    message: 'Too many requests from this IP, please try again later.'
-  }
 };

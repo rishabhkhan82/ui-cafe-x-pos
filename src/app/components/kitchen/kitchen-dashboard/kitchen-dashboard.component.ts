@@ -2,24 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MockDataService, Order, User } from '../../../services/mock-data.service';
-
-interface OrderStats {
-  totalOrders: number;
-  completedOrders: number;
-  pendingOrders: number;
-  avgPrepTime: number;
-  totalRevenue: number;
-}
-
-interface RecentOrder {
-  id: string;
-  customerName: string;
-  status: string;
-  totalAmount: number;
-  createdAt: Date;
-  estimatedReadyTime?: Date;
-}
+import { MockDataService, Order, OrderStats, RecentOrder, User } from '../../../services/mock-data.service';
 
 @Component({
   selector: 'app-kitchen-dashboard',
@@ -44,7 +27,8 @@ export class KitchenDashboardComponent implements OnInit {
     completedOrders: 0,
     pendingOrders: 0,
     avgPrepTime: 0,
-    totalRevenue: 0
+    totalRevenue: 0,
+    processing: 0
   };
 
   // Filters
@@ -152,7 +136,10 @@ export class KitchenDashboardComponent implements OnInit {
         ['pending', 'confirmed', 'preparing', 'ready'].includes(order.status)
       ).length,
       avgPrepTime: this.calculateAveragePrepTime(completedOrders),
-      totalRevenue: this.allOrders.reduce((sum, order) => sum + order.totalAmount, 0)
+      totalRevenue: this.allOrders.reduce((sum, order) => sum + order.totalAmount, 0),
+      processing: this.allOrders.filter(order =>
+        ['confirmed', 'preparing'].includes(order.status)
+      ).length
     };
   }
 

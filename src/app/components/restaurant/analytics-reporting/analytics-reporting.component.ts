@@ -1,9 +1,10 @@
-import { Component, OnInit, inject, AfterViewInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MockDataService, User, Order, MenuItem } from '../../../services/mock-data.service';
+import { MockDataService, User, Order, MenuItem, CustomerSegment, LoyaltyStats, SatisfactionScores } from '../../../services/mock-data.service';
 import { Chart, registerables } from 'chart.js';
+import { Subscription } from 'rxjs';
 
 Chart.register(...registerables);
 
@@ -38,23 +39,6 @@ interface PeakHour {
   revenue: number;
 }
 
-interface CustomerSegment {
-  name: string;
-  percentage: number;
-}
-
-interface LoyaltyStats {
-  activeMembers: number;
-  avgPoints: number;
-  redemptionRate: number;
-}
-
-interface SatisfactionScores {
-  food: number;
-  service: number;
-  overall: number;
-}
-
 @Component({
   selector: 'app-analytics-reporting',
   standalone: true,
@@ -63,8 +47,14 @@ interface SatisfactionScores {
   styleUrl: './analytics-reporting.component.css'
 })
 export class AnalyticsReportingComponent implements OnInit, AfterViewInit {
-  private mockDataService = inject(MockDataService);
-  private router = inject(Router);
+  // Subscriptions
+  private subscriptions = new Subscription();
+
+  // Constructor for dependency injection
+  constructor(
+    private mockDataService: MockDataService,
+    private router: Router
+  ) {}
 
   // Component state
   currentUser: User | null = null;
@@ -96,23 +86,17 @@ export class AnalyticsReportingComponent implements OnInit, AfterViewInit {
   // Peak hours
   peakHours: PeakHour[] = [];
 
-  // Customer insights
-  customerSegments: CustomerSegment[] = [
-    { name: 'New Customers', percentage: 35 },
-    { name: 'Regular Customers', percentage: 45 },
-    { name: 'VIP Customers', percentage: 20 }
-  ];
-
+  // Customer insights - Data will be loaded from service
+  customerSegments: CustomerSegment[] = [];
   loyaltyStats: LoyaltyStats = {
-    activeMembers: 1250,
-    avgPoints: 450,
-    redemptionRate: 68
+    activeMembers: 0,
+    avgPoints: 0,
+    redemptionRate: 0
   };
-
   satisfactionScores: SatisfactionScores = {
-    food: 4.2,
-    service: 4.5,
-    overall: 4.3
+    food: 0,
+    service: 0,
+    overall: 0
   };
 
   // Charts
@@ -124,12 +108,17 @@ export class AnalyticsReportingComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     this.initializeData();
     this.loadAnalyticsData();
+    this.loadServiceData();
   }
 
   ngAfterViewInit(): void {
     setTimeout(() => {
       this.initializeCharts();
     }, 100);
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 
   private initializeData(): void {
@@ -147,12 +136,51 @@ export class AnalyticsReportingComponent implements OnInit, AfterViewInit {
   }
 
   private loadAnalyticsData(): void {
-    this.mockDataService.getOrders().subscribe(orders => {
+    const ordersSub = this.mockDataService.getOrders().subscribe(orders => {
       this.calculateAnalytics(orders);
       this.calculateCategorySales(orders);
       this.calculatePeakHours(orders);
       this.updateCharts();
     });
+    this.subscriptions.add(ordersSub);
+  }
+
+  private loadServiceData(): void {
+    // Load customer segments from service
+    const segmentsSub = this.mockDataService.getCustomerSegments().subscribe(segments => {
+      this.customerSegments = segments;
+    });
+    this.subscriptions.add(segmentsSub);
+
+    // Load loyalty stats from service
+    const loyaltySub = this.mockDataService.getLoyaltyStats().subscribe(stats => {
+      if (stats) {
+        this.loyaltyStats = stats;
+      }
+    });
+    this.subscriptions.add(loyaltySub);
+
+    // Load satisfaction scores from service
+    const satisfactionSub = this.mockDataService.getSatisfactionScores().subscribe(scores => {
+      if (scores) {
+        this.satisfactionScores = scores;
+        this.analytics.customerSatisfaction = scores.overall;
+      }
+    });
+    this.subscriptions.add(satisfactionSub);
+
+    // Load customer satisfaction and growth from service
+    const customerSatSub = this.mockDataService.getCustomerSatisfaction().subscribe(score => {
+      if (this.analytics.customerSatisfaction === 0) {
+        this.analytics.customerSatisfaction = score;
+      }
+    });
+    this.subscriptions.add(customerSatSub);
+
+    const satisfactionGrowthSub = this.mockDataService.getSatisfactionGrowth().subscribe(growth => {
+      this.analytics.satisfactionGrowth = growth;
+    });
+    this.subscriptions.add(satisfactionGrowthSub);
   }
 
   private calculateAnalytics(orders: Order[]): void {
@@ -163,9 +191,6 @@ export class AnalyticsReportingComponent implements OnInit, AfterViewInit {
     this.analytics.totalOrders = currentPeriodOrders.length;
     this.analytics.avgOrderValue = currentPeriodOrders.length > 0 ?
       Math.round(this.analytics.totalRevenue / currentPeriodOrders.length) : 0;
-
-    // Mock customer satisfaction (in real app, this would come from customer feedback)
-    this.analytics.customerSatisfaction = 94;
 
     // Calculate growth percentages
     const prevRevenue = previousPeriodOrders.reduce((sum, order) => sum + order.totalAmount, 0);
@@ -178,7 +203,6 @@ export class AnalyticsReportingComponent implements OnInit, AfterViewInit {
       Math.round(((this.analytics.totalOrders - prevOrders) / prevOrders) * 100) : 0;
     this.analytics.aovGrowth = prevAOV > 0 ?
       Math.round(((this.analytics.avgOrderValue - prevAOV) / prevAOV) * 100) : 0;
-    this.analytics.satisfactionGrowth = 5; // Mock growth
   }
 
   private filterOrdersByDateRange(orders: Order[]): Order[] {
@@ -270,125 +294,132 @@ export class AnalyticsReportingComponent implements OnInit, AfterViewInit {
     const ctx = document.getElementById('revenueChart') as HTMLCanvasElement;
     if (!ctx) return;
 
-    const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-    const data = [82000, 95000, 91000, 110000, 124000, 132000];
-
-    this.revenueChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [{
-          label: 'Revenue',
-          data,
-          borderColor: '#ef4444',
-          backgroundColor: 'rgba(239, 68, 68, 0.1)',
-          tension: 0.4,
-          fill: true
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false }
+    // Use service data for chart
+    const chartSub = this.mockDataService.getRevenueChartData().subscribe(chartData => {
+      this.revenueChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: chartData.labels,
+          datasets: [{
+            label: 'Revenue',
+            data: chartData.data,
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
         },
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              callback: (value) => '₹' + (value as number).toLocaleString()
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: (value) => '₹' + (value as number).toLocaleString()
+              }
             }
           }
         }
-      }
+      });
     });
+    this.subscriptions.add(chartSub);
   }
 
   private createOrdersChart(): void {
     const ctx = document.getElementById('ordersChart') as HTMLCanvasElement;
     if (!ctx) return;
 
-    const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-    const data = [540, 610, 590, 700, 760, 780];
-
-    this.ordersChart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{
-          label: 'Orders',
-          data,
-          backgroundColor: '#0ea5e9',
-          borderRadius: 6
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false }
+    // Use service data for chart
+    const chartSub = this.mockDataService.getOrdersChartData().subscribe(chartData => {
+      this.ordersChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: chartData.labels,
+          datasets: [{
+            label: 'Orders',
+            data: chartData.data,
+            backgroundColor: '#0ea5e9',
+            borderRadius: 6
+          }]
         },
-        scales: {
-          y: { beginAtZero: true }
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { beginAtZero: true }
+          }
         }
-      }
+      });
     });
+    this.subscriptions.add(chartSub);
   }
 
   private createPaymentChart(): void {
     const ctx = document.getElementById('paymentChart') as HTMLCanvasElement;
     if (!ctx) return;
 
-    this.paymentChart = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: ['UPI', 'Card', 'Cash', 'Wallet'],
-        datasets: [{
-          data: [48, 32, 15, 5],
-          backgroundColor: ['#10b981', '#3b82f6', '#ef4444', '#a855f7'],
-          borderWidth: 0
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { position: 'bottom' }
+    // Use service data for chart
+    const chartSub = this.mockDataService.getPaymentChartData().subscribe(chartData => {
+      this.paymentChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['UPI', 'Card', 'Cash', 'Wallet'],
+          datasets: [{
+            data: chartData,
+            backgroundColor: ['#10b981', '#3b82f6', '#ef4444', '#a855f7'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
         }
-      }
+      });
     });
+    this.subscriptions.add(chartSub);
   }
 
   private createItemsChart(): void {
     const ctx = document.getElementById('itemsChart') as HTMLCanvasElement;
     if (!ctx) return;
 
-    const labels = ['Biryani', 'Pizza', 'Butter Chicken', 'Pasta', 'Burger', 'Salad'];
-    const data = [1240, 1050, 980, 850, 720, 650];
-
-    this.itemsChart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{
-          label: 'Orders',
-          data,
-          backgroundColor: '#f59e0b',
-          borderRadius: 6
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false }
+    // Use service data for chart
+    const chartSub = this.mockDataService.getItemsChartData().subscribe(chartData => {
+      this.itemsChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: chartData.labels,
+          datasets: [{
+            label: 'Orders',
+            data: chartData.data,
+            backgroundColor: '#f59e0b',
+            borderRadius: 6
+          }]
         },
-        scales: {
-          y: { beginAtZero: true }
-        },
-        indexAxis: 'y'
-      }
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { beginAtZero: true }
+          },
+          indexAxis: 'y'
+        }
+      });
     });
+    this.subscriptions.add(chartSub);
   }
 
   private updateCharts(): void {
@@ -413,7 +444,7 @@ export class AnalyticsReportingComponent implements OnInit, AfterViewInit {
     const html = document.documentElement;
     html.classList.toggle('dark');
     const newTheme = html.classList.contains('dark') ? 'dark' : 'light';
-    localStorage.setItem('theme', newTheme);
+    sessionStorage.setItem('theme', newTheme);
   }
 
   setDateRange(range: string): void {

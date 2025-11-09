@@ -1,6 +1,7 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Chart, registerables } from 'chart.js';
+import { MockDataService } from '../../../services/mock-data.service';
 
 Chart.register(...registerables);
 
@@ -12,9 +13,15 @@ Chart.register(...registerables);
   styleUrls: ['./platform-dashboard.component.css']
 })
 export class PlatformDashboardComponent implements OnInit, AfterViewInit {
+  private dashboardData: any = {};
+
+  constructor(private mockDataService: MockDataService) {}
 
   ngOnInit(): void {
     // Component initialization
+    this.mockDataService.getPlatformDashboardData().subscribe(data => {
+      this.dashboardData = data;
+    });
   }
 
   ngAfterViewInit(): void {
@@ -24,14 +31,14 @@ export class PlatformDashboardComponent implements OnInit, AfterViewInit {
   private initCharts(): void {
     // Revenue Trend Chart
     const revenueCtx = document.getElementById('revenueChart') as HTMLCanvasElement;
-    if (revenueCtx) {
+    if (revenueCtx && this.dashboardData.revenueChart) {
       new Chart(revenueCtx, {
         type: 'line',
         data: {
-          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+          labels: this.dashboardData.revenueChart.labels,
           datasets: [{
             label: 'Monthly Revenue',
-            data: [32000, 35000, 38000, 42000, 45000, 45600],
+            data: this.dashboardData.revenueChart.data,
             borderColor: '#ef4444',
             backgroundColor: 'rgba(239, 68, 68, 0.1)',
             tension: 0.4,
@@ -60,13 +67,13 @@ export class PlatformDashboardComponent implements OnInit, AfterViewInit {
 
     // Subscription Distribution Chart
     const subscriptionCtx = document.getElementById('subscriptionChart') as HTMLCanvasElement;
-    if (subscriptionCtx) {
+    if (subscriptionCtx && this.dashboardData.subscriptionChart) {
       new Chart(subscriptionCtx, {
         type: 'doughnut',
         data: {
-          labels: ['Pro Plan', 'Starter Plan', 'Enterprise'],
+          labels: this.dashboardData.subscriptionChart.labels,
           datasets: [{
-            data: [12, 6, 6],
+            data: this.dashboardData.subscriptionChart.data,
             backgroundColor: ['#10b981', '#f59e0b', '#8b5cf6'],
             borderWidth: 0
           }]

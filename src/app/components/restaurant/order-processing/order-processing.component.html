@@ -23,7 +23,7 @@
         </div>
         <span class="text-blue-600 dark:text-blue-400 text-sm font-medium">Total Orders</span>
       </div>
-      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ orderStats.total }}</div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ orderStats.totalOrders }}</div>
       <div class="text-sm text-gray-600 dark:text-gray-400">All Time</div>
     </div>
 
@@ -34,7 +34,7 @@
         </div>
         <span class="text-yellow-600 dark:text-yellow-400 text-sm font-medium">Pending</span>
       </div>
-      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ orderStats.pending }}</div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ orderStats.pendingOrders }}</div>
       <div class="text-sm text-gray-600 dark:text-gray-400">Awaiting Action</div>
     </div>
 
@@ -56,7 +56,7 @@
         </div>
         <span class="text-green-600 dark:text-green-400 text-sm font-medium">Completed</span>
       </div>
-      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ orderStats.completed }}</div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ orderStats.completedOrders }}</div>
       <div class="text-sm text-gray-600 dark:text-gray-400">Today</div>
     </div>
   </div>
@@ -86,14 +86,7 @@
           [(ngModel)]="statusFilter"
           (change)="filterOrders()"
           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
-          <option value="all">All Orders</option>
-          <option value="placed">Placed</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="preparing">Preparing</option>
-          <option value="ready">Ready</option>
-          <option value="served">Served</option>
-          <option value="paid">Paid</option>
-          <option value="cancelled">Cancelled</option>
+          <option *ngFor="let option of orderFilterOptions" [value]="option.value">{{ option.label }}</option>
         </select>
       </div>
       <div>
@@ -104,10 +97,7 @@
           [(ngModel)]="sortBy"
           (change)="filterOrders()"
           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
-          <option value="newest">Newest First</option>
-          <option value="oldest">Oldest First</option>
-          <option value="amount-high">Amount: High to Low</option>
-          <option value="amount-low">Amount: Low to High</option>
+          <option *ngFor="let option of orderSortOptions" [value]="option.value">{{ option.label }}</option>
         </select>
       </div>
       <div class="flex items-end">

@@ -372,8 +372,8 @@
         <div class="space-y-3">
           <div *ngFor="let staff of todaysStaff" class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
             <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 rounded-lg flex items-center justify-center" [class]="getStaffIconBg(staff.icon)">
-                <i [class]="staff.icon" class="text-sm" [class]="getStaffIconColor(staff.icon)"></i>
+              <div class="w-10 h-10 rounded-lg flex items-center justify-center" [class]="getStaffIconBg(staff.avatar)">
+                <i [class]="staff.avatar" class="text-sm" [class]="getStaffIconColor(staff.avatar)"></i>
               </div>
               <div>
                 <div class="text-sm font-semibold text-gray-900 dark:text-white">{{ staff.name }}</div>

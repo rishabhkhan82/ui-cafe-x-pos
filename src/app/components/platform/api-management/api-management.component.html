@@ -22,7 +22,7 @@
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm text-gray-500 dark:text-gray-400">Total Requests</p>
-          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ metrics.totalRequests.toLocaleString() }}</h3>
+          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ metrics?.totalRequests?.toLocaleString() }}</h3>
           <p class="text-sm text-green-600 dark:text-green-400">+12.5% this month</p>
         </div>
         <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-500">
@@ -35,7 +35,7 @@
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm text-gray-500 dark:text-gray-400">Active API Keys</p>
-          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ metrics.activeKeys }}</h3>
+          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ metrics?.activeKeys }}</h3>
           <p class="text-sm text-green-600 dark:text-green-400">All keys active</p>
         </div>
         <div class="w-12 h-12 rounded-xl bg-green-50 dark:bg-green-900/30 flex items-center justify-center text-green-500">
@@ -48,7 +48,7 @@
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm text-gray-500 dark:text-gray-400">Avg Response Time</p>
-          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ metrics.averageResponseTime }}ms</h3>
+          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ metrics?.averageResponseTime }}ms</h3>
           <p class="text-sm text-green-600 dark:text-green-400">-5.2% improvement</p>
         </div>
         <div class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center text-purple-500">
@@ -61,7 +61,7 @@
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm text-gray-500 dark:text-gray-400">API Uptime</p>
-          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ metrics.uptime }}%</h3>
+          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">{{ metrics?.uptime }}%</h3>
           <p class="text-sm text-green-600 dark:text-green-400">Last 30 days</p>
         </div>
         <div class="w-12 h-12 rounded-xl bg-primary-50 dark:bg-red-900/30 flex items-center justify-center text-primary-500">
@@ -333,7 +333,7 @@
         <div class="pos-card rounded-2xl p-6">
           <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Top Endpoints</h3>
           <div class="space-y-4">
-            <div *ngFor="let endpoint of metrics.topEndpoints" class="flex items-center justify-between">
+            <div *ngFor="let endpoint of metrics?.topEndpoints" class="flex items-center justify-between">
               <div class="flex items-center space-x-3">
                 <div class="w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
                   <i class="fas fa-code text-primary-600 dark:text-primary-400 text-sm"></i>
@@ -351,20 +351,20 @@
           <div class="space-y-4">
             <div class="flex justify-between items-center">
               <span class="text-sm text-gray-600 dark:text-gray-300">Uptime (30 days)</span>
-              <span class="text-sm font-bold text-green-600 dark:text-green-400">{{ metrics.uptime }}%</span>
+              <span class="text-sm font-bold text-green-600 dark:text-green-400">{{ metrics?.uptime }}%</span>
             </div>
             <div class="flex justify-between items-center">
               <span class="text-sm text-gray-600 dark:text-gray-300">Failed Requests</span>
-              <span class="text-sm font-bold text-red-600 dark:text-red-400">{{ metrics.failedRequests }}</span>
+              <span class="text-sm font-bold text-red-600 dark:text-red-400">{{ metrics?.failedRequests }}</span>
             </div>
             <div class="flex justify-between items-center">
               <span class="text-sm text-gray-600 dark:text-gray-300">Avg Response Time</span>
-              <span class="text-sm font-bold text-blue-600 dark:text-blue-400">{{ metrics.averageResponseTime }}ms</span>
+              <span class="text-sm font-bold text-blue-600 dark:text-blue-400">{{ metrics?.averageResponseTime }}ms</span>
             </div>
             <div class="flex justify-between items-center">
               <span class="text-sm text-gray-600 dark:text-gray-300">Error Rate</span>
               <span class="text-sm font-bold text-orange-600 dark:text-orange-400">
-                {{ ((metrics.failedRequests / metrics.totalRequests) * 100).toFixed(2) }}%
+                {{ metrics ? ((metrics.failedRequests / metrics.totalRequests) * 100).toFixed(2) : '0.00' }}%
               </span>
             </div>
           </div>

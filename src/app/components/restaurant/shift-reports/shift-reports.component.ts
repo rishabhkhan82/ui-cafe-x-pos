@@ -1,8 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { MockDataService, ShiftReport, User } from '../../../services/mock-data.service';
+import { Subscription } from 'rxjs';
+import {
+  MockDataService,
+  ShiftReport,
+  User,
+  ShiftReportsConfig,
+  SelectOption
+} from '../../../services/mock-data.service';
 import { AuthService } from '../../../services/auth.service';
 
 @Component({
@@ -12,7 +19,9 @@ import { AuthService } from '../../../services/auth.service';
   templateUrl: './shift-reports.component.html',
   styleUrls: ['./shift-reports.component.css']
 })
-export class ShiftReportsComponent implements OnInit {
+export class ShiftReportsComponent implements OnInit, OnDestroy {
+  private subscriptions: Subscription = new Subscription();
+
   currentUser: any;
   shiftReports: ShiftReport[] = [];
   filteredReports: ShiftReport[] = [];
@@ -21,6 +30,12 @@ export class ShiftReportsComponent implements OnInit {
   startDate: string = '';
   endDate: string = '';
   currentDate = new Date();
+
+  // Configuration data from service
+  shiftReportsConfig: ShiftReportsConfig | null = null;
+  periodFilterOptions: SelectOption[] = [];
+  shiftFilterOptions: SelectOption[] = [];
+  defaultHoursPerShift = 24;
 
   // Summary stats
   summaryStats = {
@@ -42,31 +57,33 @@ export class ShiftReportsComponent implements OnInit {
       this.currentUser = user;
     });
 
+    this.loadConfigurationData();
     this.initializeDateRange();
     this.loadShiftReports();
   }
 
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
+
+  loadConfigurationData(): void {
+    // Load shift reports configuration
+    this.subscriptions.add(
+      this.mockDataService.getShiftReportsConfig().subscribe(config => {
+        this.shiftReportsConfig = config;
+        if (config) {
+          this.periodFilterOptions = config.periodFilterOptions;
+          this.shiftFilterOptions = config.shiftFilterOptions;
+          this.defaultHoursPerShift = config.defaultHoursPerShift;
+        }
+      })
+    );
+  }
+
   initializeDateRange(): void {
-    const endDate = new Date();
-    const startDate = new Date();
-
-    switch (this.selectedPeriod) {
-      case 'today':
-        startDate.setHours(0, 0, 0, 0);
-        break;
-      case 'week':
-        startDate.setDate(endDate.getDate() - 7);
-        break;
-      case 'month':
-        startDate.setMonth(endDate.getMonth() - 1);
-        break;
-      case 'quarter':
-        startDate.setMonth(endDate.getMonth() - 3);
-        break;
-    }
-
-    this.startDate = startDate.toISOString().split('T')[0];
-    this.endDate = endDate.toISOString().split('T')[0];
+    const dateRange = this.mockDataService.getDateRangeForPeriod(this.selectedPeriod);
+    this.startDate = dateRange.startDate.toISOString().split('T')[0];
+    this.endDate = dateRange.endDate.toISOString().split('T')[0];
   }
 
   loadShiftReports(): void {
@@ -97,7 +114,7 @@ export class ShiftReportsComponent implements OnInit {
       totalReports: this.filteredReports.length,
       totalRevenue: this.filteredReports.reduce((sum, report) => sum + report.revenue, 0),
       totalOrders: this.filteredReports.reduce((sum, report) => sum + report.ordersProcessed, 0),
-      totalHours: this.filteredReports.reduce((sum, report) => sum + 24, 0), // Assuming 24 hours per shift
+      totalHours: this.filteredReports.reduce((sum, report) => sum + this.defaultHoursPerShift, 0),
       avgOrdersPerShift: 0,
       avgRevenuePerShift: 0
     };
@@ -140,7 +157,7 @@ export class ShiftReportsComponent implements OnInit {
       report.date.toLocaleDateString(),
       report.shift,
       report.staffCount.toString(),
-      '24', // Assuming 24 hours per shift
+      this.defaultHoursPerShift.toString(),
       report.ordersProcessed.toString(),
       report.revenue.toString(),
       report.customerComplaints.toString(),
@@ -229,19 +246,11 @@ export class ShiftReportsComponent implements OnInit {
   }
 
   getShiftBadgeClass(shift: string): string {
-    switch (shift) {
-      case 'morning': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600';
-      case 'afternoon': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-600';
-      case 'evening': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-600';
-      case 'night': return 'bg-purple-100 dark:bg-purple-900/30 text-purple-600';
-      default: return 'bg-gray-100 dark:bg-gray-700 text-gray-600';
-    }
+    return this.mockDataService.getShiftBadgeClass(shift);
   }
 
   getApprovalBadgeClass(approved: boolean | undefined): string {
-    return approved
-      ? 'bg-green-100 dark:bg-green-900/30 text-green-600'
-      : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600';
+    return this.mockDataService.getApprovalBadgeClass(approved || false);
   }
 
   getTopPerformingShifts(): ShiftReport[] {
@@ -251,10 +260,11 @@ export class ShiftReportsComponent implements OnInit {
   }
 
   getPerformanceScore(report: ShiftReport): number {
-    // Simple performance score based on revenue and orders vs complaints
-    const baseScore = (report.revenue / 1000) + (report.ordersProcessed * 2);
-    const penalty = report.customerComplaints * 5;
-    return Math.max(0, Math.min(100, Math.round(baseScore - penalty)));
+    return this.mockDataService.calculatePerformanceScore(
+      report.revenue,
+      report.ordersProcessed,
+      report.customerComplaints
+    );
   }
 
   getReportsWithIssues(): ShiftReport[] {
@@ -299,21 +309,23 @@ export class ShiftReportsComponent implements OnInit {
   }
 
   getPeakShiftType(): string {
-    // Analyze which shift type performs best
-    const shiftPerformance = {
-      morning: 0,
-      afternoon: 0,
-      evening: 0,
-      night: 0
-    };
+    const shiftTypes = this.mockDataService.getShiftTypes();
+    const shiftPerformance: { [key: string]: number } = {};
+
+    // Initialize performance for all shift types
+    shiftTypes.forEach(shift => {
+      shiftPerformance[shift] = 0;
+    });
 
     this.filteredReports.forEach(report => {
       const score = this.getPerformanceScore(report);
-      shiftPerformance[report.shift as keyof typeof shiftPerformance] += score;
+      if (shiftPerformance[report.shift] !== undefined) {
+        shiftPerformance[report.shift] += score;
+      }
     });
 
     const bestShift = Object.entries(shiftPerformance).reduce((a, b) =>
-      shiftPerformance[a[0] as keyof typeof shiftPerformance] > shiftPerformance[b[0] as keyof typeof shiftPerformance] ? a : b
+      shiftPerformance[a[0]] > shiftPerformance[b[0]] ? a : b
     )[0];
 
     return bestShift.charAt(0).toUpperCase() + bestShift.slice(1);
@@ -329,7 +341,6 @@ export class ShiftReportsComponent implements OnInit {
   }
 
   getRevenueGrowth(): number {
-    // Mock growth calculation - in real app would compare with previous period
-    return Math.floor(Math.random() * 20) + 5; // Random growth between 5-25%
+    return this.mockDataService.calculateRevenueGrowth();
   }
 }

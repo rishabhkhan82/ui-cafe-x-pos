@@ -86,12 +86,7 @@
           [(ngModel)]="selectedCategory"
           (change)="filterSettings()"
           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
-          <option value="all">All Categories</option>
-          <option value="general">General</option>
-          <option value="hours">Business Hours</option>
-          <option value="payments">Payments</option>
-          <option value="operations">Operations</option>
-          <option value="notifications">Notifications</option>
+          <option *ngFor="let category of settingsFilterCategories" [value]="category.value">{{ category.label }}</option>
         </select>
       </div>
       <div>
@@ -102,10 +97,7 @@
           [(ngModel)]="selectedStatus"
           (change)="filterSettings()"
           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
-          <option value="all">All Status</option>
-          <option value="configured">Configured</option>
-          <option value="default">Default</option>
-          <option value="disabled">Disabled</option>
+          <option *ngFor="let status of settingsFilterStatuses" [value]="status.value">{{ status.label }}</option>
         </select>
       </div>
       <div class="flex items-end">
@@ -280,7 +272,7 @@
       <!-- Business Hours -->
       <div *ngIf="activeTab === 'hours'" class="space-y-4">
         <div class="grid grid-cols-1 gap-4">
-          <div *ngFor="let day of ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']"
+          <div *ngFor="let day of businessDays"
                class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-4">
@@ -328,18 +320,18 @@
             <i class="fas fa-credit-card mr-2 text-blue-500"></i>Accepted Payment Methods
           </label>
           <div class="space-y-3">
-            <div *ngFor="let method of ['cash', 'card', 'upi', 'wallet']"
+            <div *ngFor="let methodDesc of paymentMethodDescriptions"
                  class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
               <div class="flex items-center">
                 <input
                   type="checkbox"
-                  [checked]="restaurantSettings?.paymentSettings?.acceptedPayments?.includes(method)"
-                  (change)="restaurantSettings?.paymentSettings?.acceptedPayments?.includes(method) ? removePaymentMethod(method) : addPaymentMethod(method)"
+                  [checked]="restaurantSettings?.paymentSettings?.acceptedPayments?.includes(methodDesc.method)"
+                  (change)="restaurantSettings?.paymentSettings?.acceptedPayments?.includes(methodDesc.method) ? removePaymentMethod(methodDesc.method) : addPaymentMethod(methodDesc.method)"
                   [disabled]="!isEditing"
                   class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 disabled:opacity-50">
-                <span class="ml-3 text-sm text-gray-900 dark:text-white capitalize font-medium">{{ method }}</span>
+                <span class="ml-3 text-sm text-gray-900 dark:text-white capitalize font-medium">{{ methodDesc.method }}</span>
               </div>
-              <span class="text-xs text-gray-500 dark:text-gray-400">{{ getPaymentMethodDescription(method) }}</span>
+              <span class="text-xs text-gray-500 dark:text-gray-400">{{ methodDesc.description }}</span>
             </div>
           </div>
         </div>
@@ -394,7 +386,7 @@
               <i class="fas fa-hand-holding-heart mr-2 text-pink-500"></i>Tip Options
             </label>
             <div class="flex flex-wrap gap-2">
-              <div *ngFor="let tip of [5, 10, 15, 20, 25]" class="flex items-center">
+              <div *ngFor="let tip of tipOptions" class="flex items-center">
                 <input
                   type="checkbox"
                   [checked]="restaurantSettings?.paymentSettings?.tipOptions?.includes(tip)"
@@ -489,12 +481,7 @@
       <!-- Notification Settings -->
       <div *ngIf="activeTab === 'notifications'" class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div *ngFor="let notification of [
-            { key: 'lowStockAlerts', label: 'Low Stock Alerts', desc: 'Get notified when inventory items are running low', icon: 'fas fa-exclamation-triangle', color: 'text-orange-500' },
-            { key: 'orderAlerts', label: 'Order Alerts', desc: 'Receive notifications for new orders and order status changes', icon: 'fas fa-receipt', color: 'text-blue-500' },
-            { key: 'paymentAlerts', label: 'Payment Alerts', desc: 'Notifications for payment processing and failures', icon: 'fas fa-credit-card', color: 'text-green-500' },
-            { key: 'staffAlerts', label: 'Staff Alerts', desc: 'Alerts for staff schedule changes and performance issues', icon: 'fas fa-users', color: 'text-purple-500' }
-          ]" class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6">
+          <div *ngFor="let notification of notificationConfigs" class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6">
             <div class="flex items-center justify-between mb-3">
               <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 rounded-lg bg-white dark:bg-gray-600 flex items-center justify-center">

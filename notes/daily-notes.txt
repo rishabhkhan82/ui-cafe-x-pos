@@ -1,0 +1,37 @@
+08/11/2025 
+
+1- find the link between the authservice, interceptor, environment, crud service and all 4 interceptors
+
+Controllers - Handle HTTP requests/responses
+Services - Contain business logic
+Repositories - Handle database operations
+Entities - Represent database tables
+DTOs - Transfer data between layers
+
+Check if the production database already has users with properly hashed passwords
+If yes, use BCrypt matching only (remove the plain text fallback)
+
+=======================================================================
+
+password_min_length → Not in entity
+two_factor_required → Not in entity
+email_notifications → Not in entity
+sms_notifications → Not in entity
+notification_batch_size → Not in entity
+webhook_retries → Not in entity
+
+=================
+
+platformLogo
+defaultLanguage
+maintenanceMessage
+fileUploadMaxSize
+backupEnabled
+backupFrequency
+supportEmail
+supportPhone
+termsUrl
+privacyUrl
+updatedBy (User reference)
+updatedAt
+createdAt

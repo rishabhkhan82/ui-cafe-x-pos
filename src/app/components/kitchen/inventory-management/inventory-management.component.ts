@@ -2,43 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MockDataService, User, InventoryItem } from '../../../services/mock-data.service';
-
-interface InventoryStats {
-  totalItems: number;
-  lowStock: number;
-  outOfStock: number;
-  totalValue: number;
-}
-
-interface LowStockAlert {
-  id: string;
-  itemName: string;
-  currentStock: number;
-  minStock: number;
-  unit: string;
-  category: string;
-}
-
-interface ItemForm {
-  name: string;
-  sku: string;
-  category: string;
-  unit: string;
-  unitCost: number;
-  currentStock: number;
-  minStockLevel: number;
-  maxStockLevel?: number;
-  supplier?: string;
-  description?: string;
-}
-
-interface StockAdjustment {
-  type: string;
-  quantity: number;
-  reason: string;
-  notes?: string;
-}
+import { MockDataService, User, InventoryItem, InventoryStats, ItemForm, LowStockAlert, StockAdjustment } from '../../../services/mock-data.service';
 
 @Component({
   selector: 'app-inventory-management',

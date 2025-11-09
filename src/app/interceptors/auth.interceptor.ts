@@ -4,12 +4,7 @@ import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, switchMap, filter, take } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
 import { NotificationService } from '../services/notification.service';
-
-interface TokenResponse {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-}
+import { TokenResponse } from '../services/mock-data.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -151,17 +146,17 @@ export class AuthInterceptor implements HttpInterceptor {
   }
 
   private storeTokens(tokenResponse: TokenResponse): void {
-    localStorage.setItem('accessToken', tokenResponse.accessToken);
-    localStorage.setItem('refreshToken', tokenResponse.refreshToken);
+    sessionStorage.setItem('accessToken', tokenResponse.accessToken);
+    sessionStorage.setItem('refreshToken', tokenResponse.refreshToken);
 
     // Set token expiry
     const expiryTime = Date.now() + (tokenResponse.expiresIn * 1000);
-    localStorage.setItem('tokenExpiry', expiryTime.toString());
+    sessionStorage.setItem('tokenExpiry', expiryTime.toString());
   }
 
   private getAccessToken(): string | null {
-    const token = localStorage.getItem('accessToken');
-    const expiry = localStorage.getItem('tokenExpiry');
+    const token = sessionStorage.getItem('accessToken');
+    const expiry = sessionStorage.getItem('tokenExpiry');
 
     if (token && expiry) {
       // Check if token is expired
@@ -176,13 +171,13 @@ export class AuthInterceptor implements HttpInterceptor {
   }
 
   private getRefreshToken(): string | null {
-    return localStorage.getItem('refreshToken');
+    return sessionStorage.getItem('refreshToken');
   }
 
   private clearTokens(): void {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('tokenExpiry');
+    sessionStorage.removeItem('accessToken');
+    sessionStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('tokenExpiry');
   }
 
   private isAuthEndpoint(url: string): boolean {

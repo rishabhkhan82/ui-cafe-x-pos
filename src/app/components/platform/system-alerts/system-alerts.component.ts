@@ -1,15 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MockDataService, Notification } from '../../../services/mock-data.service';
-
-interface SystemAlert extends Notification {
-  alertType: 'maintenance' | 'security' | 'performance' | 'billing' | 'system';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  affectedUsers?: number;
-  resolutionTime?: Date;
-  resolvedBy?: string;
-}
+import { MockDataService, Notification, SystemAlert } from '../../../services/mock-data.service';
 
 @Component({
   selector: 'app-system-alerts',
@@ -44,63 +36,10 @@ export class SystemAlertsComponent implements OnInit {
   }
 
   loadAlerts(): void {
-    // In a real app, this would fetch system alerts from API
-    // For now, we'll create mock system alerts
-    this.alerts = [
-      {
-        id: 'alert-1',
-        title: 'Scheduled Maintenance',
-        message: 'System maintenance scheduled for tonight from 2:00 AM to 4:00 AM IST. Platform will be unavailable during this period.',
-        type: 'system',
-        priority: 'high',
-        status: 'unread',
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        alertType: 'maintenance',
-        severity: 'medium',
-        affectedUsers: 1500
-      },
-      {
-        id: 'alert-2',
-        title: 'High CPU Usage Detected',
-        message: 'Server CPU usage has exceeded 85% for the last 30 minutes. Performance may be impacted.',
-        type: 'system',
-        priority: 'high',
-        status: 'read',
-        timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-        alertType: 'performance',
-        severity: 'high',
-        affectedUsers: 800,
-        resolutionTime: new Date(Date.now() - 3 * 60 * 60 * 1000),
-        resolvedBy: 'System Admin'
-      },
-      {
-        id: 'alert-3',
-        title: 'Security Alert: Failed Login Attempts',
-        message: 'Multiple failed login attempts detected from IP 192.168.1.100. Account has been temporarily locked.',
-        type: 'system',
-        priority: 'high',
-        status: 'read',
-        timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
-        alertType: 'security',
-        severity: 'critical',
-        affectedUsers: 1,
-        resolutionTime: new Date(Date.now() - 5 * 60 * 60 * 1000),
-        resolvedBy: 'Security Team'
-      },
-      {
-        id: 'alert-4',
-        title: 'Billing System Update',
-        message: 'Monthly billing cycle completed successfully. All subscriptions have been renewed.',
-        type: 'system',
-        priority: 'medium',
-        status: 'read',
-        timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-        alertType: 'billing',
-        severity: 'low',
-        affectedUsers: 1200
-      }
-    ];
-    this.filteredAlerts = [...this.alerts];
+    this.mockDataService.getSystemAlerts().subscribe(alerts => {
+      this.alerts = alerts;
+      this.filteredAlerts = [...this.alerts];
+    });
   }
 
   filterAlerts(): void {
@@ -137,8 +76,19 @@ export class SystemAlertsComponent implements OnInit {
 
   createAlert(): void {
     if (this.newAlert.title && this.newAlert.message) {
-      // In a real app, this would call an API to create the alert
-      console.log('Creating new alert:', this.newAlert);
+      const alert: SystemAlert = {
+        id: `alert-${Date.now()}`,
+        title: this.newAlert.title!,
+        message: this.newAlert.message!,
+        type: this.newAlert.type!,
+        priority: this.newAlert.priority!,
+        status: this.newAlert.status!,
+        timestamp: new Date(),
+        alertType: this.newAlert.alertType!,
+        severity: this.newAlert.severity!
+      };
+
+      this.mockDataService.addSystemAlert(alert);
       this.showCreateForm = false;
       this.newAlert = {};
       // Reload alerts
@@ -147,16 +97,11 @@ export class SystemAlertsComponent implements OnInit {
   }
 
   markAsRead(alert: SystemAlert): void {
-    alert.status = 'read';
-    // In a real app, this would call an API to update the alert status
-    console.log('Marked alert as read:', alert.id);
+    this.mockDataService.updateSystemAlertStatus(alert.id, 'read');
   }
 
   resolveAlert(alert: SystemAlert): void {
-    alert.resolutionTime = new Date();
-    alert.resolvedBy = 'Current User'; // In real app, get from auth service
-    // In a real app, this would call an API to resolve the alert
-    console.log('Resolved alert:', alert.id);
+    this.mockDataService.resolveSystemAlert(alert.id, 'Current User'); // In real app, get from auth service
   }
 
   getSeverityColor(severity: string): string {

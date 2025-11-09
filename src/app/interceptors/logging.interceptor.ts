@@ -2,20 +2,7 @@ import { Injectable, isDevMode } from '@angular/core';
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { Observable, tap, catchError, throwError } from 'rxjs';
 import { ErrorHandlingService } from '../services/error-handling.service';
-
-interface RequestLog {
-  id: string;
-  timestamp: number;
-  method: string;
-  url: string;
-  duration?: number;
-  status?: number;
-  size?: number;
-  userId?: string;
-  sessionId?: string;
-  userAgent?: string;
-  ip?: string;
-}
+import { RequestLog } from '../services/mock-data.service';
 
 @Injectable()
 export class LoggingInterceptor implements HttpInterceptor {

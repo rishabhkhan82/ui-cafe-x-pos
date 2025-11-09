@@ -2,44 +2,8 @@ import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { Order, OrderItem, MenuItem } from '../../../services/mock-data.service';
+import { Order, OrderItem, MenuItem, DineInSubTab, MenuCategory, OnlineOrderEntry, OrderTypeTab, PaymentMethod, MockDataService } from '../../../services/mock-data.service';
 import { RealtimeService } from '../../../services/realtime.service';
-
-interface PaymentMethod {
-  id: string;
-  name: string;
-  icon: string;
-}
-
-interface MenuCategory {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-}
-
-interface OrderTypeTab {
-  id: string;
-  name: string;
-  icon: string;
-  active: boolean;
-}
-
-interface DineInSubTab {
-  id: string;
-  name: string;
-  active: boolean;
-}
-
-interface OnlineOrderEntry {
-  platform: string;
-  orderId: string;
-  customerName: string;
-  phone: string;
-  address: string;
-  items: OrderItem[];
-  total: number;
-}
 
 @Component({
   selector: 'app-cashier-interface',
@@ -50,33 +14,21 @@ interface OnlineOrderEntry {
 })
 export class CashierInterfaceComponent implements OnInit, OnDestroy {
   private realtimeService = inject(RealtimeService);
+  private mockDataService = inject(MockDataService);
   private subscriptions: Subscription[] = [];
 
   // Order Type Tabs
-  orderTypeTabs: OrderTypeTab[] = [
-    { id: 'dine_in', name: 'Dine In', icon: 'fas fa-utensils', active: true },
-    { id: 'dine_direct', name: 'Dine Direct', icon: 'fas fa-concierge-bell', active: false },
-    { id: 'takeaway', name: 'Takeaway', icon: 'fas fa-shopping-bag', active: false },
-    { id: 'online', name: 'Online', icon: 'fas fa-globe', active: false }
-  ];
+  orderTypeTabs: OrderTypeTab[] = [];
 
   // Dine In Sub-tabs
-  dineInSubTabs: DineInSubTab[] = [
-    { id: 'with_app', name: 'With App', active: true },
-    { id: 'without_app', name: 'Without App', active: false }
-  ];
+  dineInSubTabs: DineInSubTab[] = [];
 
   // Current active states
   activeOrderType: 'dine_in' | 'dine_direct' | 'takeaway' | 'online' = 'dine_in';
   activeDineInType: string = 'with_app';
 
   // Menu Categories
-  menuCategories: MenuCategory[] = [
-    { id: 'appetizers', name: 'Appetizers', icon: 'fas fa-leaf', color: 'bg-green-500' },
-    { id: 'mains', name: 'Main Course', icon: 'fas fa-utensils', color: 'bg-blue-500' },
-    { id: 'beverages', name: 'Beverages', icon: 'fas fa-coffee', color: 'bg-orange-500' },
-    { id: 'desserts', name: 'Desserts', icon: 'fas fa-ice-cream', color: 'bg-pink-500' }
-  ];
+  menuCategories: MenuCategory[] = [];
 
   // Component state
   orders: Order[] = [];
@@ -109,57 +61,40 @@ export class CashierInterfaceComponent implements OnInit, OnDestroy {
   pendingBillsCount: number = 0;
 
   // Payment methods
-  paymentMethods: PaymentMethod[] = [
-    { id: 'cash', name: 'Cash', icon: 'fas fa-money-bill-wave' },
-    { id: 'card', name: 'Card', icon: 'fas fa-credit-card' },
-    { id: 'upi', name: 'UPI', icon: 'fas fa-mobile-alt' },
-    { id: 'wallet', name: 'Wallet', icon: 'fas fa-wallet' }
-  ];
+  paymentMethods: PaymentMethod[] = [];
 
   // Quick amount buttons
-  quickAmounts: number[] = [100, 200, 500, 1000, 2000];
+  quickAmounts: number[] = [];
 
   // Sample menu items for demonstration
-  menuItems: MenuItem[] = [
-    {
-      id: '1',
-      name: 'Butter Chicken',
-      description: 'Creamy tomato-based curry',
-      price: 320,
-      category: 'Main Course',
-      image: '',
-      isAvailable: true,
-      isVegetarian: false,
-      isSpicy: true,
-      preparationTime: 20
-    },
-    {
-      id: '2',
-      name: 'Margherita Pizza',
-      description: 'Classic pizza with cheese',
-      price: 250,
-      category: 'Main Course',
-      image: '',
-      isAvailable: true,
-      isVegetarian: true,
-      isSpicy: false,
-      preparationTime: 15
-    },
-    {
-      id: '3',
-      name: 'Caesar Salad',
-      description: 'Fresh romaine lettuce salad',
-      price: 180,
-      category: 'Appetizers',
-      image: '',
-      isAvailable: true,
-      isVegetarian: true,
-      isSpicy: false,
-      preparationTime: 10
-    }
-  ];
+  menuItems: MenuItem[] = [];
 
   ngOnInit(): void {
+    // Subscribe to mock data service observables
+    this.mockDataService.getOrderTypeTabs().subscribe(tabs => {
+      this.orderTypeTabs = tabs;
+    });
+
+    this.mockDataService.getDineInSubTabs().subscribe(subTabs => {
+      this.dineInSubTabs = subTabs;
+    });
+
+    this.mockDataService.getMenuCategories().subscribe(categories => {
+      this.menuCategories = categories;
+    });
+
+    this.mockDataService.getPaymentMethods().subscribe(methods => {
+      this.paymentMethods = methods;
+    });
+
+    this.mockDataService.getQuickAmounts().subscribe(amounts => {
+      this.quickAmounts = amounts;
+    });
+
+    this.mockDataService.getSampleMenuItems().subscribe(items => {
+      this.menuItems = items;
+    });
+
     this.loadOrders();
     this.setupRealtimeSubscriptions();
     this.calculateTodaysSales();
@@ -172,9 +107,10 @@ export class CashierInterfaceComponent implements OnInit, OnDestroy {
 
   private loadOrders(): void {
     // Load orders from mock data service
-    // For now, we'll simulate with some sample orders
-    this.orders = this.getSampleOrders();
-    this.filterReadyOrders();
+    this.mockDataService.getSampleOrders().subscribe(sampleOrders => {
+      this.orders = sampleOrders;
+      this.filterReadyOrders();
+    });
   }
 
   private setupRealtimeSubscriptions(): void {
@@ -202,13 +138,13 @@ export class CashierInterfaceComponent implements OnInit, OnDestroy {
 
   // Tab Management
   switchOrderType(tabId: string): void {
-    this.orderTypeTabs.forEach(tab => tab.active = tab.id === tabId);
+    this.mockDataService.updateOrderTypeTab(tabId, true);
     this.activeOrderType = tabId as 'dine_in' | 'dine_direct' | 'takeaway' | 'online';
     this.resetCurrentOrder();
   }
 
   switchDineInType(subTabId: string): void {
-    this.dineInSubTabs.forEach(tab => tab.active = tab.id === subTabId);
+    this.mockDataService.updateDineInSubTab(subTabId, true);
     this.activeDineInType = subTabId;
     this.resetCurrentOrder();
   }
@@ -352,89 +288,6 @@ export class CashierInterfaceComponent implements OnInit, OnDestroy {
     };
   }
 
-  private getSampleOrders(): Order[] {
-    const now = new Date();
-    return [
-      {
-        id: 'ORD-2025-1045',
-        customerId: 'customer-1',
-        customerName: 'Amit Patil',
-        tableNumber: 'T-07',
-        items: [
-          {
-            id: 'order-item-1',
-            menuItemId: 'item-1',
-            menuItemName: 'Hyderabadi Biryani',
-            quantity: 2,
-            unitPrice: 280,
-            totalPrice: 560,
-            status: 'ready'
-          },
-          {
-            id: 'order-item-2',
-            menuItemId: 'item-2',
-            menuItemName: 'Margherita Pizza',
-            quantity: 1,
-            unitPrice: 250,
-            totalPrice: 250,
-            status: 'ready'
-          }
-        ],
-        status: 'ready',
-        orderType: 'dine_in',
-        paymentStatus: 'pending',
-        totalAmount: 810,
-        createdAt: new Date(now.getTime() - 2 * 60 * 60 * 1000),
-        updatedAt: new Date(now.getTime() - 30 * 60 * 1000)
-      },
-      {
-        id: 'ORD-2025-1044',
-        customerId: 'customer-2',
-        customerName: 'Sarah Johnson',
-        tableNumber: 'T-12',
-        items: [
-          {
-            id: 'order-item-3',
-            menuItemId: 'item-2',
-            menuItemName: 'Margherita Pizza',
-            quantity: 2,
-            unitPrice: 250,
-            totalPrice: 500,
-            status: 'ready'
-          }
-        ],
-        status: 'ready',
-        orderType: 'dine_in',
-        paymentStatus: 'pending',
-        totalAmount: 500,
-        createdAt: new Date(now.getTime() - 3 * 60 * 60 * 1000),
-        updatedAt: new Date(now.getTime() - 45 * 60 * 1000)
-      },
-      {
-        id: 'ORD-2025-1043',
-        customerId: 'customer-3',
-        customerName: 'Raj Kumar',
-        tableNumber: 'T-05',
-        items: [
-          {
-            id: 'order-item-4',
-            menuItemId: 'item-3',
-            menuItemName: 'Butter Chicken',
-            quantity: 1,
-            unitPrice: 320,
-            totalPrice: 320,
-            status: 'preparing'
-          }
-        ],
-        status: 'preparing',
-        orderType: 'dine_in',
-        paymentStatus: 'pending',
-        totalAmount: 320,
-        createdAt: new Date(now.getTime() - 10 * 60 * 1000),
-        updatedAt: new Date(now.getTime() - 5 * 60 * 1000)
-      }
-    ];
-  }
 
   private filterReadyOrders(): void {
     this.readyOrders = this.orders.filter(order => order.status === 'ready');

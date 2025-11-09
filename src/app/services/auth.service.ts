@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { MockDataService, User } from './mock-data.service';
+import { MockDataService, User, LoginRequest, LoginResponse } from './mock-data.service';
+import { CrudService } from './crud.service';
+import { environment } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +15,7 @@ export class AuthService {
   private currentUser: User | null = null;
   private users: User[] = [];
 
-  constructor(private router: Router, private mockDataService: MockDataService) {
+  constructor(private router: Router, private mockDataService: MockDataService, private crudService: CrudService) {
     // Initialize users from MockDataService
     this.mockDataService.getUsers().subscribe(users => {
       this.users = users;
@@ -24,16 +26,21 @@ export class AuthService {
     const user = this.users.find(u => u.username === username && u.password === password);
     if (user) {
       this.currentUser = user;
-      localStorage.setItem('currentUser', JSON.stringify(user));
+      sessionStorage.setItem('currentUser', JSON.stringify(user));
       this.currentUserSubject.next(user);
       return true;
     }
     return false;
   }
 
+  // API-based login method
+  loginApi(credentials: LoginRequest): Observable<LoginResponse> {
+    return this.crudService.postData('auth/login', credentials);
+  }
+
   logout(): void {
     this.currentUser = null;
-    localStorage.removeItem('currentUser');
+    sessionStorage.clear();
     this.currentUserSubject.next(null);
     // Navigate to appropriate login based on current route
     const currentUrl = this.router.url;
@@ -46,13 +53,19 @@ export class AuthService {
 
   getCurrentUser(): User | null {
     if (!this.currentUser) {
-      const stored = localStorage.getItem('currentUser');
+      const stored = sessionStorage.getItem('currentUser');
       if (stored) {
         this.currentUser = JSON.parse(stored);
         this.currentUserSubject.next(this.currentUser);
       }
     }
     return this.currentUser;
+  }
+
+  setCurrentUser(user: User): void {
+    this.currentUser = user;
+    sessionStorage.setItem('currentUser', JSON.stringify(user));
+    this.currentUserSubject.next(user);
   }
 
   isLoggedIn(): boolean {

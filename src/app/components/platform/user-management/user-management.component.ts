@@ -105,29 +105,11 @@ export class UserManagementComponent implements OnInit {
   }
 
   getRoleColor(role: string): string {
-    switch (role) {
-      case 'platform_owner': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400';
-      case 'restaurant_owner': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
-      case 'restaurant_manager': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-      case 'cashier': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
-      case 'kitchen_manager': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
-      case 'waiter': return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400';
-      case 'customer': return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
-    }
+    return this.mockDataService.getRoleColor(role);
   }
 
   getRoleDisplayName(role: string): string {
-    const roleNames: { [key: string]: string } = {
-      'platform_owner': 'Platform Owner',
-      'restaurant_owner': 'Restaurant Owner',
-      'restaurant_manager': 'Restaurant Manager',
-      'cashier': 'Cashier',
-      'kitchen_manager': 'Kitchen Manager',
-      'waiter': 'Waiter',
-      'customer': 'Customer'
-    };
-    return roleNames[role] || role;
+    return this.mockDataService.getRoleDisplayName(role);
   }
 
   formatDate(date: Date): string {
@@ -139,15 +121,6 @@ export class UserManagementComponent implements OnInit {
   }
 
   getRolePermissions(role: string): string {
-    const permissions: { [key: string]: string } = {
-      'platform_owner': 'full platform administration',
-      'restaurant_owner': 'restaurant management and analytics',
-      'restaurant_manager': 'staff supervision and operations',
-      'cashier': 'order processing and payments',
-      'kitchen_manager': 'menu management and kitchen operations',
-      'waiter': 'table service and customer interaction',
-      'customer': 'ordering and account management'
-    };
-    return permissions[role] || 'basic user access';
+    return this.mockDataService.getRolePermissions(role);
   }
 }

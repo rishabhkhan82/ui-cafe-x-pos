@@ -2,23 +2,8 @@ import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
-import { MockDataService, Order, User } from '../../../services/mock-data.service';
+import { KitchenStaff, KitchenStats, MockDataService, Order, User } from '../../../services/mock-data.service';
 import { RealtimeService } from '../../../services/realtime.service';
-
-interface KitchenStats {
-  totalOrders: number;
-  preparing: number;
-  ready: number;
-  avgPrepTime: number;
-}
-
-interface KitchenStaff {
-  name: string;
-  role: string;
-  avatar: string;
-  status: 'active' | 'break';
-  currentTask: string;
-}
 
 @Component({
   selector: 'app-kitchen-manager',
@@ -208,7 +193,7 @@ export class KitchenManagerComponent implements OnInit, OnDestroy {
     const html = document.documentElement;
     html.classList.toggle('dark');
     const newTheme = html.classList.contains('dark') ? 'dark' : 'light';
-    localStorage.setItem('theme', newTheme);
+    sessionStorage.setItem('theme', newTheme);
   }
 
   // Helper methods

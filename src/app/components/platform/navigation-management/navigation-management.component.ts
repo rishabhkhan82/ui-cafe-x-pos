@@ -25,8 +25,8 @@ export class NavigationManagementComponent implements OnInit {
   selectedParent = '';
 
   // Available options for filters
-  roles = ['platform_owner', 'restaurant_owner', 'restaurant_manager', 'cashier', 'kitchen_manager', 'waiter', 'customer', 'all'];
-  statuses = ['active', 'inactive'];
+  roles: string[] = [];
+  statuses: string[] = [];
   parentMenus: NavigationMenu[] = [];
 
   // Current menu for modal
@@ -66,6 +66,14 @@ export class NavigationManagementComponent implements OnInit {
       this.navigationMenus = menus;
       this.parentMenus = menus.filter(menu => !menu.parentId && menu.type === 'parent');
       this.applyFilters();
+    });
+
+    this.mockDataService.getNavigationRoles().subscribe(roles => {
+      this.roles = roles;
+    });
+
+    this.mockDataService.getNavigationStatuses().subscribe(statuses => {
+      this.statuses = statuses;
     });
   }
 
@@ -221,17 +229,7 @@ export class NavigationManagementComponent implements OnInit {
   }
 
   getRoleDisplayName(role: string): string {
-    const roleNames: { [key: string]: string } = {
-      'platform_owner': 'Platform Owner',
-      'restaurant_owner': 'Restaurant Owner',
-      'restaurant_manager': 'Restaurant Manager',
-      'cashier': 'Cashier',
-      'kitchen_manager': 'Kitchen Manager',
-      'waiter': 'Waiter',
-      'customer': 'Customer',
-      'all': 'All Roles'
-    };
-    return roleNames[role] || role;
+    return this.mockDataService.getRoleDisplayName(role);
   }
 
   getMenuRoles(menu: NavigationMenu): string[] {

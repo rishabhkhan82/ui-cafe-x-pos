@@ -8,7 +8,7 @@
       <div class="flex items-center space-x-3">
         <div class="text-right">
           <div class="text-sm text-gray-500 dark:text-gray-400">Current Balance</div>
-          <div class="text-2xl font-bold text-green-600">{{ formatCurrency(cashDrawer.currentBalance) }}</div>
+          <div class="text-2xl font-bold text-green-600">{{ formatCurrency(cashDrawer?.currentBalance || 0) }}</div>
         </div>
         <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
           <i class="fas fa-money-bill-wave text-white text-xl"></i>
@@ -26,7 +26,7 @@
         </div>
         <span class="text-green-600 dark:text-green-400 text-sm font-medium">Current Balance</span>
       </div>
-      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ formatCurrency(cashDrawer.currentBalance) }}</div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ formatCurrency(cashDrawer?.currentBalance || 0) }}</div>
       <div class="text-sm text-gray-600 dark:text-gray-400">Available in drawer</div>
     </div>
 
@@ -37,7 +37,7 @@
         </div>
         <span class="text-blue-600 dark:text-blue-400 text-sm font-medium">Starting Float</span>
       </div>
-      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ formatCurrency(cashDrawer.startingFloat) }}</div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ formatCurrency(cashDrawer?.startingFloat || 0) }}</div>
       <div class="text-sm text-gray-600 dark:text-gray-400">Shift start amount</div>
     </div>
 
@@ -95,31 +95,31 @@
   <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-bold text-gray-900 dark:text-white">Shift Reconciliation</h3>
-      <span [class]="currentReconciliation.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'"
+      <span [class]="currentReconciliation?.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'"
             class="px-3 py-1 rounded-full text-sm font-medium">
-        {{ currentReconciliation.status | titlecase }}
+        {{ currentReconciliation?.status | titlecase }}
       </span>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <div class="text-center">
         <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Starting Float</div>
-        <div class="text-xl font-bold text-gray-900 dark:text-white">{{ formatCurrency(currentReconciliation.startingFloat) }}</div>
+        <div class="text-xl font-bold text-gray-900 dark:text-white">{{ formatCurrency(currentReconciliation?.startingFloat || 0) }}</div>
       </div>
       <div class="text-center">
         <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Cash Sales</div>
-        <div class="text-xl font-bold text-green-600">{{ formatCurrency(currentReconciliation.cashSales) }}</div>
+        <div class="text-xl font-bold text-green-600">{{ formatCurrency(currentReconciliation?.cashSales || 0) }}</div>
       </div>
       <div class="text-center">
         <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Expected Balance</div>
-        <div class="text-xl font-bold text-blue-600">{{ formatCurrency(currentReconciliation.expectedEndingBalance) }}</div>
+        <div class="text-xl font-bold text-blue-600">{{ formatCurrency(currentReconciliation?.expectedEndingBalance || 0) }}</div>
       </div>
       <div class="text-center">
         <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Variance</div>
-        <div [class]="getVarianceColor(currentReconciliation.variance)" class="text-xl font-bold">
-          {{ formatCurrency(currentReconciliation.variance) }}
+        <div [class]="getVarianceColor(currentReconciliation?.variance || 0)" class="text-xl font-bold">
+          {{ formatCurrency(currentReconciliation?.variance || 0) }}
         </div>
-        <div class="text-xs text-gray-500">{{ getVarianceLabel(currentReconciliation.variance) }}</div>
+        <div class="text-xs text-gray-500">{{ getVarianceLabel(currentReconciliation?.variance || 0) }}</div>
       </div>
     </div>
   </div>
@@ -284,11 +284,11 @@
         <div class="space-y-2 text-sm">
           <div class="flex justify-between">
             <span>Starting Float:</span>
-            <span class="font-medium">{{ formatCurrency(currentReconciliation.startingFloat) }}</span>
+            <span class="font-medium">{{ formatCurrency(currentReconciliation?.startingFloat || 0) }}</span>
           </div>
           <div class="flex justify-between">
             <span>Cash Sales:</span>
-            <span class="font-medium text-green-600">{{ formatCurrency(currentReconciliation.cashSales) }}</span>
+            <span class="font-medium text-green-600">{{ formatCurrency(currentReconciliation?.cashSales || 0) }}</span>
           </div>
           <div class="flex justify-between">
             <span>Net Transactions:</span>
@@ -296,7 +296,7 @@
           </div>
           <div class="flex justify-between font-bold border-t pt-2">
             <span>Expected Balance:</span>
-            <span class="text-blue-600">{{ formatCurrency(currentReconciliation.expectedEndingBalance) }}</span>
+            <span class="text-blue-600">{{ formatCurrency(currentReconciliation?.expectedEndingBalance || 0) }}</span>
           </div>
         </div>
       </div>
@@ -316,11 +316,11 @@
         <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
           <div class="flex justify-between items-center">
             <span class="font-medium">Variance:</span>
-            <span [class]="getVarianceColor(currentReconciliation.variance)" class="font-bold text-lg">
-              {{ formatCurrency(currentReconciliation.variance) }}
+            <span [class]="getVarianceColor(currentReconciliation?.variance || 0)" class="font-bold text-lg">
+              {{ formatCurrency(currentReconciliation?.variance || 0) }}
             </span>
           </div>
-          <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ getVarianceLabel(currentReconciliation.variance) }}</div>
+          <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ getVarianceLabel(currentReconciliation?.variance || 0) }}</div>
         </div>
 
         <div>

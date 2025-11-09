@@ -1,29 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { NotificationService } from './notification.service';
-
-export interface ErrorDetails {
-  code: string;
-  message: string;
-  details?: any;
-  timestamp: Date;
-  userMessage?: string;
-  actionRequired?: boolean;
-  actionLabel?: string;
-  actionCallback?: () => void;
-}
-
-export interface GlobalError {
-  id: string;
-  type: 'network' | 'validation' | 'business' | 'system' | 'authentication';
-  title: string;
-  message: string;
-  details?: ErrorDetails;
-  timestamp: Date;
-  dismissed: boolean;
-  retryable?: boolean;
-  retryCallback?: () => void;
-}
+import { GlobalError, ErrorDetails } from './mock-data.service';
 
 @Injectable({
   providedIn: 'root'

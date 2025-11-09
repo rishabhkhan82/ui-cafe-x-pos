@@ -3,21 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { MockDataService, Notification, User } from '../../../services/mock-data.service';
+import { MockDataService, Notification, NotificationSetting, NotificationStats, User } from '../../../services/mock-data.service';
 import { RealtimeService } from '../../../services/realtime.service';
-
-interface NotificationStats {
-  unread: number;
-  today: number;
-  highPriority: number;
-  systemAlerts: number;
-}
-
-interface NotificationSetting {
-  name: string;
-  description: string;
-  enabled: boolean;
-}
 
 @Component({
   selector: 'app-notification-center',
@@ -294,7 +281,7 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
     const html = document.documentElement;
     html.classList.toggle('dark');
     const newTheme = html.classList.contains('dark') ? 'dark' : 'light';
-    localStorage.setItem('theme', newTheme);
+    sessionStorage.setItem('theme', newTheme);
   }
 
   // Helper methods

@@ -1,21 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-
-export interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  message?: string;
-  error?: string;
-}
-
-export interface CrudHeaders {
-  [key: string]: string;
-}
-
-export interface CrudParams {
-  [key: string]: string | number | boolean;
-}
+import { CrudParams, CrudHeaders } from './mock-data.service';
+import { environment } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -134,7 +121,7 @@ export class CrudService {
   // ===============================
 
   private buildUrl(apiName: string, id?: string | number): string {
-    let url = `/api/${apiName}`;
+    let url = `${environment.api.baseUrl}/${apiName}`;
 
     if (id !== undefined) {
       url += `/${id}`;

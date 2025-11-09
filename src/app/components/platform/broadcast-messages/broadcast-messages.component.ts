@@ -1,28 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MockDataService, User } from '../../../services/mock-data.service';
-
-interface BroadcastMessage {
-  id: string;
-  title: string;
-  message: string;
-  type: 'announcement' | 'promotion' | 'maintenance' | 'emergency' | 'update';
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  status: 'draft' | 'scheduled' | 'sent' | 'cancelled';
-  targetAudience: 'all' | 'restaurants' | 'customers' | 'staff' | 'specific';
-  sentBy: string;
-  sentAt?: Date;
-  scheduledFor?: Date;
-  expiresAt?: Date;
-  totalRecipients: number;
-  readCount: number;
-  engagementRate: number;
-  deliveryStatus: 'pending' | 'sending' | 'completed' | 'failed';
-  attachments?: string[];
-  ctaText?: string;
-  ctaUrl?: string;
-}
+import { Subscription } from 'rxjs';
+import { BroadcastMessage, MockDataService, User } from '../../../services/mock-data.service';
 
 @Component({
   selector: 'app-broadcast-messages',
@@ -31,7 +11,7 @@ interface BroadcastMessage {
   templateUrl: './broadcast-messages.component.html',
   styleUrl: './broadcast-messages.component.css'
 })
-export class BroadcastMessagesComponent implements OnInit {
+export class BroadcastMessagesComponent implements OnInit, OnDestroy {
   broadcasts: BroadcastMessage[] = [];
   filteredBroadcasts: BroadcastMessage[] = [];
   selectedBroadcast: BroadcastMessage | null = null;
@@ -50,83 +30,24 @@ export class BroadcastMessagesComponent implements OnInit {
     deliveryStatus: 'pending'
   };
 
+  private subscriptions: Subscription[] = [];
+
   constructor(private mockDataService: MockDataService) {}
 
   ngOnInit(): void {
     this.loadBroadcasts();
   }
 
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
   loadBroadcasts(): void {
-    // In a real app, this would fetch broadcast messages from API
-    // For now, we'll create mock broadcast messages
-    this.broadcasts = [
-      {
-        id: 'broadcast-1',
-        title: 'Platform Maintenance Notice',
-        message: 'Scheduled maintenance will occur tonight from 11 PM to 1 AM IST. All services will be temporarily unavailable.',
-        type: 'maintenance',
-        priority: 'high',
-        status: 'sent',
-        targetAudience: 'all',
-        sentBy: 'Platform Admin',
-        sentAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        totalRecipients: 1500,
-        readCount: 1200,
-        engagementRate: 80,
-        deliveryStatus: 'completed'
-      },
-      {
-        id: 'broadcast-2',
-        title: 'New Feature: Digital Menu Updates',
-        message: 'Exciting news! You can now update your restaurant menus digitally. Check out the new menu management features.',
-        type: 'update',
-        priority: 'medium',
-        status: 'scheduled',
-        targetAudience: 'restaurants',
-        sentBy: 'Product Team',
-        scheduledFor: new Date(Date.now() + 4 * 60 * 60 * 1000),
-        totalRecipients: 24,
-        readCount: 0,
-        engagementRate: 0,
-        deliveryStatus: 'pending',
-        ctaText: 'Explore New Features',
-        ctaUrl: '/restaurant/menu'
-      },
-      {
-        id: 'broadcast-3',
-        title: 'Happy Hour Promotion',
-        message: 'Enjoy 20% off on all beverages during happy hour (5-7 PM)! Limited time offer for our valued customers.',
-        type: 'promotion',
-        priority: 'medium',
-        status: 'sent',
-        targetAudience: 'customers',
-        sentBy: 'Marketing Team',
-        sentAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-        expiresAt: new Date(Date.now() + 6 * 60 * 60 * 1000),
-        totalRecipients: 1200,
-        readCount: 800,
-        engagementRate: 67,
-        deliveryStatus: 'completed',
-        ctaText: 'Order Now',
-        ctaUrl: '/customer/menu'
-      },
-      {
-        id: 'broadcast-4',
-        title: 'Emergency: System Alert',
-        message: 'URGENT: System experiencing high load. Some services may be slow. We are working to resolve this immediately.',
-        type: 'emergency',
-        priority: 'critical',
-        status: 'sent',
-        targetAudience: 'all',
-        sentBy: 'System Admin',
-        sentAt: new Date(Date.now() - 30 * 60 * 1000),
-        totalRecipients: 1500,
-        readCount: 1450,
-        engagementRate: 97,
-        deliveryStatus: 'completed'
-      }
-    ];
-    this.filteredBroadcasts = [...this.broadcasts];
+    const subscription = this.mockDataService.getBroadcastMessages().subscribe(broadcasts => {
+      this.broadcasts = broadcasts;
+      this.filteredBroadcasts = [...this.broadcasts];
+    });
+    this.subscriptions.push(subscription);
   }
 
   filterBroadcasts(): void {
@@ -182,37 +103,44 @@ export class BroadcastMessagesComponent implements OnInit {
           totalRecipients = 0;
       }
 
-      this.newBroadcast.totalRecipients = totalRecipients;
+      const broadcastMessage: BroadcastMessage = {
+        id: `broadcast-${Date.now()}`,
+        title: this.newBroadcast.title!,
+        message: this.newBroadcast.message!,
+        type: this.newBroadcast.type!,
+        priority: this.newBroadcast.priority!,
+        status: this.newBroadcast.status!,
+        targetAudience: this.newBroadcast.targetAudience!,
+        deliveryStatus: this.newBroadcast.deliveryStatus!,
+        sentBy: 'Platform Admin', // Default sender
+        totalRecipients,
+        readCount: 0,
+        engagementRate: 0
+      };
 
-      // In a real app, this would call an API to create the broadcast
-      console.log('Creating new broadcast:', this.newBroadcast);
+      this.mockDataService.addBroadcastMessage(broadcastMessage);
+      console.log('Creating new broadcast:', broadcastMessage);
       this.showCreateForm = false;
       this.newBroadcast = {};
-      // Reload broadcasts
-      this.loadBroadcasts();
     }
   }
 
   sendBroadcast(broadcast: BroadcastMessage): void {
-    broadcast.status = 'sent';
-    broadcast.sentAt = new Date();
-    broadcast.deliveryStatus = 'sending';
-    // In a real app, this would trigger the broadcast sending process
+    this.mockDataService.updateBroadcastMessageStatus(broadcast.id, 'sent');
+    this.mockDataService.updateBroadcastMessageDeliveryStatus(broadcast.id, 'sending');
     console.log('Sending broadcast:', broadcast.id);
 
     // Simulate delivery completion
     setTimeout(() => {
-      broadcast.deliveryStatus = 'completed';
-      broadcast.readCount = Math.floor(broadcast.totalRecipients * 0.8); // 80% read rate
-      broadcast.engagementRate = Math.round((broadcast.readCount / broadcast.totalRecipients) * 100);
+      this.mockDataService.updateBroadcastMessageDeliveryStatus(broadcast.id, 'completed');
+      // Note: In a real implementation, readCount and engagementRate would be updated via API
     }, 2000);
   }
 
   cancelBroadcast(broadcast: BroadcastMessage): void {
     if (confirm('Are you sure you want to cancel this broadcast?')) {
-      broadcast.status = 'cancelled';
-      broadcast.deliveryStatus = 'failed';
-      // In a real app, this would call an API to cancel the broadcast
+      this.mockDataService.updateBroadcastMessageStatus(broadcast.id, 'cancelled');
+      this.mockDataService.updateBroadcastMessageDeliveryStatus(broadcast.id, 'failed');
       console.log('Cancelled broadcast:', broadcast.id);
     }
   }

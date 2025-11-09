@@ -261,7 +261,7 @@
                     <div class="flex items-center">
                       <input
                         type="checkbox"
-                        [ngModel]="currentMenu.rolePermissions![role]?.canView"
+                        [ngModel]="currentMenu.rolePermissions![role].canView"
                         (ngModelChange)="updateRolePermission(role, 'canView', $event)"
                         [name]="'canView-' + role"
                         [id]="'canView-' + role"
@@ -271,7 +271,7 @@
                     <div class="flex items-center">
                       <input
                         type="checkbox"
-                        [ngModel]="currentMenu.rolePermissions![role]?.canEdit"
+                        [ngModel]="currentMenu.rolePermissions![role].canEdit"
                         (ngModelChange)="updateRolePermission(role, 'canEdit', $event)"
                         [name]="'canEdit-' + role"
                         [id]="'canEdit-' + role"
@@ -281,7 +281,7 @@
                     <div class="flex items-center">
                       <input
                         type="checkbox"
-                        [ngModel]="currentMenu.rolePermissions![role]?.canCreate"
+                        [ngModel]="currentMenu.rolePermissions![role].canCreate"
                         (ngModelChange)="updateRolePermission(role, 'canCreate', $event)"
                         [name]="'canCreate-' + role"
                         [id]="'canCreate-' + role"
@@ -291,7 +291,7 @@
                     <div class="flex items-center">
                       <input
                         type="checkbox"
-                        [ngModel]="currentMenu.rolePermissions![role]?.canDelete"
+                        [ngModel]="currentMenu.rolePermissions![role].canDelete"
                         (ngModelChange)="updateRolePermission(role, 'canDelete', $event)"
                         [name]="'canDelete-' + role"
                         [id]="'canDelete-' + role"

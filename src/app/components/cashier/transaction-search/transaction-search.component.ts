@@ -1,42 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MockDataService, Order } from '../../../services/mock-data.service';
-
-interface TransactionSearchResult {
-  orderId: string;
-  customerName: string;
-  tableNumber: string;
-  totalAmount: number;
-  paymentMethod: string;
-  status: 'completed' | 'refunded' | 'voided' | 'pending';
-  timestamp: Date;
-  cashierName: string;
-  items: Array<{
-    name: string;
-    quantity: number;
-    price: number;
-  }>;
-  modifications?: Array<{
-    type: 'void' | 'discount' | 'refund';
-    amount: number;
-    reason: string;
-    timestamp: Date;
-  }>;
-}
-
-interface SearchFilters {
-  orderId: string;
-  customerName: string;
-  tableNumber: string;
-  paymentMethod: string;
-  status: string;
-  dateFrom: string;
-  dateTo: string;
-  amountMin: number;
-  amountMax: number;
-  cashierName: string;
-}
+import { MockDataService, Order, SearchFilters, TransactionSearchResult } from '../../../services/mock-data.service';
 
 @Component({
   selector: 'app-transaction-search',
@@ -81,108 +46,38 @@ export class TransactionSearchComponent implements OnInit {
   totalItems = 0;
 
   // Available options
-  paymentMethods = ['Cash', 'Card', 'UPI', 'Wallet'];
-  statuses = ['completed', 'refunded', 'voided', 'pending'];
-  cashiers = ['John Doe', 'Jane Smith', 'Mike Johnson'];
+  paymentMethods: string[] = [];
+  statuses: string[] = [];
+  cashiers: string[] = [];
 
   constructor(private mockDataService: MockDataService) {}
 
   ngOnInit(): void {
-    this.loadSampleTransactions();
+    this.loadTransactionData();
   }
 
-  private loadSampleTransactions(): void {
-    // Generate sample transaction data
-    const now = new Date();
-    this.searchResults = [
-      {
-        orderId: 'ORD-20241201-001',
-        customerName: 'Amit Patil',
-        tableNumber: 'T-07',
-        totalAmount: 483,
-        paymentMethod: 'Card',
-        status: 'completed',
-        timestamp: new Date(now.getTime() - 2 * 60 * 60 * 1000),
-        cashierName: 'John Doe',
-        items: [
-          { name: 'Hyderabadi Biryani', quantity: 2, price: 280 },
-          { name: 'Margherita Pizza', quantity: 1, price: 250 }
-        ]
-      },
-      {
-        orderId: 'ORD-20241201-002',
-        customerName: 'Sarah Johnson',
-        tableNumber: 'T-12',
-        totalAmount: 250,
-        paymentMethod: 'Cash',
-        status: 'completed',
-        timestamp: new Date(now.getTime() - 4 * 60 * 60 * 1000),
-        cashierName: 'Jane Smith',
-        items: [
-          { name: 'Margherita Pizza', quantity: 2, price: 250 }
-        ]
-      },
-      {
-        orderId: 'ORD-20241201-003',
-        customerName: 'Raj Kumar',
-        tableNumber: 'T-05',
-        totalAmount: 320,
-        paymentMethod: 'UPI',
-        status: 'refunded',
-        timestamp: new Date(now.getTime() - 6 * 60 * 60 * 1000),
-        cashierName: 'John Doe',
-        items: [
-          { name: 'Butter Chicken', quantity: 1, price: 320 }
-        ],
-        modifications: [
-          {
-            type: 'refund',
-            amount: 320,
-            reason: 'Customer complaint - cold food',
-            timestamp: new Date(now.getTime() - 5 * 60 * 60 * 1000)
-          }
-        ]
-      },
-      {
-        orderId: 'ORD-20241130-045',
-        customerName: 'Priya Sharma',
-        tableNumber: 'T-08',
-        totalAmount: 1250,
-        paymentMethod: 'Card',
-        status: 'completed',
-        timestamp: new Date(now.getTime() - 24 * 60 * 60 * 1000),
-        cashierName: 'Mike Johnson',
-        items: [
-          { name: 'Paneer Butter Masala', quantity: 2, price: 350 },
-          { name: 'Garlic Naan', quantity: 4, price: 80 },
-          { name: 'Ras Malai', quantity: 2, price: 120 }
-        ]
-      },
-      {
-        orderId: 'ORD-20241201-004',
-        customerName: 'David Chen',
-        tableNumber: 'T-15',
-        totalAmount: 180,
-        paymentMethod: 'Wallet',
-        status: 'voided',
-        timestamp: new Date(now.getTime() - 30 * 60 * 1000),
-        cashierName: 'Jane Smith',
-        items: [
-          { name: 'Coffee', quantity: 2, price: 90 }
-        ],
-        modifications: [
-          {
-            type: 'void',
-            amount: 180,
-            reason: 'Wrong order entry',
-            timestamp: new Date(now.getTime() - 25 * 60 * 1000)
-          }
-        ]
-      }
-    ];
+  private loadTransactionData(): void {
+    // Load transaction search results
+    this.mockDataService.getTransactionSearchResults().subscribe(results => {
+      this.searchResults = results;
+      this.filteredResults = [...this.searchResults];
+      this.totalItems = this.filteredResults.length;
+    });
 
-    this.filteredResults = [...this.searchResults];
-    this.totalItems = this.filteredResults.length;
+    // Load available payment methods
+    this.mockDataService.getAvailablePaymentMethods().subscribe(methods => {
+      this.paymentMethods = methods;
+    });
+
+    // Load available statuses
+    this.mockDataService.getAvailableStatuses().subscribe(statuses => {
+      this.statuses = statuses;
+    });
+
+    // Load available cashiers
+    this.mockDataService.getAvailableCashiers().subscribe(cashiers => {
+      this.cashiers = cashiers;
+    });
   }
 
   applyFilters(): void {
@@ -302,16 +197,19 @@ export class TransactionSearchComponent implements OnInit {
 
   processRefund(transaction: TransactionSearchResult): void {
     if (confirm(`Process refund for Order ${transaction.orderId}?`)) {
-      // Simulate refund processing
-      alert('Refund processed successfully!');
-      transaction.status = 'refunded';
-      if (!transaction.modifications) transaction.modifications = [];
-      transaction.modifications.push({
+      // Update transaction status in service
+      this.mockDataService.updateTransactionStatus(transaction.orderId, 'refunded');
+
+      // Add modification to transaction
+      const modification = {
         type: 'refund',
         amount: transaction.totalAmount,
         reason: 'Customer request',
         timestamp: new Date()
-      });
+      };
+      this.mockDataService.addTransactionModification(transaction.orderId, modification);
+
+      alert('Refund processed successfully!');
     }
   }
 
