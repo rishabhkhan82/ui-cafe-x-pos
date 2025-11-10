@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { SystemSetting, MockDataService } from '../../../services/mock-data.service';
+import { SystemSettings, MockDataService } from '../../../services/mock-data.service';
 
 @Component({
   selector: 'app-system-configuration',
@@ -11,8 +11,7 @@ import { SystemSetting, MockDataService } from '../../../services/mock-data.serv
   styleUrl: './system-configuration.component.css'
 })
 export class SystemConfigurationComponent implements OnInit {
-  settings: SystemSetting[] = [];
-  filteredSettings: SystemSetting[] = [];
+  settings: SystemSettings | null = null;
   selectedCategory = 'all';
   searchTerm = '';
   hasUnsavedChanges = false;
@@ -26,30 +25,20 @@ export class SystemConfigurationComponent implements OnInit {
   loadSystemSettings(): void {
     this.mockDataService.getSystemSettings().subscribe(settings => {
       this.settings = settings;
-      this.filteredSettings = [...this.settings];
     });
   }
 
-  filterSettings(): void {
-    this.filteredSettings = this.settings.filter(setting => {
-      const matchesCategory = this.selectedCategory === 'all' || setting.category === this.selectedCategory;
-      const matchesSearch = setting.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                           setting.description.toLowerCase().includes(this.searchTerm.toLowerCase());
-      return matchesCategory && matchesSearch;
-    });
-  }
-
-  getSettingsByCategory(category: string): SystemSetting[] {
+  getSettingsByCategory(category: string): any {
     return this.mockDataService.getSystemSettingsByCategory(category);
   }
 
-  updateSetting(setting: SystemSetting, newValue: any): void {
-    this.mockDataService.updateSystemSetting(setting.id, newValue);
+  updateSetting(settingPath: string, newValue: any): void {
+    this.mockDataService.updateSystemSetting(settingPath, newValue);
     this.hasUnsavedChanges = true;
   }
 
-  resetSetting(setting: SystemSetting): void {
-    this.mockDataService.resetSystemSetting(setting.id);
+  resetSetting(settingPath: string): void {
+    this.mockDataService.resetSystemSetting(settingPath);
     this.hasUnsavedChanges = true;
   }
 
@@ -58,11 +47,8 @@ export class SystemConfigurationComponent implements OnInit {
     console.log('Saving system settings...');
     this.hasUnsavedChanges = false;
 
-    // Check if any settings require restart
-    const requiresRestart = this.settings.some(s => s.requiresRestart && s.lastModified);
-    if (requiresRestart) {
-      alert('Some changes require a system restart to take effect.');
-    }
+    // For now, just show a success message
+    alert('Settings saved successfully!');
   }
 
   resetAllSettings(): void {
@@ -74,12 +60,28 @@ export class SystemConfigurationComponent implements OnInit {
 
   exportSettings(): void {
     // In a real app, this would export settings as JSON
-    const settingsData = this.settings.map(s => ({
-      id: s.id,
-      value: s.value,
-      lastModified: s.lastModified
-    }));
-    console.log('Exporting settings:', settingsData);
+    if (this.settings) {
+      const settingsData = {
+        id: this.settings.id,
+        updatedBy: this.settings.updatedBy,
+        updatedAt: this.settings.updatedAt,
+        createdAt: this.settings.createdAt,
+        general: this.settings.general,
+        performance: this.settings.performance,
+        security: this.settings.security,
+        notifications: this.settings.notifications,
+        integrations: this.settings.integrations
+      };
+      console.log('Exporting settings:', settingsData);
+      // Create and download JSON file
+      const dataStr = JSON.stringify(settingsData, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      const exportFileDefaultName = 'system-settings.json';
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+    }
   }
 
   importSettings(): void {

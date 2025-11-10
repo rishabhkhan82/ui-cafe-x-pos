@@ -932,23 +932,47 @@ export interface SystemAlert extends Notification {
   resolvedBy?: string;
 }
 
-export interface SystemSetting {
-  id: string;
-  name: string;
-  description: string;
-  category: 'general' | 'performance' | 'security' | 'notifications' | 'integrations';
-  type: 'text' | 'number' | 'boolean' | 'select' | 'textarea';
-  value: any;
-  defaultValue: any;
-  options?: string[];
-  validation?: {
-    required?: boolean;
-    min?: number;
-    max?: number;
-    pattern?: string;
+export interface SystemSettings {
+  id : number;
+  updatedBy : number;
+  updatedAt: Date;
+  createdAt: Date;
+  general: {
+    platform_name: string;
+    platform_url: string;
+    platform_logo: string;
+    default_language: string;
+    maintenance_mode: boolean;
+    maintenance_message: string;
+    file_upload_max_size: number;
+    backup_enabled: boolean;
+    backup_frequency: string;
+    support_email: string;
+    support_phone: string;
+    terms_url: string;
+    privacy_url: string;
+    timezone: string;
+    currency: string;
   };
-  requiresRestart?: boolean;
-  lastModified?: Date;
+  performance: {
+    max_concurrent_users: number;
+    cache_enabled: boolean;
+    cache_ttl: number;
+  };
+  security: {
+    session_timeout: number;
+    password_min_length: number;
+    two_factor_required: boolean;
+  };
+  notifications: {
+    email_notifications: boolean;
+    sms_notifications: boolean;
+    notification_batch_size: number;
+  };
+  integrations: {
+    api_rate_limit: number;
+    webhook_retries: number;
+  };
 }
 
 export interface UserNotification extends Notification {
@@ -1698,7 +1722,7 @@ export class MockDataService {
   private planFeatureAccessSubject = new BehaviorSubject<PlanFeatureAccess[]>([]);
   private roleFeatureAccessSubject = new BehaviorSubject<RoleFeatureAccess[]>([]);
   private systemAlertsSubject = new BehaviorSubject<SystemAlert[]>([]);
-  private systemSettingsSubject = new BehaviorSubject<SystemSetting[]>([]);
+  private systemSettingsSubject = new BehaviorSubject<SystemSettings>(null as any);
   private userNotificationsSubject = new BehaviorSubject<UserNotification[]>([]);
 
   // Analytics data BehaviorSubjects
@@ -6485,175 +6509,48 @@ export class MockDataService {
     ];
 
     // Initialize system settings
-    const systemSettings: SystemSetting[] = [
-      // General Settings
-      {
-        id: 'platform_name',
-        name: 'Platform Name',
-        description: 'The name displayed across the platform',
-        category: 'general',
-        type: 'text',
-        value: 'CafeX POS',
-        defaultValue: 'CafeX POS',
-        validation: { required: true }
+    const systemSettings: SystemSettings = {
+      id : 1, 
+      updatedBy : 0, 
+      updatedAt : new Date(),
+      createdAt : new Date(),
+      general: {
+        platform_name: 'CafeX POS',
+        platform_url: 'https://cafex.com',
+        platform_logo: '',
+        default_language: 'en-IN',
+        maintenance_mode: false,
+        maintenance_message: 'The system is currently under maintenance. Please try again later.',
+        file_upload_max_size: 10,
+        backup_enabled: true,
+        backup_frequency: 'daily',
+        support_email: 'support@cafex.com',
+        support_phone: '+91 98765 43210',
+        terms_url: 'https://cafex.com/terms',
+        privacy_url: 'https://cafex.com/privacy',
+        timezone: 'Asia/Kolkata',
+        currency: 'INR',
       },
-      {
-        id: 'platform_url',
-        name: 'Platform URL',
-        description: 'Base URL for the platform',
-        category: 'general',
-        type: 'text',
-        value: 'https://cafex.com',
-        defaultValue: 'https://cafex.com',
-        validation: { required: true, pattern: '^https?://.+' }
+      performance: {
+        max_concurrent_users: 1000,
+        cache_enabled: true,
+        cache_ttl: 3600
       },
-      {
-        id: 'timezone',
-        name: 'Default Timezone',
-        description: 'Default timezone for the platform',
-        category: 'general',
-        type: 'select',
-        value: 'Asia/Kolkata',
-        defaultValue: 'Asia/Kolkata',
-        options: ['Asia/Kolkata', 'UTC', 'America/New_York', 'Europe/London']
+      security: {
+        session_timeout: 30,
+        password_min_length: 8,
+        two_factor_required: false
       },
-      {
-        id: 'currency',
-        name: 'Default Currency',
-        description: 'Default currency for transactions',
-        category: 'general',
-        type: 'select',
-        value: 'INR',
-        defaultValue: 'INR',
-        options: ['INR', 'USD', 'EUR', 'GBP']
+      notifications: {
+        email_notifications: true,
+        sms_notifications: false,
+        notification_batch_size: 100
       },
-
-      // Performance Settings
-      {
-        id: 'max_concurrent_users',
-        name: 'Max Concurrent Users',
-        description: 'Maximum number of users that can be active simultaneously',
-        category: 'performance',
-        type: 'number',
-        value: 1000,
-        defaultValue: 1000,
-        validation: { required: true, min: 10, max: 10000 },
-        requiresRestart: true
-      },
-      {
-        id: 'cache_enabled',
-        name: 'Enable Caching',
-        description: 'Enable system-wide caching for better performance',
-        category: 'performance',
-        type: 'boolean',
-        value: true,
-        defaultValue: true,
-        requiresRestart: true
-      },
-      {
-        id: 'cache_ttl',
-        name: 'Cache TTL (seconds)',
-        description: 'Time-to-live for cached data',
-        category: 'performance',
-        type: 'number',
-        value: 3600,
-        defaultValue: 3600,
-        validation: { required: true, min: 60, max: 86400 }
-      },
-
-      // Security Settings
-      {
-        id: 'session_timeout',
-        name: 'Session Timeout (minutes)',
-        description: 'Automatic logout after inactivity',
-        category: 'security',
-        type: 'number',
-        value: 30,
-        defaultValue: 30,
-        validation: { required: true, min: 5, max: 480 }
-      },
-      {
-        id: 'password_min_length',
-        name: 'Minimum Password Length',
-        description: 'Minimum characters required for passwords',
-        category: 'security',
-        type: 'number',
-        value: 8,
-        defaultValue: 8,
-        validation: { required: true, min: 6, max: 128 }
-      },
-      {
-        id: 'two_factor_required',
-        name: 'Require 2FA',
-        description: 'Require two-factor authentication for all users',
-        category: 'security',
-        type: 'boolean',
-        value: false,
-        defaultValue: false
-      },
-
-      // Notification Settings
-      {
-        id: 'email_notifications',
-        name: 'Email Notifications',
-        description: 'Enable email notifications system-wide',
-        category: 'notifications',
-        type: 'boolean',
-        value: true,
-        defaultValue: true
-      },
-      {
-        id: 'sms_notifications',
-        name: 'SMS Notifications',
-        description: 'Enable SMS notifications for critical alerts',
-        category: 'notifications',
-        type: 'boolean',
-        value: false,
-        defaultValue: false
-      },
-      {
-        id: 'notification_batch_size',
-        name: 'Notification Batch Size',
-        description: 'Maximum notifications sent per batch',
-        category: 'notifications',
-        type: 'number',
-        value: 100,
-        defaultValue: 100,
-        validation: { required: true, min: 10, max: 1000 }
-      },
-
-      // Integration Settings
-      {
-        id: 'api_rate_limit',
-        name: 'API Rate Limit',
-        description: 'Maximum API requests per minute',
-        category: 'integrations',
-        type: 'number',
-        value: 1000,
-        defaultValue: 1000,
-        validation: { required: true, min: 10, max: 10000 }
-      },
-      {
-        id: 'webhook_retries',
-        name: 'Webhook Retry Attempts',
-        description: 'Number of retry attempts for failed webhooks',
-        category: 'integrations',
-        type: 'number',
-        value: 3,
-        defaultValue: 3,
-        validation: { required: true, min: 0, max: 10 }
-      },
-      {
-        id: 'maintenance_mode',
-        name: 'Maintenance Mode',
-        description: 'Put the platform in maintenance mode',
-        category: 'general',
-        type: 'boolean',
-        value: false,
-        defaultValue: false,
-        requiresRestart: true
+      integrations: {
+        api_rate_limit: 1000,
+        webhook_retries: 3
       }
-    ];
+    };
 
     // Initialize user notifications
     const userNotifications: UserNotification[] = [
@@ -7943,45 +7840,141 @@ export class MockDataService {
   }
 
   // System settings methods
-  getSystemSettings(): Observable<SystemSetting[]> {
+  getSystemSettings(): Observable<SystemSettings> {
     return this.systemSettings$;
   }
 
-  getSystemSettingById(id: string): SystemSetting | undefined {
-    return this.systemSettingsSubject.value.find(setting => setting.id === id);
+  getSystemSettingById(id: string): SystemSettings | undefined {
+    // Since we now have a single object, return the entire settings if id matches
+    return this.systemSettingsSubject.value.id === parseInt(id) ? this.systemSettingsSubject.value : undefined;
   }
 
-  getSystemSettingsByCategory(category: string): SystemSetting[] {
-    return this.systemSettingsSubject.value.filter(setting => setting.category === category);
+  getSystemSettingsByCategory(category: string): any {
+    const settings = this.systemSettingsSubject.value;
+    return settings[category as keyof SystemSettings] || {};
   }
 
   updateSystemSetting(settingId: string, newValue: any): void {
-    const settings = [...this.systemSettingsSubject.value];
-    const settingIndex = settings.findIndex(setting => setting.id === settingId);
-    if (settingIndex !== -1) {
-      settings[settingIndex].value = newValue;
-      settings[settingIndex].lastModified = new Date();
-      this.systemSettingsSubject.next(settings);
+    const settings = { ...this.systemSettingsSubject.value };
+    const path = settingId.split('.');
+    let current: any = settings;
+
+    // Navigate to the nested property
+    for (let i = 0; i < path.length - 1; i++) {
+      if (!current[path[i]]) {
+        current[path[i]] = {};
+      }
+      current = current[path[i]];
     }
+
+    // Update the final property
+    current[path[path.length - 1]] = newValue;
+    settings.updatedAt = new Date();
+    this.systemSettingsSubject.next(settings);
   }
 
   resetSystemSetting(settingId: string): void {
-    const settings = [...this.systemSettingsSubject.value];
-    const settingIndex = settings.findIndex(setting => setting.id === settingId);
-    if (settingIndex !== -1) {
-      settings[settingIndex].value = settings[settingIndex].defaultValue;
-      settings[settingIndex].lastModified = new Date();
-      this.systemSettingsSubject.next(settings);
+    // Reset to default values - for now, we'll reset to initial mock values
+    const defaultSettings: SystemSettings = {
+      id: 1,
+      updatedBy: 1,
+      updatedAt: new Date(),
+      createdAt: new Date(),
+      general: {
+        platform_name: 'CafeX POS',
+        platform_url: 'https://cafex.com',
+        platform_logo: '',
+        default_language: 'en-IN',
+        maintenance_mode: false,
+        maintenance_message: 'The system is currently under maintenance. Please try again later.',
+        file_upload_max_size: 10,
+        backup_enabled: true,
+        backup_frequency: 'daily',
+        support_email: 'support@cafex.com',
+        support_phone: '+91 98765 43210',
+        terms_url: 'https://cafex.com/terms',
+        privacy_url: 'https://cafex.com/privacy',
+        timezone: 'Asia/Kolkata',
+        currency: 'INR',
+      },
+      performance: {
+        max_concurrent_users: 1000,
+        cache_enabled: true,
+        cache_ttl: 3600
+      },
+      security: {
+        session_timeout: 30,
+        password_min_length: 8,
+        two_factor_required: false
+      },
+      notifications: {
+        email_notifications: true,
+        sms_notifications: false,
+        notification_batch_size: 100
+      },
+      integrations: {
+        api_rate_limit: 1000,
+        webhook_retries: 3
+      }
+    };
+
+    const path = settingId.split('.');
+    let current: any = defaultSettings;
+
+    // Navigate to the nested property in default settings
+    for (let i = 0; i < path.length - 1; i++) {
+      current = current[path[i]];
     }
+
+    const defaultValue = current[path[path.length - 1]];
+    this.updateSystemSetting(settingId, defaultValue);
   }
 
   resetAllSystemSettings(): void {
-    const settings = [...this.systemSettingsSubject.value];
-    settings.forEach(setting => {
-      setting.value = setting.defaultValue;
-      setting.lastModified = new Date();
-    });
-    this.systemSettingsSubject.next(settings);
+    // Reset to default values
+    const defaultSettings: SystemSettings = {
+      id: 1,
+      updatedBy: 1,
+      updatedAt: new Date(),
+      createdAt: new Date(),
+      general: {
+        platform_name: 'CafeX POS',
+        platform_url: 'https://cafex.com',
+        platform_logo: '',
+        default_language: 'en-IN',
+        maintenance_mode: false,
+        maintenance_message: 'The system is currently under maintenance. Please try again later.',
+        file_upload_max_size: 10,
+        backup_enabled: true,
+        backup_frequency: 'daily',
+        support_email: 'support@cafex.com',
+        support_phone: '+91 98765 43210',
+        terms_url: 'https://cafex.com/terms',
+        privacy_url: 'https://cafex.com/privacy',
+        timezone: 'Asia/Kolkata',
+        currency: 'INR',
+      },
+      performance: {
+        max_concurrent_users: 1000,
+        cache_enabled: true,
+        cache_ttl: 3600
+      },
+      security: {
+        session_timeout: 30,
+        password_min_length: 8,
+        two_factor_required: false
+      },
+      notifications: {
+        email_notifications: true,
+        sms_notifications: false,
+        notification_batch_size: 100
+      },
+      integrations: {
+        api_rate_limit: 1000,
+        webhook_retries: 3
+      }
+    };
+    this.systemSettingsSubject.next(defaultSettings);
   }
 
   // Navigation menu methods
