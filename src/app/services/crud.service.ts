@@ -214,4 +214,8 @@ export class CrudService {
   createUser(payload: any): Observable<any> {
     return this.postData('users', payload);
   }
+
+  getHeaderToken(): any {
+    return { 'Authorization': `Bearer ${sessionStorage.getItem('accessToken') || ''}` };
+  }
 }

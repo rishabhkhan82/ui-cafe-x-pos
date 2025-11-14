@@ -1,0 +1,105 @@
+// extra details
+
+//  Recommended Installation:
+// Install Java JDK 17 (download from oracle.com or adoptium.net)
+// Install MySQL Server (mysql.com/downloads/mysql/)
+// Use MySQL Workbench to create your cafe_x_pos database
+// Start Spring Boot development
+
+// C:\Program Files\Java\jdk-17\
+
+// https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html
+
+// https://dev.mysql.com/downloads/mysql/
+
+// Mysql Server - Set root password: CafeX_POS_2024! (or your choice)   
+
+// ------------------------------------------
+
+// backend/
+// ├── pom.xml                           ✅ Enterprise dependencies
+// ├── src/main/java/com/cafex/pos/
+// │   ├── CafeXPosBackendApplication.java ✅ Main application
+// │   ├── config/
+// │   │   ├── CorsConfig.java          ✅ CORS configuration
+// │   │   ├── SecurityConfig.java      ✅ Spring Security
+// │   │   └── JwtAuthenticationFilter.java ✅ JWT filter
+// │   ├── controller/
+// │   │   └── AuthController.java      ✅ Authentication API
+// │   ├── entity/
+// │   │   └── User.java               ✅ User JPA entity
+// │   ├── repository/
+// │   │   └── UserRepository.java     ✅ Data access layer
+// │   ├── service/
+// │   │   └── AuthService.java        ✅ Business logic
+// │   └── dto/
+// │       ├── LoginRequest.java       ✅ Request DTO
+// │       └── LoginResponse.java      ✅ Response DTO
+// ├── src/main/resources/
+// │   ├── application.properties       ✅ Database & app config
+// │   └── data.sql                    ✅ Initial test data
+// └── README.md                       ✅ Complete documentation 
+
+======================================================================
+
+Windows
+Locate the JDK Installation Path: The default path is typically C:\Program Files\Java\jdk-<version>. Copy this path.
+Open Environment Variables: Search for "Environment Variables" in the Start menu and select "Edit the system environment variables".
+Set JAVA_HOME:
+In the System Properties window, click the Environment Variables button.
+Under the System variables section, click New.
+Enter JAVA_HOME as the Variable name.
+Paste the JDK installation path (e.g., C:\Program Files\Java\jdk-17.0.4.1) as the Variable value. Do not include the \bin directory.
+Click OK.
+Update Path:
+In the System variables section, select the Path variable and click Edit.
+Click New and add %JAVA_HOME%\bin to the list of entries.
+Click OK on all windows to save the changes.
+Verify: Open a new Command Prompt (existing ones won't reflect the changes) and type java -version and javac -version to confirm the setup. 
+
+
+setx -m JAVA_HOME "C:\Program Files\Java\jdk-17"
+setx -m PATH "%PATH%;%JAVA_HOME%\bin"
+
+================================================================
+
+To "install" Maven from a ZIP file, you essentially just need to extract it to a permanent location and then set up two environment variables in Windows so that your system can find the mvn executable.
+Here are the step-by-step instructions for Windows using the Command Prompt (CMD).
+Prerequisites
+You must have the JDK installed and configured with JAVA_HOME and Path variables already set up (which we did earlier). Maven requires Java to run.
+Step 1: Extract the ZIP file
+Extract the contents of the Maven ZIP file to a stable, permanent location on your computer. A good place is usually within your C:\Program Files\ directory.
+Example Location: C:\Program Files\Apache Software Foundation\apache-maven-3.9.6
+Step 2: Set Environment Variables via CMD
+Open Command Prompt as an Administrator (right-click Command Prompt in the Start menu and select "Run as administrator").
+Use the setx commands to create a MAVEN_HOME variable and update the system Path variable.
+Replace "C:\Program Files\Apache Software Foundation\apache-maven-3.9.6" with the exact path where you extracted Maven.
+A. Set MAVEN_HOME
+This command creates a system variable pointing to your Maven installation folder (the directory that contains the bin, conf, lib folders, etc.).
+cmd
+setx -m MAVEN_HOME "C:\Program Files\Apache Software Foundation\apache-maven-3.9.6"
+Use code with caution.
+
+B. Update the Path variable
+This command appends the location of the mvn.cmd executable (which is inside the bin folder) to your system's Path.
+cmd
+setx -m PATH "%PATH%;%MAVEN_HOME%\bin"
+Use code with caution.
+
+Step 3: Verify the Installation
+The setx changes are permanent, but they won't apply to the current CMD window.
+Close the current Administrator Command Prompt.
+Open a new, regular Command Prompt window.
+Run the verification command:
+cmd
+mvn -version
+Use code with caution.
+
+If everything is set up correctly, you will see output showing the Maven version, Java version, and the location of your MAVEN_HOME, confirming the installation is complete.
+
+C:\Users\rkhandekar>mvn -v
+Apache Maven 3.9.11 (3e54c93a704957b63ee3494413a2b544fd3d825b)
+Maven home: C:\Program Files\apache-maven\apache-maven-3.9.11
+Java version: 17.0.12, vendor: Oracle Corporation, runtime: C:\Program Files\Java\jdk-17
+Default locale: en_US, platform encoding: Cp1252
+OS name: "windows 11", version: "10.0", arch: "amd64", family: "windows"

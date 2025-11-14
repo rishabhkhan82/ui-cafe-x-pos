@@ -19,6 +19,11 @@
           <span>Import</span>
         </button>
         <button
+          (click)="resetAllSettings()"
+          class="px-4 py-2 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+          Reset All
+        </button>
+        <button
           *ngIf="hasUnsavedChanges"
           (click)="saveSettings()"
           class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2">
@@ -41,7 +46,7 @@
   </div>
 
   <!-- Filters and Search -->
-  <div class="pos-card rounded-2xl p-6 mb-6">
+  <!-- <div class="pos-card rounded-2xl p-6 mb-6">
     <div class="flex flex-wrap gap-4 items-center">
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
@@ -74,7 +79,7 @@
         </button>
       </div>
     </div>
-  </div>
+  </div> -->
 
   <!-- Settings by Category -->
   <div class="space-y-8">
@@ -99,13 +104,13 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">The name of your POS platform</p>
           <input
             type="text"
-            [(ngModel)]="settings!.general.platform_name"
-            (ngModelChange)="updateSetting('general.platform_name', $event)"
+            [(ngModel)]="settings.platform_name"
+            (input)="hasUnsavedChanges = true"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: CafeX POS</span>
             <button
-              (click)="resetSetting('general.platform_name')"
+              (click)="resetSetting('platform_name')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -120,13 +125,13 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">The main URL of your platform</p>
           <input
             type="text"
-            [(ngModel)]="settings!.general.platform_url"
-            (ngModelChange)="updateSetting('general.platform_url', $event)"
+            [(ngModel)]="settings.platform_url"
+            (input)="hasUnsavedChanges = true"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: https://cafex.com</span>
             <button
-              (click)="resetSetting('general.platform_url')"
+              (click)="resetSetting('platform_url')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -141,13 +146,13 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">URL or path to platform logo</p>
           <input
             type="text"
-            [(ngModel)]="settings!.general.platform_logo"
-            (ngModelChange)="updateSetting('general.platform_logo', $event)"
+            [(ngModel)]="settings.platform_logo"
+            (input)="hasUnsavedChanges = true"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: (empty)</span>
             <button
-              (click)="resetSetting('general.platform_logo')"
+              (click)="resetSetting('platform_logo')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -161,8 +166,8 @@
           </label>
           <p class="text-xs text-gray-500 dark:text-gray-400">Default language for the platform</p>
           <select
-            [(ngModel)]="settings!.general.default_language"
-            (ngModelChange)="updateSetting('general.default_language', $event)"
+            [(ngModel)]="settings.default_language"
+            (input)="hasUnsavedChanges = true"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
             <option value="en-IN">English (India)</option>
             <option value="hi-IN">हिंदी (India)</option>
@@ -172,7 +177,7 @@
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: en-IN</span>
             <button
-              (click)="resetSetting('general.default_language')"
+              (click)="resetSetting('default_language')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -188,18 +193,18 @@
           <label class="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              [(ngModel)]="settings!.general.maintenance_mode"
-              (ngModelChange)="updateSetting('general.maintenance_mode', $event)"
+              [(ngModel)]="settings.maintenance_mode"
+              (input)="hasUnsavedChanges = true"
               class="sr-only peer">
             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
             <span class="ml-3 text-sm font-medium text-gray-900 dark:text-white">
-              {{ settings!.general.maintenance_mode ? 'Enabled' : 'Disabled' }}
+              {{ settings.maintenance_mode ? 'Enabled' : 'Disabled' }}
             </span>
           </label>
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: false</span>
             <button
-              (click)="resetSetting('general.maintenance_mode')"
+              (click)="resetSetting('maintenance_mode')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -213,14 +218,14 @@
           </label>
           <p class="text-xs text-gray-500 dark:text-gray-400">Message to display during maintenance</p>
           <textarea
-            [(ngModel)]="settings!.general.maintenance_message"
-            (ngModelChange)="updateSetting('general.maintenance_message', $event)"
+            [(ngModel)]="settings.maintenance_message"
+            (input)="hasUnsavedChanges = true"
             rows="3"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white"></textarea>
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: The system is currently under maintenance...</span>
             <button
-              (click)="resetSetting('general.maintenance_message')"
+              (click)="resetSetting('maintenance_message')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -235,15 +240,15 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">Maximum file size for uploads</p>
           <input
             type="number"
-            [(ngModel)]="settings!.general.file_upload_max_size"
-            (ngModelChange)="updateSetting('general.file_upload_max_size', $event)"
+            [(ngModel)]="settings.file_upload_max_size"
+            (input)="hasUnsavedChanges = true"
             min="1"
             max="100"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: 10</span>
             <button
-              (click)="resetSetting('general.file_upload_max_size')"
+              (click)="resetSetting('file_upload_max_size')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -259,18 +264,18 @@
           <label class="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              [(ngModel)]="settings!.general.backup_enabled"
-              (ngModelChange)="updateSetting('general.backup_enabled', $event)"
+              [(ngModel)]="settings.backup_enabled"
+              (input)="hasUnsavedChanges = true"
               class="sr-only peer">
             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
             <span class="ml-3 text-sm font-medium text-gray-900 dark:text-white">
-              {{ settings!.general.backup_enabled ? 'Enabled' : 'Disabled' }}
+              {{ settings.backup_enabled ? 'Enabled' : 'Disabled' }}
             </span>
           </label>
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: true</span>
             <button
-              (click)="resetSetting('general.backup_enabled')"
+              (click)="resetSetting('backup_enabled')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -284,8 +289,8 @@
           </label>
           <p class="text-xs text-gray-500 dark:text-gray-400">How often to perform backups</p>
           <select
-            [(ngModel)]="settings!.general.backup_frequency"
-            (ngModelChange)="updateSetting('general.backup_frequency', $event)"
+            [(ngModel)]="settings.backup_frequency"
+            (input)="hasUnsavedChanges = true"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
@@ -294,7 +299,7 @@
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: daily</span>
             <button
-              (click)="resetSetting('general.backup_frequency')"
+              (click)="resetSetting('backup_frequency')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -309,13 +314,13 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">Email address for support</p>
           <input
             type="email"
-            [(ngModel)]="settings!.general.support_email"
-            (ngModelChange)="updateSetting('general.support_email', $event)"
+            [(ngModel)]="settings.support_email"
+            (input)="hasUnsavedChanges = true"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <!-- <span>Default: <span>support@cafex.com</span></span> -->
             <button
-              (click)="resetSetting('general.support_email')"
+              (click)="resetSetting('support_email')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -330,13 +335,13 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">Phone number for support</p>
           <input
             type="tel"
-            [(ngModel)]="settings!.general.support_phone"
-            (ngModelChange)="updateSetting('general.support_phone', $event)"
+            [(ngModel)]="settings.support_phone"
+            (input)="hasUnsavedChanges = true"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: +91 98765 43210</span>
             <button
-              (click)="resetSetting('general.support_phone')"
+              (click)="resetSetting('support_phone')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -351,13 +356,13 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">URL to terms and conditions</p>
           <input
             type="url"
-            [(ngModel)]="settings!.general.terms_url"
-            (ngModelChange)="updateSetting('general.terms_url', $event)"
+            [(ngModel)]="settings.terms_url"
+            (input)="hasUnsavedChanges = true"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: https://cafex.com/terms</span>
             <button
-              (click)="resetSetting('general.terms_url')"
+              (click)="resetSetting('terms_url')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -372,13 +377,13 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">URL to privacy policy</p>
           <input
             type="url"
-            [(ngModel)]="settings!.general.privacy_url"
-            (ngModelChange)="updateSetting('general.privacy_url', $event)"
+            [(ngModel)]="settings.privacy_url"
+            (input)="hasUnsavedChanges = true"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: https://cafex.com/privacy</span>
             <button
-              (click)="resetSetting('general.privacy_url')"
+              (click)="resetSetting('privacy_url')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -392,8 +397,8 @@
           </label>
           <p class="text-xs text-gray-500 dark:text-gray-400">Default timezone for the platform</p>
           <select
-            [(ngModel)]="settings!.general.timezone"
-            (ngModelChange)="updateSetting('general.timezone', $event)"
+            [(ngModel)]="settings.timezone"
+            (input)="hasUnsavedChanges = true"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
             <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
             <option value="Asia/Dubai">Asia/Dubai (GST)</option>
@@ -403,7 +408,7 @@
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: Asia/Kolkata</span>
             <button
-              (click)="resetSetting('general.timezone')"
+              (click)="resetSetting('timezone')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -417,8 +422,8 @@
           </label>
           <p class="text-xs text-gray-500 dark:text-gray-400">Default currency for the platform</p>
           <select
-            [(ngModel)]="settings!.general.currency"
-            (ngModelChange)="updateSetting('general.currency', $event)"
+            [(ngModel)]="settings.currency"
+            (input)="hasUnsavedChanges = true"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
             <option value="INR">INR (₹)</option>
             <option value="USD">USD ($)</option>
@@ -428,7 +433,7 @@
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: INR</span>
             <button
-              (click)="resetSetting('general.currency')"
+              (click)="resetSetting('currency')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -458,15 +463,15 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">Maximum number of users that can be logged in simultaneously</p>
           <input
             type="number"
-            [(ngModel)]="settings!.performance.max_concurrent_users"
-            (ngModelChange)="updateSetting('performance.max_concurrent_users', $event)"
+            [(ngModel)]="settings.max_concurrent_users"
+            (input)="hasUnsavedChanges = true"
             min="1"
             max="10000"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: 1000</span>
             <button
-              (click)="resetSetting('performance.max_concurrent_users')"
+              (click)="resetSetting('max_concurrent_users')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -482,18 +487,18 @@
           <label class="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              [(ngModel)]="settings!.performance.cache_enabled"
-              (ngModelChange)="updateSetting('performance.cache_enabled', $event)"
+              [(ngModel)]="settings.cache_enabled"
+              (input)="hasUnsavedChanges = true"
               class="sr-only peer">
             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
             <span class="ml-3 text-sm font-medium text-gray-900 dark:text-white">
-              {{ settings!.performance.cache_enabled ? 'Enabled' : 'Disabled' }}
+              {{ settings.cache_enabled ? 'Enabled' : 'Disabled' }}
             </span>
           </label>
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: true</span>
             <button
-              (click)="resetSetting('performance.cache_enabled')"
+              (click)="resetSetting('cache_enabled')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -508,15 +513,15 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">Time to live for cached data in seconds</p>
           <input
             type="number"
-            [(ngModel)]="settings!.performance.cache_ttl"
-            (ngModelChange)="updateSetting('performance.cache_ttl', $event)"
+            [(ngModel)]="settings.cache_ttl"
+            (input)="hasUnsavedChanges = true"
             min="60"
             max="86400"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: 3600</span>
             <button
-              (click)="resetSetting('performance.cache_ttl')"
+              (click)="resetSetting('cache_ttl')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -546,15 +551,15 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">Time before user session expires</p>
           <input
             type="number"
-            [(ngModel)]="settings!.security.session_timeout"
-            (ngModelChange)="updateSetting('security.session_timeout', $event)"
+            [(ngModel)]="settings.session_timeout"
+            (input)="hasUnsavedChanges = true"session_timeout
             min="5"
             max="480"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: 30</span>
             <button
-              (click)="resetSetting('security.session_timeout')"
+              (click)="resetSetting('session_timeout')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -569,15 +574,15 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">Minimum characters required for passwords</p>
           <input
             type="number"
-            [(ngModel)]="settings!.security.password_min_length"
-            (ngModelChange)="updateSetting('security.password_min_length', $event)"
+            [(ngModel)]="settings.password_min_length"
+            (input)="hasUnsavedChanges = true"password_min_length
             min="6"
             max="32"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: 8</span>
             <button
-              (click)="resetSetting('security.password_min_length')"
+              (click)="resetSetting('password_min_length')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -593,18 +598,18 @@
           <label class="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              [(ngModel)]="settings!.security.two_factor_required"
-              (ngModelChange)="updateSetting('security.two_factor_required', $event)"
+              [(ngModel)]="settings.two_factor_required"
+              (input)="hasUnsavedChanges = true"two_factor_required
               class="sr-only peer">
             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
             <span class="ml-3 text-sm font-medium text-gray-900 dark:text-white">
-              {{ settings!.security.two_factor_required ? 'Enabled' : 'Disabled' }}
+              {{ settings.two_factor_required ? 'Enabled' : 'Disabled' }}
             </span>
           </label>
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: false</span>
             <button
-              (click)="resetSetting('security.two_factor_required')"
+              (click)="resetSetting('two_factor_required')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -635,18 +640,18 @@
           <label class="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              [(ngModel)]="settings!.notifications.email_notifications"
-              (ngModelChange)="updateSetting('notifications.email_notifications', $event)"
+              [(ngModel)]="settings.email_notifications"
+              (input)="hasUnsavedChanges = true"email_notifications
               class="sr-only peer">
             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
             <span class="ml-3 text-sm font-medium text-gray-900 dark:text-white">
-              {{ settings!.notifications.email_notifications ? 'Enabled' : 'Disabled' }}
+              {{ settings.email_notifications ? 'Enabled' : 'Disabled' }}
             </span>
           </label>
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: true</span>
             <button
-              (click)="resetSetting('notifications.email_notifications')"
+              (click)="resetSetting('email_notifications')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -662,18 +667,18 @@
           <label class="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              [(ngModel)]="settings!.notifications.sms_notifications"
-              (ngModelChange)="updateSetting('notifications.sms_notifications', $event)"
+              [(ngModel)]="settings.sms_notifications"
+              (input)="hasUnsavedChanges = true"sms_notifications
               class="sr-only peer">
             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
             <span class="ml-3 text-sm font-medium text-gray-900 dark:text-white">
-              {{ settings!.notifications.sms_notifications ? 'Enabled' : 'Disabled' }}
+              {{ settings.sms_notifications ? 'Enabled' : 'Disabled' }}
             </span>
           </label>
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: false</span>
             <button
-              (click)="resetSetting('notifications.sms_notifications')"
+              (click)="resetSetting('sms_notifications')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -688,15 +693,15 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">Number of notifications to process in each batch</p>
           <input
             type="number"
-            [(ngModel)]="settings!.notifications.notification_batch_size"
-            (ngModelChange)="updateSetting('notifications.notification_batch_size', $event)"
+            [(ngModel)]="settings.notification_batch_size"
+            (input)="hasUnsavedChanges = true"notification_batch_size
             min="10"
             max="1000"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: 100</span>
             <button
-              (click)="resetSetting('notifications.notification_batch_size')"
+              (click)="resetSetting('notification_batch_size')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -726,15 +731,15 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">Maximum API requests per minute</p>
           <input
             type="number"
-            [(ngModel)]="settings!.integrations.api_rate_limit"
-            (ngModelChange)="updateSetting('integrations.api_rate_limit', $event)"
+            [(ngModel)]="settings.api_rate_limit"
+            (input)="hasUnsavedChanges = true"api_rate_limit
             min="10"
             max="10000"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: 1000</span>
             <button
-              (click)="resetSetting('integrations.api_rate_limit')"
+              (click)="resetSetting('api_rate_limit')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -749,15 +754,15 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">Number of times to retry failed webhook deliveries</p>
           <input
             type="number"
-            [(ngModel)]="settings!.integrations.webhook_retries"
-            (ngModelChange)="updateSetting('integrations.webhook_retries', $event)"
+            [(ngModel)]="settings.webhook_retries"
+            (input)="hasUnsavedChanges = true"webhook_retries
             min="0"
             max="10"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <span>Default: 3</span>
             <button
-              (click)="resetSetting('integrations.webhook_retries')"
+              (click)="resetSetting('webhook_retries')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>

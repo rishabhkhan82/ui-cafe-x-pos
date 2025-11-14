@@ -937,42 +937,32 @@ export interface SystemSettings {
   updatedBy : number;
   updatedAt: Date;
   createdAt: Date;
-  general: {
-    platform_name: string;
-    platform_url: string;
-    platform_logo: string;
-    default_language: string;
-    maintenance_mode: boolean;
-    maintenance_message: string;
-    file_upload_max_size: number;
-    backup_enabled: boolean;
-    backup_frequency: string;
-    support_email: string;
-    support_phone: string;
-    terms_url: string;
-    privacy_url: string;
-    timezone: string;
-    currency: string;
-  };
-  performance: {
-    max_concurrent_users: number;
-    cache_enabled: boolean;
-    cache_ttl: number;
-  };
-  security: {
-    session_timeout: number;
-    password_min_length: number;
-    two_factor_required: boolean;
-  };
-  notifications: {
-    email_notifications: boolean;
-    sms_notifications: boolean;
-    notification_batch_size: number;
-  };
-  integrations: {
-    api_rate_limit: number;
-    webhook_retries: number;
-  };
+  platform_name: string;
+  platform_url: string;
+  platform_logo: string;
+  default_language: string;
+  maintenance_mode: boolean;
+  maintenance_message: string;
+  file_upload_max_size: number;
+  backup_enabled: boolean;
+  backup_frequency: string;
+  support_email: string;
+  support_phone: string;
+  terms_url: string;
+  privacy_url: string;
+  timezone: string;
+  currency: string;
+  max_concurrent_users: number;
+  cache_enabled: boolean;
+  cache_ttl: number;
+  session_timeout: number;
+  password_min_length: number;
+  two_factor_required: boolean;
+  email_notifications: boolean;
+  sms_notifications: boolean;
+  notification_batch_size: number;
+  api_rate_limit: number;
+  webhook_retries: number;
 }
 
 export interface UserNotification extends Notification {
@@ -6514,42 +6504,32 @@ export class MockDataService {
       updatedBy : 0, 
       updatedAt : new Date(),
       createdAt : new Date(),
-      general: {
-        platform_name: 'CafeX POS',
-        platform_url: 'https://cafex.com',
-        platform_logo: '',
-        default_language: 'en-IN',
-        maintenance_mode: false,
-        maintenance_message: 'The system is currently under maintenance. Please try again later.',
-        file_upload_max_size: 10,
-        backup_enabled: true,
-        backup_frequency: 'daily',
-        support_email: 'support@cafex.com',
-        support_phone: '+91 98765 43210',
-        terms_url: 'https://cafex.com/terms',
-        privacy_url: 'https://cafex.com/privacy',
-        timezone: 'Asia/Kolkata',
-        currency: 'INR',
-      },
-      performance: {
-        max_concurrent_users: 1000,
-        cache_enabled: true,
-        cache_ttl: 3600
-      },
-      security: {
-        session_timeout: 30,
-        password_min_length: 8,
-        two_factor_required: false
-      },
-      notifications: {
-        email_notifications: true,
-        sms_notifications: false,
-        notification_batch_size: 100
-      },
-      integrations: {
-        api_rate_limit: 1000,
-        webhook_retries: 3
-      }
+      platform_name: 'CafeX POS',
+      platform_url: 'https://cafex.com',
+      platform_logo: '',
+      default_language: 'en-IN',
+      maintenance_mode: false,
+      maintenance_message: 'The system is currently under maintenance. Please try again later.',
+      file_upload_max_size: 10,
+      backup_enabled: true,
+      backup_frequency: 'daily',
+      support_email: 'support@cafex.com',
+      support_phone: '+91 98765 43210',
+      terms_url: 'https://cafex.com/terms',
+      privacy_url: 'https://cafex.com/privacy',
+      timezone: 'Asia/Kolkata',
+      currency: 'INR',
+      max_concurrent_users: 1000,
+      cache_enabled: true,
+      cache_ttl: 3600,
+      session_timeout: 30,
+      password_min_length: 8,
+      two_factor_required: false,
+      email_notifications: true,
+      sms_notifications: false,
+      notification_batch_size: 100,
+      api_rate_limit: 1000,
+      webhook_retries: 3
     };
 
     // Initialize user notifications
@@ -7873,6 +7853,11 @@ export class MockDataService {
     this.systemSettingsSubject.next(settings);
   }
 
+  updateSystemSettings(settings: SystemSettings): void {
+    const updatedSettings = { ...settings, updatedAt: new Date() };
+    this.systemSettingsSubject.next(updatedSettings);
+  }
+
   resetSystemSetting(settingId: string): void {
     // Reset to default values - for now, we'll reset to initial mock values
     const defaultSettings: SystemSettings = {
@@ -7880,42 +7865,32 @@ export class MockDataService {
       updatedBy: 1,
       updatedAt: new Date(),
       createdAt: new Date(),
-      general: {
-        platform_name: 'CafeX POS',
-        platform_url: 'https://cafex.com',
-        platform_logo: '',
-        default_language: 'en-IN',
-        maintenance_mode: false,
-        maintenance_message: 'The system is currently under maintenance. Please try again later.',
-        file_upload_max_size: 10,
-        backup_enabled: true,
-        backup_frequency: 'daily',
-        support_email: 'support@cafex.com',
-        support_phone: '+91 98765 43210',
-        terms_url: 'https://cafex.com/terms',
-        privacy_url: 'https://cafex.com/privacy',
-        timezone: 'Asia/Kolkata',
-        currency: 'INR',
-      },
-      performance: {
-        max_concurrent_users: 1000,
-        cache_enabled: true,
-        cache_ttl: 3600
-      },
-      security: {
-        session_timeout: 30,
-        password_min_length: 8,
-        two_factor_required: false
-      },
-      notifications: {
-        email_notifications: true,
-        sms_notifications: false,
-        notification_batch_size: 100
-      },
-      integrations: {
-        api_rate_limit: 1000,
-        webhook_retries: 3
-      }
+      platform_name: 'CafeX POS',
+      platform_url: 'https://cafex.com',
+      platform_logo: '',
+      default_language: 'en-IN',
+      maintenance_mode: false,
+      maintenance_message: 'The system is currently under maintenance. Please try again later.',
+      file_upload_max_size: 10,
+      backup_enabled: true,
+      backup_frequency: 'daily',
+      support_email: 'support@cafex.com',
+      support_phone: '+91 98765 43210',
+      terms_url: 'https://cafex.com/terms',
+      privacy_url: 'https://cafex.com/privacy',
+      timezone: 'Asia/Kolkata',
+      currency: 'INR',
+      max_concurrent_users: 1000,
+      cache_enabled: true,
+      cache_ttl: 3600,
+      session_timeout: 30,
+      password_min_length: 8,
+      two_factor_required: false,
+      email_notifications: true,
+      sms_notifications: false,
+      notification_batch_size: 100,
+      api_rate_limit: 1000,
+      webhook_retries: 3
     };
 
     const path = settingId.split('.');
@@ -7937,42 +7912,32 @@ export class MockDataService {
       updatedBy: 1,
       updatedAt: new Date(),
       createdAt: new Date(),
-      general: {
-        platform_name: 'CafeX POS',
-        platform_url: 'https://cafex.com',
-        platform_logo: '',
-        default_language: 'en-IN',
-        maintenance_mode: false,
-        maintenance_message: 'The system is currently under maintenance. Please try again later.',
-        file_upload_max_size: 10,
-        backup_enabled: true,
-        backup_frequency: 'daily',
-        support_email: 'support@cafex.com',
-        support_phone: '+91 98765 43210',
-        terms_url: 'https://cafex.com/terms',
-        privacy_url: 'https://cafex.com/privacy',
-        timezone: 'Asia/Kolkata',
-        currency: 'INR',
-      },
-      performance: {
-        max_concurrent_users: 1000,
-        cache_enabled: true,
-        cache_ttl: 3600
-      },
-      security: {
-        session_timeout: 30,
-        password_min_length: 8,
-        two_factor_required: false
-      },
-      notifications: {
-        email_notifications: true,
-        sms_notifications: false,
-        notification_batch_size: 100
-      },
-      integrations: {
-        api_rate_limit: 1000,
-        webhook_retries: 3
-      }
+      platform_name: 'CafeX POS',
+      platform_url: 'https://cafex.com',
+      platform_logo: '',
+      default_language: 'en-IN',
+      maintenance_mode: false,
+      maintenance_message: 'The system is currently under maintenance. Please try again later.',
+      file_upload_max_size: 10,
+      backup_enabled: true,
+      backup_frequency: 'daily',
+      support_email: 'support@cafex.com',
+      support_phone: '+91 98765 43210',
+      terms_url: 'https://cafex.com/terms',
+      privacy_url: 'https://cafex.com/privacy',
+      timezone: 'Asia/Kolkata',
+      currency: 'INR',
+      max_concurrent_users: 1000,
+      cache_enabled: true,
+      cache_ttl: 3600,
+      session_timeout: 30,
+      password_min_length: 8,
+      two_factor_required: false,
+      email_notifications: true,
+      sms_notifications: false,
+      notification_batch_size: 100,
+      api_rate_limit: 1000,
+      webhook_retries: 3
     };
     this.systemSettingsSubject.next(defaultSettings);
   }

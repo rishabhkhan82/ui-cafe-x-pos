@@ -1,7 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SystemSettings, MockDataService } from '../../../services/mock-data.service';
+import { CrudService } from '../../../services/crud.service';
+import { LoadingService } from '../../../services/loading.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-system-configuration',
@@ -10,26 +13,55 @@ import { SystemSettings, MockDataService } from '../../../services/mock-data.ser
   templateUrl: './system-configuration.component.html',
   styleUrl: './system-configuration.component.css'
 })
-export class SystemConfigurationComponent implements OnInit {
-  settings: SystemSettings | null = null;
+export class SystemConfigurationComponent implements OnInit, OnDestroy {
+  settings: any | null = null;
   selectedCategory = 'all';
   searchTerm = '';
   hasUnsavedChanges = false;
+  isLoading = false;
+  errorMessage = '';
+  private loadingSubscription: Subscription = new Subscription();
 
-  constructor(private mockDataService: MockDataService) {}
+  constructor(
+    private mockDataService: MockDataService,
+    private crudService: CrudService,
+    private loadingService: LoadingService
+  ) {}
 
   ngOnInit(): void {
+    // Subscribe to global loading state
+    this.loadingSubscription = this.loadingService.loading$.subscribe(
+      loading => this.isLoading = loading
+    );
+
     this.loadSystemSettings();
   }
 
+  ngOnDestroy(): void {
+    // Unsubscribe to prevent memory leaks
+    this.loadingSubscription.unsubscribe();
+  }
+
   loadSystemSettings(): void {
-    this.mockDataService.getSystemSettings().subscribe(settings => {
-      this.settings = settings;
+    this.errorMessage = '';
+
+    this.crudService.getData('system-settings/get-system-settings',{}).subscribe({
+      next: (response) => {
+        this.settings = response;
+      },
+      error: (error) => {
+        this.errorMessage = error.error?.message || 'Failed to load system settings. Please try again.';
+        console.error('Error loading system settings:', error);
+      }
     });
   }
 
   getSettingsByCategory(category: string): any {
-    return this.mockDataService.getSystemSettingsByCategory(category);
+    // Since we now load all settings at once, we can filter locally
+    if (this.settings && this.settings[category as keyof typeof this.settings]) {
+      return { [category]: this.settings[category as keyof typeof this.settings] };
+    }
+    return {};
   }
 
   updateSetting(settingPath: string, newValue: any): void {
@@ -38,23 +70,61 @@ export class SystemConfigurationComponent implements OnInit {
   }
 
   resetSetting(settingPath: string): void {
-    this.mockDataService.resetSystemSetting(settingPath);
-    this.hasUnsavedChanges = true;
+    // For now, reset locally by reloading settings and updating the specific field
+    // In a full implementation, this would call an API to reset the specific setting
+    this.errorMessage = '';
+
+    this.crudService.getData('system-settings/get-system-settings').subscribe({
+      next: (response) => {
+        // Update the local settings object with fresh data
+        this.settings = response;
+        this.hasUnsavedChanges = true;
+        console.log('Settings refreshed after reset');
+      },
+      error: (error) => {
+        this.errorMessage = error.error?.message || 'Failed to refresh settings after reset.';
+        console.error('Error refreshing settings:', error);
+      }
+    });
   }
 
   saveSettings(): void {
-    // In a real app, this would save settings to backend
-    console.log('Saving system settings...');
-    this.hasUnsavedChanges = false;
+    if (!this.settings) {
+      this.errorMessage = 'No settings to save.';
+      return;
+    }
 
-    // For now, just show a success message
-    alert('Settings saved successfully!');
+    this.errorMessage = '';
+    let payload = this.settings;
+    this.crudService.putData('system-settings/save-system-settings', payload, this.crudService.getHeaderToken()).subscribe({
+      next: (response) => {
+        this.hasUnsavedChanges = false;
+        console.log('System settings saved successfully:', response);
+        // Show success message (you can replace with a toast notification)
+        alert('Settings saved successfully!');
+      },
+      error: (error) => {
+        this.errorMessage = error.error?.message || 'Failed to save settings. Please try again.';
+        console.error('Error saving system settings:', error);
+      }
+    });
   }
 
   resetAllSettings(): void {
-    if (confirm('Are you sure you want to reset all settings to their default values?')) {
-      this.mockDataService.resetAllSystemSettings();
-      this.hasUnsavedChanges = true;
+    if (confirm('Are you sure you want to reset all settings to their default values? This will reload all settings from the server.')) {
+      this.errorMessage = '';
+
+      this.crudService.getData('system-settings/get-system-settings').subscribe({
+        next: (response) => {
+          this.settings = response;
+          this.hasUnsavedChanges = true;
+          console.log('All settings reset to defaults');
+        },
+        error: (error) => {
+          this.errorMessage = error.error?.message || 'Failed to reset all settings.';
+          console.error('Error resetting all settings:', error);
+        }
+      });
     }
   }
 
@@ -66,11 +136,32 @@ export class SystemConfigurationComponent implements OnInit {
         updatedBy: this.settings.updatedBy,
         updatedAt: this.settings.updatedAt,
         createdAt: this.settings.createdAt,
-        general: this.settings.general,
-        performance: this.settings.performance,
-        security: this.settings.security,
-        notifications: this.settings.notifications,
-        integrations: this.settings.integrations
+        platform_name: this.settings.platform_name,
+        platform_url: this.settings.platform_url,
+        platform_logo: this.settings.platform_logo,
+        default_language: this.settings.default_language,
+        maintenance_mode: this.settings.maintenance_mode,
+        maintenance_message: this.settings.maintenance_message,
+        file_upload_max_size: this.settings.file_upload_max_size,
+        backup_enabled: this.settings.backup_enabled,
+        backup_frequency: this.settings.backup_frequency,
+        support_email: this.settings.support_email,
+        support_phone: this.settings.support_phone,
+        terms_url: this.settings.terms_url,
+        privacy_url: this.settings.privacy_url,
+        timezone: this.settings.timezone,
+        currency: this.settings.currency,
+        max_concurrent_users: this.settings.max_concurrent_users,
+        cache_enabled: this.settings.cache_enabled,
+        cache_ttl: this.settings.cache_ttl,
+        session_timeout: this.settings.session_timeout,
+        password_min_length: this.settings.password_min_length,
+        two_factor_required: this.settings.two_factor_required,
+        email_notifications: this.settings.email_notifications,
+        sms_notifications: this.settings.sms_notifications,
+        notification_batch_size: this.settings.notification_batch_size,
+        api_rate_limit: this.settings.api_rate_limit,
+        webhook_retries: this.settings.webhook_retries,
       };
       console.log('Exporting settings:', settingsData);
       // Create and download JSON file
