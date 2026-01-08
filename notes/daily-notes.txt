@@ -1,3 +1,22 @@
+----------------------------
+
+What happen when create API for the form (crud)
+
+1] api request - dto folder (for the validation)
+2] api response - dto folder (for giving proper api response)
+3] api service - service folder (write the services as per the table, like getuser, get any particular field)
+4] actual api - controller (contains api)
+----------------------------
+
+transaction-search (component - contains main table with pagination)
+
+taskkill /f /im java.exe
+
+-----------------------------
+
+start java - mvn spring-boot:run
+  
+  
   id : number;
   updatedBy : number;
   updatedAt: Date;
@@ -40,3 +59,114 @@ privacyUrl
 updatedBy (User reference)
 updatedAt
 createdAt
+
+====== 03/12/25 ============================================
+
+Powner Dashboard what to do in api. 
+
+1] System
+System Configuration - Done
+Security Settings - Hold
+API Management - Hold
+Integrations - Hold
+
+2] Users & Roles
+User Management - Pending
+
+3] Navigation Menu
+Navigation Management - Pending
+
+4] Subscriptions
+Plan Management - Pending
+Subscription Analytics - Hold
+Feature Access Control - Pending
+
+5] Restaurants
+Restaurant Management - Pending
+
+6] Notifications
+Notification Manangement - Pending
+User Notifications - Pending
+Broadcast Messages - Hold
+
+-------------------------------------------------------------------------------
+
+User Management - Pending
+
+tasks to do. 
+
+1] Active/inactive - Status toggle button in form and in users list cards to display status.
+2] create api's - api, get - api, update - api, delete api.
+
+--------------------------------------------------------------------------------
+DB Confirmed - Done
+
+Table: users
+Columns:
+is_active bit(1) 
+created_at datetime(6) 
+id bigint AI PK 
+last_login datetime(6) 
+member_since datetime(6) 
+updated_at datetime(6) 
+avatar varchar(255) 
+email varchar(255) 
+name varchar(255) 
+password varchar(255) 
+phone varchar(255) 
+restaurant_id varchar(255) 
+username varchar(255) 
+created_by bigint
+role enum('cashier','customer','kitchen_manager','platform_owner','restaurant_manager','restaurant_owner','waiter')
+
+-------------------------------------------------
+UI CHANGES - Done
+
+1] is_active - add toggle button
+2] avatar - add file upload.
+3] username - add new
+4] password - add new
+5] restaurant - select (dynamic restaurant list)
+
+--------------------------------------------
+API CHANGES - Done
+
+1] save-user
+2] update-user
+3] get-users
+4] ger-user/id
+5] delete-user
+
+------- Restaurant list - Pending
+5] get-restaurants
+6] get-roles - Roles list 
+
+--------------------------------------------
+
+API Integrations WITH UI - Pending
+
+--------------------------------------------
+
+TESTING - Pending
+
+--------------------------------------------------------------------------------
+
+extraa changes
+
+1] in payload send complete data in user except password - Done
+2] check file-upload service used or not. - Done
+3] use global validations in ui with (notifications - user noti service) - Done
+4] global confirmation dialogue - Done
+4] standardize api response in save and update - Done
+   {
+    status : 'success' | failure or any other
+    code : 
+    id : return id
+   }
+5] use pagination - in get api (make the standard ui/api) - Done
+6] move all the users api in new service (user service) - Not needed.
+7] add restaurant filter - Done
+7] audit user logs - enable aop in java (automatic process)
+
+-------------------------------------------------------------------------------
+

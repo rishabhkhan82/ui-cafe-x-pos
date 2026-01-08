@@ -5,6 +5,9 @@ import { Observable } from 'rxjs';
 import { RealtimeService } from './services/realtime.service';
 import { AuthService } from './services/auth.service';
 import { NavigationMenuComponent } from './components/shared/navigation-menu/navigation-menu.component';
+import { LoadingService } from './services/loading.service';
+import { ToastNotifierComponent } from './components/common/toast-notifier/app-toast-notifier';
+import { ConfirmationDialogComponent } from './components/common/confirmation-dialog/confirmation-dialog.component';
 
 interface User {
   id: string;
@@ -18,7 +21,7 @@ interface User {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterModule, RouterOutlet, NavigationMenuComponent],
+  imports: [CommonModule, RouterModule, RouterOutlet, NavigationMenuComponent, ToastNotifierComponent, ConfirmationDialogComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
@@ -29,6 +32,7 @@ export class AppComponent implements OnInit {
   notificationPermission: NotificationPermission = 'default';
   showNotificationPrompt = false;
   isLoggedIn: boolean = false;
+  isLoading = false;
 
   // Header properties
   currentDateTime: string = '';
@@ -37,6 +41,7 @@ export class AppComponent implements OnInit {
   private realtimeService = inject(RealtimeService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private loadingService = inject(LoadingService);
 
   ngOnInit() {
     // Load theme preference
@@ -74,6 +79,11 @@ export class AppComponent implements OnInit {
 
     // Initialize authentication state on app start
     this.initializeAuthState();
+
+    // Subscribe to global loading state
+    this.loadingService.loading$.subscribe(
+      loading => this.isLoading = loading
+    );
   }
 
   private initializeAuthState(): void {

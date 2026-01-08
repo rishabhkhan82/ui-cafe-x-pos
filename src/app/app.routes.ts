@@ -34,6 +34,10 @@ export const routes: Routes = [
             loadComponent: () => import('./components/platform/user-management/user-management.component').then(m => m.UserManagementComponent)
           },
           {
+            path: 'role-management',
+            loadComponent: () => import('./components/platform/role-management/role-management.component').then(m => m.RoleManagementComponent)
+          },
+          {
             path: 'notifications',
             children: [
               {

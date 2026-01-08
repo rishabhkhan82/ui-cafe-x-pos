@@ -1,10 +1,11 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SystemSettings, MockDataService } from '../../../services/mock-data.service';
 import { CrudService } from '../../../services/crud.service';
 import { LoadingService } from '../../../services/loading.service';
 import { Subscription } from 'rxjs';
+import { NotificationService } from '../../../services/notification.service';
 
 @Component({
   selector: 'app-system-configuration',
@@ -13,7 +14,7 @@ import { Subscription } from 'rxjs';
   templateUrl: './system-configuration.component.html',
   styleUrl: './system-configuration.component.css'
 })
-export class SystemConfigurationComponent implements OnInit, OnDestroy {
+export class SystemConfigurationComponent implements OnInit, OnDestroy, AfterViewInit {
   settings: any | null = null;
   selectedCategory = 'all';
   searchTerm = '';
@@ -25,16 +26,20 @@ export class SystemConfigurationComponent implements OnInit, OnDestroy {
   constructor(
     private mockDataService: MockDataService,
     private crudService: CrudService,
-    private loadingService: LoadingService
-  ) {}
-
-  ngOnInit(): void {
+    private loadingService: LoadingService,
+    private notificationService: NotificationService
+  ) {
     // Subscribe to global loading state
     this.loadingSubscription = this.loadingService.loading$.subscribe(
       loading => this.isLoading = loading
     );
+  }
 
+  ngOnInit(): void {
     this.loadSystemSettings();
+  }
+
+  ngAfterViewInit() {
   }
 
   ngOnDestroy(): void {
@@ -44,14 +49,16 @@ export class SystemConfigurationComponent implements OnInit, OnDestroy {
 
   loadSystemSettings(): void {
     this.errorMessage = '';
-
+    this.loadingService.show();
     this.crudService.getData('system-settings/get-system-settings',{}).subscribe({
       next: (response) => {
         this.settings = response;
+        this.loadingService.hide();
       },
       error: (error) => {
         this.errorMessage = error.error?.message || 'Failed to load system settings. Please try again.';
         console.error('Error loading system settings:', error);
+        this.loadingService.hide();
       }
     });
   }
@@ -73,17 +80,19 @@ export class SystemConfigurationComponent implements OnInit, OnDestroy {
     // For now, reset locally by reloading settings and updating the specific field
     // In a full implementation, this would call an API to reset the specific setting
     this.errorMessage = '';
-
+    this.loadingService.show();
     this.crudService.getData('system-settings/get-system-settings').subscribe({
       next: (response) => {
         // Update the local settings object with fresh data
         this.settings = response;
         this.hasUnsavedChanges = true;
+        this.loadingService.hide();
         console.log('Settings refreshed after reset');
       },
       error: (error) => {
         this.errorMessage = error.error?.message || 'Failed to refresh settings after reset.';
         console.error('Error refreshing settings:', error);
+        this.loadingService.hide();
       }
     });
   }
@@ -96,16 +105,22 @@ export class SystemConfigurationComponent implements OnInit, OnDestroy {
 
     this.errorMessage = '';
     let payload = this.settings;
+    this.loadingService.show();
     this.crudService.putData('system-settings/save-system-settings', payload, this.crudService.getHeaderToken()).subscribe({
       next: (response) => {
         this.hasUnsavedChanges = false;
         console.log('System settings saved successfully:', response);
         // Show success message (you can replace with a toast notification)
-        alert('Settings saved successfully!');
+        this.loadingService.hide();
+        this.notificationService.success(
+          'System Configuration',
+          'Settings saved successfully!.'
+        );
       },
       error: (error) => {
         this.errorMessage = error.error?.message || 'Failed to save settings. Please try again.';
         console.error('Error saving system settings:', error);
+        this.loadingService.hide();
       }
     });
   }
@@ -113,16 +128,18 @@ export class SystemConfigurationComponent implements OnInit, OnDestroy {
   resetAllSettings(): void {
     if (confirm('Are you sure you want to reset all settings to their default values? This will reload all settings from the server.')) {
       this.errorMessage = '';
-
+      this.loadingService.show();
       this.crudService.getData('system-settings/get-system-settings').subscribe({
         next: (response) => {
           this.settings = response;
           this.hasUnsavedChanges = true;
           console.log('All settings reset to defaults');
+          this.loadingService.hide();
         },
         error: (error) => {
           this.errorMessage = error.error?.message || 'Failed to reset all settings.';
           console.error('Error resetting all settings:', error);
+          this.loadingService.hide();
         }
       });
     }

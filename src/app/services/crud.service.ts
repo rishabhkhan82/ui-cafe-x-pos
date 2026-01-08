@@ -153,6 +153,12 @@ export class CrudService {
       httpHeaders = httpHeaders.set('Content-Type', 'application/json');
     }
 
+    // Add Authorization header if token exists
+    const token = sessionStorage.getItem('accessToken');
+    if (token) {
+      httpHeaders = httpHeaders.set('Authorization', `Bearer ${token}`);
+    }
+
     // Custom headers
     if (headers) {
       Object.keys(headers).forEach(key => {
@@ -213,6 +219,14 @@ export class CrudService {
 
   createUser(payload: any): Observable<any> {
     return this.postData('users', payload);
+  }
+
+  updateUser(id: string | number, payload: any): Observable<any> {
+    return this.putData('users', payload, {}, id);
+  }
+
+  deleteUser(id: string | number): Observable<any> {
+    return this.deleteData('users', {}, id);
   }
 
   getHeaderToken(): any {

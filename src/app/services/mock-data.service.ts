@@ -22,12 +22,26 @@ export interface User {
   phone: string;
   role: 'platform_owner' | 'restaurant_owner' | 'restaurant_manager' | 'cashier' | 'kitchen_manager' | 'waiter' | 'customer';
   avatar?: string;
-  restaurantId?: string;
-  memberSince?: Date;
-  createdAt?: Date;
-  updatedAt?: Date;
-  isActive: boolean;
-  lastLogin?: Date;
+  restaurant_id?: string;
+  member_since?: Date;
+  created_at?: Date;
+  updated_at?: Date;
+  is_active: string;
+  last_login?: Date;
+  created_by?: string;
+}
+
+export interface Role {
+  id: number;
+  name: string;
+  code: string;
+  role_id: string;
+  description: string;
+  is_active: boolean;
+  is_system_role: boolean;
+  created_at: Date;
+  updated_at: Date;
+  created_by: string;
 }
 
 export interface MenuItem {
@@ -1611,6 +1625,7 @@ export interface NotificationMessage {
 export class MockDataService {
   // BehaviorSubjects for reactive data
   private usersSubject = new BehaviorSubject<User[]>([]);
+  private rolesSubject = new BehaviorSubject<Role[]>([]);
   private menuItemsSubject = new BehaviorSubject<MenuItem[]>([]);
   private ordersSubject = new BehaviorSubject<Order[]>([]);
   private notificationsSubject = new BehaviorSubject<Notification[]>([]);
@@ -1733,6 +1748,7 @@ export class MockDataService {
 
   // Observable streams
   users$ = this.usersSubject.asObservable();
+  roles$ = this.rolesSubject.asObservable();
   menuItems$ = this.menuItemsSubject.asObservable();
   orders$ = this.ordersSubject.asObservable();
   notifications$ = this.notificationsSubject.asObservable();
@@ -1858,6 +1874,94 @@ export class MockDataService {
   }
 
   private initializeMockData(): void {
+    // Initialize roles
+    const roles: Role[] = [
+      {
+        id: 1,
+        name: 'Platform Owner',
+        code: 'PLATFORM_OWNER',
+        role_id: 'platform_owner',
+        description: 'Full platform administration access with complete control over all system features',
+        is_active: true,
+        is_system_role: true,
+        created_at: new Date('2024-01-01'),
+        updated_at: new Date('2024-01-01'),
+        created_by: 'system'
+      },
+      {
+        id: 2,
+        name: 'Restaurant Owner',
+        code: 'RESTAURANT_OWNER',
+        role_id: 'restaurant_owner',
+        description: 'Restaurant management access with control over restaurant operations and analytics',
+        is_active: true,
+        is_system_role: true,
+        created_at: new Date('2024-01-01'),
+        updated_at: new Date('2024-01-01'),
+        created_by: 'system'
+      },
+      {
+        id: 3,
+        name: 'Restaurant Manager',
+        code: 'RESTAURANT_MANAGER',
+        role_id: 'restaurant_manager',
+        description: 'Staff supervision and operations management access',
+        is_active: true,
+        is_system_role: true,
+        created_at: new Date('2024-01-01'),
+        updated_at: new Date('2024-01-01'),
+        created_by: 'system'
+      },
+      {
+        id: 4,
+        name: 'Cashier',
+        code: 'CASHIER',
+        role_id: 'cashier',
+        description: 'Order processing and payment handling access',
+        is_active: true,
+        is_system_role: true,
+        created_at: new Date('2024-01-01'),
+        updated_at: new Date('2024-01-01'),
+        created_by: 'system'
+      },
+      {
+        id: 5,
+        name: 'Kitchen Manager',
+        code: 'KITCHEN_MANAGER',
+        role_id: 'kitchen_manager',
+        description: 'Menu management and kitchen operations access',
+        is_active: true,
+        is_system_role: true,
+        created_at: new Date('2024-01-01'),
+        updated_at: new Date('2024-01-01'),
+        created_by: 'system'
+      },
+      {
+        id: 6,
+        name: 'Waiter',
+        code: 'WAITER',
+        role_id: 'waiter',
+        description: 'Table service and customer interaction access',
+        is_active: true,
+        is_system_role: true,
+        created_at: new Date('2024-01-01'),
+        updated_at: new Date('2024-01-01'),
+        created_by: 'system'
+      },
+      {
+        id: 7,
+        name: 'Customer',
+        code: 'CUSTOMER',
+        role_id: 'customer',
+        description: 'Ordering and account management access for customers',
+        is_active: true,
+        is_system_role: true,
+        created_at: new Date('2024-01-01'),
+        updated_at: new Date('2024-01-01'),
+        created_by: 'system'
+      }
+    ];
+
     // Initialize users
     const users: User[] = [
       {
@@ -1869,12 +1973,13 @@ export class MockDataService {
         phone: '+91 98765 43217',
         role: 'platform_owner',
         avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=80&h=80&fit=crop&crop=face',
-        restaurantId: undefined,
-        memberSince: undefined,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-01'),
-        isActive: true,
-        lastLogin: new Date('2024-12-29')
+        restaurant_id: undefined,
+        member_since: undefined,
+        created_at: new Date('2024-01-01'),
+        updated_at: new Date('2024-01-01'),
+        is_active: 'Y',
+        last_login: new Date('2024-12-29'),
+        created_by: '1'
       },
       {
         id: '2',
@@ -1885,12 +1990,13 @@ export class MockDataService {
         phone: '+91 98765 43210',
         role: 'restaurant_owner',
         avatar: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQOeZjZWEr4oFmJhILQQgTy7-WUX9BmRrAAFw&s',
-        restaurantId: 'restaurant-1',
-        memberSince: undefined,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-01'),
-        isActive: true,
-        lastLogin: undefined
+        restaurant_id: 'restaurant-1',
+        member_since: undefined,
+        created_at: new Date('2024-01-01'),
+        updated_at: new Date('2024-01-01'),
+        is_active: 'Y',
+        last_login: undefined,
+        created_by: '1'
       },
       {
         id: '3',
@@ -1901,12 +2007,13 @@ export class MockDataService {
         phone: '+91 98765 43211',
         role: 'restaurant_manager',
         avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop&crop=face',
-        restaurantId: 'restaurant-1',
-        memberSince: undefined,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-01'),
-        isActive: true,
-        lastLogin: undefined
+        restaurant_id: 'restaurant-1',
+        member_since: undefined,
+        created_at: new Date('2024-01-01'),
+        updated_at: new Date('2024-01-01'),
+        is_active: 'Y',
+        last_login: undefined,
+        created_by: '2'
       },
       {
         id: '4',
@@ -1917,12 +2024,13 @@ export class MockDataService {
         phone: '+91 98765 43213',
         role: 'kitchen_manager',
         avatar: 'https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?w=80&h=80&fit=crop&crop=face',
-        restaurantId: 'restaurant-1',
-        memberSince: undefined,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-01'),
-        isActive: true,
-        lastLogin: undefined
+        restaurant_id: 'restaurant-1',
+        member_since: undefined,
+        created_at: new Date('2024-01-01'),
+        updated_at: new Date('2024-01-01'),
+        is_active: 'Y',
+        last_login: undefined,
+        created_by: '2'
       },
       {
         id: '5',
@@ -1933,12 +2041,13 @@ export class MockDataService {
         phone: '+91 98765 43212',
         role: 'cashier',
         avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=80&h=80&fit=crop&crop=face',
-        restaurantId: 'restaurant-1',
-        memberSince: undefined,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-01'),
-        isActive: true,
-        lastLogin: undefined
+        restaurant_id: 'restaurant-1',
+        member_since: undefined,
+        created_at: new Date('2024-01-01'),
+        updated_at: new Date('2024-01-01'),
+        is_active: 'Y',
+        last_login: undefined,
+        created_by: '2'
       },
       {
         id: '6',
@@ -1949,12 +2058,13 @@ export class MockDataService {
         phone: '+91 98765 43214',
         role: 'waiter',
         avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face',
-        restaurantId: 'restaurant-1',
-        memberSince: undefined,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-01'),
-        isActive: true,
-        lastLogin: undefined
+        restaurant_id: 'restaurant-1',
+        member_since: undefined,
+        created_at: new Date('2024-01-01'),
+        updated_at: new Date('2024-01-01'),
+        is_active: 'Y',
+        last_login: undefined,
+        created_by: '2'
       },
       {
         id: '7',
@@ -1965,12 +2075,13 @@ export class MockDataService {
         phone: '+91 98765 43215',
         role: 'customer',
         avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop&crop=face',
-        restaurantId: undefined,
-        memberSince: new Date('2024-01-15'),
-        createdAt: new Date('2024-01-15'),
-        updatedAt: new Date('2024-01-15'),
-        isActive: true,
-        lastLogin: undefined
+        restaurant_id: 'restaurant-1',
+        member_since: new Date('2024-01-15'),
+        created_at: new Date('2024-01-15'),
+        updated_at: new Date('2024-01-15'),
+        is_active: 'Y',
+        last_login: undefined,
+        created_by: undefined
       },
       {
         id: '8',
@@ -1981,12 +2092,13 @@ export class MockDataService {
         phone: '+91 98765 43216',
         role: 'customer',
         avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=80&h=80&fit=crop&crop=face',
-        restaurantId: undefined,
-        memberSince: new Date('2024-03-20'),
-        createdAt: new Date('2024-03-20'),
-        updatedAt: new Date('2024-03-20'),
-        isActive: true,
-        lastLogin: undefined
+        restaurant_id: 'restaurant-1',
+        member_since: new Date('2024-03-20'),
+        created_at: new Date('2024-03-20'),
+        updated_at: new Date('2024-03-20'),
+        is_active: 'Y',
+        last_login: undefined,
+        created_by: undefined
       }
     ];
 
@@ -2736,6 +2848,26 @@ export class MockDataService {
         icon: 'fas fa-user-cog',
         isActive: true,
         order: 1,
+        type: 'action'
+      },
+      {
+        id: 'po-3-2',
+        name: 'Role Management',
+        parentId: 'po-3',
+        rolePermissions: {
+          'platform_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: true,
+            canCreate: true,
+            allowedRoles: ['platform_owner'],
+            permissions: ['create_role', 'update_role', 'delete_role']
+          }
+        },
+        path: '/role-management',
+        icon: 'fas fa-user-cog',
+        isActive: true,
+        order: 2,
         type: 'action'
       },
       {
@@ -6709,6 +6841,7 @@ export class MockDataService {
 
     // Emit initial data
     this.usersSubject.next(users);
+    this.rolesSubject.next(roles);
     this.menuItemsSubject.next(menuItems);
     this.ordersSubject.next(orders);
     this.notificationsSubject.next(notifications);
@@ -6840,6 +6973,54 @@ export class MockDataService {
 
   getUserByRole(role: User['role']): User | undefined {
     return this.usersSubject.value.find(user => user.role === role);
+  }
+
+  // Role methods
+  getRoles(): Observable<Role[]> {
+    return this.roles$;
+  }
+
+  getRoleById(id: number): Role | undefined {
+    return this.rolesSubject.value.find(role => role.id === id);
+  }
+
+  getRoleByCode(code: string): Role | undefined {
+    return this.rolesSubject.value.find(role => role.code === code);
+  }
+
+  getRoleByRoleId(roleId: string): Role | undefined {
+    return this.rolesSubject.value.find(role => role.role_id === roleId);
+  }
+
+  addRole(role: Role): void {
+    const roles = [...this.rolesSubject.value];
+    roles.push(role);
+    this.rolesSubject.next(roles);
+  }
+
+  updateRole(role: Role): void {
+    const roles = [...this.rolesSubject.value];
+    const index = roles.findIndex(r => r.id === role.id);
+    if (index !== -1) {
+      roles[index] = role;
+      this.rolesSubject.next(roles);
+    }
+  }
+
+  deleteRole(roleId: number): void {
+    const roles = [...this.rolesSubject.value];
+    const filteredRoles = roles.filter(r => r.id !== roleId);
+    this.rolesSubject.next(filteredRoles);
+  }
+
+  toggleRoleStatus(roleId: number): void {
+    const roles = [...this.rolesSubject.value];
+    const role = roles.find(r => r.id === roleId);
+    if (role && !role.is_system_role) {
+      role.is_active = !role.is_active;
+      role.updated_at = new Date();
+      this.rolesSubject.next(roles);
+    }
   }
 
   // Menu methods

@@ -60,6 +60,13 @@ export class FileUploadService {
   // ===============================
 
   /**
+   * Validate file against category requirements
+   */
+  validateFileForCategory(file: File, category: FileMetadata['category']): { isValid: boolean; message?: string } {
+    return this.validateFile(file, category);
+  }
+
+  /**
    * Upload single file with progress tracking
    */
   uploadFile(

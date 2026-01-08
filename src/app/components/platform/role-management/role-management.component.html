@@ -1,0 +1,414 @@
+<div class="p-6">
+  <div class="mb-6">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Role Management</h1>
+        <p class="text-gray-600 dark:text-gray-300">Manage user roles and permissions</p>
+      </div>
+      <button
+        (click)="onAddRole()"
+        class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
+        <i class="fas fa-plus"></i>
+        <span>Add Role</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-search mr-2 text-red-500"></i>Search Roles
+        </label>
+        <div class="relative">
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            (input)="filterRoles()"
+            placeholder="Search by name or code..."
+            class="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-toggle-on mr-2 text-green-500"></i>Status Filter
+        </label>
+        <select
+          [(ngModel)]="statusFilter"
+          (change)="filterRoles()"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+      <div class="flex items-end">
+        <div class="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 px-4 py-3 rounded-xl border border-red-200 dark:border-red-800">
+          <div class="text-sm text-gray-700 dark:text-gray-300">
+            <span class="font-bold text-red-600 dark:text-red-400">{{ filteredRoles.length }}</span> roles found
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Role Modal -->
+  <div *ngIf="showForm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center">
+            <i [class]="isEditing ? 'fas fa-user-edit' : 'fas fa-user-plus'" class="text-white"></i>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ isEditing ? 'Edit Role' : 'Add New Role' }}</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">{{ isEditing ? 'Update role information' : 'Create a new role' }}</p>
+          </div>
+        </div>
+        <button
+          (click)="onCancel()"
+          class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+          <i class="fas fa-times text-gray-500 dark:text-gray-400"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-red-500 scrollbar-track-gray-100 dark:scrollbar-track-gray-700">
+
+        <form [formGroup]="roleForm" (ngSubmit)="onSubmit()" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Name -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-tag mr-2 text-red-500"></i>Role Name
+              </label>
+              <input
+                type="text"
+                formControlName="name"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                placeholder="Enter role name">
+              <div *ngIf="roleForm.get('name')?.invalid && roleForm.get('name')?.touched" class="text-red-500 text-sm mt-1">
+                <div *ngIf="roleForm.get('name')?.errors?.['required']">Role name is required</div>
+                <div *ngIf="roleForm.get('name')?.errors?.['minlength']">Role name must be at least 2 characters</div>
+              </div>
+            </div>
+
+            <!-- Code -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-code mr-2 text-indigo-500"></i>Code
+              </label>
+              <input
+                type="text"
+                formControlName="code"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white uppercase transition-all duration-200"
+                placeholder="ROLE_CODE">
+              <div *ngIf="roleForm.get('code')?.invalid && roleForm.get('code')?.touched" class="text-red-500 text-sm mt-1">
+                <div *ngIf="roleForm.get('code')?.errors?.['required']">Code is required</div>
+                <div *ngIf="roleForm.get('code')?.errors?.['pattern']">Code must be uppercase letters and underscores only</div>
+              </div>
+            </div>
+
+            <!-- Role ID -->
+            <div class="md:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-id-badge mr-2 text-blue-500"></i>Role ID
+              </label>
+              <input
+                type="text"
+                formControlName="role_id"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                placeholder="role_id">
+              <div *ngIf="roleForm.get('role_id')?.invalid && roleForm.get('role_id')?.touched" class="text-red-500 text-sm mt-1">
+                Role ID is required
+              </div>
+            </div>
+
+            <!-- Is System Role -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-shield-alt mr-2 text-purple-500"></i>System Role
+              </label>
+              <div class="flex items-center">
+                <input
+                  type="checkbox"
+                  formControlName="is_system_role"
+                  class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">This is a system-defined role</span>
+              </div>
+            </div>
+
+            <!-- Is Active -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-toggle-on mr-2 text-teal-500"></i>Status
+              </label>
+              <div class="flex items-center">
+                <input
+                  type="checkbox"
+                  formControlName="is_active"
+                  class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Role is active</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <i class="fas fa-file-alt mr-2 text-green-500"></i>Description
+            </label>
+            <textarea
+              formControlName="description"
+              rows="3"
+              class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+              placeholder="Enter role description"></textarea>
+            <div *ngIf="roleForm.get('description')?.invalid && roleForm.get('description')?.touched" class="text-red-500 text-sm mt-1">
+              Description is required
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <button
+          type="button"
+          (click)="onCancel()"
+          class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          Cancel
+        </button>
+        <button
+          type="submit"
+          (click)="onSubmit()"
+          [disabled]="roleForm.invalid"
+          class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-gray-400 transition-colors disabled:cursor-not-allowed">
+          {{ isEditing ? 'Update Role' : 'Create Role' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Role Modal -->
+  <div *ngIf="showViewModal && selectedRole" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center">
+            <i class="fas fa-eye text-white"></i>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">Role Details</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">View role information</p>
+          </div>
+        </div>
+        <button
+          (click)="closeViewModal()"
+          class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+          <i class="fas fa-times text-gray-500 dark:text-gray-400"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="flex-1 overflow-y-auto p-6">
+        <div class="space-y-4">
+          <!-- Role Information -->
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6">
+            <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+              <i class="fas fa-info-circle mr-3 text-red-500"></i>Role Information
+            </h4>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                <span class="text-gray-600 dark:text-gray-400 font-medium">Role Name:</span>
+                <span class="text-gray-900 dark:text-white font-semibold">{{ selectedRole.name }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                <span class="text-gray-600 dark:text-gray-400 font-medium">Code:</span>
+                <span class="text-gray-900 dark:text-white font-semibold font-mono bg-gray-100 dark:bg-gray-600 px-2 py-1 rounded text-sm">{{ selectedRole.code }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                <span class="text-gray-600 dark:text-gray-400 font-medium">Role ID:</span>
+                <span class="text-gray-900 dark:text-white font-semibold">{{ selectedRole.role_id }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                <span class="text-gray-600 dark:text-gray-400 font-medium">Status:</span>
+                <span [ngClass]="getStatusBadgeClass(selectedRole.is_active)" class="px-2 py-1 text-xs rounded-full font-medium">
+                  {{ getStatusText(selectedRole.is_active) }}
+                </span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                <span class="text-gray-600 dark:text-gray-400 font-medium">System Role:</span>
+                <div class="flex items-center">
+                  <i *ngIf="selectedRole.is_system_role" class="fas fa-check text-green-500 mr-2"></i>
+                  <i *ngIf="!selectedRole.is_system_role" class="fas fa-times text-gray-400 mr-2"></i>
+                  <span class="text-gray-900 dark:text-white font-semibold">{{ selectedRole.is_system_role ? 'Yes' : 'No' }}</span>
+                </div>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                <span class="text-gray-600 dark:text-gray-400 font-medium">Created:</span>
+                <span class="text-gray-900 dark:text-white font-semibold">{{ selectedRole.created_at | date:'medium' }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                <span class="text-gray-600 dark:text-gray-400 font-medium">Last Updated:</span>
+                <span class="text-gray-900 dark:text-white font-semibold">{{ selectedRole.updated_at | date:'medium' }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                <span class="text-gray-600 dark:text-gray-400 font-medium">Created By:</span>
+                <span class="text-gray-900 dark:text-white font-semibold">{{ selectedRole.created_by }}</span>
+              </div>
+            </div>
+            <div class="mt-4">
+              <div class="flex justify-between items-start">
+                <span class="text-gray-600 dark:text-gray-400 font-medium">Description:</span>
+                <span class="text-gray-900 dark:text-white font-semibold ml-4 flex-1 text-right">{{ selectedRole.description }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <button
+          (click)="closeViewModal()"
+          class="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Roles Table -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center">
+          <i class="fas fa-list mr-3 text-red-500"></i>Search Results
+        </h3>
+        <div class="text-sm text-gray-600 dark:text-gray-400">
+          Showing {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ min(currentPage * itemsPerPage, totalItems) }} of {{ totalItems }} roles
+        </div>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto scrollbar-thin scrollbar-thumb-red-500 scrollbar-track-gray-100 dark:scrollbar-track-gray-700">
+      <table class="w-full">
+        <thead class="bg-gray-50 dark:bg-gray-700/50">
+          <tr>
+            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">ID</th>
+            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Name</th>
+            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Code</th>
+            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Role ID</th>
+            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Description</th>
+            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Status</th>
+            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">System Role</th>
+            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Created</th>
+            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider sticky right-0 bg-red-100 dark:bg-red-900 border-l border-red-300 dark:border-red-700">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+          <tr *ngFor="let role of paginatedResults" class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ role.id }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white font-medium">{{ role.name }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+              <code class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs">{{ role.code }}</code>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ role.role_id }}</td>
+            <td class="px-6 py-4 text-sm text-gray-900 dark:text-white max-w-xs truncate" [title]="role.description">
+              {{ role.description }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span [ngClass]="getStatusBadgeClass(role.is_active)"
+                    class="px-2 py-1 text-xs font-medium rounded-full">
+                {{ getStatusText(role.is_active) }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+              <i *ngIf="role.is_system_role" class="fas fa-check text-green-500" title="System Role"></i>
+              <i *ngIf="!role.is_system_role" class="fas fa-times text-gray-400" title="Custom Role"></i>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+              {{ role.created_at | date:'short' }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium sticky right-0 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700">
+              <div class="flex items-center gap-2">
+                <button
+                  (click)="viewRole(role)"
+                  class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                  title="View Role Details">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button
+                  (click)="onEditRole(role)"
+                  class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button
+                  (click)="toggleRoleStatus(role)"
+                  [disabled]="role.is_system_role"
+                  [title]="role.is_system_role ? 'Cannot deactivate system roles' : (role.is_active ? 'Deactivate role' : 'Activate role')"
+                  [ngClass]="role.is_active ? 'text-yellow-600 hover:text-yellow-900' : 'text-green-600 hover:text-green-900'">
+                  <i [class]="role.is_active ? 'fas fa-ban' : 'fas fa-check'"></i>
+                </button>
+                <button
+                  (click)="onDeleteRole(role)"
+                  [disabled]="role.is_system_role"
+                  [title]="role.is_system_role ? 'Cannot delete system roles' : 'Delete role'"
+                  class="text-red-600 hover:text-red-900 disabled:text-gray-400 disabled:cursor-not-allowed">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+      <div class="flex items-center justify-between">
+        <div class="text-sm text-gray-700 dark:text-gray-300">
+          <select [(ngModel)]="itemsPerPage" (change)="currentPage = 1" class="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm dark:bg-gray-700 dark:text-white">
+            <option [value]="10">10 per page</option>
+            <option [value]="25">25 per page</option>
+            <option [value]="50">50 per page</option>
+          </select>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)"
+                  class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-600 dark:bg-gray-700 dark:text-white">
+            Previous
+          </button>
+
+          <span class="text-sm text-gray-700 dark:text-gray-300">
+            Page {{ currentPage }} of {{ totalPages }}
+          </span>
+
+          <button [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)"
+                  class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-600 dark:bg-gray-700 dark:text-white">
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="totalItems === 0" class="text-center py-12">
+      <i class="fas fa-users text-gray-400 text-4xl mb-4"></i>
+      <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No roles found</h3>
+      <p class="text-gray-500 dark:text-gray-400 mb-4">Get started by creating your first role.</p>
+      <button
+        (click)="onAddRole()"
+        class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
+        <i class="fas fa-plus"></i>
+        <span>Add Role</span>
+      </button>
+    </div>
+  </div>
+</div>

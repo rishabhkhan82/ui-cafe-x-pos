@@ -1,0 +1,31 @@
+<!-- Global Toast Container - Fixed Position -->
+<div class="fixed top-4 right-4 z-[100] space-y-2 pointer-events-none">
+  <div *ngFor="let toast of toasts; let i = index" 
+       class="toast-item pointer-events-auto animate-slide-in-right"
+       [class]="getToastClasses(toast)"
+       [style.animation-delay.ms]="i * 100">
+    
+    <!-- Toast Icon -->
+    <div class="flex-shrink-0 mr-3">
+      <i [class]="toast.icon" class="text-lg"></i>
+    </div>
+    
+    <!-- Toast Content -->
+    <div class="flex-1">
+      <div class="font-semibold">{{ toast.title }}</div>
+      <div class="text-sm opacity-90 mt-0.5">{{ toast.message }}</div>
+    </div>
+    
+    <!-- Close Button -->
+    <button (click)="removeToast(toast.id)" 
+            class="ml-3 flex-shrink-0 text-current opacity-70 hover:opacity-100 transition-opacity">
+      <i class="fas fa-times text-sm"></i>
+    </button>
+    
+    <!-- Progress Bar -->
+    <div class="absolute bottom-0 left-0 right-0 h-1 bg-current opacity-20 rounded-b-lg overflow-hidden">
+      <div class="h-full bg-current animate-progress" 
+           [style.animation-duration.ms]="toast.duration || 5000"></div>
+    </div>
+  </div>
+</div>
