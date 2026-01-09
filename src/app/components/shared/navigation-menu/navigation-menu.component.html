@@ -7,11 +7,11 @@
   </button>
 
   <!-- Dropdown Menu -->
-  <div *ngIf="isDropdownOpen" class="absolute right-0 z-50 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 max-h-96 overflow-y-auto">
+  <div [ngClass]="{'dropdown-menu': true, 'dropdown-open': isDropdownOpen}" class="absolute right-0 z-50 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 max-h-96 overflow-y-auto">
     <!-- Dashboard as first item -->
 
     <div class="p-2">
-      <a [routerLink]="getDashboardPath()" class="flex items-center px-3 py-2 text-sm font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 rounded-md hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-colors duration-150" (click)="closeDropdown()">
+      <a [routerLink]="getDashboardPath()" routerLinkActive="active" class="flex items-center px-3 py-2 text-sm font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 rounded-md hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-colors duration-150" (click)="closeDropdown()">
         <i class="fas fa-tachometer-alt mr-3 w-4 text-center"></i>
         Dashboard
       </a>
@@ -19,13 +19,15 @@
     <div class="border-t border-gray-200 dark:border-gray-700"></div>
 
     <!-- Navigation Menu Section -->
+
+    <!-- <pre>{{navigationMenus | json}}</pre> -->
     <div class="p-2 space-y-1">
       <ng-container *ngFor="let menu of navigationMenus">
         <div *ngIf="!menu.parentId && menu.name !== 'Dashboard'">
           <ng-container *ngIf="menu.children && menu.children.length > 0; else singleMenu">
             <!-- Parent menu with children -->
             <div class="relative">
-              <button class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-150" (click)="toggleSubmenu(menu)">
+              <button [class.parent-active]="menu.isActive" class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-150" (click)="toggleSubmenu(menu)">
                 <div class="flex items-center">
                   <i [class]="menu.icon + ' mr-3 w-4 text-center'"></i>
                   {{ menu.name }}
@@ -34,10 +36,10 @@
               </button>
 
               <!-- Submenu -->
-              <div *ngIf="menu.isActive" class="ml-4 mt-1 space-y-1">
+              <div [ngClass]="{'submenu': true, 'submenu-open': menu.isActive}" class="ml-4 mt-1 space-y-1">
                 <ng-container *ngFor="let child of menu.children">
                   <!-- {{child.path}} -->
-                  <button *ngIf="child.path" (click)="navigateToMenu(child.path)" class="w-full text-left flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-150 pl-6 relative before:content-[''] before:absolute before:left-3 before:top-1/2 before:w-2 before:h-px before:bg-gray-400 dark:before:bg-gray-500">
+                  <button *ngIf="child.path" [class.active]="child.isActive" (click)="navigateToMenu(child.path)" class="w-full text-left flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-150 pl-6 relative before:content-[''] before:absolute before:left-3 before:top-1/2 before:w-2 before:h-px before:bg-gray-400 dark:before:bg-gray-500">
                     <i [class]="child.icon + ' mr-3 w-4 text-center'"></i>
                     {{ child.name }}
                   </button>
@@ -47,7 +49,7 @@
           </ng-container>
           <ng-template #singleMenu>
             <!-- Single menu item -->
-            <a [routerLink]="menu.path" class="flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-150" (click)="closeDropdown()" *ngIf="menu.path">
+            <a [routerLink]="menu.path" routerLinkActive="active" class="flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-150" (click)="closeDropdown()" *ngIf="menu.path">
               <i [class]="menu.icon + ' mr-3 w-4 text-center'"></i>
               {{ menu.name }}
               <!-- {{menu.path}} -->

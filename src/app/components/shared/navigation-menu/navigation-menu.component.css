@@ -2,3 +2,58 @@
 .navigation-dropdown {
   position: relative;
 }
+
+/* Dropdown menu transitions */
+.dropdown-menu {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.dropdown-menu.dropdown-open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  visibility: visible;
+}
+
+/* Submenu transitions */
+.submenu {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: opacity 0.3s ease, max-height 0.3s ease;
+}
+
+.submenu.submenu-open {
+  opacity: 1;
+  max-height: 500px; /* Adjust based on content */
+}
+
+/* Active menu item styles */
+.active {
+  background-color: rgb(239 68 68);
+  color: white;
+  font-weight: 600;
+}
+
+.active:hover {
+  background-color: rgb(220 38 38);
+}
+
+/* Parent menu with active children styles */
+.parent-active {
+  background-color: rgb(156 163 175 / 0.1); /* light grey */
+}
+
+/* Hide scrollbar but keep scrolling functionality */
+.dropdown-menu::-webkit-scrollbar {
+  display: none;
+}
+
+.dropdown-menu {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}

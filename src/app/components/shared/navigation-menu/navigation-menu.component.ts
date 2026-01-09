@@ -1,6 +1,8 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
+import { NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { MockDataService, NavigationMenu, User } from '../../../services/mock-data.service';
 import { AuthService } from '../../../services/auth.service';
 
@@ -40,10 +42,19 @@ export class NavigationMenuComponent implements OnInit {
         this.ensureDashboardFirst();
         // Update menu paths to include admin prefix for admin users
         this.updateMenuPathsForAdmin(user.role);
+        // Update active menu based on current route
+        this.updateActiveMenu();
       } else {
         this.currentUser = undefined;
         this.navigationMenus = [];
       }
+    });
+
+    // Subscribe to router events to update active menu on navigation
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.updateActiveMenu();
     });
   }
 
@@ -166,5 +177,40 @@ export class NavigationMenuComponent implements OnInit {
         }
       }
     }
+  }
+
+  private updateActiveMenu(): void {
+    const currentUrl = this.router.url;
+    // Reset all active states
+    this.navigationMenus.forEach(menu => {
+      menu.isActive = false;
+      if (menu.children) {
+        menu.children.forEach(child => {
+          child.isActive = false;
+        });
+      }
+    });
+
+    // Find and set active menu based on current URL
+    this.navigationMenus.forEach(menu => {
+      if (menu.path) {
+        // Check if current URL ends with the menu path or contains it
+        const menuPath = menu.path.startsWith('/') ? menu.path : `/${menu.path}`;
+        if (currentUrl === menuPath || currentUrl.endsWith(menuPath)) {
+          menu.isActive = true;
+        }
+      }
+      if (menu.children) {
+        menu.children.forEach(child => {
+          if (child.path) {
+            const childPath = child.path.startsWith('/') ? child.path : `/${child.path}`;
+            if (currentUrl === childPath || currentUrl.endsWith(childPath)) {
+              child.isActive = true;
+              menu.isActive = true; // Also activate parent
+            }
+          }
+        });
+      }
+    });
   }
 }

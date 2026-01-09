@@ -170,3 +170,19 @@ extraa changes
 
 -------------------------------------------------------------------------------
 
+Restaurant Management - Pending
+
+tasks to do. 
+
+1] check db for the object.
+2] modify the form object accordingly
+3] add the new fields in form if needed as per the new object.
+4] name the form object - restaurantform
+5] design the crud api's 
+6] modify the save and update function as per the user management
+6] validations in api
+7] api's integration with the ui
+
+===============================================================================
+
+extra points - user activit logs. 

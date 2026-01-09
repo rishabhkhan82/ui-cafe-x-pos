@@ -1,0 +1,56 @@
+Perfect! Here's how to deploy both Angular and Java to Tomcat for your tester:
+
+1. Java Backend → WAR for Tomcat
+Modify pom.xml:
+<packaging>war</packaging>
+
+<build>
+    <finalName>api</finalName>  <!-- This becomes api.war -->
+</build>
+Add this dependency to exclude embedded Tomcat:
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-tomcat</artifactId>
+    <scope>provided</scope>
+</dependency>
+Build:
+cd java/api-cafe-x-pos-git
+mvn clean package
+# Result: target/api.war
+2. Angular Frontend → Deploy to Tomcat
+Build Angular:
+cd angular/ui-cafe-x-pos
+ng build
+# Result: dist/ folder with static files
+Configure Angular API URL:
+Edit environment.ts before building:
+
+export const environment = {
+  production: true,
+  apiUrl: 'http://your-tomcat-server:8080/api'
+};
+Copy Angular Build to Tomcat:
+Copy all files from dist/ to Tomcat's webapps/ROOT/ folder.
+
+3. Final Deployment Structure on Tomcat
+tomcat/
+├── webapps/
+│   ├── ROOT/          ← Angular static files (index.html, etc.)
+│   └── api.war        ← Java backend (becomes /api context)
+
+txt
+
+
+4. Access Points
+Frontend: http://tomcat-server:8080/
+Backend API: http://tomcat-server:8080/api/auth/login
+Quick Summary for Tester
+Give your tester:
+
+api.war → deploy to tomcat/webapps/
+Angular build files → deploy to tomcat/webapps/ROOT/
+Your tester just needs to:
+
+Copy files to Tomcat's webapps folder
+Start Tomcat
+Access http://localhost:8080 in browser
