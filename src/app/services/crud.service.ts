@@ -229,6 +229,27 @@ export class CrudService {
     return this.deleteData('users', {}, id);
   }
 
+  // Restaurant operations
+  getRestaurants(params?: CrudParams): Observable<any> {
+    return this.getData('restaurants', params);
+  }
+
+  createRestaurant(payload: any): Observable<any> {
+    return this.postData('restaurants', payload);
+  }
+
+  updateRestaurant(id: string | number, payload: any): Observable<any> {
+    return this.putData('restaurants', payload, {}, id);
+  }
+
+  deleteRestaurant(id: string | number): Observable<any> {
+    return this.deleteData('restaurants', {}, id);
+  }
+
+  getRestaurantById(id: string | number): Observable<any> {
+    return this.getData(`restaurants/${id}`);
+  }
+
   getHeaderToken(): any {
     return { 'Authorization': `Bearer ${sessionStorage.getItem('accessToken') || ''}` };
   }

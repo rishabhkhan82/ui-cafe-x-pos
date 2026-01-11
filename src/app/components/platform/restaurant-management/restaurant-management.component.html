@@ -16,9 +16,9 @@
   </div>
 
   <!-- Filters and Search -->
-  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <div class="md:col-span-2">
+  <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div>
         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
           <i class="fas fa-search mr-2 text-red-500"></i>Search Restaurants
         </label>
@@ -26,11 +26,33 @@
           <input
             type="text"
             [(ngModel)]="searchTerm"
-            (input)="filterRestaurants()"
-            placeholder="Search by name, owner, or email..."
+            placeholder="Search by name"
             class="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
           <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
         </div>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-crown mr-2 text-yellow-500"></i>Subscription Plan Filter
+        </label>
+        <select
+          [(ngModel)]="subscriptionPlanFilter"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Plans</option>
+          <option value="Starter">Starter Plan</option>
+          <option value="Pro">Pro Plan</option>
+          <option value="Enterprise">Enterprise Plan</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-city mr-2 text-purple-500"></i>City Filter
+        </label>
+        <input
+          type="text"
+          [(ngModel)]="cityFilter"
+          placeholder="Filter by city"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
       </div>
       <div>
         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
@@ -38,21 +60,22 @@
         </label>
         <select
           [(ngModel)]="statusFilter"
-          (change)="filterRestaurants()"
           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
           <option value="all">All Status</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-          <option value="suspended">Suspended</option>
+          <option value="ACTIVE">Active</option>
+          <option value="INACTIVE">Inactive</option>
+          <option value="SUSPENDED">Suspended</option>
+          <option value="PENDING_VERIFICATION">Pending Verification</option>
         </select>
       </div>
-      <div class="flex items-end">
-        <div class="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 px-4 py-3 rounded-xl border border-red-200 dark:border-red-800">
-          <div class="text-sm text-gray-700 dark:text-gray-300">
-            <span class="font-bold text-red-600 dark:text-red-400">{{ filteredRestaurants.length }}</span> restaurants found
-          </div>
-        </div>
-      </div>
+    </div>
+    <div class="absolute -right-4 top-1/2 transform -translate-y-1/2 flex flex-col gap-2">
+      <button (click)="filterRestaurants()" class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 transition-colors">
+        <i class="fas fa-search text-sm"></i>
+      </button>
+      <button (click)="clearFilters()" class="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors">
+        <i class="fas fa-times text-sm"></i>
+      </button>
     </div>
   </div>
 
@@ -79,75 +102,340 @@
 
       <!-- Modal Body -->
       <div class="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-red-500 scrollbar-track-gray-100 dark:scrollbar-track-gray-700">
-        <form (ngSubmit)="addRestaurant()" class="space-y-6">
+        <form (ngSubmit)="onSubmitForm()" class="space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Restaurant Name -->
             <div class="md:col-span-2">
               <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                <i class="fas fa-store mr-2 text-red-500"></i>Restaurant Name
+                <i class="fas fa-store mr-2 text-red-500"></i>Restaurant Name <span class="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                [(ngModel)]="newRestaurant.name"
+                [(ngModel)]="restaurantForm.name"
                 name="name"
+                (blur)="validateName()"
+                (input)="validateName()"
                 required
                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
                 placeholder="Enter restaurant name">
+              <div *ngIf="fieldErrors['name']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ fieldErrors['name'] }}
+              </div>
             </div>
 
             <!-- Email -->
             <div>
               <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                <i class="fas fa-envelope mr-2 text-blue-500"></i>Email Address
+                <i class="fas fa-envelope mr-2 text-blue-500"></i>Email Address <span class="text-red-500">*</span>
               </label>
               <input
                 type="email"
-                [(ngModel)]="newRestaurant.email"
+                [(ngModel)]="restaurantForm.email"
                 name="email"
-                required
+                (blur)="validateEmail()"
+                (input)="validateEmail()"
                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
                 placeholder="restaurant@example.com">
+              <div *ngIf="fieldErrors['email']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ fieldErrors['email'] }}
+              </div>
             </div>
 
             <!-- Phone -->
             <div>
               <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                <i class="fas fa-phone mr-2 text-green-500"></i>Phone Number
+                <i class="fas fa-phone mr-2 text-green-500"></i>Phone Number <span class="text-red-500">*</span>
               </label>
               <input
                 type="tel"
-                [(ngModel)]="newRestaurant.phone"
+                [(ngModel)]="restaurantForm.phone"
                 name="phone"
+                (blur)="validatePhone()"
+                (input)="validatePhone()"
                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
                 placeholder="+91 98765 43210">
+              <div *ngIf="fieldErrors['phone']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ fieldErrors['phone'] }}
+              </div>
             </div>
 
             <!-- City -->
             <div>
               <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                <i class="fas fa-city mr-2 text-purple-500"></i>City
+                <i class="fas fa-city mr-2 text-purple-500"></i>City <span class="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                [(ngModel)]="newRestaurant.city"
+                [(ngModel)]="restaurantForm.city"
                 name="city"
+                (blur)="validateCity()"
+                (input)="validateCity()"
+                required
                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
                 placeholder="Enter city">
+              <div *ngIf="fieldErrors['city']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ fieldErrors['city'] }}
+              </div>
             </div>
 
             <!-- Subscription Plan -->
             <div>
               <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                <i class="fas fa-crown mr-2 text-yellow-500"></i>Subscription Plan
+                <i class="fas fa-crown mr-2 text-yellow-500"></i>Subscription Plan <span class="text-red-500">*</span>
               </label>
               <select
-                [(ngModel)]="newRestaurant.subscriptionPlan"
+                [(ngModel)]="restaurantForm.subscription_plan"
                 name="subscriptionPlan"
+                (change)="onPlanChange(); validateSubscriptionPlan()"
                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                <option value="">Select Plan</option>
                 <option value="Starter">Starter Plan</option>
                 <option value="Pro">Pro Plan</option>
                 <option value="Enterprise">Enterprise Plan</option>
               </select>
+              <div *ngIf="fieldErrors['subscription_plan']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ fieldErrors['subscription_plan'] }}
+              </div>
+            </div>
+
+            <!-- Subscription Start Date -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-calendar-plus mr-2 text-orange-500"></i>Subscription Start Date
+              </label>
+              <input
+                type="date"
+                [(ngModel)]="subscriptionStartDateStr"
+                name="subscriptionStartDate"
+                [disabled]="true"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed">
+            </div>
+
+            <!-- Subscription End Date -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-calendar-times mr-2 text-red-500"></i>Subscription End Date
+              </label>
+              <input
+                type="date"
+                [(ngModel)]="subscriptionEndDateStr"
+                name="subscriptionEndDate"
+                [disabled]="true"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed">
+            </div>
+
+            <!-- Owner Name -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-user mr-2 text-purple-500"></i>Owner Name <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                [(ngModel)]="restaurantForm.owner_name"
+                name="ownerName"
+                (blur)="validateOwnerName()"
+                (input)="validateOwnerName()"
+                required
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                placeholder="Enter owner name">
+              <div *ngIf="fieldErrors['owner_name']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ fieldErrors['owner_name'] }}
+              </div>
+            </div>
+
+            <!-- Owner Email -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-envelope mr-2 text-blue-500"></i>Owner Email <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                [(ngModel)]="restaurantForm.owner_email"
+                name="ownerEmail"
+                (blur)="validateOwnerEmail()"
+                (input)="validateOwnerEmail()"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                placeholder="owner@example.com">
+              <div *ngIf="fieldErrors['owner_email']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ fieldErrors['owner_email'] }}
+              </div>
+            </div>
+
+            <!-- Owner Phone -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-phone mr-2 text-green-500"></i>Owner Phone <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                [(ngModel)]="restaurantForm.owner_phone"
+                name="ownerPhone"
+                (blur)="validateOwnerPhone()"
+                (input)="validateOwnerPhone()"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                placeholder="+91 98765 43210">
+              <div *ngIf="fieldErrors['owner_phone']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ fieldErrors['owner_phone'] }}
+              </div>
+            </div>
+
+            <!-- GST Number -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-file-invoice mr-2 text-indigo-500"></i>GST Number
+              </label>
+              <input
+                type="text"
+                [(ngModel)]="restaurantForm.gst_number"
+                name="gstNumber"
+                (blur)="validateGstNumber()"
+                (input)="validateGstNumber()"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                placeholder="22AAAAA0000A1Z5">
+              <div *ngIf="fieldErrors['gst_number']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ fieldErrors['gst_number'] }}
+              </div>
+            </div>
+
+            <!-- License Number, Status, and Is Active in one row -->
+            <div class="md:col-span-2">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-id-card mr-2 text-teal-500"></i>License Number
+                  </label>
+                  <input
+                    type="text"
+                    [(ngModel)]="restaurantForm.license_number"
+                    name="licenseNumber"
+                    (blur)="validateLicenseNumber()"
+                    (input)="validateLicenseNumber()"
+                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                    placeholder="Enter license number">
+                  <div *ngIf="fieldErrors['license_number']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {{ fieldErrors['license_number'] }}
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-check-circle mr-2 text-lime-500"></i>Is Active
+                  </label>
+                  <div class="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      [(ngModel)]="restaurantForm.is_active"
+                      name="isActive"
+                      class="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                    <span class="text-sm text-gray-700 dark:text-gray-300">{{ restaurantForm.is_active ? 'Yes' : 'No' }}</span>
+                  </div>
+                </div>                 
+              </div>
+            </div>
+
+            <div class="md:col-span-2">
+              <div class="grid grid-cols-1 gap-6">
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-toggle-on mr-2 text-cyan-500"></i>Status
+                  </label>
+                  <div class="flex flex-wrap gap-4">
+                    <label class="flex items-center">
+                      <input
+                        type="radio"
+                        name="status"
+                        value="ACTIVE"
+                        [(ngModel)]="restaurantForm.status"
+                        class="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                      <span class="text-sm text-gray-700 dark:text-gray-300">Active</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input
+                        type="radio"
+                        name="status"
+                        value="INACTIVE"
+                        [(ngModel)]="restaurantForm.status"
+                        class="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                      <span class="text-sm text-gray-700 dark:text-gray-300">Inactive</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input
+                        type="radio"
+                        name="status"
+                        value="PENDING_VERIFICATION"
+                        [(ngModel)]="restaurantForm.status"
+                        class="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                      <span class="text-sm text-gray-700 dark:text-gray-300">Pending Verification</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input
+                        type="radio"
+                        name="status"
+                        value="SUSPENDED"
+                        [(ngModel)]="restaurantForm.status"
+                        class="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                      <span class="text-sm text-gray-700 dark:text-gray-300">Suspended</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            
+
+            <!-- Description -->
+            <div class="md:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-align-left mr-2 text-pink-500"></i>Description <span class="text-red-500">*</span>
+              </label>
+              <textarea
+                [(ngModel)]="restaurantForm.description"
+                name="description"
+                (blur)="validateDescription()"
+                (input)="validateDescription()"
+                rows="3"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 resize-none"
+                placeholder="Enter restaurant description"></textarea>
+              <div *ngIf="fieldErrors['description']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ fieldErrors['description'] }}
+              </div>
+            </div>
+
+            <!-- State -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-map mr-2 text-yellow-500"></i>State <span class="text-red-500">*</span>
+              </label>
+              <select
+                [(ngModel)]="restaurantForm.state"
+                name="state"
+                (blur)="validateState()"
+                (change)="validateState()"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                <option value="0">Select State</option>
+                <option *ngFor="let state of states" [value]="state.id">{{ state.name }}</option>
+              </select>
+              <div *ngIf="fieldErrors['state']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ fieldErrors['state'] }}
+              </div>
+            </div>
+
+            <!-- Pincode -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-mailbox mr-2 text-rose-500"></i>Pincode <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                [(ngModel)]="restaurantForm.pincode"
+                name="pincode"
+                (blur)="validatePincode()"
+                (input)="validatePincode()"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                placeholder="400001">
+              <div *ngIf="fieldErrors['pincode']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ fieldErrors['pincode'] }}
+              </div>
             </div>
 
             <!-- Address -->
@@ -156,11 +444,47 @@
                 <i class="fas fa-map-marker-alt mr-2 text-red-500"></i>Full Address
               </label>
               <textarea
-                [(ngModel)]="newRestaurant.address"
+                [(ngModel)]="restaurantForm.address"
                 name="address"
                 rows="4"
                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 resize-none"
                 placeholder="Enter complete address with landmark"></textarea>
+            </div>
+
+            <!-- Latitude and Longitude -->
+            <div class="md:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-location-arrow mr-2 text-emerald-500"></i>Geolocation <span class="text-red-500">*</span>
+              </label>
+              <div class="flex space-x-4">
+                <input
+                  type="number"
+                  [(ngModel)]="restaurantForm.lat"
+                  name="latitude"
+                  (blur)="validateGeolocation()"
+                  (input)="validateGeolocation()"
+                  step="any"
+                  class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                  placeholder="Latitude">
+                <input
+                  type="number"
+                  [(ngModel)]="restaurantForm.long"
+                  name="longitude"
+                  (blur)="validateGeolocation()"
+                  (input)="validateGeolocation()"
+                  step="any"
+                  class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                  placeholder="Longitude">
+                <button
+                  type="button"
+                  (click)="getCurrentLocation()"
+                  class="px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors">
+                  <i class="fas fa-crosshairs"></i>
+                </button>
+              </div>
+              <div *ngIf="fieldErrors['geolocation']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ fieldErrors['geolocation'] }}
+              </div>
             </div>
           </div>
         </form>
@@ -176,7 +500,7 @@
         </button>
         <button
           type="submit"
-          (click)="addRestaurant()"
+          (click)="onSubmitForm()"
           class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
           {{ 'Add Restaurant' }}
         </button>
@@ -185,51 +509,20 @@
   </div>
 
   <!-- Restaurants Grid -->
-  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-2">
     <!-- Header with Compact Pagination -->
     <div class="flex justify-between items-center mb-6">
       <h3 class="text-lg font-bold text-gray-900 dark:text-white">Restaurants</h3>
-      <div *ngIf="totalPages > 1" class="flex items-center space-x-1">
-        <span class="text-xs text-gray-500 dark:text-gray-400 mr-2">
-          {{ currentPage }} of {{ totalPages }} pages ({{ itemsPerPage }} restaurants per page)
-        </span>
-        <button
-          (click)="changePage(1)"
-          [disabled]="currentPage === 1"
-          class="p-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          title="First Page">
-          <i class="fas fa-angle-double-left"></i>
-        </button>
-        <button
-          (click)="changePage(currentPage - 1)"
-          [disabled]="currentPage === 1"
-          class="p-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          title="Previous Page">
-          <i class="fas fa-chevron-left"></i>
-        </button>
-        <span class="px-2 py-1 text-xs text-gray-700 dark:text-gray-300">
-          {{ currentPage }} / {{ totalPages }}
-        </span>
-        <button
-          (click)="changePage(currentPage + 1)"
-          [disabled]="currentPage === totalPages"
-          class="p-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          title="Next Page">
-          <i class="fas fa-chevron-right"></i>
-        </button>
-        <button
-          (click)="changePage(totalPages)"
-          [disabled]="currentPage === totalPages"
-          class="p-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          title="Last Page">
-          <i class="fas fa-angle-double-right"></i>
-        </button>
+      <div class="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 px-4 py-2 rounded-xl border border-red-200 dark:border-red-800 text-sm text-gray-700 dark:text-gray-300">
+        Showing <span class="font-medium">{{ (currentPage - 1) * itemsPerPage + 1 }}</span> to
+        <span class="font-medium">{{ Math.min(currentPage * itemsPerPage, totalElements) }}</span>
+        of <span class="font-medium">{{ totalElements }}</span> restaurants
       </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
       <div
-        *ngFor="let restaurant of paginatedRestaurants"
+        *ngFor="let restaurant of restaurants"
         (click)="selectRestaurant(restaurant)"
         class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 cursor-pointer hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
         <!-- Header -->
@@ -241,7 +534,7 @@
             <div class="min-w-0 flex-1">
               <h3 class="font-bold text-gray-900 dark:text-white text-lg truncate">{{ restaurant.name }}</h3>
               <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center">
-                <i class="fas fa-user mr-1"></i>{{ restaurant.ownerName }}
+                <i class="fas fa-user mr-1"></i>{{ restaurant.owner_name }}
               </p>
             </div>
           </div>
@@ -252,28 +545,11 @@
               {{ restaurant.status | titlecase }}
             </span>
             <span class="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-lg">
-              {{ restaurant.subscriptionPlan }}
+              {{ restaurant.subscription_plan }}
             </span>
           </div>
         </div>
 
-        <!-- Details Grid -->
-        <div class="grid grid-cols-2 gap-4 mb-6">
-          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
-            <div class="flex items-center space-x-2 mb-1">
-              <i class="fas fa-shopping-cart text-blue-500 text-sm"></i>
-              <span class="text-xs text-gray-500 dark:text-gray-400">Orders</span>
-            </div>
-            <div class="text-lg font-bold text-gray-900 dark:text-white">{{ restaurant.totalOrders }}</div>
-          </div>
-          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
-            <div class="flex items-center space-x-2 mb-1">
-              <i class="fas fa-rupee-sign text-green-500 text-sm"></i>
-              <span class="text-xs text-gray-500 dark:text-gray-400">Revenue</span>
-            </div>
-            <div class="text-lg font-bold text-gray-900 dark:text-white">{{ formatCurrency(restaurant.totalRevenue) }}</div>
-          </div>
-        </div>
 
         <!-- Contact Info -->
         <div class="space-y-3 mb-6">
@@ -296,11 +572,11 @@
           <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
             <div class="flex items-center space-x-1">
               <i class="fas fa-calendar-plus"></i>
-              <span>Created {{ formatDate(restaurant.createdAt) }}</span>
+              <span>Created {{ formatDate(restaurant.created_at) }}</span>
             </div>
             <div class="flex items-center space-x-1">
               <i class="fas fa-clock"></i>
-              <span>Active {{ formatDate(restaurant.lastActive) }}</span>
+              <span>Updated {{ formatDate(restaurant.updated_at) }}</span>
             </div>
           </div>
         </div>
@@ -313,12 +589,75 @@
     </div>
   </div>
 
-  <!-- Empty State -->
-  <div *ngIf="filteredRestaurants.length === 0" class="text-center py-12">
-    <i class="fas fa-search text-gray-400 text-4xl mb-4"></i>
-    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No restaurants found</h3>
-    <p class="text-gray-500 dark:text-gray-400">Try adjusting your filters or add a new restaurant.</p>
+  <!-- Pagination Controls -->
+  <div class="flex justify-between items-center w-full mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+    <div class="flex items-center space-x-4">
+      <div class="text-sm text-gray-600 dark:text-gray-400">
+        Showing <span class="font-medium">{{ (currentPage - 1) * itemsPerPage + 1 }}</span> to
+        <span class="font-medium">{{ Math.min(currentPage * itemsPerPage, totalElements) }}</span>
+        of <span class="font-medium">{{ totalElements }}</span> restaurants
+      </div>
+      <div class="flex items-center space-x-2">
+        <select
+          [(ngModel)]="itemsPerPage"
+          (change)="changeItemsPerPage($any($event.target).value)"
+          class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors">
+          <option *ngFor="let option of itemsPerPageOptions" [value]="option">{{ option }}</option>
+        </select>
+      </div>
+    </div>
+    <div class="flex items-center space-x-1" *ngIf="restaurants.length > 0">
+      <!-- First Page Button -->
+      <button
+        (click)="changePage(1)"
+        [disabled]="currentPage === 1"
+        class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:text-gray-400 dark:disabled:text-gray-500 text-gray-900 dark:text-white transition-colors">
+        <i class="fas fa-angle-double-left"></i>
+      </button>
+
+      <!-- Previous Page Button -->
+      <button
+        (click)="changePage(currentPage - 1)"
+        [disabled]="currentPage === 1"
+        class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:text-gray-400 dark:disabled:text-gray-500 text-gray-900 dark:text-white transition-colors">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+
+      <!-- Page Number Buttons -->
+      <button
+        *ngFor="let page of pageNumbers"
+        (click)="changePage(page)"
+        [class.bg-primary-600]="page === currentPage"
+        [class.text-white]="page === currentPage"
+        [class.hover:bg-primary-700]="page === currentPage"
+        class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white transition-colors">
+        {{ page }}
+      </button>
+
+      <!-- Next Page Button -->
+      <button
+        (click)="changePage(currentPage + 1)"
+        [disabled]="currentPage === totalPages"
+        class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:text-gray-400 dark:disabled:text-gray-500 text-gray-900 dark:text-white transition-colors">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+
+      <!-- Last Page Button -->
+      <button
+        (click)="changePage(totalPages)"
+        [disabled]="currentPage === totalPages"
+        class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:text-gray-400 dark:disabled:text-gray-500 text-gray-900 dark:text-white transition-colors">
+        <i class="fas fa-angle-double-right"></i>
+      </button>
+    </div>
   </div>
+
+<!-- Empty State -->
+<div *ngIf="restaurants.length === 0" class="text-center py-12">
+  <i class="fas fa-search text-gray-400 text-4xl mb-4"></i>
+  <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No restaurants found</h3>
+  <p class="text-gray-500 dark:text-gray-400">Try adjusting your filters or add a new restaurant.</p>
+</div>
 </div>
 
 <!-- Edit Restaurant Modal -->
@@ -344,88 +683,383 @@
 
         <!-- Modal Body -->
         <div class="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-red-500 scrollbar-track-gray-100 dark:scrollbar-track-gray-700">
-          <form (ngSubmit)="updateRestaurant()" class="space-y-6">
+          <form (ngSubmit)="onSubmitForm()" class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <!-- Restaurant Name -->
               <div class="md:col-span-2">
                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  <i class="fas fa-store mr-2 text-red-500"></i>Restaurant Name
+                  <i class="fas fa-store mr-2 text-red-500"></i>Restaurant Name <span class="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  [(ngModel)]="newRestaurant.name"
+                  [(ngModel)]="restaurantForm.name"
                   name="editName"
+                  (blur)="validateName()"
+                  (input)="validateName()"
                   required
                   class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
                   placeholder="Enter restaurant name">
+                <div *ngIf="fieldErrors['name']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {{ fieldErrors['name'] }}
+                </div>
               </div>
  
               <!-- Email -->
               <div>
                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  <i class="fas fa-envelope mr-2 text-blue-500"></i>Email Address
+                  <i class="fas fa-envelope mr-2 text-blue-500"></i>Email Address <span class="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
-                  [(ngModel)]="newRestaurant.email"
+                  [(ngModel)]="restaurantForm.email"
                   name="editEmail"
-                  required
+                  (blur)="validateEmail()"
+                  (input)="validateEmail()"
                   class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
                   placeholder="restaurant@example.com">
+                <div *ngIf="fieldErrors['email']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {{ fieldErrors['email'] }}
+                </div>
               </div>
  
               <!-- Phone -->
               <div>
                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  <i class="fas fa-phone mr-2 text-green-500"></i>Phone Number
+                  <i class="fas fa-phone mr-2 text-green-500"></i>Phone Number <span class="text-red-500">*</span>
                 </label>
                 <input
                   type="tel"
-                  [(ngModel)]="newRestaurant.phone"
+                  [(ngModel)]="restaurantForm.phone"
                   name="editPhone"
+                  (blur)="validatePhone()"
+                  (input)="validatePhone()"
                   class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
                   placeholder="+91 98765 43210">
+                <div *ngIf="fieldErrors['phone']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {{ fieldErrors['phone'] }}
+                </div>
               </div>
  
               <!-- City -->
               <div>
                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  <i class="fas fa-city mr-2 text-purple-500"></i>City
+                  <i class="fas fa-city mr-2 text-purple-500"></i>City <span class="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  [(ngModel)]="newRestaurant.city"
+                  [(ngModel)]="restaurantForm.city"
                   name="editCity"
+                  (blur)="validateCity()"
+                  (input)="validateCity()"
+                  required
                   class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
                   placeholder="Enter city">
+                <div *ngIf="fieldErrors['city']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {{ fieldErrors['city'] }}
+                </div>
               </div>
  
               <!-- Subscription Plan -->
               <div>
                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  <i class="fas fa-crown mr-2 text-yellow-500"></i>Subscription Plan
+                  <i class="fas fa-crown mr-2 text-yellow-500"></i>Subscription Plan <span class="text-red-500">*</span>
                 </label>
                 <select
-                  [(ngModel)]="newRestaurant.subscriptionPlan"
+                  [(ngModel)]="restaurantForm.subscription_plan"
                   name="editSubscriptionPlan"
+                  (change)="onPlanChange(); validateSubscriptionPlan()"
                   class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                  <option value="">Select Plan</option>
                   <option value="Starter">Starter Plan</option>
                   <option value="Pro">Pro Plan</option>
                   <option value="Enterprise">Enterprise Plan</option>
                 </select>
+                <div *ngIf="fieldErrors['subscription_plan']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {{ fieldErrors['subscription_plan'] }}
+                </div>
+              </div>
+
+                            <!-- Subscription Start Date -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-calendar-plus mr-2 text-orange-500"></i>Subscription Start Date
+                </label>
+                <input
+                  type="date"
+                  [(ngModel)]="subscriptionStartDateStr"
+                  name="editSubscriptionStartDate"
+                  [disabled]="true"
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed">
+              </div>
+
+              <!-- Subscription End Date -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-calendar-times mr-2 text-red-500"></i>Subscription End Date
+                </label>
+                <input
+                  type="date"
+                  [(ngModel)]="subscriptionEndDateStr"
+                  name="editSubscriptionEndDate"
+                  [disabled]="true"
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed">
               </div>
  
+              <!-- Owner Name -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-user mr-2 text-purple-500"></i>Owner Name <span class="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="restaurantForm.owner_name"
+                  name="editOwnerName"
+                  (blur)="validateOwnerName()"
+                  (input)="validateOwnerName()"
+                  required
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                  placeholder="Enter owner name">
+                <div *ngIf="fieldErrors['owner_name']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {{ fieldErrors['owner_name'] }}
+                </div>
+              </div>
+
+              <!-- Owner Email -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-envelope mr-2 text-blue-500"></i>Owner Email <span class="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  [(ngModel)]="restaurantForm.owner_email"
+                  name="editOwnerEmail"
+                  (blur)="validateOwnerEmail()"
+                  (input)="validateOwnerEmail()"
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                  placeholder="owner@example.com">
+                <div *ngIf="fieldErrors['owner_email']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {{ fieldErrors['owner_email'] }}
+                </div>
+              </div>
+
+              <!-- Owner Phone -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-phone mr-2 text-green-500"></i>Owner Phone <span class="text-red-500">*</span>
+                </label>
+                <input
+                  type="tel"
+                  [(ngModel)]="restaurantForm.owner_phone"
+                  name="editOwnerPhone"
+                  (blur)="validateOwnerPhone()"
+                  (input)="validateOwnerPhone()"
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                  placeholder="+91 98765 43210">
+                <div *ngIf="fieldErrors['owner_phone']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {{ fieldErrors['owner_phone'] }}
+                </div>
+              </div>
+
+              <!-- GST Number -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-file-invoice mr-2 text-indigo-500"></i>GST Number
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="restaurantForm.gst_number"
+                  name="editGstNumber"
+                  (blur)="validateGstNumber()"
+                  (input)="validateGstNumber()"
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                  placeholder="22AAAAA0000A1Z5">
+                <div *ngIf="fieldErrors['gst_number']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {{ fieldErrors['gst_number'] }}
+                </div>
+              </div>
+
+              <!-- License Number, Status, and Is Active in one row -->
+              <div class="md:col-span-2">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      <i class="fas fa-id-card mr-2 text-teal-500"></i>License Number
+                    </label>
+                    <input
+                      type="text"
+                      [(ngModel)]="restaurantForm.license_number"
+                      name="editLicenseNumber"
+                      (blur)="validateLicenseNumber()"
+                      (input)="validateLicenseNumber()"
+                      class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                      placeholder="Enter license number">
+                    <div *ngIf="fieldErrors['license_number']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {{ fieldErrors['license_number'] }}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      <i class="fas fa-toggle-on mr-2 text-cyan-500"></i>Status
+                    </label>
+                    <div class="flex flex-wrap gap-4">
+                      <label class="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          name="editStatus"
+                          value="ACTIVE"
+                          [(ngModel)]="restaurantForm.status"
+                          class="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                        <span class="text-sm text-gray-700 dark:text-gray-300">Active</span>
+                      </label>
+                      <label class="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          name="editStatus"
+                          value="INACTIVE"
+                          [(ngModel)]="restaurantForm.status"
+                          class="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                        <span class="text-sm text-gray-700 dark:text-gray-300">Inactive</span>
+                      </label>
+                      <label class="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          name="editStatus"
+                          value="PENDING_VERIFICATION"
+                          [(ngModel)]="restaurantForm.status"
+                          class="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                        <span class="text-sm text-gray-700 dark:text-gray-300">Pending Verification</span>
+                      </label>
+                      <label class="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          name="editStatus"
+                          value="SUSPENDED"
+                          [(ngModel)]="restaurantForm.status"
+                          class="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                        <span class="text-sm text-gray-700 dark:text-gray-300">Suspended</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      <i class="fas fa-check-circle mr-2 text-lime-500"></i>Is Active
+                    </label>
+                    <div class="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        [(ngModel)]="restaurantForm.is_active"
+                        name="editIsActive"
+                        class="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                      <span class="text-sm text-gray-700 dark:text-gray-300">{{ restaurantForm.is_active ? 'Yes' : 'No' }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Description -->
+              <div class="md:col-span-2">
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-align-left mr-2 text-pink-500"></i>Description
+                </label>
+                <textarea
+                  [(ngModel)]="restaurantForm.description"
+                  name="editDescription"
+                  (blur)="validateDescription()"
+                  (input)="validateDescription()"
+                  rows="3"
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 resize-none"
+                  placeholder="Enter restaurant description"></textarea>
+                <div *ngIf="fieldErrors['description']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {{ fieldErrors['description'] }}
+                </div>
+              </div>
+
+              <!-- State -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-map mr-2 text-yellow-500"></i>State <span class="text-red-500">*</span>
+                </label>
+                <select
+                  [(ngModel)]="restaurantForm.state"
+                  name="editState"
+                  (blur)="validateState()"
+                  (change)="validateState()"
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                  <option value="0">Select State</option>
+                  <option *ngFor="let state of states" [value]="state.id">{{ state.name }}</option>
+                </select>
+                <div *ngIf="fieldErrors['state']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {{ fieldErrors['state'] }}
+                </div>
+              </div>
+
+              <!-- Pincode -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-mailbox mr-2 text-rose-500"></i>Pincode <span class="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  [(ngModel)]="restaurantForm.pincode"
+                  name="editPincode"
+                  (blur)="validatePincode()"
+                  (input)="validatePincode()"
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                  placeholder="400001">
+                <div *ngIf="fieldErrors['pincode']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {{ fieldErrors['pincode'] }}
+                </div>
+              </div>
+
               <!-- Address -->
               <div class="md:col-span-2">
                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   <i class="fas fa-map-marker-alt mr-2 text-red-500"></i>Full Address
                 </label>
                 <textarea
-                  [(ngModel)]="newRestaurant.address"
+                  [(ngModel)]="restaurantForm.address"
                   name="editAddress"
                   rows="4"
                   class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 resize-none"
                   placeholder="Enter complete address with landmark"></textarea>
+              </div>
+
+              <!-- Latitude and Longitude -->
+              <div class="md:col-span-2">
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <i class="fas fa-location-arrow mr-2 text-emerald-500"></i>Geolocation
+                </label>
+                <div class="flex space-x-4">
+                  <input
+                    type="number"
+                    [(ngModel)]="restaurantForm.lat"
+                    name="editLatitude"
+                    (blur)="validateGeolocation()"
+                    (input)="validateGeolocation()"
+                    step="any"
+                    class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                    placeholder="Latitude">
+                  <input
+                    type="number"
+                    [(ngModel)]="restaurantForm.long"
+                    name="editLongitude"
+                    (blur)="validateGeolocation()"
+                    (input)="validateGeolocation()"
+                    step="any"
+                    class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                    placeholder="Longitude">
+                  <button
+                    type="button"
+                    (click)="getCurrentLocation()"
+                    class="px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-crosshairs"></i>
+                  </button>
+                </div>
+                <div *ngIf="fieldErrors['geolocation']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {{ fieldErrors['geolocation'] }}
+                </div>
               </div>
             </div>
  
@@ -442,7 +1076,7 @@
           </button>
           <button
             type="submit"
-            (click)="updateRestaurant()"
+            (click)="onSubmitForm()"
             class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
             {{ 'Update Restaurant' }}
           </button>
@@ -459,7 +1093,7 @@
         <div class="flex justify-between items-center">
           <div>
             <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ selectedRestaurant.name }}</h2>
-            <p class="text-gray-600 dark:text-gray-300 text-sm">Managed by {{ selectedRestaurant.ownerName }}</p>
+            <p class="text-gray-600 dark:text-gray-300 text-sm">Managed by {{ selectedRestaurant.owner_name }}</p>
           </div>
           <div class="flex space-x-2">
             <button
@@ -468,8 +1102,8 @@
               <i class="fas fa-edit"></i>
             </button>
             <button
-              (click)="updateRestaurantStatus(selectedRestaurant, selectedRestaurant.status === 'active' ? 'suspended' : 'active')"
-              [class]="selectedRestaurant.status === 'active' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'"
+              (click)="updateRestaurantStatus(selectedRestaurant, selectedRestaurant.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE')"
+              [class]="selectedRestaurant.status === 'ACTIVE' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'"
               class="px-3 py-2 text-white text-sm rounded-lg transition-colors">
               <i class="fas fa-power-off"></i>
             </button>
@@ -490,29 +1124,7 @@
     <!-- Content -->
     <div class="p-6">
       <!-- KPI Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-800">
-          <div class="flex items-center justify-between mb-4">
-            <div class="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center">
-              <i class="fas fa-shopping-cart text-white"></i>
-            </div>
-            <span class="text-blue-600 dark:text-blue-400 text-sm font-medium">Orders</span>
-          </div>
-          <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ selectedRestaurant.totalOrders }}</div>
-          <div class="text-sm text-gray-600 dark:text-gray-400">Total Orders</div>
-        </div>
-
-        <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-2xl p-6 border border-green-200 dark:border-green-800">
-          <div class="flex items-center justify-between mb-4">
-            <div class="w-12 h-12 rounded-xl bg-green-500 flex items-center justify-center">
-              <i class="fas fa-rupee-sign text-white"></i>
-            </div>
-            <span class="text-green-600 dark:text-green-400 text-sm font-medium">Revenue</span>
-          </div>
-          <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ formatCurrency(selectedRestaurant.totalRevenue) }}</div>
-          <div class="text-sm text-gray-600 dark:text-gray-400">Total Revenue</div>
-        </div>
-
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-2xl p-6 border border-purple-200 dark:border-purple-800">
           <div class="flex items-center justify-between mb-4">
             <div class="w-12 h-12 rounded-xl bg-purple-500 flex items-center justify-center">
@@ -520,7 +1132,7 @@
             </div>
             <span class="text-purple-600 dark:text-purple-400 text-sm font-medium">Plan</span>
           </div>
-          <div class="text-2xl font-bold text-gray-900 dark:text-white mb-1">{{ selectedRestaurant.subscriptionPlan }}</div>
+          <div class="text-2xl font-bold text-gray-900 dark:text-white mb-1">{{ selectedRestaurant.subscription_plan }}</div>
           <div class="text-sm text-gray-600 dark:text-gray-400">Subscription</div>
         </div>
 
@@ -531,7 +1143,7 @@
             </div>
             <span class="text-orange-600 dark:text-orange-400 text-sm font-medium">Activity</span>
           </div>
-          <div class="text-lg font-bold text-gray-900 dark:text-white mb-1">{{ formatDate(selectedRestaurant.lastActive) }}</div>
+          <div class="text-lg font-bold text-gray-900 dark:text-white mb-1">{{ formatDate(selectedRestaurant.updated_at) }}</div>
           <div class="text-sm text-gray-600 dark:text-gray-400">Last Active</div>
         </div>
       </div>

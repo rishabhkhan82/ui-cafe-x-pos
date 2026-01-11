@@ -860,20 +860,32 @@ export interface PlanFeature {
 }
 
 export interface Restaurant {
-  id: string;
+  id: number;
   name: string;
-  ownerId: string;
-  ownerName: string;
   email: string;
   phone: string;
-  address: string;
+  owner_name: string;
+  owner_email: string;
+  owner_phone: string;
+  subscription_plan: string;
+  subscription_start_date: Date;
+  subscription_end_date: Date;
+  gst_number: string;
+  license_number: string;
+  status: 'ACTIVE' | 'INACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED';
+  is_active: boolean;
+  description: string;
+  state: number;
   city: string;
-  status: 'active' | 'inactive' | 'suspended';
-  subscriptionPlan: string;
-  totalOrders: number;
-  totalRevenue: number;
-  createdAt: Date;
-  lastActive: Date;
+  pincode: number;
+  address: string;
+  lat: number;
+  long: number;
+  logo_image?: string;
+  created_at: Date;
+  created_by: number;
+  updated_at: Date | null;
+  updated_by: number;
 }
 
 export interface SecurityPolicy {
@@ -6075,52 +6087,85 @@ export class MockDataService {
     // Initialize restaurant data
     const restaurants: Restaurant[] = [
       {
-        id: 'restaurant-1',
+        id: 1,
         name: "RK's Cafe",
-        ownerId: '1',
-        ownerName: 'Rishabh Khandekar',
         email: 'powner@cafex.com',
-        phone: '+91 98765 43217',
-        address: '123 Main Street',
+        phone: '98765 43217',
+        owner_name: 'Rishabh Khandekar',
+        owner_email: 'powner@cafex.com',
+        owner_phone: '+91 98765 43217',
+        subscription_plan: 'Pro Plan',
+        subscription_start_date: new Date('2024-01-15'),
+        subscription_end_date: new Date('2025-01-15'),
+        gst_number: 'GST123456789',
+        license_number: 'LIC123456',
+        status: 'ACTIVE',
+        is_active: true,
+        description: 'A cozy cafe in Mumbai',
+        state: 1,
         city: 'Mumbai',
-        status: 'active',
-        subscriptionPlan: 'Pro Plan',
-        totalOrders: 450,
-        totalRevenue: 125000,
-        createdAt: new Date('2024-01-15'),
-        lastActive: new Date(Date.now() - 2 * 60 * 60 * 1000)
+        pincode: 400001,
+        address: '123 Main Street',
+        lat: 19.0760,
+        long: 72.8777,
+        created_at: new Date('2024-01-15'),
+        created_by: 1,
+        updated_at: new Date('2024-01-15'),
+        updated_by: 1
       },
       {
-        id: 'restaurant-2',
+        id: 2,
         name: "Res-Owner User's Restaurant",
-        ownerId: '2',
-        ownerName: 'Res-Owner User',
         email: 'rowner@restaurant.com',
-        phone: '+91 98765 43210',
-        address: '456 Business Avenue',
+        phone: '98765 43210',
+        owner_name: 'Res-Owner User',
+        owner_email: 'rowner@restaurant.com',
+        owner_phone: '+91 98765 43210',
+        subscription_plan: 'Starter Plan',
+        subscription_start_date: new Date('2024-02-20'),
+        subscription_end_date: new Date('2025-02-20'),
+        gst_number: 'GST987654321',
+        license_number: 'LIC987654',
+        status: 'ACTIVE',
+        is_active: true,
+        description: 'Business dining in Delhi',
+        state: 2,
         city: 'Delhi',
-        status: 'active',
-        subscriptionPlan: 'Starter Plan',
-        totalOrders: 280,
-        totalRevenue: 78000,
-        createdAt: new Date('2024-02-20'),
-        lastActive: new Date(Date.now() - 5 * 60 * 60 * 1000)
+        pincode: 110001,
+        address: '456 Business Avenue',
+        lat: 28.7041,
+        long: 77.1025,
+        created_at: new Date('2024-02-20'),
+        created_by: 2,
+        updated_at: new Date('2024-02-20'),
+        updated_by: 2
       },
       {
-        id: 'restaurant-3',
+        id: 3,
         name: 'Premium Dine',
-        ownerId: '3',
-        ownerName: 'Priya Sharma',
         email: 'rmanager@cafex.com',
-        phone: '+91 98765 43211',
-        address: '789 Food Court',
+        phone: '98765 43211',
+        owner_name: 'Priya Sharma',
+        owner_email: 'rmanager@cafex.com',
+        owner_phone: '+91 98765 43211',
+        subscription_plan: 'Enterprise',
+        subscription_start_date: new Date('2024-03-10'),
+        subscription_end_date: new Date('2025-03-10'),
+        gst_number: 'GST456789123',
+        license_number: 'LIC456789',
+        status: 'ACTIVE',
+        is_active: true,
+        description: 'Premium dining experience in Bangalore',
+        state: 3,
         city: 'Bangalore',
-        status: 'active',
-        subscriptionPlan: 'Enterprise',
-        totalOrders: 890,
-        totalRevenue: 245000,
-        createdAt: new Date('2024-03-10'),
-        lastActive: new Date(Date.now() - 1 * 60 * 60 * 1000)
+        pincode: 560001,
+        address: '789 Food Court',
+        lat: 12.9716,
+        long: 77.5946,
+        created_at: new Date('2024-03-10'),
+        created_by: 3,
+        updated_at: new Date('2024-03-10'),
+        updated_by: 3
       }
     ];
 
@@ -7847,7 +7892,7 @@ export class MockDataService {
     return this.restaurants$;
   }
 
-  getRestaurantById(id: string): Restaurant | undefined {
+  getRestaurantById(id: number): Restaurant | undefined {
     return this.restaurantsSubject.value.find(restaurant => restaurant.id === id);
   }
 

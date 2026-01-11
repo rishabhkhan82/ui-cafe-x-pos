@@ -395,17 +395,20 @@ export class UserManagementComponent implements OnInit {
       this.crudService.createUser(userRequest).subscribe({
         next: (response) => {
           console.log('User created successfully:', response);
+          this.notificationService.success('User Created', 'The user has been successfully created.');
           this.resetForm();
           this.loadUsers(); // Reload users
         },
         error: (error) => {
           console.error('Error creating user:', error);
+          this.notificationService.error('Creation Failed', 'Failed to create user. Please try again.');
           this.errorMessage = 'Failed to create user. Please try again.';
           this.loadingService.hide();
         }
       });
     } catch (error) {
       console.error('Error uploading avatar:', error);
+      this.notificationService.error('Upload Failed', 'Failed to upload avatar. Please try again.');
       this.errorMessage = 'Failed to upload avatar. Please try again.';
       this.loadingService.hide();
     }
@@ -416,13 +419,6 @@ export class UserManagementComponent implements OnInit {
 
     try {
       let avatarUrl = this.userForm.avatar;
-
-      // Upload avatar if a file was selected
-      if (this.selectedFile) {
-        const uploadResult = await this.fileUploadService.uploadFile(this.selectedFile, 'profile', this.editingUser!.id).toPromise();
-        avatarUrl = uploadResult!.fileUrl;
-        this.selectedFile = null; // Clear the selected file after upload
-      }
 
       const currentTime = new Date();
       const userRequest = {
@@ -446,11 +442,14 @@ export class UserManagementComponent implements OnInit {
       this.crudService.updateUser(this.editingUser!.id, userRequest).subscribe({
         next: (response) => {
           console.log('User updated successfully:', response);
+          this.notificationService.success('User Updated', 'The user has been successfully updated.');
           this.resetForm();
           this.loadUsers(); // Reload users
+          this.loadingService.hide();
         },
         error: (error) => {
           console.error('Error updating user:', error);
+          this.notificationService.error('Update Failed', 'Failed to update user. Please try again.');
           this.errorMessage = 'Failed to update user. Please try again.';
           this.loadingService.hide();
         }
