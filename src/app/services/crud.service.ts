@@ -250,6 +250,27 @@ export class CrudService {
     return this.getData(`restaurants/${id}`);
   }
 
+  // User role operations
+  getUserRoles(params?: CrudParams): Observable<any> {
+    return this.getData('user-roles', params);
+  }
+
+  createUserRole(payload: any): Observable<any> {
+    return this.postData('user-roles', payload);
+  }
+
+  updateUserRole(id: string | number, payload: any): Observable<any> {
+    return this.putData('user-roles', payload, {}, id);
+  }
+
+  deleteUserRole(id: string | number): Observable<any> {
+    return this.deleteData('user-roles', {}, id);
+  }
+
+  getUserRoleById(id: string | number): Observable<any> {
+    return this.getData(`user-roles/${id}`);
+  }
+
   getHeaderToken(): any {
     return { 'Authorization': `Bearer ${sessionStorage.getItem('accessToken') || ''}` };
   }

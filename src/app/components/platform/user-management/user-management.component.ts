@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { CrudService } from '../../../services/crud.service';
 import { LoadingService } from '../../../services/loading.service';
 import { MockDataService, User, Restaurant } from '../../../services/mock-data.service';
@@ -67,7 +68,17 @@ export class UserManagementComponent implements OnInit {
     this.userForm.is_active = value ? 'Y' : 'N';
   }
 
-  constructor(private crudService: CrudService, private loadingService: LoadingService, private mockDataService: MockDataService, private authService: AuthService, private confirmationService: ConfirmationDialogService, private fileUploadService: FileUploadService, private notificationService: NotificationService, private validationService: ValidationService) {}
+  constructor(
+    private router: Router,
+    private crudService: CrudService,
+    private loadingService: LoadingService,
+    private mockDataService: MockDataService,
+    private authService: AuthService,
+    private confirmationService: ConfirmationDialogService,
+    private fileUploadService: FileUploadService,
+    private notificationService: NotificationService,
+    private validationService: ValidationService
+  ) {}
 
   ngOnInit(): void {
     this.loadUsers();
@@ -166,6 +177,12 @@ export class UserManagementComponent implements OnInit {
   changeItemsPerPage(newLimit: number): void {
     this.itemsPerPage = newLimit;
     this.currentPage = 1; // Reset to first page
+    this.loadUsers();
+  }
+
+  onItemsPerPageChange(event: any): void {
+    this.itemsPerPage = +event.target.value;
+    this.currentPage = 1;
     this.loadUsers();
   }
 
@@ -595,6 +612,48 @@ export class UserManagementComponent implements OnInit {
 
   getRolePermissions(role: string): string {
     return this.mockDataService.getRolePermissions(role);
+  }
+
+  reloadComponent(): void {
+    // Reset all component state
+    this.users = [];
+    this.selectedUser = null;
+    this.editingUser = null;
+    this.searchTerm = '';
+    this.restaurantFilter = 'all';
+    this.roleFilter = 'all';
+    this.statusFilter = 'all';
+    this.showAddForm = false;
+    this.errorMessage = '';
+    this.selectedFile = null;
+    this.currentPage = 1;
+    this.itemsPerPage = 10;
+    this.totalPages = 1;
+    this.totalElements = 0;
+    this.fieldErrors = {};
+
+    // Reset user form
+    this.userForm = {
+      id: '',
+      username: '',
+      password: '',
+      name: '',
+      email: '',
+      phone: '',
+      role: 'customer',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face',
+      restaurant_id: '',
+      member_since: undefined,
+      created_at: undefined,
+      updated_at: undefined,
+      is_active: 'Y' as any,
+      last_login: undefined,
+      created_by: ''
+    };
+
+    // Reload data
+    this.loadUsers();
+    this.loadRestaurants();
   }
 
   // Helper for template Math operations

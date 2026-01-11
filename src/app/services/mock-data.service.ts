@@ -42,6 +42,7 @@ export interface Role {
   created_at: Date;
   updated_at: Date;
   created_by: string;
+  updated_by: string;
 }
 
 export interface MenuItem {
@@ -1898,7 +1899,8 @@ export class MockDataService {
         is_system_role: true,
         created_at: new Date('2024-01-01'),
         updated_at: new Date('2024-01-01'),
-        created_by: 'system'
+        created_by: 'system',
+        updated_by: 'system'
       },
       {
         id: 2,
@@ -1910,7 +1912,8 @@ export class MockDataService {
         is_system_role: true,
         created_at: new Date('2024-01-01'),
         updated_at: new Date('2024-01-01'),
-        created_by: 'system'
+        created_by: 'system',
+        updated_by: 'system'
       },
       {
         id: 3,
@@ -1922,7 +1925,8 @@ export class MockDataService {
         is_system_role: true,
         created_at: new Date('2024-01-01'),
         updated_at: new Date('2024-01-01'),
-        created_by: 'system'
+        created_by: 'system',
+        updated_by: 'system'
       },
       {
         id: 4,
@@ -1934,7 +1938,8 @@ export class MockDataService {
         is_system_role: true,
         created_at: new Date('2024-01-01'),
         updated_at: new Date('2024-01-01'),
-        created_by: 'system'
+        created_by: 'system',
+        updated_by: 'system'
       },
       {
         id: 5,
@@ -1946,7 +1951,8 @@ export class MockDataService {
         is_system_role: true,
         created_at: new Date('2024-01-01'),
         updated_at: new Date('2024-01-01'),
-        created_by: 'system'
+        created_by: 'system',
+        updated_by: 'system'
       },
       {
         id: 6,
@@ -1958,7 +1964,8 @@ export class MockDataService {
         is_system_role: true,
         created_at: new Date('2024-01-01'),
         updated_at: new Date('2024-01-01'),
-        created_by: 'system'
+        created_by: 'system',
+        updated_by: 'system'
       },
       {
         id: 7,
@@ -1970,7 +1977,8 @@ export class MockDataService {
         is_system_role: true,
         created_at: new Date('2024-01-01'),
         updated_at: new Date('2024-01-01'),
-        created_by: 'system'
+        created_by: 'system',
+        updated_by: 'system'
       }
     ];
 

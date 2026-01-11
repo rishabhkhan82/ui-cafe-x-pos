@@ -5,12 +5,20 @@
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">User Management</h1>
         <p class="text-gray-600 dark:text-gray-300">Manage all users across the platform</p>
       </div>
-      <button
-        (click)="showUserForm()"
-        class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
-        <i class="fas fa-plus"></i>
-        <span>Add User</span>
-      </button>
+      <div class="flex items-center space-x-2">
+        <button
+          (click)="reloadComponent()"
+          class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 transition-colors"
+          title="Refresh">
+          <i class="fas fa-refresh"></i>
+        </button>
+        <button
+          (click)="showUserForm()"
+          class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
+          <i class="fas fa-plus"></i>
+          <span>Add User</span>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -409,7 +417,7 @@
         <div class="flex items-center space-x-2">
           <select
             [(ngModel)]="itemsPerPage"
-            (change)="changeItemsPerPage($any($event.target).value)"
+            (change)="onItemsPerPageChange($event)"
             class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors">
             <option *ngFor="let option of itemsPerPageOptions" [value]="option">{{ option }}</option>
           </select>

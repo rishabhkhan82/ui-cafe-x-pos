@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { CrudService } from '../../../services/crud.service';
 import { LoadingService } from '../../../services/loading.service';
 import { Restaurant } from '../../../services/mock-data.service';
@@ -107,7 +108,15 @@ export class RestaurantManagementComponent implements OnInit {
     updated_by: 0
   };
 
-  constructor(private crudService: CrudService, private loadingService: LoadingService, private authService: AuthService, private confirmationService: ConfirmationDialogService, private notificationService: NotificationService, private validationService: ValidationService) {}
+  constructor(
+    private router: Router,
+    private crudService: CrudService,
+    private loadingService: LoadingService,
+    private authService: AuthService,
+    private confirmationService: ConfirmationDialogService,
+    private notificationService: NotificationService,
+    private validationService: ValidationService
+  ) {}
 
   ngOnInit(): void {
     this.loadRestaurants();
@@ -699,12 +708,71 @@ export class RestaurantManagementComponent implements OnInit {
     this.loadRestaurants();
   }
 
+  onItemsPerPageChange(event: any): void {
+    this.itemsPerPage = +event.target.value;
+    this.currentPage = 1;
+    this.loadRestaurants();
+  }
+
   get pageNumbers(): number[] {
     const pages: number[] = [];
     for (let i = 1; i <= this.totalPages; i++) {
       pages.push(i);
     }
     return pages;
+  }
+
+  reloadComponent(): void {
+    // Reset all component state
+    this.restaurants = [];
+    this.filteredRestaurants = [];
+    this.selectedRestaurant = null;
+    this.editingRestaurant = null;
+    this.searchTerm = '';
+    this.subscriptionPlanFilter = 'all';
+    this.cityFilter = '';
+    this.statusFilter = 'all';
+    this.showAddForm = false;
+    this.errorMessage = '';
+    this.currentPage = 1;
+    this.itemsPerPage = 10;
+    this.totalPages = 1;
+    this.totalElements = 0;
+    this.showDetailsModal = false;
+    this.showEditForm = false;
+    this.fieldErrors = {};
+
+    // Reset restaurant form
+    this.restaurantForm = {
+      id: 0,
+      name: '',
+      email: '',
+      phone: '',
+      owner_name: '',
+      owner_email: '',
+      owner_phone: '',
+      subscription_plan: '',
+      subscription_start_date: new Date(),
+      subscription_end_date: new Date(),
+      gst_number: '',
+      license_number: '',
+      status: 'ACTIVE',
+      is_active: true,
+      description: '',
+      state: 0,
+      city: '',
+      pincode: 0,
+      address: '',
+      lat: 0,
+      long: 0,
+      created_at: new Date(),
+      created_by: 0,
+      updated_at: new Date(),
+      updated_by: 0
+    };
+
+    // Reload data
+    this.loadRestaurants();
   }
 
   // Helper for template Math operations

@@ -5,18 +5,26 @@
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Role Management</h1>
         <p class="text-gray-600 dark:text-gray-300">Manage user roles and permissions</p>
       </div>
-      <button
-        (click)="onAddRole()"
-        class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
-        <i class="fas fa-plus"></i>
-        <span>Add Role</span>
-      </button>
+      <div class="flex items-center space-x-2">
+        <button
+          (click)="reloadComponent()"
+          class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 transition-colors"
+          title="Refresh">
+          <i class="fas fa-refresh"></i>
+        </button>
+        <button
+          (click)="showRoleForm()"
+          class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
+          <i class="fas fa-plus"></i>
+          <span>Add Role</span>
+        </button>
+      </div>
     </div>
   </div>
 
   <!-- Filters and Search -->
-  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
       <div>
         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
           <i class="fas fa-search mr-2 text-red-500"></i>Search Roles
@@ -25,10 +33,22 @@
           <input
             type="text"
             [(ngModel)]="searchTerm"
-            (input)="filterRoles()"
-            placeholder="Search by name or code..."
+            placeholder="Search by name..."
             class="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
           <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-code mr-2 text-indigo-500"></i>Code Filter
+        </label>
+        <div class="relative">
+          <input
+            type="text"
+            [(ngModel)]="codeFilter"
+            placeholder="Filter by code..."
+            class="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white uppercase transition-all duration-200">
+          <i class="fas fa-code absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
         </div>
       </div>
       <div>
@@ -37,39 +57,39 @@
         </label>
         <select
           [(ngModel)]="statusFilter"
-          (change)="filterRoles()"
           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
           <option value="all">All Status</option>
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
         </select>
       </div>
-      <div class="flex items-end">
-        <div class="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 px-4 py-3 rounded-xl border border-red-200 dark:border-red-800">
-          <div class="text-sm text-gray-700 dark:text-gray-300">
-            <span class="font-bold text-red-600 dark:text-red-400">{{ filteredRoles.length }}</span> roles found
-          </div>
-        </div>
-      </div>
+    </div>
+    <div class="absolute -right-4 top-1/2 transform -translate-y-1/2 flex flex-col gap-2">
+      <button (click)="filterRoles()" class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 transition-colors">
+        <i class="fas fa-search text-sm"></i>
+      </button>
+      <button (click)="clearFilters()" class="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors">
+        <i class="fas fa-times text-sm"></i>
+      </button>
     </div>
   </div>
 
   <!-- Add/Edit Role Modal -->
-  <div *ngIf="showForm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div *ngIf="showAddForm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
       <!-- Modal Header -->
       <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center">
-            <i [class]="isEditing ? 'fas fa-user-edit' : 'fas fa-user-plus'" class="text-white"></i>
+            <i [class]="!!editingRole ? 'fas fa-user-edit' : 'fas fa-user-plus'" class="text-white"></i>
           </div>
           <div>
-            <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ isEditing ? 'Edit Role' : 'Add New Role' }}</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400">{{ isEditing ? 'Update role information' : 'Create a new role' }}</p>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ !!editingRole ? 'Edit Role' : 'Add New Role' }}</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">{{ !!editingRole ? 'Update role information' : 'Create a new role' }}</p>
           </div>
         </div>
         <button
-          (click)="onCancel()"
+          (click)="cancelAdd()"
           class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
           <i class="fas fa-times text-gray-500 dark:text-gray-400"></i>
         </button>
@@ -78,7 +98,7 @@
       <!-- Modal Body -->
       <div class="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-red-500 scrollbar-track-gray-100 dark:scrollbar-track-gray-700">
 
-        <form [formGroup]="roleForm" (ngSubmit)="onSubmit()" class="space-y-6">
+        <div class="space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Name -->
             <div>
@@ -87,12 +107,12 @@
               </label>
               <input
                 type="text"
-                formControlName="name"
+                [(ngModel)]="roleForm.name"
+                (input)="validateName()"
                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
                 placeholder="Enter role name">
-              <div *ngIf="roleForm.get('name')?.invalid && roleForm.get('name')?.touched" class="text-red-500 text-sm mt-1">
-                <div *ngIf="roleForm.get('name')?.errors?.['required']">Role name is required</div>
-                <div *ngIf="roleForm.get('name')?.errors?.['minlength']">Role name must be at least 2 characters</div>
+              <div *ngIf="fieldErrors['name']" class="text-red-500 text-sm mt-1">
+                {{ fieldErrors['name'] }}
               </div>
             </div>
 
@@ -103,12 +123,12 @@
               </label>
               <input
                 type="text"
-                formControlName="code"
-                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white uppercase transition-all duration-200"
+                [(ngModel)]="roleForm.code"
+                (input)="validateCode()"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
                 placeholder="ROLE_CODE">
-              <div *ngIf="roleForm.get('code')?.invalid && roleForm.get('code')?.touched" class="text-red-500 text-sm mt-1">
-                <div *ngIf="roleForm.get('code')?.errors?.['required']">Code is required</div>
-                <div *ngIf="roleForm.get('code')?.errors?.['pattern']">Code must be uppercase letters and underscores only</div>
+              <div *ngIf="fieldErrors['code']" class="text-red-500 text-sm mt-1">
+                {{ fieldErrors['code'] }}
               </div>
             </div>
 
@@ -119,11 +139,12 @@
               </label>
               <input
                 type="text"
-                formControlName="role_id"
+                [(ngModel)]="roleForm.role_id"
+                (input)="validateRoleId()"
                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
                 placeholder="role_id">
-              <div *ngIf="roleForm.get('role_id')?.invalid && roleForm.get('role_id')?.touched" class="text-red-500 text-sm mt-1">
-                Role ID is required
+              <div *ngIf="fieldErrors['role_id']" class="text-red-500 text-sm mt-1">
+                {{ fieldErrors['role_id'] }}
               </div>
             </div>
 
@@ -135,7 +156,7 @@
               <div class="flex items-center">
                 <input
                   type="checkbox"
-                  formControlName="is_system_role"
+                  [(ngModel)]="roleForm.is_system_role"
                   class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
                 <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">This is a system-defined role</span>
               </div>
@@ -149,7 +170,7 @@
               <div class="flex items-center">
                 <input
                   type="checkbox"
-                  formControlName="is_active"
+                  [(ngModel)]="roleForm.is_active"
                   class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
                 <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Role is active</span>
               </div>
@@ -162,39 +183,39 @@
               <i class="fas fa-file-alt mr-2 text-green-500"></i>Description
             </label>
             <textarea
-              formControlName="description"
+              [(ngModel)]="roleForm.description"
+              (input)="validateDescription()"
               rows="3"
               class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
               placeholder="Enter role description"></textarea>
-            <div *ngIf="roleForm.get('description')?.invalid && roleForm.get('description')?.touched" class="text-red-500 text-sm mt-1">
-              Description is required
+            <div *ngIf="fieldErrors['description']" class="text-red-500 text-sm mt-1">
+              {{ fieldErrors['description'] }}
             </div>
           </div>
 
-        </form>
+        </div>
       </div>
 
       <!-- Modal Footer -->
       <div class="flex justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
         <button
           type="button"
-          (click)="onCancel()"
+          (click)="cancelAdd()"
           class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
           Cancel
         </button>
         <button
-          type="submit"
-          (click)="onSubmit()"
-          [disabled]="roleForm.invalid"
-          class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-gray-400 transition-colors disabled:cursor-not-allowed">
-          {{ isEditing ? 'Update Role' : 'Create Role' }}
+          type="button"
+          (click)="onSubmitForm()"
+          class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+          {{ !!editingRole ? 'Update Role' : 'Create Role' }}
         </button>
       </div>
     </div>
   </div>
 
   <!-- View Role Modal -->
-  <div *ngIf="showViewModal && selectedRole" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div *ngIf="selectedRole" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
       <!-- Modal Header -->
       <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
@@ -208,7 +229,7 @@
           </div>
         </div>
         <button
-          (click)="closeViewModal()"
+          (click)="selectedRole = null"
           class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
           <i class="fas fa-times text-gray-500 dark:text-gray-400"></i>
         </button>
@@ -275,7 +296,7 @@
       <!-- Modal Footer -->
       <div class="flex justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
         <button
-          (click)="closeViewModal()"
+          (click)="selectedRole = null"
           class="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors">
           Close
         </button>
@@ -290,8 +311,8 @@
         <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center">
           <i class="fas fa-list mr-3 text-red-500"></i>Search Results
         </h3>
-        <div class="text-sm text-gray-600 dark:text-gray-400">
-          Showing {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ min(currentPage * itemsPerPage, totalItems) }} of {{ totalItems }} roles
+        <div class="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 px-4 py-2 rounded-xl border border-red-200 dark:border-red-800 text-sm text-gray-700 dark:text-gray-300">
+          Showing {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, totalElements) }} of {{ totalElements }} roles
         </div>
       </div>
     </div>
@@ -312,7 +333,7 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-          <tr *ngFor="let role of paginatedResults" class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+          <tr *ngFor="let role of roles" class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ role.id }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white font-medium">{{ role.name }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
@@ -338,25 +359,25 @@
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium sticky right-0 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700">
               <div class="flex items-center gap-2">
                 <button
-                  (click)="viewRole(role)"
+                  (click)="selectRole(role)"
                   class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
                   title="View Role Details">
                   <i class="fas fa-eye"></i>
                 </button>
                 <button
-                  (click)="onEditRole(role)"
+                  (click)="showRoleForm(role)"
                   class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
                   <i class="fas fa-edit"></i>
                 </button>
                 <button
-                  (click)="toggleRoleStatus(role)"
+                  (click)="updateRoleStatus(role, !role.is_active)"
                   [disabled]="role.is_system_role"
                   [title]="role.is_system_role ? 'Cannot deactivate system roles' : (role.is_active ? 'Deactivate role' : 'Activate role')"
                   [ngClass]="role.is_active ? 'text-yellow-600 hover:text-yellow-900' : 'text-green-600 hover:text-green-900'">
                   <i [class]="role.is_active ? 'fas fa-ban' : 'fas fa-check'"></i>
                 </button>
                 <button
-                  (click)="onDeleteRole(role)"
+                  (click)="deleteRole(role)"
                   [disabled]="role.is_system_role"
                   [title]="role.is_system_role ? 'Cannot delete system roles' : 'Delete role'"
                   class="text-red-600 hover:text-red-900 disabled:text-gray-400 disabled:cursor-not-allowed">
@@ -373,15 +394,23 @@
     <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
       <div class="flex items-center justify-between">
         <div class="text-sm text-gray-700 dark:text-gray-300">
-          <select [(ngModel)]="itemsPerPage" (change)="currentPage = 1" class="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm dark:bg-gray-700 dark:text-white">
-            <option [value]="10">10 per page</option>
-            <option [value]="25">25 per page</option>
-            <option [value]="50">50 per page</option>
-          </select>
+          <div class="flex align-items-center space-x-4">
+            <div class="text-sm text-gray-600 dark:text-gray-400">
+              Showing {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, totalElements) }} of {{ totalElements }} roles
+            </div>
+            <select [(ngModel)]="itemsPerPage" (change)="onItemsPerPageChange($event)" class="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm dark:bg-gray-700 dark:text-white">
+              <option [value]="5">5</option>
+              <option [value]="10">10</option>
+              <option [value]="15">15</option>
+              <option [value]="20">20</option>
+              <option [value]="25">25</option>
+              <option [value]="50">50</option>
+            </select>
+          </div>
         </div>
 
         <div class="flex items-center space-x-2">
-          <button [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)"
+          <button [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)"
                   class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-600 dark:bg-gray-700 dark:text-white">
             Previous
           </button>
@@ -390,7 +419,7 @@
             Page {{ currentPage }} of {{ totalPages }}
           </span>
 
-          <button [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)"
+          <button [disabled]="currentPage === totalPages" (click)="changePage(currentPage + 1)"
                   class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-600 dark:bg-gray-700 dark:text-white">
             Next
           </button>
@@ -399,16 +428,19 @@
     </div>
 
     <!-- Empty State -->
-    <div *ngIf="totalItems === 0" class="text-center py-12">
+    <div *ngIf="totalElements === 0" class="text-center py-12">
       <i class="fas fa-users text-gray-400 text-4xl mb-4"></i>
       <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No roles found</h3>
       <p class="text-gray-500 dark:text-gray-400 mb-4">Get started by creating your first role.</p>
-      <button
-        (click)="onAddRole()"
-        class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
-        <i class="fas fa-plus"></i>
-        <span>Add Role</span>
-      </button>
+      <div class="flex justify-center">
+        <button
+          (click)="showRoleForm()"
+          class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
+          <i class="fas fa-plus"></i>
+          <span>Add Role</span>
+        </button>
+      </div>
     </div>
+
   </div>
 </div>
