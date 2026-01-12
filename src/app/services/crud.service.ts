@@ -271,6 +271,32 @@ export class CrudService {
     return this.getData(`user-roles/${id}`);
   }
 
+  // Menu access permission operations
+  getMenuAccessPermissions(params?: CrudParams): Observable<any> {
+    return this.getData('menu-access-permissions', params);
+  }
+
+  createMenuAccessPermission(payload: any): Observable<any> {
+    return this.postData('menu-access-permissions', payload);
+  }
+
+  updateMenuAccessPermission(id: string | number, payload: any): Observable<any> {
+    return this.putData('menu-access-permissions', payload, {}, id);
+  }
+
+  deleteMenuAccessPermission(id: string | number): Observable<any> {
+    return this.deleteData('menu-access-permissions', {}, id);
+  }
+
+  getMenuAccessPermissionsByRole(roleId: string | number): Observable<any> {
+    return this.getData(`menu-access-permissions/role/${roleId}`);
+  }
+
+  // Menu operations (alias for getMenuItems)
+  getMenus(params?: CrudParams): Observable<any> {
+    return this.getMenuItems(params);
+  }
+
   getHeaderToken(): any {
     return { 'Authorization': `Bearer ${sessionStorage.getItem('accessToken') || ''}` };
   }

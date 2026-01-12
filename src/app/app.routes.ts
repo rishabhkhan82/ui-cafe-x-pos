@@ -38,6 +38,10 @@ export const routes: Routes = [
             loadComponent: () => import('./components/platform/role-management/role-management.component').then(m => m.RoleManagementComponent)
           },
           {
+            path: 'role-access-management',
+            loadComponent: () => import('./components/platform/role-access-management/role-access-management.component').then(m => m.RoleAccessManagementComponent)
+          },
+          {
             path: 'notifications',
             children: [
               {

@@ -1,0 +1,143 @@
+Table: menu_access_permissions
+Columns:
+can_create bit(1) 
+can_delete bit(1) 
+can_edit bit(1) 
+can_view bit(1) 
+created_at datetime(6) 
+id bigint AI PK 
+menu_id bigint 
+role_id bigint 
+updated_at datetime(6) 
+permission_id varchar(255) 
+created_by bigint 
+updated_by bigint
+
+
+------------------------
+
+Based on the role-management component standards, here's the comprehensive checklist for creating the Role Access Management component:
+
+Role Access Management Component Checklist
+1. Component Structure & Setup
+ Create role-access-management.component.ts following role-management structure
+ Create role-access-management.component.html with consistent styling
+ Create role-access-management.component.css (if needed)
+ Add to routing module
+2. TypeScript Component (role-access-management.component.ts)
+Imports & Dependencies
+ Import required services: CrudService, LoadingService, AuthService, ConfirmationDialogService, NotificationService, ValidationService
+ Import Router and CommonModule, FormsModule
+Interface/Model
+ Define MenuAccessPermission interface matching the table:
+interface MenuAccessPermission {
+  id: number;
+  menu_id: number;
+  role_id: number;
+  can_view: boolean;
+  can_edit: boolean;
+  can_create: boolean;
+  can_delete: boolean;
+  permission_id?: string;
+  created_at: Date;
+  updated_at: Date;
+  created_by: number;
+  updated_by: number;
+  // Optional: related data for display
+  menu_name?: string;
+  role_name?: string;
+}
+Component Properties
+ permissions: MenuAccessPermission[] = []
+ selectedPermission: MenuAccessPermission | null = null
+ editingPermission: MenuAccessPermission | null = null
+ Search/Filter properties: searchTerm, menuFilter, roleFilter, statusFilter
+ Pagination: currentPage, itemsPerPage, totalPages, totalElements
+ Form validation: fieldErrors: { [key: string]: string }
+ Modal states: showAddForm, errorMessage
+Form Object
+ permissionForm: MenuAccessPermission with proper initialization
+API Methods (using CrudService)
+ loadPermissions() - GET /api/menu-access-permissions with pagination/filters
+ createPermission() - POST /api/menu-access-permissions
+ updatePermission() - PUT /api/menu-access-permissions/{id}
+ deletePermission() - DELETE /api/menu-access-permissions/{id}
+ getPermissionsByRole(roleId) - GET /api/menu-access-permissions/role/{roleId}
+Validation Methods
+ validateMenuId(), validateRoleId() (required fields)
+ Real-time validation on input change
+UI Interaction Methods
+ showPermissionForm(permission?) - Open add/edit modal
+ cancelAdd() - Close modal and reset form
+ onSubmitForm() - Handle save/update with validation
+ deletePermission() - Delete with confirmation
+ togglePermissionStatus() - Toggle active/inactive if needed
+Utility Methods
+ filterPermissions(), clearFilters()
+ changePage(), onItemsPerPageChange()
+ formatDate(), status badge methods
+ reloadComponent() - Reset all state
+3. HTML Template (role-access-management.component.html)
+Header Section
+ Title: "Role Access Management"
+ Subtitle: "Manage menu access permissions for roles"
+ Add button: "Add Permission"
+Filters Section
+ Search by permission ID or menu/role names
+ Filter by menu, role, status
+ Clear filters button
+Data Table
+ Columns: ID, Menu Name, Role Name, Can View, Can Edit, Can Create, Can Delete, Created, Actions
+ Permission checkboxes display (read-only in table)
+ Action buttons: View, Edit, Delete
+ Pagination controls
+ Empty state handling
+Add/Edit Modal
+ Menu selection dropdown (will need menu list API)
+ Role selection dropdown (will need role list API)
+ Permission checkboxes: View, Edit, Create, Delete
+ Permission ID field (optional)
+ Form validation display
+View Modal
+ Display all permission details
+ Show related menu and role information
+4. API Integration
+Endpoints to Implement
+ GET /api/menu-access-permissions - List with pagination/filters
+ POST /api/menu-access-permissions - Create
+ PUT /api/menu-access-permissions/{id} - Update
+ DELETE /api/menu-access-permissions/{id} - Delete
+ GET /api/menu-access-permissions/role/{roleId} - Get by role
+ GET /api/menus - For menu dropdown (minimal data)
+ GET /api/roles - For role dropdown (minimal data)
+5. Additional Features
+Dropdown Data Loading
+ Load menus list for dropdown
+ Load roles list for dropdown
+ Cache dropdown data to avoid repeated API calls
+Enhanced Validation
+ Prevent duplicate menu-role combinations
+ Ensure at least one permission is selected
+ Validate permission_id format if provided
+Bulk Operations (Future)
+ Bulk permission updates
+ Copy permissions from one role to another
+6. Integration Points
+With Navigation System
+ Method to get permissions by role for menu filtering
+ Helper method to check specific permissions
+With Authentication
+ Use current user for created_by/updated_by
+ Role-based access to manage permissions
+7. Testing Checklist
+ CRUD operations work correctly
+ Validation prevents invalid data
+ Pagination and filtering work
+ Modal forms function properly
+ Error handling and notifications
+ Responsive design on different screen sizes
+8. Future Enhancements
+ Matrix view (roles vs menus grid)
+ Bulk permission assignment
+ Permission templates
+ Audit trail for permission changes
