@@ -777,4 +777,12 @@ export class RestaurantManagementComponent implements OnInit {
 
   // Helper for template Math operations
   Math = Math;
+
+  // Check if any filters are currently active
+  get hasActiveFilters(): boolean {
+    return !!(this.searchTerm?.trim() ||
+              this.subscriptionPlanFilter !== 'all' ||
+              this.cityFilter?.trim() ||
+              this.statusFilter !== 'all');
+  }
 }

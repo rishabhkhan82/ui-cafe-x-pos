@@ -658,4 +658,12 @@ export class UserManagementComponent implements OnInit {
 
   // Helper for template Math operations
   Math = Math;
+
+  // Check if any filters are currently active
+  get hasActiveFilters(): boolean {
+    return !!(this.searchTerm?.trim() ||
+              this.restaurantFilter !== 'all' ||
+              this.roleFilter !== 'all' ||
+              this.statusFilter !== 'all');
+  }
 }

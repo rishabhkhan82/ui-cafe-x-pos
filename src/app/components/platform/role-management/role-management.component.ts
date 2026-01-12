@@ -458,4 +458,9 @@ export class RoleManagementComponent implements OnInit {
 
   // Helper for template Math operations
   Math = Math;
+
+  // Check if any filters are currently active
+  get hasActiveFilters(): boolean {
+    return !!(this.searchTerm?.trim() || this.codeFilter?.trim() || this.statusFilter !== 'all');
+  }
 }
