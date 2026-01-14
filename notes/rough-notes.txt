@@ -1,143 +1,1212 @@
-Table: menu_access_permissions
-Columns:
-can_create bit(1) 
-can_delete bit(1) 
-can_edit bit(1) 
-can_view bit(1) 
-created_at datetime(6) 
-id bigint AI PK 
-menu_id bigint 
-role_id bigint 
-updated_at datetime(6) 
-permission_id varchar(255) 
-created_by bigint 
-updated_by bigint
+    const navigationMenus: NavigationMenu[] = [
+      // Navigation Menu (Parent)
+      {
+        id: 'nav-1',
+        name: 'Navigation Menu',
+        rolePermissions: {
+          'platform_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['platform_owner'],
+            permissions: ['manage_navigation']
+          }
+        },
+        icon: 'fas fa-bars',
+        isActive: true,
+        order: 1,
+        type: 'parent'
+      },
+      // Navigation Management (Child of Navigation Menu)
+      {
+        id: 'nav-1-1',
+        name: 'Navigation Management',
+        parentId: 'nav-1',
+        rolePermissions: {
+          'platform_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: true,
+            canCreate: true,
+            allowedRoles: ['platform_owner'],
+            permissions: ['create_menu', 'update_menu', 'delete_menu']
+          }
+        },
+        path: '/navigation-management',
+        icon: 'fas fa-cogs',
+        isActive: true,
+        order: 1,
+        type: 'action'
+      },
+
+      // Platform Owner Menus
+      {
+        id: 'po-1',
+        name: 'Dashboard',
+        rolePermissions: {
+          'platform_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: true,
+            canCreate: true,
+            allowedRoles: ['platform_owner'],
+            permissions: ['view_dashboard']
+          }
+        },
+        path: '/dashboard',
+        icon: 'fas fa-tachometer-alt',
+        isActive: true,
+        order: 2,
+        type: 'action'
+      },
+      {
+        id: 'po-2',
+        name: 'Restaurants',
+        rolePermissions: {
+          'platform_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: true,
+            canCreate: true,
+            allowedRoles: ['platform_owner'],
+            permissions: ['manage_restaurants']
+          }
+        },
+        icon: 'fas fa-utensils',
+        isActive: true,
+        order: 3,
+        type: 'parent'
+      },
+      {
+        id: 'po-2-1',
+        name: 'Restaurant Management',
+        parentId: 'po-2',
+        rolePermissions: {
+          'platform_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: true,
+            canCreate: true,
+            allowedRoles: ['platform_owner'],
+            permissions: ['view_restaurants']
+          }
+        },
+        path: '/restaurant-management',
+        icon: 'fas fa-utensils',
+        isActive: true,
+        order: 1,
+        type: 'action'
+      },
+      {
+        id: 'po-3',
+        name: 'Users & Roles',
+        rolePermissions: {
+          'platform_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: true,
+            canCreate: true,
+            allowedRoles: ['platform_owner'],
+            permissions: ['manage_users', 'manage_roles']
+          }
+        },
+        icon: 'fas fa-users',
+        isActive: true,
+        order: 4,
+        type: 'parent'
+      },
+      {
+        id: 'po-3-1',
+        name: 'User Management',
+        parentId: 'po-3',
+        rolePermissions: {
+          'platform_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: true,
+            canCreate: true,
+            allowedRoles: ['platform_owner'],
+            permissions: ['create_user', 'update_user', 'delete_user']
+          }
+        },
+        path: '/user-management',
+        icon: 'fas fa-user-cog',
+        isActive: true,
+        order: 1,
+        type: 'action'
+      },
+      {
+        id: 'po-3-2',
+        name: 'Role Management',
+        parentId: 'po-3',
+        rolePermissions: {
+          'platform_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: true,
+            canCreate: true,
+            allowedRoles: ['platform_owner'],
+            permissions: ['create_role', 'update_role', 'delete_role']
+          }
+        },
+        path: '/role-management',
+        icon: 'fas fa-user-cog',
+        isActive: true,
+        order: 2,
+        type: 'action'
+      },
+      {
+        id: 'po-4',
+        name: 'Billing & Subscriptions',
+        rolePermissions: {
+          'platform_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: true,
+            canCreate: true,
+            allowedRoles: ['platform_owner'],
+            permissions: ['manage_billing', 'manage_subscriptions']
+          }
+        },
+        icon: 'fas fa-credit-card',
+        isActive: true,
+        order: 5,
+        type: 'parent'
+      },
+      {
+        id: 'po-5',
+        name: 'Notifications',
+        rolePermissions: {
+          'platform_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: true,
+            canCreate: true,
+            allowedRoles: ['platform_owner'],
+            permissions: ['manage_notifications', 'send_broadcasts']
+          }
+        },
+        icon: 'fas fa-bell',
+        isActive: true,
+        order: 6,
+        type: 'parent'
+      },
+      {
+        id: 'po-5-1',
+        name: 'Notification Manangement',
+        parentId: 'po-5',
+        rolePermissions: {
+          'platform_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: true,
+            allowedRoles: ['platform_owner'],
+            permissions: ['view_system_alerts', 'create_alerts']
+          }
+        },
+        path: '/notifications/system-alerts',
+        icon: 'fas fa-exclamation-triangle',
+        isActive: true,
+        order: 1,
+        type: 'action'
+      },
+      {
+        id: 'po-5-2',
+        name: 'User Notifications',
+        parentId: 'po-5',
+        rolePermissions: {
+          'platform_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: true,
+            canCreate: true,
+            allowedRoles: ['platform_owner'],
+            permissions: ['manage_user_notifications']
+          }
+        },
+        path: '/notifications/user-notifications',
+        icon: 'fas fa-users',
+        isActive: true,
+        order: 2,
+        type: 'action'
+      },
+      {
+        id: 'po-5-3',
+        name: 'Broadcast Messages',
+        parentId: 'po-5',
+        rolePermissions: {
+          'platform_owner': {
+            canView: true,
+            canEdit: false,
+            canDelete: false,
+            canCreate: true,
+            allowedRoles: ['platform_owner'],
+            permissions: ['send_broadcasts']
+          }
+        },
+        path: '/notifications/broadcast-message',
+        icon: 'fas fa-bullhorn',
+        isActive: true,
+        order: 3,
+        type: 'action'
+      },
+      {
+        id: 'po-6',
+        name: 'Subscriptions',
+        rolePermissions: {
+          'platform_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: true,
+            canCreate: true,
+            allowedRoles: ['platform_owner'],
+            permissions: ['manage_subscriptions', 'manage_plans']
+          }
+        },
+        icon: 'fas fa-crown',
+        isActive: true,
+        order: 7,
+        type: 'parent'
+      },
+      {
+        id: 'po-6-1',
+        name: 'Plan Management',
+        parentId: 'po-6',
+        rolePermissions: {
+          'platform_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: true,
+            canCreate: true,
+            allowedRoles: ['platform_owner'],
+            permissions: ['create_plans', 'update_plans', 'delete_plans']
+          }
+        },
+        path: '/subscriptions/plans',
+        icon: 'fas fa-list-alt',
+        isActive: true,
+        order: 1,
+        type: 'action'
+      },
+      {
+        id: 'po-6-2',
+        name: 'Subscription Analytics',
+        parentId: 'po-6',
+        rolePermissions: {
+          'platform_owner': {
+            canView: true,
+            canEdit: false,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['platform_owner'],
+            permissions: ['view_subscription_analytics']
+          }
+        },
+        path: '/subscriptions/analytics',
+        icon: 'fas fa-chart-bar',
+        isActive: true,
+        order: 2,
+        type: 'action'
+      },
+      {
+        id: 'po-6-3',
+        name: 'Feature Access Control',
+        parentId: 'po-6',
+        rolePermissions: {
+          'platform_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['platform_owner'],
+            permissions: ['manage_feature_access']
+          }
+        },
+        path: '/subscriptions/features',
+        icon: 'fas fa-key',
+        isActive: true,
+        order: 3,
+        type: 'action'
+      },
+      {
+        id: 'po-7',
+        name: 'Settings',
+        rolePermissions: {
+          'platform_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['platform_owner'],
+            permissions: ['manage_settings', 'configure_system']
+          }
+        },
+        icon: 'fas fa-cog',
+        isActive: true,
+        order: 8,
+        type: 'parent'
+      },
+      {
+        id: 'po-7-1',
+        name: 'System Configuration',
+        parentId: 'po-7',
+        rolePermissions: {
+          'platform_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['platform_owner'],
+            permissions: ['configure_system']
+          }
+        },
+        path: '/settings/system',
+        icon: 'fas fa-server',
+        isActive: true,
+        order: 1,
+        type: 'action'
+      },
+      {
+        id: 'po-7-2',
+        name: 'Security Settings',
+        parentId: 'po-7',
+        rolePermissions: {
+          'platform_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['platform_owner'],
+            permissions: ['manage_security']
+          }
+        },
+        path: '/settings/security',
+        icon: 'fas fa-shield-alt',
+        isActive: true,
+        order: 2,
+        type: 'action'
+      },
+      {
+        id: 'po-7-3',
+        name: 'API Management',
+        parentId: 'po-7',
+        rolePermissions: {
+          'platform_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: true,
+            canCreate: true,
+            allowedRoles: ['platform_owner'],
+            permissions: ['manage_api_keys', 'configure_integrations']
+          }
+        },
+        path: '/settings/api',
+        icon: 'fas fa-code',
+        isActive: true,
+        order: 3,
+        type: 'action'
+      },
+      {
+        id: 'po-7-4',
+        name: 'Integrations',
+        parentId: 'po-7',
+        rolePermissions: {
+          'platform_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: true,
+            canCreate: true,
+            allowedRoles: ['platform_owner'],
+            permissions: ['manage_integrations']
+          }
+        },
+        path: '/settings/integrations',
+        icon: 'fas fa-plug',
+        isActive: true,
+        order: 4,
+        type: 'action'
+      },
+
+      // Restaurant Owner Menus
+      {
+        id: 'ro-1',
+        name: 'Dashboard',
+        rolePermissions: {
+          'restaurant_owner': {
+            canView: true,
+            canEdit: false,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['restaurant_owner'],
+            permissions: ['view_dashboard']
+          }
+        },
+        path: '/dashboard',
+        icon: 'fas fa-tachometer-alt',
+        isActive: true,
+        order: 1,
+        type: 'action'
+      },
+      {
+        id: 'ro-2',
+        name: 'Owner Dashboard',
+        rolePermissions: {
+          'restaurant_owner': {
+            canView: true,
+            canEdit: false,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['restaurant_owner'],
+            permissions: ['view_owner_dashboard']
+          }
+        },
+        path: '/dashboard',
+        icon: 'fas fa-chart-pie',
+        isActive: true,
+        order: 2,
+        type: 'action'
+      },
+      {
+        id: 'ro-3',
+        name: 'Analytics & Reporting',
+        rolePermissions: {
+          'restaurant_owner': {
+            canView: true,
+            canEdit: false,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['restaurant_owner'],
+            permissions: ['view_analytics']
+          }
+        },
+        path: '/analytics-reporting',
+        icon: 'fas fa-chart-bar',
+        isActive: true,
+        order: 3,
+        type: 'action'
+      },
+      {
+        id: 'ro-4',
+        name: 'Inventory Management',
+        rolePermissions: {
+          'restaurant_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['restaurant_owner'],
+            permissions: ['manage_inventory']
+          }
+        },
+        path: '/inventory-management',
+        icon: 'fas fa-boxes',
+        isActive: true,
+        order: 4,
+        type: 'action'
+      },
+      {
+        id: 'ro-5',
+        name: 'Menu Management',
+        rolePermissions: {
+          'restaurant_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: true,
+            canCreate: true,
+            allowedRoles: ['restaurant_owner'],
+            permissions: ['create_menu_item', 'update_menu_item', 'delete_menu_item']
+          }
+        },
+        path: '/menu-management',
+        icon: 'fas fa-utensils',
+        isActive: true,
+        order: 5,
+        type: 'action'
+      },
+      {
+        id: 'ro-6',
+        name: 'Notifications',
+        rolePermissions: {
+          'restaurant_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: true,
+            canCreate: true,
+            allowedRoles: ['restaurant_owner'],
+            permissions: ['manage_notifications']
+          }
+        },
+        path: '/notifications',
+        icon: 'fas fa-bell',
+        isActive: true,
+        order: 6,
+        type: 'action'
+      },
+      {
+        id: 'ro-7',
+        name: 'Offers & Loyalty',
+        rolePermissions: {
+          'restaurant_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: true,
+            canCreate: true,
+            allowedRoles: ['restaurant_owner'],
+            permissions: ['manage_offers', 'manage_loyalty']
+          }
+        },
+        path: '/offers-loyalty',
+        icon: 'fas fa-gift',
+        isActive: true,
+        order: 7,
+        type: 'action'
+      },
+      {
+        id: 'ro-8',
+        name: 'Order Processing',
+        rolePermissions: {
+          'restaurant_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['restaurant_owner'],
+            permissions: ['manage_orders']
+          }
+        },
+        path: '/order-processing',
+        icon: 'fas fa-clipboard-list',
+        isActive: true,
+        order: 8,
+        type: 'action'
+      },
+      {
+        id: 'ro-9',
+        name: 'Payment Processing',
+        rolePermissions: {
+          'restaurant_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['restaurant_owner'],
+            permissions: ['manage_payments']
+          }
+        },
+        path: '/payment-processing',
+        icon: 'fas fa-credit-card',
+        isActive: true,
+        order: 9,
+        type: 'action'
+      },
+      {
+        id: 'ro-10',
+        name: 'Settings & Configuration',
+        rolePermissions: {
+          'restaurant_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['restaurant_owner'],
+            permissions: ['manage_settings', 'configure_restaurant']
+          }
+        },
+        path: '/settings-configuration',
+        icon: 'fas fa-cog',
+        isActive: true,
+        order: 10,
+        type: 'action'
+      },
+      {
+        id: 'ro-11',
+        name: 'Shift Reports',
+        rolePermissions: {
+          'restaurant_owner': {
+            canView: true,
+            canEdit: false,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['restaurant_owner'],
+            permissions: ['view_shift_reports']
+          }
+        },
+        path: '/shift-reports',
+        icon: 'fas fa-file-alt',
+        isActive: true,
+        order: 11,
+        type: 'action'
+      },
+      {
+        id: 'ro-12',
+        name: 'Staff Management',
+        rolePermissions: {
+          'restaurant_owner': {
+            canView: true,
+            canEdit: true,
+            canDelete: true,
+            canCreate: true,
+            allowedRoles: ['restaurant_owner'],
+            permissions: ['manage_staff', 'hire_staff', 'fire_staff', 'manage_salaries']
+          }
+        },
+        path: '/staff-management',
+        icon: 'fas fa-users',
+        isActive: true,
+        order: 12,
+        type: 'action'
+      },
+
+      // Restaurant Manager Menus
+      {
+        id: 'rm-1',
+        name: 'Restaurant Manager Dashboard',
+        rolePermissions: {
+          'restaurant_manager': {
+            canView: true,
+            canEdit: false,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['restaurant_manager'],
+            permissions: ['view_manager_dashboard']
+          }
+        },
+        path: '/dashboard',
+        icon: 'fas fa-tachometer-alt',
+        isActive: true,
+        order: 1,
+        type: 'action'
+      },
+      {
+        id: 'rm-2',
+        name: 'Analytics & Reporting',
+        rolePermissions: {
+          'restaurant_manager': {
+            canView: true,
+            canEdit: false,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['restaurant_manager'],
+            permissions: ['view_analytics']
+          }
+        },
+        path: '/analytics-reporting',
+        icon: 'fas fa-chart-bar',
+        isActive: true,
+        order: 2,
+        type: 'action'
+      },
+      {
+        id: 'rm-3',
+        name: 'Inventory Management',
+        rolePermissions: {
+          'restaurant_manager': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['restaurant_manager'],
+            permissions: ['manage_inventory']
+          }
+        },
+        path: '/inventory-management',
+        icon: 'fas fa-boxes',
+        isActive: true,
+        order: 3,
+        type: 'action'
+      },
+      {
+        id: 'rm-4',
+        name: 'Menu Management',
+        rolePermissions: {
+          'restaurant_manager': {
+            canView: true,
+            canEdit: true,
+            canDelete: true,
+            canCreate: true,
+            allowedRoles: ['restaurant_manager'],
+            permissions: ['create_menu_item', 'update_menu_item', 'delete_menu_item']
+          }
+        },
+        path: '/menu-management',
+        icon: 'fas fa-utensils',
+        isActive: true,
+        order: 4,
+        type: 'action'
+      },
+      {
+        id: 'rm-5',
+        name: 'Notifications',
+        rolePermissions: {
+          'restaurant_manager': {
+            canView: true,
+            canEdit: true,
+            canDelete: true,
+            canCreate: true,
+            allowedRoles: ['restaurant_manager'],
+            permissions: ['manage_notifications']
+          }
+        },
+        path: '/notifications',
+        icon: 'fas fa-bell',
+        isActive: true,
+        order: 5,
+        type: 'action'
+      },
+      {
+        id: 'rm-6',
+        name: 'Offers & Loyalty',
+        rolePermissions: {
+          'restaurant_manager': {
+            canView: true,
+            canEdit: true,
+            canDelete: true,
+            canCreate: true,
+            allowedRoles: ['restaurant_manager'],
+            permissions: ['manage_offers', 'manage_loyalty']
+          }
+        },
+        path: '/offers-loyalty',
+        icon: 'fas fa-gift',
+        isActive: true,
+        order: 6,
+        type: 'action'
+      },
+      {
+        id: 'rm-7',
+        name: 'Order Processing',
+        rolePermissions: {
+          'restaurant_manager': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['restaurant_manager'],
+            permissions: ['manage_orders']
+          }
+        },
+        path: '/order-processing',
+        icon: 'fas fa-clipboard-list',
+        isActive: true,
+        order: 7,
+        type: 'action'
+      },
+      {
+        id: 'rm-8',
+        name: 'Payment Processing',
+        rolePermissions: {
+          'restaurant_manager': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['restaurant_manager'],
+            permissions: ['manage_payments']
+          }
+        },
+        path: '/payment-processing',
+        icon: 'fas fa-credit-card',
+        isActive: true,
+        order: 8,
+        type: 'action'
+      },
+      {
+        id: 'rm-9',
+        name: 'Settings & Configuration',
+        rolePermissions: {
+          'restaurant_manager': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['restaurant_manager'],
+            permissions: ['manage_settings', 'configure_restaurant']
+          }
+        },
+        path: '/settings-configuration',
+        icon: 'fas fa-cog',
+        isActive: true,
+        order: 9,
+        type: 'action'
+      },
+      {
+        id: 'rm-10',
+        name: 'Shift Reports',
+        rolePermissions: {
+          'restaurant_manager': {
+            canView: true,
+            canEdit: false,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['restaurant_manager'],
+            permissions: ['view_shift_reports']
+          }
+        },
+        path: '/shift-reports',
+        icon: 'fas fa-file-alt',
+        isActive: true,
+        order: 10,
+        type: 'action'
+      },
+      {
+        id: 'rm-11',
+        name: 'Staff Management',
+        rolePermissions: {
+          'restaurant_manager': {
+            canView: true,
+            canEdit: true,
+            canDelete: true,
+            canCreate: true,
+            allowedRoles: ['restaurant_manager'],
+            permissions: ['manage_staff', 'hire_staff', 'fire_staff', 'manage_salaries']
+          }
+        },
+        path: '/staff-management',
+        icon: 'fas fa-users',
+        isActive: true,
+        order: 11,
+        type: 'action'
+      },
+
+      // Cashier Menus
+      {
+        id: 'c-1',
+        name: 'Dashboard',
+        rolePermissions: {
+          'cashier': {
+            canView: true,
+            canEdit: false,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['cashier'],
+            permissions: ['view_dashboard']
+          }
+        },
+        path: '/dashboard',
+        icon: 'fas fa-tachometer-alt',
+        isActive: true,
+        order: 1
+      },
+      {
+        id: 'c-2',
+        name: 'POS Interface',
+        rolePermissions: {
+          'cashier': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['cashier'],
+            permissions: ['process_orders', 'handle_payments']
+          }
+        },
+        path: '/pos',
+        icon: 'fas fa-cash-register',
+        isActive: true,
+        order: 2
+      },
+      {
+        id: 'c-5',
+        name: 'Receipt Management',
+        rolePermissions: {
+          'cashier': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['cashier'],
+            permissions: ['print_receipts', 'reprint_receipts', 'email_receipts']
+          }
+        },
+        path: '/receipt-management',
+        icon: 'fas fa-print',
+        isActive: true,
+        order: 5
+      },
+      {
+        id: 'c-6',
+        name: 'Cash Management',
+        rolePermissions: {
+          'cashier': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['cashier'],
+            permissions: ['manage_cash_drawer', 'cash_reconciliation']
+          }
+        },
+        path: '/cash-management',
+        icon: 'fas fa-money-bill-wave',
+        isActive: true,
+        order: 6
+      },
+      {
+        id: 'c-7',
+        name: 'Shift Reports',
+        rolePermissions: {
+          'cashier': {
+            canView: true,
+            canEdit: false,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['cashier'],
+            permissions: ['view_shift_reports']
+          }
+        },
+        path: '/shift-reports',
+        icon: 'fas fa-file-alt',
+        isActive: true,
+        order: 7
+      },
+      {
+        id: 'c-8',
+        name: 'Transaction Search',
+        rolePermissions: {
+          'cashier': {
+            canView: true,
+            canEdit: false,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['cashier'],
+            permissions: ['search_transactions', 'view_transaction_details']
+          }
+        },
+        path: '/transaction-search',
+        icon: 'fas fa-search',
+        isActive: true,
+        order: 8
+      },
+      {
+        id: 'c-11',
+        name: 'Settings',
+        rolePermissions: {
+          'cashier': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['cashier'],
+            permissions: ['configure_cashier_settings']
+          }
+        },
+        path: '/settings',
+        icon: 'fas fa-cog',
+        isActive: true,
+        order: 11
+      },
+
+      // Kitchen Manager Menus
+      {
+        id: 'km-1',
+        name: 'Dashboard',
+        rolePermissions: {
+          'kitchen_manager': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: true,
+            allowedRoles: ['kitchen_manager'],
+            permissions: ['manage_recipes', 'view_menu']
+          }
+        },
+        icon: 'fas fa-book-open',
+        path: '/dashboard',
+        isActive: true,
+        order: 2,
+        type: 'action'
+      },
+      {
+        id: 'km-2',
+        name: 'Kitchen Display',
+        rolePermissions: {
+          'kitchen_manager': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['kitchen_manager'],
+            permissions: ['view_orders', 'update_order_status']
+          }
+        },
+        path: '/display',
+        icon: 'fas fa-utensils',
+        isActive: true,
+        order: 1,
+        type: 'action'
+      },
+      {
+        id: 'km-3',
+        name: 'Inventory Management',
+        rolePermissions: {
+          'kitchen_manager': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['kitchen_manager'],
+            permissions: ['manage_inventory', 'view_stock']
+          }
+        },
+        icon: 'fas fa-boxes',
+        type: 'action',
+        path: '/inventory-management',
+        isActive: true,
+        order: 3
+      },
+      {
+        id: 'km-4',
+        name: 'Recipe Management',
+        rolePermissions: {
+          'kitchen_manager': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['kitchen_manager'],
+            permissions: ['manage_inventory', 'view_stock']
+          }
+        },
+        icon: 'fas fa-boxes',
+        type: 'action',
+        path: '/recipe-management',
+        isActive: true,
+        order: 4
+      },
+      {
+        id: 'km-5',
+        name: 'Analytics & Reports',
+        rolePermissions: {
+          'kitchen_manager': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['kitchen_manager'],
+            permissions: ['manage_inventory', 'view_stock']
+          }
+        },
+        icon: 'fas fa-chart-line',
+        type: 'action',
+        path: '/analytics-reports',
+        isActive: true,
+        order: 5
+      },
+
+      // Waiter Menus
+      {
+        id: 'w-1',
+        name: 'Tables',
+        rolePermissions: {
+          'waiter': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['waiter'],
+            permissions: ['view_tables', 'manage_tables']
+          }
+        },
+        icon: 'fas fa-table',
+        isActive: true,
+        order: 1,
+        type: 'parent'
+      },
+      {
+        id: 'w-2',
+        name: 'Orders',
+        rolePermissions: {
+          'waiter': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: true,
+            allowedRoles: ['waiter'],
+            permissions: ['create_orders', 'update_orders']
+          }
+        },
+        icon: 'fas fa-clipboard-list',
+        isActive: true,
+        order: 2,
+        type: 'action',
+        path: '/dashboard'
+      },
+
+      // Customer Menus
+      {
+        id: 'cust-1',
+        name: 'Menu',
+        rolePermissions: {
+          'customer': {
+            canView: true,
+            canEdit: false,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['customer'],
+            permissions: ['view_menu']
+          }
+        },
+        path: '/customer/menu',
+        icon: 'fas fa-utensils',
+        isActive: true,
+        order: 1
+      },
+      {
+        id: 'cust-2',
+        name: 'Orders',
+        rolePermissions: {
+          'customer': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: true,
+            allowedRoles: ['customer'],
+            permissions: ['view_orders', 'place_orders']
+          }
+        },
+        icon: 'fas fa-shopping-cart',
+        isActive: true,
+        order: 2
+      },
+      {
+        id: 'cust-3',
+        name: 'Profile',
+        rolePermissions: {
+          'customer': {
+            canView: true,
+            canEdit: true,
+            canDelete: false,
+            canCreate: false,
+            allowedRoles: ['customer'],
+            permissions: ['manage_profile']
+          }
+        },
+        icon: 'fas fa-user',
+        isActive: true,
+        order: 3
+      }
+    ];
 
 
-------------------------
 
-Based on the role-management component standards, here's the comprehensive checklist for creating the Role Access Management component:
 
-Role Access Management Component Checklist
-1. Component Structure & Setup
- Create role-access-management.component.ts following role-management structure
- Create role-access-management.component.html with consistent styling
- Create role-access-management.component.css (if needed)
- Add to routing module
-2. TypeScript Component (role-access-management.component.ts)
-Imports & Dependencies
- Import required services: CrudService, LoadingService, AuthService, ConfirmationDialogService, NotificationService, ValidationService
- Import Router and CommonModule, FormsModule
-Interface/Model
- Define MenuAccessPermission interface matching the table:
-interface MenuAccessPermission {
+    =============
+
+
+    export interface NavigationMenu {
   id: number;
-  menu_id: number;
-  role_id: number;
-  can_view: boolean;
-  can_edit: boolean;
-  can_create: boolean;
-  can_delete: boolean;
-  permission_id?: string;
+  name: string;
+  parent_id?: string; // null for root level
+  path?: string;
+  icon?: string;
+  is_active: boolean;
+  display_order: number;
+  type?: 'PARENT' | 'ACTION'; // Menu type: parent container or action item (optional for backward compatibility)
+  menu_id: string;
   created_at: Date;
   updated_at: Date;
   created_by: number;
   updated_by: number;
-  // Optional: related data for display
-  menu_name?: string;
-  role_name?: string;
 }
-Component Properties
- permissions: MenuAccessPermission[] = []
- selectedPermission: MenuAccessPermission | null = null
- editingPermission: MenuAccessPermission | null = null
- Search/Filter properties: searchTerm, menuFilter, roleFilter, statusFilter
- Pagination: currentPage, itemsPerPage, totalPages, totalElements
- Form validation: fieldErrors: { [key: string]: string }
- Modal states: showAddForm, errorMessage
-Form Object
- permissionForm: MenuAccessPermission with proper initialization
-API Methods (using CrudService)
- loadPermissions() - GET /api/menu-access-permissions with pagination/filters
- createPermission() - POST /api/menu-access-permissions
- updatePermission() - PUT /api/menu-access-permissions/{id}
- deletePermission() - DELETE /api/menu-access-permissions/{id}
- getPermissionsByRole(roleId) - GET /api/menu-access-permissions/role/{roleId}
-Validation Methods
- validateMenuId(), validateRoleId() (required fields)
- Real-time validation on input change
-UI Interaction Methods
- showPermissionForm(permission?) - Open add/edit modal
- cancelAdd() - Close modal and reset form
- onSubmitForm() - Handle save/update with validation
- deletePermission() - Delete with confirmation
- togglePermissionStatus() - Toggle active/inactive if needed
-Utility Methods
- filterPermissions(), clearFilters()
- changePage(), onItemsPerPageChange()
- formatDate(), status badge methods
- reloadComponent() - Reset all state
-3. HTML Template (role-access-management.component.html)
-Header Section
- Title: "Role Access Management"
- Subtitle: "Manage menu access permissions for roles"
- Add button: "Add Permission"
-Filters Section
- Search by permission ID or menu/role names
- Filter by menu, role, status
- Clear filters button
-Data Table
- Columns: ID, Menu Name, Role Name, Can View, Can Edit, Can Create, Can Delete, Created, Actions
- Permission checkboxes display (read-only in table)
- Action buttons: View, Edit, Delete
- Pagination controls
- Empty state handling
-Add/Edit Modal
- Menu selection dropdown (will need menu list API)
- Role selection dropdown (will need role list API)
- Permission checkboxes: View, Edit, Create, Delete
- Permission ID field (optional)
- Form validation display
-View Modal
- Display all permission details
- Show related menu and role information
-4. API Integration
-Endpoints to Implement
- GET /api/menu-access-permissions - List with pagination/filters
- POST /api/menu-access-permissions - Create
- PUT /api/menu-access-permissions/{id} - Update
- DELETE /api/menu-access-permissions/{id} - Delete
- GET /api/menu-access-permissions/role/{roleId} - Get by role
- GET /api/menus - For menu dropdown (minimal data)
- GET /api/roles - For role dropdown (minimal data)
-5. Additional Features
-Dropdown Data Loading
- Load menus list for dropdown
- Load roles list for dropdown
- Cache dropdown data to avoid repeated API calls
-Enhanced Validation
- Prevent duplicate menu-role combinations
- Ensure at least one permission is selected
- Validate permission_id format if provided
-Bulk Operations (Future)
- Bulk permission updates
- Copy permissions from one role to another
-6. Integration Points
-With Navigation System
- Method to get permissions by role for menu filtering
- Helper method to check specific permissions
-With Authentication
- Use current user for created_by/updated_by
- Role-based access to manage permissions
-7. Testing Checklist
- CRUD operations work correctly
- Validation prevents invalid data
- Pagination and filtering work
- Modal forms function properly
- Error handling and notifications
- Responsive design on different screen sizes
-8. Future Enhancements
- Matrix view (roles vs menus grid)
- Bulk permission assignment
- Permission templates
- Audit trail for permission changes

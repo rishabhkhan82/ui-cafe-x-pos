@@ -1,0 +1,111 @@
+
+
+  - Platform Module
+    - Platform Dashboard
+    - System Administration
+        - API Management
+        - Feature Access Control
+        - Navigation Management
+        - Role Access Management
+        - Role Management
+        - Security Settings
+        - System Alerts
+        - System Configuration
+        - User Management
+    - Business Management
+        - Broadcast Messages
+        - Integrations
+        - Plan Management
+        - Restaurant Management
+        - Subscription Analytics
+    - User Engagement
+        - User Notifications
+
+---------------------------------------------------
+
+For Restaurant Owner & Manager
+
+-] Restaurant Module
+
+0] Owner Dashboard
+0] Restaurant Manager Dashboard
+
+1] Order Management
+Order Processing
+Payment Processing
+Shift Reports
+
+2] Inventory & Menu Management
+Inventory Management
+Menu Management
+Offers & Loyalty
+
+3] Reporting & Administration
+Analytics Reporting
+Notifications
+Settings Configuration
+Staff Management
+---------------------------------------------------
+For Kitchen Manager
+
+-] Kitchen Module
+
+0] Kitchen Dashboard
+
+1] Kitchen Operations
+Kitchen Display
+Kitchen Manager
+
+2] Inventory & Recipe Management
+Inventory Management
+Recipe Management
+
+3] Reporting & Analytics
+Analytics Reports
+
+---------------------------------------------------
+
+For Cashier
+
+-] Cashier Module
+
+0] Cashier Dashboard
+
+1] Transaction Management
+Cashier Interface
+Receipt Management
+Transaction Search
+
+2] Financial Operations
+Cash Management
+Cashier Shift Reports
+
+3] System & Configuration
+Cashier Settings
+
+---------------------------------------------------
+
+For Waiter
+
+- Waiter Module
+
+0] Dashboard - will include all this
+Table Layout View
+Table Management
+Table Selection
+
+1] Order Management
+Menu Browsing
+Cart Management
+Order Submission
+
+2] Order Tracking
+Ready Orders
+On the Way Orders
+Order Details
+
+3] Customer Management
+Customer Details
+Discount Application
+
+---------------------------------------------------
