@@ -8,24 +8,7 @@ import { AuthService } from '../../../services/auth.service';
 import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ValidationService } from '../../../services/validation.service';
-
-export interface MenuAccessPermission {
-  id: number;
-  menu_id: number;
-  role_id: number;
-  can_view: boolean;
-  can_edit: boolean;
-  can_create: boolean;
-  can_delete: boolean;
-  permission_id?: string;
-  created_at: Date;
-  updated_at: Date;
-  created_by: number;
-  updated_by: number;
-  // Display helpers
-  menu_name?: string;
-  role_name?: string;
-}
+import { MenuAccessPermission } from '../../../services/mock-data.service';
 
 export interface Menu {
   id: number;
@@ -110,9 +93,11 @@ export class RoleAccessManagementComponent implements OnInit {
 
   loadMenus(): void {
     // Load menus for dropdown - assuming we have a simple endpoint
-    this.crudService.getMenus().subscribe({
+    this.crudService.getNavigationMenus().subscribe({
       next: (response: any) => {
-        this.menus = response.data || response;
+        const allMenus = response.data || response;
+        // Filter menus to include only those with type 'ACTION'
+        this.menus = allMenus.filter((menu: any) => menu.type === 'ACTION');
       },
       error: (error) => {
         console.error('Error loading menus:', error);
@@ -486,12 +471,14 @@ export class RoleAccessManagementComponent implements OnInit {
     return role?.name || `Role ${roleId}`;
   }
 
-  formatDate(date: Date): string {
+  formatDate(date: Date | string): string {
+    // Handle ISO date strings by converting them to Date objects
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
     return new Intl.DateTimeFormat('en-IN', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
-    }).format(date);
+    }).format(dateObj);
   }
 
   reloadComponent(): void {
