@@ -20,43 +20,43 @@
 
     <!-- Navigation Menu Section -->
 
-    <!-- <pre>{{navigationMenus | json}}</pre> -->
+    <!-- <pre>{{hierarchicalMenus | json}}</pre> -->
     <div class="p-2 space-y-1">
       <ng-container *ngFor="let menu of hierarchicalMenus">
         <div *ngIf="!menu.parent_id && menu.name !== 'Dashboard'">
-          <ng-container *ngIf="menu.children && menu.children.length > 0; else singleMenu">
-            <!-- Parent menu with children -->
-            <div class="relative">
-              <button [class.parent-active]="menu.is_active" class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-150" (click)="toggleSubmenu(menu)">
-                <div class="flex items-center">
-                  <i [class]="menu.icon + ' mr-3 w-4 text-center'"></i>
-                  {{ menu.name }}
-                </div>
-                <i class="fas fa-chevron-right text-xs transition-transform duration-200" [class.rotate-90]="menu.is_active"></i>
-              </button>
-
-              <!-- Submenu -->
-              <div [ngClass]="{'submenu': true, 'submenu-open': menu.is_active}" class="ml-4 mt-1 space-y-1">
-                <ng-container *ngFor="let child of menu.children">
-                  <!-- {{child.path}} -->
-                  <button *ngIf="child.path" [class.active]="child.is_active" (click)="navigateToMenu(child.path)" class="w-full text-left flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-150 pl-6 relative before:content-[''] before:absolute before:left-3 before:top-1/2 before:w-2 before:h-px before:bg-gray-400 dark:before:bg-gray-500">
-                    <i [class]="child.icon + ' mr-3 w-4 text-center'"></i>
-                    {{ child.name }}
-                  </button>
-                </ng-container>
-              </div>
-            </div>
-          </ng-container>
-          <ng-template #singleMenu>
-            <!-- Single menu item -->
-            <a [routerLink]="menu.path" routerLinkActive="active" class="flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-150" (click)="closeDropdown()" *ngIf="menu.path">
-              <i [class]="menu.icon + ' mr-3 w-4 text-center'"></i>
-              {{ menu.name }}
-              <!-- {{menu.path}} -->
-            </a>
-          </ng-template>
+          <ng-container *ngTemplateOutlet="menuTemplate; context: { menu: menu, level: 0 }"></ng-container>
         </div>
       </ng-container>
     </div>
+
+    <!-- Recursive Menu Template -->
+    <ng-template #menuTemplate let-menu="menu" let-level="level">
+      <ng-container *ngIf="menu.children && menu.children.length > 0; else singleMenu">
+        <!-- Parent menu with children -->
+        <div class="relative">
+          <button [class.parent-active]="menu.is_active" class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-150" [style.padding-left.px]="level * 16 + 12" (click)="toggleSubmenu(menu)">
+            <div class="flex items-center">
+              <i [class]="menu.icon + ' mr-3 w-4 text-center'"></i>
+              {{ menu.name }}
+            </div>
+            <i class="fas fa-chevron-right text-xs transition-transform duration-200" [class.rotate-90]="menu.is_active"></i>
+          </button>
+
+          <!-- Submenu -->
+          <div [ngClass]="{'submenu': true, 'submenu-open': menu.is_active}" class="mt-1 space-y-1" [style.margin-left.px]="(level + 1) * 16">
+            <ng-container *ngFor="let child of menu.children">
+              <ng-container *ngTemplateOutlet="menuTemplate; context: { menu: child, level: level + 1 }"></ng-container>
+            </ng-container>
+          </div>
+        </div>
+      </ng-container>
+      <ng-template #singleMenu>
+        <!-- Single menu item -->
+        <button *ngIf="menu.path" [class.active]="menu.is_active" (click)="navigateToMenu(menu.path)" class="w-full text-left flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-150" [style.padding-left.px]="level * 16 + 12">
+          <i [class]="menu.icon + ' mr-3 w-4 text-center'"></i>
+          {{ menu.name }}
+        </button>
+      </ng-template>
+    </ng-template>
   </div>
 </div>

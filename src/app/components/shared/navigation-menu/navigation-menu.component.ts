@@ -32,15 +32,13 @@ export class NavigationMenuComponent implements OnInit {
 
   constructor(private mockDataService: MockDataService, private authService: AuthService, private router: Router, private route: ActivatedRoute) {}
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     // Subscribe to current user changes
-    this.authService.currentUser$.subscribe(user => {
+    this.authService.currentUser$.subscribe(async user => {
       if (user) {
         this.currentUser = user; // Now user is already the complete User object from MockDataService
-        // Get navigation menus for the current user role
-        this.navigationMenus = this.mockDataService.getNavigationMenusByRole(user.role);
-        // Transform flat structure to hierarchical structure
-        this.hierarchicalMenus = this.transformToHierarchical(this.navigationMenus);
+        // Get navigation menus for the current user role (already hierarchical)
+        this.hierarchicalMenus = await this.mockDataService.getNavigationMenusByRole();
         // Ensure Dashboard is first and active
         this.ensureDashboardFirst();
         // Update menu paths to include admin prefix for admin users
@@ -49,7 +47,7 @@ export class NavigationMenuComponent implements OnInit {
         this.updateActiveMenu();
       } else {
         this.currentUser = undefined;
-        this.navigationMenus = [];
+        this.hierarchicalMenus = [];
       }
     });
 
@@ -69,20 +67,20 @@ export class NavigationMenuComponent implements OnInit {
       // Convert role format from underscore to hyphen to match route structure
       const routeRole = role.replace(/_/g, '-');
 
-      this.hierarchicalMenus.forEach(menu => {
-        if (menu.path && !menu.path.startsWith('/admin')) {
-          // Add admin prefix with correct role format to relative paths
-          menu.path = `/${menu.path}`;
-        }
-        // Update children paths too
-        if (menu.children) {
-          menu.children.forEach(child => {
-            if (child.path && !child.path.startsWith('/admin')) {
-              child.path = `/${child.path}`;
-            }
-          });
-        }
-      });
+      const updatePathsRecursively = (menus: NavigationMenu[]) => {
+        menus.forEach(menu => {
+          if (menu.path && !menu.path.startsWith('/admin')) {
+            // Add admin prefix with correct role format to relative paths
+            menu.path = `/${menu.path}`;
+          }
+          // Update children paths recursively
+          if (menu.children && menu.children.length > 0) {
+            updatePathsRecursively(menu.children);
+          }
+        });
+      };
+
+      updatePathsRecursively(this.hierarchicalMenus);
     }
   }
 
@@ -133,12 +131,44 @@ export class NavigationMenuComponent implements OnInit {
   }
 
   toggleSubmenu(menu: NavigationMenu): void {
-    // Close other submenus
-    this.hierarchicalMenus.forEach(m => {
-      if (m !== menu) {
-        m.is_active = false;
+    // Close siblings at the same level
+    const closeSiblings = (menus: NavigationMenu[], currentMenu: NavigationMenu) => {
+      menus.forEach(m => {
+        if (m !== currentMenu) {
+          m.is_active = false;
+          // Recursively close children
+          if (m.children && m.children.length > 0) {
+            closeSiblings(m.children, null as any);
+          }
+        }
+      });
+    };
+
+    // Find the parent level menus
+    let parentMenus = this.hierarchicalMenus;
+    // If menu has parent_id, find its siblings
+    if (menu.parent_id) {
+      const findParentAndSiblings = (menus: NavigationMenu[]): NavigationMenu[] | null => {
+        for (const m of menus) {
+          if (m.menu_id === menu.parent_id) {
+            return m.children || [];
+          }
+          if (m.children && m.children.length > 0) {
+            const found = findParentAndSiblings(m.children);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+      const siblings = findParentAndSiblings(this.hierarchicalMenus);
+      if (siblings) {
+        parentMenus = siblings;
       }
-    });
+    }
+
+    // Close siblings
+    closeSiblings(parentMenus, menu);
+
     // Toggle current submenu
     menu.is_active = !menu.is_active;
   }
@@ -211,36 +241,40 @@ export class NavigationMenuComponent implements OnInit {
 
   private updateActiveMenu(): void {
     const currentUrl = this.router.url;
-    // Reset all active states
-    this.hierarchicalMenus.forEach(menu => {
-      menu.is_active = false;
-      if (menu.children) {
-        menu.children.forEach(child => {
-          child.is_active = false;
-        });
-      }
-    });
 
-    // Find and set active menu based on current URL
-    this.hierarchicalMenus.forEach(menu => {
-      if (menu.path) {
-        // Check if current URL ends with the menu path or contains it
-        const menuPath = menu.path.startsWith('/') ? menu.path : `/${menu.path}`;
-        if (currentUrl === menuPath || currentUrl.endsWith(menuPath)) {
-          menu.is_active = true;
+    // Reset all active states recursively
+    const resetActiveStates = (menus: NavigationMenu[]) => {
+      menus.forEach(menu => {
+        menu.is_active = false;
+        if (menu.children && menu.children.length > 0) {
+          resetActiveStates(menu.children);
         }
-      }
-      if (menu.children) {
-        menu.children.forEach(child => {
-          if (child.path) {
-            const childPath = child.path.startsWith('/') ? child.path : `/${child.path}`;
-            if (currentUrl === childPath || currentUrl.endsWith(childPath)) {
-              child.is_active = true;
-              menu.is_active = true; // Also activate parent
-            }
+      });
+    };
+    resetActiveStates(this.hierarchicalMenus);
+
+    // Find and set active menu based on current URL recursively
+    const setActiveMenu = (menus: NavigationMenu[]): boolean => {
+      for (const menu of menus) {
+        let isActive = false;
+        if (menu.path) {
+          const menuPath = menu.path.startsWith('/') ? menu.path : `/${menu.path}`;
+          if (currentUrl === menuPath || currentUrl.endsWith(menuPath)) {
+            menu.is_active = true;
+            isActive = true;
           }
-        });
+        }
+        if (menu.children && menu.children.length > 0) {
+          if (setActiveMenu(menu.children)) {
+            menu.is_active = true; // Activate parent if child is active
+            isActive = true;
+          }
+        }
+        if (isActive) return true;
       }
-    });
+      return false;
+    };
+
+    setActiveMenu(this.hierarchicalMenus);
   }
 }

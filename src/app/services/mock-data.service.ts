@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
+import { CrudService } from './crud.service';
+import { NotificationService } from './notification.service';
 
 // Interfaces
 export interface LoginRequest {
@@ -363,6 +365,7 @@ export interface NavigationMenu {
   created_by: any;
   updated_by: any;
   children?: NavigationMenu[];
+  permissions?: any;
 }
 
 export interface CashTransaction {
@@ -1765,6 +1768,7 @@ export class MockDataService {
   private systemAlertsSubject = new BehaviorSubject<SystemAlert[]>([]);
   private systemSettingsSubject = new BehaviorSubject<SystemSettings>(null as any);
   private userNotificationsSubject = new BehaviorSubject<UserNotification[]>([]);
+  private menuAccessPermissionsSubject = new BehaviorSubject<MenuAccessPermission[]>([]);
 
   // Analytics data BehaviorSubjects
   private customerSegmentsSubject = new BehaviorSubject<CustomerSegment[]>([]);
@@ -1888,6 +1892,7 @@ export class MockDataService {
   systemAlerts$ = this.systemAlertsSubject.asObservable();
   systemSettings$ = this.systemSettingsSubject.asObservable();
   userNotifications$ = this.userNotificationsSubject.asObservable();
+  menuAccessPermissions$ = this.menuAccessPermissionsSubject.asObservable();
 
   // Analytics data observables
   customerSegments$ = this.customerSegmentsSubject.asObservable();
@@ -1905,7 +1910,7 @@ export class MockDataService {
   orderFilterOptions$ = this.orderFilterOptionsSubject.asObservable();
   orderSortOptions$ = this.orderSortOptionsSubject.asObservable();
 
-  constructor() {
+  constructor(private crudService: CrudService, private notificationService: NotificationService) {
     this.initializeMockData();
   }
 
@@ -2761,6 +2766,7 @@ export class MockDataService {
         }
       }
     ];
+
     // initialize navigation menus with new data structure
     const navigationMenus: NavigationMenu[] = [
       {
@@ -3434,6 +3440,115 @@ export class MockDataService {
         created_by: 1,
         updated_by: 1
       }
+    ];
+
+    // Initialize menu access permissions
+    const menuAccessPermissions: MenuAccessPermission[] = [
+      // Platform Owner - can view all menus
+      ...navigationMenus.map((menu, index) => ({
+        id: index + 1,
+        menu_id: menu.id,
+        role_id: 1,
+        can_view: true,
+        can_edit: true,
+        can_create: true,
+        can_delete: true,
+        permission_id: undefined,
+        created_at: new Date('2024-01-01'),
+        updated_at: new Date('2024-01-01'),
+        created_by: 1,
+        updated_by: 1
+      })),
+      // Restaurant Owner - restaurant owner menus (22-31)
+      ...[22,23,24,25,26,27,28,29,30,31].map((menuId, index) => ({
+        id: navigationMenus.length + index + 1,
+        menu_id: menuId,
+        role_id: 2,
+        can_view: true,
+        can_edit: false,
+        can_create: false,
+        can_delete: false,
+        permission_id: undefined,
+        created_at: new Date('2024-01-01'),
+        updated_at: new Date('2024-01-01'),
+        created_by: 1,
+        updated_by: 1
+      })),
+      // Restaurant Manager - similar to restaurant owner but limited
+      ...[22,23,24,25,26,27,28,29,30,31].map((menuId, index) => ({
+        id: navigationMenus.length + 10 + index + 1,
+        menu_id: menuId,
+        role_id: 3,
+        can_view: true,
+        can_edit: false,
+        can_create: false,
+        can_delete: false,
+        permission_id: undefined,
+        created_at: new Date('2024-01-01'),
+        updated_at: new Date('2024-01-01'),
+        created_by: 1,
+        updated_by: 1
+      })),
+      // Cashier - cashier menus (42-47)
+      ...[42,43,44,46,47].map((menuId, index) => ({
+        id: navigationMenus.length + 20 + index + 1,
+        menu_id: menuId,
+        role_id: 4,
+        can_view: true,
+        can_edit: false,
+        can_create: false,
+        can_delete: false,
+        permission_id: undefined,
+        created_at: new Date('2024-01-01'),
+        updated_at: new Date('2024-01-01'),
+        created_by: 1,
+        updated_by: 1
+      })),
+      // Kitchen Manager - kitchen menus (48,50,51)
+      ...[48,50,51].map((menuId, index) => ({
+        id: navigationMenus.length + 25 + index + 1,
+        menu_id: menuId,
+        role_id: 5,
+        can_view: true,
+        can_edit: false,
+        can_create: false,
+        can_delete: false,
+        permission_id: undefined,
+        created_at: new Date('2024-01-01'),
+        updated_at: new Date('2024-01-01'),
+        created_by: 1,
+        updated_by: 1
+      })),
+      // Waiter - waiter menus (52,53)
+      ...[52,53].map((menuId, index) => ({
+        id: navigationMenus.length + 28 + index + 1,
+        menu_id: menuId,
+        role_id: 6,
+        can_view: true,
+        can_edit: false,
+        can_create: false,
+        can_delete: false,
+        permission_id: undefined,
+        created_at: new Date('2024-01-01'),
+        updated_at: new Date('2024-01-01'),
+        created_by: 1,
+        updated_by: 1
+      })),
+      // Customer - customer menus (54,55,56)
+      ...[54,55,56].map((menuId, index) => ({
+        id: navigationMenus.length + 30 + index + 1,
+        menu_id: menuId,
+        role_id: 7,
+        can_view: true,
+        can_edit: false,
+        can_create: false,
+        can_delete: false,
+        permission_id: undefined,
+        created_at: new Date('2024-01-01'),
+        updated_at: new Date('2024-01-01'),
+        created_by: 1,
+        updated_by: 1
+      }))
     ];
 
     // Initialize staff members
@@ -7689,29 +7804,147 @@ export class MockDataService {
     this.systemSettingsSubject.next(defaultSettings);
   }
 
+  // API call methods
+  async getNavigationMenu(): Promise<NavigationMenu[]> {
+    // Mock API call - in real implementation, this would call actual API
+    return new Promise(resolve => {
+      let params = {page: 1, size: 1000};
+      this.crudService.getNavigationMenus(params).subscribe({
+        next: (response: any) => {
+          let navData = response.data.map((menu: any) => ({
+            ...menu,
+            created_at: new Date(menu.created_at),
+            updated_at: new Date(menu.updated_at)
+          }));
+          resolve(navData);
+        },
+        error: (error) => {
+          console.error('Error loading navigation menus:', error);
+          this.notificationService.error('Error', 'Failed to load navigation menus');
+        }
+      });
+    });
+  }
+
+  async getUserRoles(): Promise<Role[]> {
+    // Mock API call - in real implementation, this would call actual API
+    return new Promise(resolve => {
+      let params = {page: 1, size: 1000};
+      this.crudService.getUserRoles(params).subscribe({
+        next: (response: any) => {
+          let roleData = response.data.map((role: any) => ({
+            ...role,
+            created_at: new Date(role.created_at),
+            updated_at: new Date(role.updated_at)
+          }));
+          resolve(roleData);
+        },
+        error: (error) => {
+          console.error('Error loading user roles:', error);
+          this.notificationService.error('Error', 'Failed to load user roles');
+        }
+      });
+    });
+  }
+
+  async getMenuAccessPermission(): Promise<MenuAccessPermission[]> {
+    // Mock API call - in real implementation, this would call actual API
+    return new Promise(resolve => {
+      let params = {page: 1, size: 1000};
+      this.crudService.getMenuAccessPermissions(params).subscribe({
+        next: (response: any) => {
+          let permissionData = response.data.map((permission: any) => ({
+            ...permission,
+            created_at: new Date(permission.created_at),
+            updated_at: new Date(permission.updated_at)
+          }));
+          resolve(permissionData);
+        },
+        error: (error) => {
+          console.error('Error loading menu access permissions:', error);
+          this.notificationService.error('Error', 'Failed to load menu access permissions');
+        }
+      });
+    });
+  }
+
   // Navigation menu methods
   getNavigationMenus(): Observable<NavigationMenu[]> {
     return this.navigationMenus$;
   }
 
-  getNavigationMenusByRole(role: User['role'] | 'all'): NavigationMenu[] {
-    const allMenus = this.navigationMenusSubject.value;
-    return allMenus;
-    // return this.buildMenuHierarchy(allMenus.filter(menu => menu.rolePermissions && menu.rolePermissions[role]));
+  async getNavigationMenusByRole(): Promise<NavigationMenu[]> {
+    // Call APIs to get data
+    const navigationMenus = await this.getNavigationMenu();
+    this.navigationMenusSubject.next(navigationMenus);
+
+    const roles = await this.getUserRoles();
+    this.rolesSubject.next(roles);
+
+    const menuAccessPermissions = await this.getMenuAccessPermission();
+    this.menuAccessPermissionsSubject.next(menuAccessPermissions);
+    
+    // Extract login user role ID by comparing sessionStorage role with role name
+    const sessionRole = sessionStorage.getItem('currentUser');
+    if (!sessionRole) {
+      return [];
+    }
+
+    const roleObject = roles.find(r => r.role_id === JSON.parse(sessionRole).role);
+    if (!roleObject) {
+      return [];
+    }
+
+    const loginUserRoleId = roleObject.id;
+
+    console.log('Login User Role ID:', loginUserRoleId);
+
+    // Filter MenuAccessPermission[] where role_id === loginUserRoleId AND can_view === true
+    const accessPermissions = menuAccessPermissions.filter(
+      perm => perm.role_id === loginUserRoleId && perm.can_view === true
+    );
+
+    // Extract allowed menu IDs
+    const allowedMenuIds = accessPermissions.map(perm => perm.menu_id);
+
+    // Filter NavigationMenu[] to only include menus where id is in allowedMenuIds
+    const allowedMenus = navigationMenus.filter(
+      menu => allowedMenuIds.includes(menu.id)
+    );
+
+    // Include parent menus if any child has permission
+    const parentIds = new Set<string>();
+    allowedMenus.forEach(menu => {
+      if (menu.parent_id) {
+        parentIds.add(menu.parent_id);
+      }
+    });
+    const parentMenus = navigationMenus.filter(menu => parentIds.has(menu.menu_id));
+    allowedMenus.push(...parentMenus);
+
+    // Attach permission objects to menus for UI to show/hide edit buttons, etc.
+    allowedMenus.forEach(menu => {
+      menu.permissions = accessPermissions.find(perm => perm.menu_id === menu.id);
+    });
+
+    console.log('Allowed Menus:', allowedMenus);
+
+    // Build menu hierarchy and return
+    return this.buildMenuHierarchy(allowedMenus);
   }
 
   private buildMenuHierarchy(menus: NavigationMenu[]): NavigationMenu[] {
-    const menuMap: any = new Map<number, NavigationMenu>();
+    const menuMap: any = new Map<string, NavigationMenu>();
     const rootMenus: NavigationMenu[] = [];
 
     // Create map of all menus
     menus.forEach(menu => {
-      menuMap.set(menu.id, { ...menu, children: [] });
+      menuMap.set(menu.menu_id, { ...menu, children: [] });
     });
 
     // Build hierarchy
     menus.forEach(menu => {
-      const menuWithChildren = menuMap.get(menu.id)!;
+      const menuWithChildren = menuMap.get(menu.menu_id)!;
       if (menu.parent_id) {
         const parent = menuMap.get(menu.parent_id);
         if (parent) {
