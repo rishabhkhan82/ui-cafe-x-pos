@@ -26,6 +26,7 @@ export class UserManagementComponent implements OnInit {
   restaurantFilter = 'all';
   roleFilter = 'all';
   statusFilter = 'all';
+  userTypeFilter = 'all';
   showAddForm = false;
   restaurants: Restaurant[] = [];
   errorMessage = '';
@@ -41,6 +42,12 @@ export class UserManagementComponent implements OnInit {
   // Field validation errors
   fieldErrors: { [key: string]: string } = {};
 
+  // User Types
+  userTypes : any = [
+    {name: 'Admin', value: 'admin'},
+    {name: 'Customer', value: 'customer'}
+  ];
+
   userForm: User = {
     id: '',
     username: '',
@@ -49,6 +56,7 @@ export class UserManagementComponent implements OnInit {
     email: '',
     phone: '',
     role: 'customer',
+    user_type: 'admin',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face',
     restaurant_id: '',
     member_since: undefined,
@@ -102,6 +110,10 @@ export class UserManagementComponent implements OnInit {
       params.restaurantId = this.restaurantFilter;
     }
 
+    if (this.userTypeFilter !== 'all') {
+      params.user_type = this.userTypeFilter;
+    }
+
     if (this.roleFilter !== 'all') {
       params.role = this.roleFilter;
     }
@@ -134,6 +146,7 @@ export class UserManagementComponent implements OnInit {
       email: apiUser.email || '',
       phone: apiUser.phone || '',
       role: apiUser.role || 'customer',
+      user_type: apiUser.user_type || 'admin',
       avatar: apiUser.avatar || '',
       restaurant_id: apiUser.restaurant_id || '',
       member_since: apiUser.member_since ? new Date(apiUser.member_since) : undefined,
@@ -159,6 +172,7 @@ export class UserManagementComponent implements OnInit {
   clearFilters(): void {
     this.searchTerm = '';
     this.restaurantFilter = 'all';
+    this.userTypeFilter = 'all';
     this.roleFilter = 'all';
     this.statusFilter = 'all';
     this.currentPage = 1; // Reset to first page
@@ -208,6 +222,7 @@ export class UserManagementComponent implements OnInit {
         password: '' // Don't pre-fill password for security
       };
       this.userFormActive = user.is_active === 'Y';
+      console.log('Editing user, userForm.user_type:', this.userForm.user_type);
     } else {
       // Adding new user
       this.userForm = {
@@ -218,6 +233,7 @@ export class UserManagementComponent implements OnInit {
         email: '',
         phone: '',
         role: 'customer',
+        user_type: 'admin',
         avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face',
         restaurant_id: '',
         member_since: undefined,
@@ -241,6 +257,7 @@ export class UserManagementComponent implements OnInit {
       email: '',
       phone: '',
       role: 'customer',
+      user_type: 'admin',
       avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face',
       restaurant_id: '',
       member_since: undefined,
@@ -272,6 +289,7 @@ export class UserManagementComponent implements OnInit {
     this.validatePhone();
     this.validateRole();
     this.validateRestaurant();
+    this.validateUserType();
 
     // Check if there are any errors
     hasErrors = Object.keys(this.fieldErrors).length > 0;
@@ -377,6 +395,15 @@ export class UserManagementComponent implements OnInit {
     }
   }
 
+  validateUserType(): void {
+    const validation = this.validationService.required(this.userForm.user_type, 'User Type');
+    if (!validation.isValid) {
+      this.fieldErrors['user_type'] = validation.message!;
+    } else {
+      delete this.fieldErrors['user_type'];
+    }
+  }
+
   private async onSaveForm(): Promise<void> {
     this.loadingService.show();
 
@@ -398,6 +425,7 @@ export class UserManagementComponent implements OnInit {
         email: this.userForm.email,
         phone: this.userForm.phone,
         role: this.userForm.role,
+        user_type: this.userForm.user_type,
         avatar: avatarUrl,
         restaurantId: this.userForm.restaurant_id,
         is_active: this.userForm.is_active,
@@ -445,6 +473,7 @@ export class UserManagementComponent implements OnInit {
         email: this.userForm.email,
         phone: this.userForm.phone,
         role: this.userForm.role,
+        user_type: this.userForm.user_type,
         avatar: avatarUrl,
         restaurantId: this.userForm.restaurant_id,
         is_active: this.userForm.is_active,
@@ -454,6 +483,8 @@ export class UserManagementComponent implements OnInit {
         last_login: this.editingUser!.last_login,
         created_by: this.editingUser!.created_by
       };
+
+      console.log('Updating user, userRequest.user_type:', userRequest.user_type);
 
       // Update existing user
       this.crudService.updateUser(this.editingUser!.id, userRequest).subscribe({
@@ -488,6 +519,7 @@ export class UserManagementComponent implements OnInit {
       email: '',
       phone: '',
       role: 'customer',
+      user_type: 'admin',
       avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face',
       restaurant_id: '',
       member_since: undefined,
@@ -621,6 +653,7 @@ export class UserManagementComponent implements OnInit {
     this.editingUser = null;
     this.searchTerm = '';
     this.restaurantFilter = 'all';
+    this.userTypeFilter = 'all';
     this.roleFilter = 'all';
     this.statusFilter = 'all';
     this.showAddForm = false;
@@ -641,6 +674,7 @@ export class UserManagementComponent implements OnInit {
       email: '',
       phone: '',
       role: 'customer',
+      user_type: 'admin',
       avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face',
       restaurant_id: '',
       member_since: undefined,
@@ -664,6 +698,6 @@ export class UserManagementComponent implements OnInit {
     return !!(this.searchTerm?.trim() ||
               this.restaurantFilter !== 'all' ||
               this.roleFilter !== 'all' ||
-              this.statusFilter !== 'all');
+              this.statusFilter !== 'all' || this.userTypeFilter !== 'all'); 
   }
 }

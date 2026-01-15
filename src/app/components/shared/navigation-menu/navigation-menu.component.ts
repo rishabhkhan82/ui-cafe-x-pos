@@ -15,6 +15,7 @@ import { AuthService } from '../../../services/auth.service';
 })
 export class NavigationMenuComponent implements OnInit {
   navigationMenus: NavigationMenu[] = [];
+  hierarchicalMenus: NavigationMenu[] = [];
   currentUser: User | undefined;
   isDropdownOpen = false;
 
@@ -38,6 +39,8 @@ export class NavigationMenuComponent implements OnInit {
         this.currentUser = user; // Now user is already the complete User object from MockDataService
         // Get navigation menus for the current user role
         this.navigationMenus = this.mockDataService.getNavigationMenusByRole(user.role);
+        // Transform flat structure to hierarchical structure
+        this.hierarchicalMenus = this.transformToHierarchical(this.navigationMenus);
         // Ensure Dashboard is first and active
         this.ensureDashboardFirst();
         // Update menu paths to include admin prefix for admin users
@@ -66,16 +69,16 @@ export class NavigationMenuComponent implements OnInit {
       // Convert role format from underscore to hyphen to match route structure
       const routeRole = role.replace(/_/g, '-');
 
-      this.navigationMenus.forEach(menu => {
+      this.hierarchicalMenus.forEach(menu => {
         if (menu.path && !menu.path.startsWith('/admin')) {
           // Add admin prefix with correct role format to relative paths
-          menu.path = `/admin/${routeRole}${menu.path}`;
+          menu.path = `/${menu.path}`;
         }
         // Update children paths too
         if (menu.children) {
           menu.children.forEach(child => {
             if (child.path && !child.path.startsWith('/admin')) {
-              child.path = `/admin/${routeRole}${child.path}`;
+              child.path = `/${child.path}`;
             }
           });
         }
@@ -83,14 +86,41 @@ export class NavigationMenuComponent implements OnInit {
     }
   }
 
+  private transformToHierarchical(menus: NavigationMenu[]): NavigationMenu[] {
+    // Create a map of menu items by their menu_id for quick lookup
+    const menuMap: Record<string, NavigationMenu> = {};
+    const rootMenus: NavigationMenu[] = [];
+
+    // First pass: create the map and identify root menus
+    menus.forEach(menu => {
+      menuMap[menu.menu_id] = { ...menu, children: [] };
+      if (!menu.parent_id || menu.parent_id === '') {
+        rootMenus.push(menuMap[menu.menu_id]);
+      }
+    });
+
+    // Second pass: build the hierarchy
+    menus.forEach(menu => {
+      if (menu.parent_id && menu.parent_id !== '') {
+        const parent = menuMap[menu.parent_id];
+        if (parent) {
+          parent.children = parent.children || [];
+          parent.children.push(menuMap[menu.menu_id]);
+        }
+      }
+    });
+
+    return rootMenus;
+  }
+
   private ensureDashboardFirst(): void {
     // Find dashboard menu
-    const dashboardMenu = this.navigationMenus.find(menu => menu.name === 'Dashboard');
+    const dashboardMenu = this.hierarchicalMenus.find(menu => menu.name === 'Dashboard');
     if (dashboardMenu) {
       // Remove dashboard from current position
-      this.navigationMenus = this.navigationMenus.filter(menu => menu.name !== 'Dashboard');
+      this.hierarchicalMenus = this.hierarchicalMenus.filter(menu => menu.name !== 'Dashboard');
       // Add dashboard at the beginning
-      this.navigationMenus.unshift(dashboardMenu);
+      this.hierarchicalMenus.unshift(dashboardMenu);
     }
   }
 
@@ -104,30 +134,30 @@ export class NavigationMenuComponent implements OnInit {
 
   toggleSubmenu(menu: NavigationMenu): void {
     // Close other submenus
-    this.navigationMenus.forEach(m => {
+    this.hierarchicalMenus.forEach(m => {
       if (m !== menu) {
-        m.isActive = false;
+        m.is_active = false;
       }
     });
     // Toggle current submenu
-    menu.isActive = !menu.isActive;
+    menu.is_active = !menu.is_active;
   }
 
-  getDashboardPath(): string {
-    if (this.currentUser) {
-      const role = this.currentUser.role;
-      const adminRoles = ['platform_owner', 'restaurant_owner', 'restaurant_manager', 'kitchen_manager', 'cashier', 'waiter'];
+  // getDashboardPath(): string {
+  //   if (this.currentUser) {
+  //     const role = this.currentUser.role;
+  //     const adminRoles = ['platform_owner', 'restaurant_owner', 'restaurant_manager', 'kitchen_manager', 'cashier', 'waiter'];
 
-      if (adminRoles.includes(role)) {
-        // Convert role format from underscore to hyphen to match route structure
-        const routeRole = role.replace(/_/g, '-');
-        return `/admin/${routeRole}/dashboard`;
-      } else if (role === 'customer') {
-        return '/customer/dashboard';
-      }
-    }
-    return '/admin/login'; // fallback
-  }
+  //     if (adminRoles.includes(role)) {
+  //       // Convert role format from underscore to hyphen to match route structure
+  //       const routeRole = role.replace(/_/g, '-');
+  //       return `/admin/${routeRole}/dashboard`;
+  //     } else if (role === 'customer') {
+  //       return '/customer/dashboard';
+  //     }
+  //   }
+  //   return '/admin/login'; // fallback
+  // }
 
   navigateToMenu(path: string): void {
     if (path) {
@@ -139,7 +169,7 @@ export class NavigationMenuComponent implements OnInit {
           path.startsWith('/restaurant-manager/') || path.startsWith('/kitchen-manager/') ||
           path.startsWith('/cashier/') || path.startsWith('/waiter/')) {
         // Navigate to the full admin path
-        const adminPath = `/admin${path}`;
+        const adminPath = `/${path}`;
         console.log('Admin navigation path:', adminPath);
 
         this.router.navigateByUrl(adminPath).then(success => {
@@ -182,22 +212,22 @@ export class NavigationMenuComponent implements OnInit {
   private updateActiveMenu(): void {
     const currentUrl = this.router.url;
     // Reset all active states
-    this.navigationMenus.forEach(menu => {
-      menu.isActive = false;
+    this.hierarchicalMenus.forEach(menu => {
+      menu.is_active = false;
       if (menu.children) {
         menu.children.forEach(child => {
-          child.isActive = false;
+          child.is_active = false;
         });
       }
     });
 
     // Find and set active menu based on current URL
-    this.navigationMenus.forEach(menu => {
+    this.hierarchicalMenus.forEach(menu => {
       if (menu.path) {
         // Check if current URL ends with the menu path or contains it
         const menuPath = menu.path.startsWith('/') ? menu.path : `/${menu.path}`;
         if (currentUrl === menuPath || currentUrl.endsWith(menuPath)) {
-          menu.isActive = true;
+          menu.is_active = true;
         }
       }
       if (menu.children) {
@@ -205,8 +235,8 @@ export class NavigationMenuComponent implements OnInit {
           if (child.path) {
             const childPath = child.path.startsWith('/') ? child.path : `/${child.path}`;
             if (currentUrl === childPath || currentUrl.endsWith(childPath)) {
-              child.isActive = true;
-              menu.isActive = true; // Also activate parent
+              child.is_active = true;
+              menu.is_active = true; // Also activate parent
             }
           }
         });

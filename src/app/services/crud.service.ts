@@ -293,8 +293,24 @@ export class CrudService {
   }
 
   // Menu operations (alias for getMenuItems)
-  getMenus(params?: CrudParams): Observable<any> {
-    return this.getMenuItems(params);
+  getNavigationMenus(params?: CrudParams): Observable<any> {
+    return this.getData('navigation-menus', params);
+  }
+
+  createNavigationMenu(payload: any): Observable<any> {
+    return this.postData('navigation-menus', payload);
+  }
+
+  updateNavigationMenu(id: string | number, payload: any): Observable<any> {
+    return this.putData('navigation-menus', payload, {}, id);
+  }
+
+  deleteNavigationMenu(id: string | number): Observable<any> {
+    return this.deleteData('navigation-menus', {}, id);
+  }
+
+  getNavigationMenuById(id: string | number): Observable<any> {
+    return this.getData(`navigation-menus/${id}`);
   }
 
   getHeaderToken(): any {

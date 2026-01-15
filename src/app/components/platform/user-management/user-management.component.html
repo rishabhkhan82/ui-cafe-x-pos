@@ -69,6 +69,17 @@
       </div>
       <div>
         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-user mr-2 text-blue-500"></i>User Type
+        </label>
+        <select
+          [(ngModel)]="userTypeFilter"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All User Types</option>
+          <option *ngFor="let usertype of userTypes" [value]="usertype.value">{{ usertype.name }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
           <i class="fas fa-toggle-on mr-2 text-green-500"></i>Status Filter
         </label>
         <select
@@ -254,7 +265,7 @@
             </div>
 
             <!-- Avatar Upload -->
-            <div class="md:col-span-2">
+            <div class="">
               <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 <i class="fas fa-camera mr-2 text-pink-500"></i>Avatar
               </label>
@@ -274,6 +285,26 @@
                 <div *ngIf="userForm.avatar" class="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-300">
                   <img [src]="userForm.avatar" [alt]="userForm.name" class="w-full h-full object-cover">
                 </div>
+              </div>
+            </div>
+
+            <!-- User Type -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-utensils mr-2 text-orange-500"></i>User Type <span class="text-red-500">*</span>
+              </label>
+              <select
+                [(ngModel)]="userForm.user_type"
+                name="user_type"
+                (blur)="validateUserType()"
+                (change)="validateUserType()"
+                [disabled]="false"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 disabled:bg-gray-100 disabled:dark:bg-gray-800 disabled:text-gray-500">
+                <option value="">Select User Type</option>
+                <option *ngFor="let userType of userTypes" [value]="userType.value">{{ userType.name }}</option>
+              </select>
+              <div *ngIf="fieldErrors['user_type']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ fieldErrors['user_type'] }}
               </div>
             </div>
 

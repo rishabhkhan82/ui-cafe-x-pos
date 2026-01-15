@@ -186,3 +186,14 @@ tasks to do.
 ===============================================================================
 
 extra points - user activit logs. 
+
+-=======================================================
+
+tomorrow's task
+
+1] add one field in user table. user type - admin/customer - done
+2] according to it modify the api, the ui and logic in component
+3] auth service before logout check the user type and redirect specifi login page base on user type
+4] navigation menu component - actual filtering
+
+========================================================

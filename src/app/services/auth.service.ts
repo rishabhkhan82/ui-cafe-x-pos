@@ -39,15 +39,16 @@ export class AuthService {
   }
 
   logout(): void {
+    const userType = this.currentUser?.user_type;
     this.currentUser = null;
     sessionStorage.clear();
     this.currentUserSubject.next(null);
-    // Navigate to appropriate login based on current route
-    const currentUrl = this.router.url;
-    if (currentUrl.startsWith('/admin')) {
+    if (userType === 'admin') {
       this.router.navigate(['/admin/login']);
-    } else {
+    } else if (userType === 'customer') {
       this.router.navigate(['/customer/login']);
+    } else {
+      this.router.navigate(['/admin/login']);
     }
   }
 
