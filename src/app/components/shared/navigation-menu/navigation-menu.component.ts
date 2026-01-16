@@ -39,11 +39,7 @@ export class NavigationMenuComponent implements OnInit {
         this.currentUser = user; // Now user is already the complete User object from MockDataService
         // Get navigation menus for the current user role (already hierarchical)
         this.hierarchicalMenus = await this.mockDataService.getNavigationMenusByRole();
-        // Ensure Dashboard is first and active
-        this.ensureDashboardFirst();
-        // Update menu paths to include admin prefix for admin users
-        this.updateMenuPathsForAdmin(user.role);
-        // Update active menu based on current route
+        // Update active menu based on current route (after paths are updated)
         this.updateActiveMenu();
       } else {
         this.currentUser = undefined;
@@ -57,31 +53,6 @@ export class NavigationMenuComponent implements OnInit {
     ).subscribe(() => {
       this.updateActiveMenu();
     });
-  }
-
-  private updateMenuPathsForAdmin(role: string): void {
-    // Admin roles need /admin prefix in their navigation paths
-    const adminRoles = ['platform_owner', 'restaurant_owner', 'restaurant_manager', 'kitchen_manager', 'cashier', 'waiter'];
-
-    if (adminRoles.includes(role)) {
-      // Convert role format from underscore to hyphen to match route structure
-      const routeRole = role.replace(/_/g, '-');
-
-      const updatePathsRecursively = (menus: NavigationMenu[]) => {
-        menus.forEach(menu => {
-          if (menu.path && !menu.path.startsWith('/admin')) {
-            // Add admin prefix with correct role format to relative paths
-            menu.path = `/${menu.path}`;
-          }
-          // Update children paths recursively
-          if (menu.children && menu.children.length > 0) {
-            updatePathsRecursively(menu.children);
-          }
-        });
-      };
-
-      updatePathsRecursively(this.hierarchicalMenus);
-    }
   }
 
   private transformToHierarchical(menus: NavigationMenu[]): NavigationMenu[] {
@@ -111,19 +82,11 @@ export class NavigationMenuComponent implements OnInit {
     return rootMenus;
   }
 
-  private ensureDashboardFirst(): void {
-    // Find dashboard menu
-    const dashboardMenu = this.hierarchicalMenus.find(menu => menu.name === 'Dashboard');
-    if (dashboardMenu) {
-      // Remove dashboard from current position
-      this.hierarchicalMenus = this.hierarchicalMenus.filter(menu => menu.name !== 'Dashboard');
-      // Add dashboard at the beginning
-      this.hierarchicalMenus.unshift(dashboardMenu);
-    }
-  }
-
   toggleDropdown(): void {
     this.isDropdownOpen = !this.isDropdownOpen;
+    if (this.isDropdownOpen) {
+      this.updateActiveMenu();
+    }
   }
 
   closeDropdown(): void {
@@ -193,49 +156,16 @@ export class NavigationMenuComponent implements OnInit {
     if (path) {
       this.closeDropdown();
       console.log('Navigating to:', path);
-
-      // For admin routes, navigate directly to the full admin path
-      if (path.startsWith('/platform-owner/') || path.startsWith('/restaurant-owner/') ||
-          path.startsWith('/restaurant-manager/') || path.startsWith('/kitchen-manager/') ||
-          path.startsWith('/cashier/') || path.startsWith('/waiter/')) {
-        // Navigate to the full admin path
-        const adminPath = `/${path}`;
-        console.log('Admin navigation path:', adminPath);
-
-        this.router.navigateByUrl(adminPath).then(success => {
-          if (success) {
-            console.log('Admin navigation successful to:', adminPath);
-          } else {
-            console.error('Admin navigation failed to:', adminPath);
-          }
-        }).catch(error => {
-          console.error('Admin navigation error:', error);
-        });
-      } else {
-        // For customer routes, navigate to customer path
-        if (path.startsWith('/customer/')) {
-          this.router.navigateByUrl(path).then(success => {
-            if (success) {
-              console.log('Customer navigation successful to:', path);
-            } else {
-              console.error('Customer navigation failed to:', path);
-            }
-          }).catch(error => {
-            console.error('Customer navigation error:', error);
-          });
+      // For other paths, navigate normally
+      this.router.navigateByUrl(path).then(success => {
+        if (success) {
+          console.log('Navigation successful to:', path);
         } else {
-          // For other paths, navigate normally
-          this.router.navigateByUrl(path).then(success => {
-            if (success) {
-              console.log('Navigation successful to:', path);
-            } else {
-              console.error('Navigation failed to:', path);
-            }
-          }).catch(error => {
-            console.error('Navigation error:', error);
-          });
+          console.error('Navigation failed to:', path);
         }
-      }
+      }).catch(error => {
+        console.error('Navigation error:', error);
+      });
     }
   }
 

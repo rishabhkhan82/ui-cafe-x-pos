@@ -34,7 +34,7 @@
       <ng-container *ngIf="menu.children && menu.children.length > 0; else singleMenu">
         <!-- Parent menu with children -->
         <div class="relative">
-          <button [class.parent-active]="menu.is_active" class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-150" [style.padding-left.px]="level * 16 + 12" (click)="toggleSubmenu(menu)">
+          <button [class.parent-active]="menu.is_active" [ngClass]="{'bg-red-100 dark:bg-red-900/20': menu.is_active}" class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-150" [style.padding-left.px]="level * 16 + 12" (click)="toggleSubmenu(menu)">
             <div class="flex items-center">
               <i [class]="menu.icon + ' mr-3 w-4 text-center'"></i>
               {{ menu.name }}
@@ -52,7 +52,7 @@
       </ng-container>
       <ng-template #singleMenu>
         <!-- Single menu item -->
-        <button *ngIf="menu.path" [class.active]="menu.is_active" (click)="navigateToMenu(menu.path)" class="w-full text-left flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-150" [style.padding-left.px]="level * 16 + 12">
+        <button *ngIf="menu.path" [ngClass]="{'bg-red-100 dark:bg-red-900/20': menu.is_active}" (click)="navigateToMenu(menu.path)" class="w-full text-left flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-150" [style.padding-left.px]="level * 16 + 12">
           <i [class]="menu.icon + ' mr-3 w-4 text-center'"></i>
           {{ menu.name }}
         </button>
