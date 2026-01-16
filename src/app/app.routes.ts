@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   // Default redirect to admin login (main entry point)
@@ -12,82 +13,98 @@ export const routes: Routes = [
 
   {
     path: 'platform-dashboard',
-    loadComponent: () => import('./components/platform/platform-dashboard/platform-dashboard.component').then(m => m.PlatformDashboardComponent)
+    loadComponent: () => import('./components/platform/platform-dashboard/platform-dashboard.component').then(m => m.PlatformDashboardComponent),
+    canActivate: [authGuard]
   },
 
   {
     path: 'navigation-management',
-    loadComponent: () => import('./components/platform/navigation-management/navigation-management.component').then(m => m.NavigationManagementComponent)
+    loadComponent: () => import('./components/platform/navigation-management/navigation-management.component').then(m => m.NavigationManagementComponent),
+    canActivate: [authGuard]
   },
 
   {
     path: 'restaurant-management',
-    loadComponent: () => import('./components/platform/restaurant-management/restaurant-management.component').then(m => m.RestaurantManagementComponent)
+    loadComponent: () => import('./components/platform/restaurant-management/restaurant-management.component').then(m => m.RestaurantManagementComponent),
+    canActivate: [authGuard]
   },
 
   {
     path: 'user-management',
-    loadComponent: () => import('./components/platform/user-management/user-management.component').then(m => m.UserManagementComponent)
+    loadComponent: () => import('./components/platform/user-management/user-management.component').then(m => m.UserManagementComponent),
+    canActivate: [authGuard]
   },
 
   {
     path: 'role-management',
-    loadComponent: () => import('./components/platform/role-management/role-management.component').then(m => m.RoleManagementComponent)
+    loadComponent: () => import('./components/platform/role-management/role-management.component').then(m => m.RoleManagementComponent),
+    canActivate: [authGuard]
   },
 
   {
     path: 'role-access-management',
-    loadComponent: () => import('./components/platform/role-access-management/role-access-management.component').then(m => m.RoleAccessManagementComponent)
+    loadComponent: () => import('./components/platform/role-access-management/role-access-management.component').then(m => m.RoleAccessManagementComponent),
+    canActivate: [authGuard]
   },
 
   {
     path: 'system-alerts',
-    loadComponent: () => import('./components/platform/system-alerts/system-alerts.component').then(m => m.SystemAlertsComponent)
+    loadComponent: () => import('./components/platform/system-alerts/system-alerts.component').then(m => m.SystemAlertsComponent),
+    canActivate: [authGuard]
   },
 
   {
     path: 'user-notifications',
-    loadComponent: () => import('./components/platform/user-notifications/user-notifications.component').then(m => m.UserNotificationsComponent)
+    loadComponent: () => import('./components/platform/user-notifications/user-notifications.component').then(m => m.UserNotificationsComponent),
+    canActivate: [authGuard]
   },
 
   {
     path: 'broadcast-message',
-    loadComponent: () => import('./components/platform/broadcast-messages/broadcast-messages.component').then(m => m.BroadcastMessagesComponent)
+    loadComponent: () => import('./components/platform/broadcast-messages/broadcast-messages.component').then(m => m.BroadcastMessagesComponent),
+    canActivate: [authGuard]
   },
 
   {
     path: 'plans',
-    loadComponent: () => import('./components/platform/plan-management/plan-management.component').then(m => m.PlanManagementComponent)
+    loadComponent: () => import('./components/platform/plan-management/plan-management.component').then(m => m.PlanManagementComponent),
+    canActivate: [authGuard]
   },
 
   {
     path: 'analytics',
-    loadComponent: () => import('./components/platform/subscription-analytics/subscription-analytics.component').then(m => m.SubscriptionAnalyticsComponent)
+    loadComponent: () => import('./components/platform/subscription-analytics/subscription-analytics.component').then(m => m.SubscriptionAnalyticsComponent),
+    canActivate: [authGuard]
   },
 
   {
-    path: 'features', 
-    loadComponent: () => import('./components/platform/feature-access-control/feature-access-control.component').then(m => m.FeatureAccessControlComponent )
+    path: 'features',
+    loadComponent: () => import('./components/platform/feature-access-control/feature-access-control.component').then(m => m.FeatureAccessControlComponent ),
+    canActivate: [authGuard]
   },
 
   {
     path: 'system',
-    loadComponent: () => import('./components/platform/system-configuration/system-configuration.component').then(m => m.SystemConfigurationComponent)
+    loadComponent: () => import('./components/platform/system-configuration/system-configuration.component').then(m => m.SystemConfigurationComponent),
+    canActivate: [authGuard]
   },
 
   {
     path: 'security',
-    loadComponent: () => import('./components/platform/security-settings/security-settings.component').then(m => m.SecuritySettingsComponent)
+    loadComponent: () => import('./components/platform/security-settings/security-settings.component').then(m => m.SecuritySettingsComponent),
+    canActivate: [authGuard]
   },
 
   {
     path: 'api',
-    loadComponent: () => import('./components/platform/api-management/api-management.component').then(m => m.ApiManagementComponent)
+    loadComponent: () => import('./components/platform/api-management/api-management.component').then(m => m.ApiManagementComponent),
+    canActivate: [authGuard]
   },
-  
+
   {
     path: 'integrations',
-    loadComponent: () => import('./components/platform/integrations/integrations.component').then(m => m.IntegrationsComponent)
+    loadComponent: () => import('./components/platform/integrations/integrations.component').then(m => m.IntegrationsComponent),
+    canActivate: [authGuard]
   },
 
   // Customer login (outside layout - no header/footer)
@@ -99,6 +116,7 @@ export const routes: Routes = [
   // Customer section with nested routing (authenticated pages only)
   {
     path: 'customer',
+    canActivate: [authGuard],
     children: [
       {
         path: 'menu',
