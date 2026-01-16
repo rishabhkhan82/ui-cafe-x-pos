@@ -1,51 +1,63 @@
 /* Custom styles for click outside functionality */
 .navigation-dropdown {
   position: relative;
+  width: max-content;
 }
 
-/* Dropdown menu transitions */
+/* Dropdown menu transitions with enhanced animations */
 .dropdown-menu {
   opacity: 0;
-  transform: translateY(-10px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transform: translateY(-20px) scale(0.95);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   pointer-events: none;
   visibility: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    width: max-content;
 }
 
 .dropdown-menu.dropdown-open {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
   pointer-events: auto;
   visibility: visible;
+  box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.3);
 }
 
-/* Submenu transitions */
+/* Submenu transitions with smooth slide */
 .submenu {
   opacity: 0;
   max-height: 0;
   overflow: hidden;
-  transition: opacity 0.3s ease, max-height 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(-10px);
 }
 
 .submenu.submenu-open {
   opacity: 1;
-  max-height: 500px; /* Adjust based on content */
+  max-height: max-content; /* Adjust based on content */
+  transform: translateX(0);
 }
 
-/* Active menu item styles */
+/* Active menu item styles with glowing effect */
 .active {
-  background-color: rgb(239 68 68);
+  background: linear-gradient(135deg, #ef4444, #f97316);
   color: white;
   font-weight: 600;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .active:hover {
-  background-color: rgb(220 38 38);
+  background: linear-gradient(135deg, #dc2626, #ea580c);
+  box-shadow: 0 0 30px rgba(239, 68, 68, 0.6);
+  transform: translateY(-2px);
 }
 
 /* Parent menu with active children styles */
 .parent-active {
-  background-color: rgb(156 163 175 / 0.1); /* light grey */
+  background: linear-gradient(135deg, rgba(156, 163, 175, 0.1), rgba(209, 213, 219, 0.1));
+  border-left: 3px solid #ef4444;
+  box-shadow: inset 0 0 10px rgba(239, 68, 68, 0.2);
 }
 
 /* Hide scrollbar but keep scrolling functionality */
@@ -56,4 +68,35 @@
 .dropdown-menu {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
+}
+
+.dropdown-menu .space-y-1::-webkit-scrollbar {
+  display: none;
+}
+
+.dropdown-menu .space-y-1 {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .dropdown-menu {
+    min-width: 320px;
+    max-width: 90vw;
+  }
+}
+
+/* Custom animations */
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.8);
+  }
+}
+
+.active {
+  animation: glow 2s ease-in-out infinite;
 }

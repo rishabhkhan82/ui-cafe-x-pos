@@ -1,13 +1,13 @@
 <div class="relative inline-block navigation-dropdown">
   <!-- Dropdown Trigger -->
-  <button class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200 shadow-sm" type="button" (click)="toggleDropdown()">
-    <i class="fas fa-bars mr-2"></i>
+  <button class="inline-flex items-center px-6 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 hover:from-purple-700 hover:via-pink-700 hover:to-red-700 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-out focus:outline-none focus:ring-4 focus:ring-purple-300 dark:focus:ring-purple-800" type="button" (click)="toggleDropdown()">
+    <i class="fas fa-compass mr-2 animate-pulse"></i>
     Navigation
-    <i class="fas fa-chevron-down ml-2 text-xs transition-transform duration-200" [class.rotate-180]="isDropdownOpen"></i>
+    <i class="fas fa-chevron-down ml-2 text-xs transition-transform duration-300 ease-in-out" [class.rotate-180]="isDropdownOpen"></i>
   </button>
 
   <!-- Dropdown Menu -->
-  <div [ngClass]="{'dropdown-menu': true, 'dropdown-open': isDropdownOpen}" class="absolute right-0 z-50 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 max-h-96 overflow-y-auto">
+  <div [ngClass]="{'dropdown-menu': true, 'dropdown-open': isDropdownOpen}" class="absolute right-0 z-50 mt-3 w-fit min-w-80 max-w-96 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-xl shadow-2xl border border-white/20 dark:border-gray-700/50 h-[300px] overflow-y-auto">
     <!-- Dashboard as first item -->
 
     <!-- <div class="p-2">
@@ -21,7 +21,7 @@
     <!-- Navigation Menu Section -->
 
     <!-- <pre>{{hierarchicalMenus | json}}</pre> -->
-    <div class="p-2 space-y-1">
+    <div class="p-3 space-y-1 overflow-y-auto">
       <ng-container *ngFor="let menu of hierarchicalMenus">
         <div *ngIf="!menu.parent_id && menu.name !== 'Dashboard'">
           <ng-container *ngTemplateOutlet="menuTemplate; context: { menu: menu, level: 0 }"></ng-container>
@@ -34,12 +34,12 @@
       <ng-container *ngIf="menu.children && menu.children.length > 0; else singleMenu">
         <!-- Parent menu with children -->
         <div class="relative">
-          <button [class.parent-active]="menu.is_active" [ngClass]="{'bg-red-100 dark:bg-red-900/20': menu.is_active}" class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-150" [style.padding-left.px]="level * 16 + 12" (click)="toggleSubmenu(menu)">
+          <button [class.parent-active]="menu.is_active" [ngClass]="{'bg-gradient-to-r from-red-100 to-pink-100 dark:from-red-900/30 dark:to-pink-900/30 shadow-md ring-2 ring-red-200 dark:ring-red-800': menu.is_active}" class="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/20 dark:hover:to-purple-900/20 rounded-xl transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-lg group" [style.padding-left.px]="level * 16 + 12" (click)="toggleSubmenu(menu)">
             <div class="flex items-center">
-              <i [class]="menu.icon + ' mr-3 w-4 text-center'"></i>
+              <i [class]="menu.icon + ' mr-3 w-5 text-center text-purple-600 dark:text-purple-400 group-hover:animate-bounce'"></i>
               {{ menu.name }}
             </div>
-            <i class="fas fa-chevron-right text-xs transition-transform duration-200" [class.rotate-90]="menu.is_active"></i>
+            <i class="fas fa-chevron-right text-xs text-gray-500 dark:text-gray-400 transition-all duration-300 ease-in-out group-hover:text-purple-600 dark:group-hover:text-purple-400" [class.rotate-90]="menu.is_active" [class.group-hover:rotate-45]="!menu.is_active"></i>
           </button>
 
           <!-- Submenu -->
@@ -52,8 +52,8 @@
       </ng-container>
       <ng-template #singleMenu>
         <!-- Single menu item -->
-        <button *ngIf="menu.path" [ngClass]="{'bg-red-100 dark:bg-red-900/20': menu.is_active}" (click)="navigateToMenu(menu.path)" class="w-full text-left flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-150" [style.padding-left.px]="level * 16 + 12">
-          <i [class]="menu.icon + ' mr-3 w-4 text-center'"></i>
+        <button *ngIf="menu.path" [ngClass]="{'bg-gradient-to-r from-red-100 to-pink-100 dark:from-red-900/30 dark:to-pink-900/30 shadow-md ring-2 ring-red-200 dark:ring-red-800': menu.is_active}" (click)="navigateToMenu(menu.path)" class="w-full text-left flex items-center px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 dark:hover:from-green-900/20 dark:hover:to-blue-900/20 rounded-xl transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-lg group" [style.padding-left.px]="level * 16 + 12">
+          <i [class]="menu.icon + ' mr-3 w-5 text-center text-green-600 dark:text-green-400 group-hover:animate-spin'"></i>
           {{ menu.name }}
         </button>
       </ng-template>

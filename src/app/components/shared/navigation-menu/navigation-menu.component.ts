@@ -91,6 +91,19 @@ export class NavigationMenuComponent implements OnInit {
 
   closeDropdown(): void {
     this.isDropdownOpen = false;
+    this.resetSubmenuStates();
+  }
+
+  private resetSubmenuStates(): void {
+    const resetStates = (menus: NavigationMenu[]) => {
+      menus.forEach(menu => {
+        menu.is_active = false;
+        if (menu.children && menu.children.length > 0) {
+          resetStates(menu.children);
+        }
+      });
+    };
+    resetStates(this.hierarchicalMenus);
   }
 
   toggleSubmenu(menu: NavigationMenu): void {
