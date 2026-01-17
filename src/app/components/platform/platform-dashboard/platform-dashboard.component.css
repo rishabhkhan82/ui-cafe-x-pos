@@ -1,17 +1,70 @@
-/* Platform Dashboard - Clean and Minimal */
+/* Enterprise SaaS Platform Dashboard Styles */
 
-/* Subtle hover effects for interactive elements */
-.pos-card:hover {
-  transform: translateY(-2px);
-  transition: all 0.2s ease;
+/* Enterprise Card Component */
+.enterprise-card {
+  @apply bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-2xl p-6 border border-white/20 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300;
 }
 
-.kpi-card:hover {
-  transform: translateY(-3px);
-  transition: all 0.2s ease;
+.enterprise-card:hover {
+  @apply transform -translate-y-1 scale-[1.02];
 }
 
-/* Loading state animation */
+/* Action Button Styles */
+.action-button {
+  @apply flex flex-col items-center justify-center p-6 rounded-xl text-white font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-out;
+}
+
+/* Gradient Backgrounds */
+.gradient-bg {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Status Indicators */
+.status-healthy {
+  @apply bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400;
+}
+
+.status-warning {
+  @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400;
+}
+
+.status-error {
+  @apply bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400;
+}
+
+/* Metric Cards Hover Effects */
+.metric-card {
+  @apply relative overflow-hidden;
+}
+
+.metric-card::before {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full transition-transform duration-700 ease-out;
+}
+
+.metric-card:hover::before {
+  @apply translate-x-full;
+}
+
+/* Chart Container Styles */
+.chart-container {
+  @apply relative;
+}
+
+.chart-container canvas {
+  @apply max-w-full h-auto;
+}
+
+/* Activity Feed Styles */
+.activity-item {
+  @apply border-l-4 border-transparent hover:border-blue-500 transition-all duration-200;
+}
+
+.activity-item:hover {
+  @apply bg-gray-50/50 dark:bg-gray-700/50 transform translate-x-1;
+}
+
+/* Loading Animations */
 @keyframes shimmer {
   0% {
     background-position: -200px 0;
@@ -25,4 +78,98 @@
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200px 100%;
   animation: shimmer 1.5s infinite;
+}
+
+/* Pulse Animation for Live Indicators */
+@keyframes enterprise-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+.live-indicator {
+  animation: enterprise-pulse 2s ease-in-out infinite;
+}
+
+/* Gradient Text Effects */
+.gradient-text {
+  @apply bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent;
+}
+
+/* Card Shadow Variations */
+.shadow-enterprise {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.shadow-enterprise-hover {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Responsive Design Enhancements */
+@media (max-width: 768px) {
+  .enterprise-card {
+    @apply p-4;
+  }
+
+  .action-button {
+    @apply p-4;
+  }
+}
+
+/* Dark Mode Enhancements */
+.dark .enterprise-card {
+  @apply bg-gray-800/80 border-gray-700/60;
+}
+
+.dark .action-button {
+  @apply shadow-gray-900/50;
+}
+
+/* Custom Scrollbar for Activity Feed */
+.activity-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.activity-scroll::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-gray-700 rounded-full;
+}
+
+.activity-scroll::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+}
+
+.activity-scroll::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400 dark:bg-gray-500;
+}
+
+/* Performance Metrics */
+.performance-bar {
+  @apply h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden;
+}
+
+.performance-fill {
+  @apply h-full bg-gradient-to-r from-green-400 to-blue-500 rounded-full transition-all duration-1000 ease-out;
+}
+
+/* Notification Badges */
+.notification-badge {
+  @apply absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold;
+}
+
+/* Trend Indicators */
+.trend-up {
+  @apply text-green-500;
+}
+
+.trend-down {
+  @apply text-red-500;
+}
+
+.trend-stable {
+  @apply text-gray-500;
 }

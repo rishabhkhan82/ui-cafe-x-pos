@@ -1,117 +1,320 @@
-<div class="p-6">
-  <div class="mb-6">
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Platform Dashboard</h1>
-    <p class="text-gray-600 dark:text-gray-300">Multi-tenant SaaS platform overview</p>
-  </div>
+<!-- Enterprise SaaS Platform Dashboard -->
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-slate-900 dark:to-gray-800">
 
-  <!-- KPI Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <div class="pos-card kpi-card rounded-2xl p-6">
+  <!-- Header Section -->
+  <div class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto px-6 py-4">
       <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm text-gray-500 dark:text-gray-400">Total Restaurants</p>
-          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">24</h3>
-          <p class="text-sm text-green-600 dark:text-green-400">+3 this month</p>
+        <div class="flex items-center space-x-4">
+          <div class="w-12 h-12 border border-red-700 rounded-xl flex items-center justify-center shadow-lg">
+            <i class="fas fa-tachometer-alt text-white text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+              Platform Dashboard
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400 text-sm">Platform analytics and real time updates</p>
+          </div>
         </div>
-        <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-500">
-          <i class="fas fa-utensils text-xl"></i>
-        </div>
-      </div>
-    </div>
-
-    <div class="pos-card kpi-card rounded-2xl p-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm text-gray-500 dark:text-gray-400">Active Subscriptions</p>
-          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">18</h3>
-          <p class="text-sm text-green-600 dark:text-green-400">75% active rate</p>
-        </div>
-        <div class="w-12 h-12 rounded-xl bg-green-50 dark:bg-green-900/30 flex items-center justify-center text-green-500">
-          <i class="fas fa-credit-card text-xl"></i>
-        </div>
-      </div>
-    </div>
-
-    <div class="pos-card kpi-card rounded-2xl p-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm text-gray-500 dark:text-gray-400">Total Revenue</p>
-          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">₹45,600</h3>
-          <p class="text-sm text-green-600 dark:text-green-400">+12% this month</p>
-        </div>
-        <div class="w-12 h-12 rounded-xl bg-primary-50 dark:bg-red-900/30 flex items-center justify-center text-primary-500">
-          <i class="fas fa-indian-rupee-sign text-xl"></i>
-        </div>
-      </div>
-    </div>
-
-    <div class="pos-card kpi-card rounded-2xl p-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm text-gray-500 dark:text-gray-400">Platform Uptime</p>
-          <h3 class="text-3xl font-bold text-gray-900 dark:text-white">99.9%</h3>
-          <p class="text-sm text-green-600 dark:text-green-400">Last 30 days</p>
-        </div>
-        <div class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center text-purple-500">
-          <i class="fas fa-server text-xl"></i>
+        <div class="flex items-center space-x-4">
+          <div class="text-right">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Last updated</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ currentTime }}</p>
+          </div>
+          <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Charts Row -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-    <div class="pos-card rounded-2xl p-6">
-      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Revenue Trend</h3>
-      <div class="h-64">
-        <canvas id="revenueChart"></canvas>
+  <div class="max-w-7xl mx-auto px-6 py-8 space-y-8">
+
+    <!-- Key Metrics Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+      <!-- MRR -->
+      <div class="enterprise-card group">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center">
+            <i class="fas fa-chart-line text-white"></i>
+          </div>
+          <span class="text-xs font-medium text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-1 rounded-full">
+            +12.5%
+          </span>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">₹1,54,195</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400">Monthly Recurring Revenue</p>
+      </div>
+
+      <!-- ARR -->
+      <div class="enterprise-card group">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
+            <i class="fas fa-calendar-alt text-white"></i>
+          </div>
+          <span class="text-xs font-medium text-blue-600 bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded-full">
+            +18.2%
+          </span>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">₹18,50,340</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400">Annual Recurring Revenue</p>
+      </div>
+
+      <!-- Active Tenants -->
+      <div class="enterprise-card group">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+            <i class="fas fa-building text-white"></i>
+          </div>
+          <span class="text-xs font-medium text-purple-600 bg-purple-100 dark:bg-purple-900/30 px-2 py-1 rounded-full">
+            89.9%
+          </span>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">73/81</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400">Active Tenants</p>
+      </div>
+
+      <!-- System Health -->
+      <div class="enterprise-card group">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
+            <i class="fas fa-heartbeat text-white"></i>
+          </div>
+          <span class="text-xs font-medium text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-full">
+            Healthy
+          </span>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">99.7%</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400">System Uptime</p>
+      </div>
+
+      <!-- New Acquisitions -->
+      <div class="enterprise-card group">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
+            <i class="fas fa-plus-circle text-white"></i>
+          </div>
+          <span class="text-xs font-medium text-orange-600 bg-orange-100 dark:bg-orange-900/30 px-2 py-1 rounded-full">
+            +8
+          </span>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">8</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400">New This Month</p>
+      </div>
+
+      <!-- Churn Rate -->
+      <div class="enterprise-card group">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-10 h-10 bg-gradient-to-r from-red-500 to-pink-500 rounded-lg flex items-center justify-center">
+            <i class="fas fa-chart-pie text-white"></i>
+          </div>
+          <span class="text-xs font-medium text-red-600 bg-red-100 dark:bg-red-900/30 px-2 py-1 rounded-full">
+            -2.1%
+          </span>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">8.5%</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400">Churn Rate</p>
       </div>
     </div>
 
-    <div class="pos-card rounded-2xl p-6">
-      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Subscription Distribution</h3>
-      <div class="h-64">
-        <canvas id="subscriptionChart"></canvas>
+    <!-- Analytics Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Revenue Trend -->
+      <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-lg hover:shadow-xl transition-all duration-300">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">Revenue Analytics</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Monthly recurring revenue trends</p>
+          </div>
+          <div class="flex space-x-2">
+            <button class="px-3 py-1 text-xs font-medium text-blue-600 bg-blue-100 dark:bg-blue-900/30 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors">1M</button>
+            <button class="px-3 py-1 text-xs font-medium text-gray-600 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">3M</button>
+            <button class="px-3 py-1 text-xs font-medium text-gray-600 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">1Y</button>
+          </div>
+        </div>
+        <div class="h-80">
+          <canvas id="revenueChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Subscription Distribution -->
+      <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-lg hover:shadow-xl transition-all duration-300">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">Plan Distribution</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Active subscriptions by tier</p>
+          </div>
+        </div>
+        <div class="h-80 flex items-center justify-center">
+          <canvas id="subscriptionChart" class="max-w-full max-h-full"></canvas>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Recent Activity -->
-  <div class="pos-card rounded-2xl p-6">
-    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Recent Activity</h3>
-    <div class="space-y-4">
-      <div class="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
-        <div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-          <i class="fas fa-plus text-green-600 dark:text-green-400"></i>
+    <!-- System Monitoring & Activities -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+      <!-- Recent Activities -->
+      <div class="enterprise-card">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center">
+            <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mr-3 shadow-lg">
+              <i class="fas fa-history text-white text-lg"></i>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-gray-900 dark:text-white">Platform Activities</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400">Recent system events</p>
+            </div>
+          </div>
+          <button class="px-4 py-2 text-sm font-medium text-purple-600 bg-purple-100 dark:bg-purple-900/30 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors">
+            View All
+          </button>
         </div>
-        <div class="flex-1">
-          <p class="text-sm font-medium text-gray-900 dark:text-white">New restaurant onboarded</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400">Blue Mug Café joined the platform</p>
+        <div class="space-y-3 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+          <!-- Activity Items with Enhanced Styling -->
+          <div class="group flex items-start space-x-4 p-5 bg-gradient-to-r from-green-50 via-emerald-50 to-green-50 dark:from-green-900/20 dark:via-emerald-900/20 dark:to-green-900/20 rounded-2xl border border-green-200/60 dark:border-green-800/60 hover:shadow-lg hover:border-green-300 dark:hover:border-green-700 transition-all duration-300 cursor-pointer transform hover:-translate-y-0.5">
+            <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-200">
+              <i class="fas fa-plus text-white text-lg"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between mb-2">
+                <p class="text-base font-bold text-gray-900 dark:text-white">New Restaurant Onboarded</p>
+                <span class="px-3 py-1 text-xs font-medium text-green-700 bg-green-200/80 dark:bg-green-800/80 rounded-full">Success</span>
+              </div>
+              <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">Spice Garden Restaurant joined the platform with Enterprise plan and completed initial setup</p>
+              <div class="flex items-center justify-between mt-3">
+                <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                  <i class="fas fa-clock mr-1"></i>
+                  2 hours ago
+                </p>
+                <span class="text-xs font-medium text-green-600 hover:text-green-700 cursor-pointer">View Details →</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="group flex items-start space-x-4 p-5 bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-blue-900/20 rounded-2xl border border-blue-200/60 dark:border-blue-800/60 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-300 cursor-pointer transform hover:-translate-y-0.5">
+            <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-200">
+              <i class="fas fa-arrow-up text-white text-lg"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between mb-2">
+                <p class="text-base font-bold text-gray-900 dark:text-white">Plan Upgrade</p>
+                <span class="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-200/80 dark:bg-blue-800/80 rounded-full">Upgrade</span>
+              </div>
+              <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">The Coffee House upgraded from Professional to Enterprise plan, increasing MRR by ₹50,000</p>
+              <div class="flex items-center justify-between mt-3">
+                <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                  <i class="fas fa-clock mr-1"></i>
+                  4 hours ago
+                </p>
+                <span class="text-xs font-medium text-blue-600 hover:text-blue-700 cursor-pointer">View Details →</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="group flex items-start space-x-4 p-5 bg-gradient-to-r from-orange-50 via-yellow-50 to-orange-50 dark:from-orange-900/20 dark:via-yellow-900/20 dark:to-orange-900/20 rounded-2xl border border-orange-200/60 dark:border-orange-800/60 hover:shadow-lg hover:border-orange-300 dark:hover:border-orange-700 transition-all duration-300 cursor-pointer transform hover:-translate-y-0.5">
+            <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-200">
+              <i class="fas fa-tools text-white text-lg"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between mb-2">
+                <p class="text-base font-bold text-gray-900 dark:text-white">System Maintenance</p>
+                <span class="px-3 py-1 text-xs font-medium text-orange-700 bg-orange-200/80 dark:bg-orange-800/80 rounded-full">Maintenance</span>
+              </div>
+              <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">Scheduled maintenance completed successfully. Database optimization and security patches applied.</p>
+              <div class="flex items-center justify-between mt-3">
+                <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                  <i class="fas fa-clock mr-1"></i>
+                  6 hours ago
+                </p>
+                <span class="text-xs font-medium text-orange-600 hover:text-orange-700 cursor-pointer">View Report →</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="group flex items-start space-x-4 p-5 bg-gradient-to-r from-red-50 via-pink-50 to-red-50 dark:from-red-900/20 dark:via-pink-900/20 dark:to-red-900/20 rounded-2xl border border-red-200/60 dark:border-red-800/60 hover:shadow-lg hover:border-red-300 dark:hover:border-red-700 transition-all duration-300 cursor-pointer transform hover:-translate-y-0.5">
+            <div class="w-12 h-12 bg-gradient-to-r from-red-500 to-pink-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-200">
+              <i class="fas fa-shield-alt text-white text-lg"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between mb-2">
+                <p class="text-base font-bold text-gray-900 dark:text-white">Security Alert</p>
+                <span class="px-3 py-1 text-xs font-medium text-red-700 bg-red-200/80 dark:bg-red-800/80 rounded-full">Alert</span>
+              </div>
+              <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">Unusual login attempts detected and blocked from IP 192.168.1.100. Security measures activated.</p>
+              <div class="flex items-center justify-between mt-3">
+                <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                  <i class="fas fa-clock mr-1"></i>
+                  8 hours ago
+                </p>
+                <span class="text-xs font-medium text-red-600 hover:text-red-700 cursor-pointer">Review →</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="group flex items-start space-x-4 p-5 bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 dark:from-purple-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-2xl border border-purple-200/60 dark:border-purple-800/60 hover:shadow-lg hover:border-purple-300 dark:hover:border-purple-700 transition-all duration-300 cursor-pointer transform hover:-translate-y-0.5">
+            <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-200">
+              <i class="fas fa-users text-white text-lg"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between mb-2">
+                <p class="text-base font-bold text-gray-900 dark:text-white">Bulk User Migration</p>
+                <span class="px-3 py-1 text-xs font-medium text-purple-700 bg-purple-200/80 dark:bg-purple-800/80 rounded-full">Migration</span>
+              </div>
+              <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">Successfully migrated 150 users from Downtown Café to new system with zero data loss.</p>
+              <div class="flex items-center justify-between mt-3">
+                <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                  <i class="fas fa-clock mr-1"></i>
+                  1 day ago
+                </p>
+                <span class="text-xs font-medium text-purple-600 hover:text-purple-700 cursor-pointer">View Report →</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <span class="text-xs text-gray-400">2 hours ago</span>
       </div>
 
-      <div class="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
-        <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-          <i class="fas fa-credit-card text-blue-600 dark:text-blue-400"></i>
-        </div>
-        <div class="flex-1">
-          <p class="text-sm font-medium text-gray-900 dark:text-white">Subscription upgraded</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400">Bean & Barrel upgraded to Pro plan</p>
-        </div>
-        <span class="text-xs text-gray-400">5 hours ago</span>
-      </div>
+            <!-- Top Performing Tenants -->
+      <div class="enterprise-card">
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+          <i class="fas fa-trophy text-gold-500 mr-3"></i>
+          Top Performing Tenants
+        </h3>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between p-3 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-lg">
+            <div class="flex items-center space-x-3">
+              <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs font-bold">1</div>
+              <div>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">The Grand Hotel</p>
+                <p class="text-xs text-gray-600 dark:text-gray-400">₹2,45,000 MRR</p>
+              </div>
+            </div>
+            <span class="text-xs font-medium text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-full">+15.2%</span>
+          </div>
 
-      <div class="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
-        <div class="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
-          <i class="fas fa-exclamation-triangle text-yellow-600 dark:text-yellow-400"></i>
+          <div class="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900/20 dark:to-slate-900/20 rounded-lg">
+            <div class="flex items-center space-x-3">
+              <div class="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-bold">2</div>
+              <div>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">Urban Bites</p>
+                <p class="text-xs text-gray-600 dark:text-gray-400">₹1,98,000 MRR</p>
+              </div>
+            </div>
+            <span class="text-xs font-medium text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-full">+8.7%</span>
+          </div>
+
+          <div class="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-lg">
+            <div class="flex items-center space-x-3">
+              <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs font-bold">3</div>
+              <div>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">Spice Garden</p>
+                <p class="text-xs text-gray-600 dark:text-gray-400">₹1,75,000 MRR</p>
+              </div>
+            </div>
+            <span class="text-xs font-medium text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-full">+12.1%</span>
+          </div>
         </div>
-        <div class="flex-1">
-          <p class="text-sm font-medium text-gray-900 dark:text-white">System maintenance</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400">Scheduled maintenance completed successfully</p>
-        </div>
-        <span class="text-xs text-gray-400">1 day ago</span>
       </div>
     </div>
+    
   </div>
 </div>
