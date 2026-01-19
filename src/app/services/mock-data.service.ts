@@ -842,22 +842,26 @@ export interface IntegrationMetrics {
 }
 
 export interface SubscriptionPlan {
-  id: string;
+  id: number;
   name: string;
-  displayName: string;
+  display_name : string;
   description: string;
   price: number;
   currency: string;
-  billingCycle: 'monthly' | 'yearly';
-  maxRestaurants: number;
-  maxUsers: number;
-  features: string[];
-  isActive: boolean;
-  isPopular?: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  subscriberCount: number;
+  billing_cycle : 'monthly' | 'yearly';
+  max_restaurants: number;
+  max_users: number;
+  is_active: boolean;
+  is_popular?: boolean;
+  subscriber_count : number;
   revenue: number;
+  plan_id: number; // new in ui
+  setup_fee: number; // new in ui
+  trial_days: number; // new in ui
+  created_at: string;
+  updated_at: string;
+  created_by: number;
+  updated_by: number; // new in ui add in entity and table
 }
 
 export interface PlanFeature {
@@ -5640,56 +5644,70 @@ export class MockDataService {
     // Initialize plan management data
     const subscriptionPlans: SubscriptionPlan[] = [
       {
-        id: 'starter',
+        id: 1,
         name: 'starter',
-        displayName: 'Starter Plan',
+        display_name: 'Starter Plan',
         description: 'Perfect for small restaurants getting started with digital transformation',
         price: 999,
         currency: 'INR',
-        billingCycle: 'monthly',
-        maxRestaurants: 1,
-        maxUsers: 5,
-        features: ['basic_pos', 'menu_management', 'order_management', 'basic_reports'],
-        isActive: true,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date(),
-        subscriberCount: 45,
-        revenue: 44555
+        billing_cycle: 'monthly',
+        max_restaurants: 1,
+        max_users: 5,
+        is_active: true,
+        is_popular: false,
+        subscriber_count: 45,
+        revenue: 44555,
+        plan_id: 1,
+        setup_fee: 0,
+        trial_days: 14,
+        created_at: '01-01-2026',
+        updated_at: '01-01-2026',
+        created_by: 1,
+        updated_by: 1
       },
       {
-        id: 'professional',
+        id: 2,
         name: 'professional',
-        displayName: 'Professional Plan',
+        display_name: 'Professional Plan',
         description: 'Advanced features for growing restaurants with multiple locations',
         price: 2499,
         currency: 'INR',
-        billingCycle: 'monthly',
-        maxRestaurants: 5,
-        maxUsers: 25,
-        features: ['basic_pos', 'menu_management', 'order_management', 'advanced_reports', 'inventory_management', 'staff_management', 'customer_loyalty'],
-        isActive: true,
-        isPopular: true,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date(),
-        subscriberCount: 28,
-        revenue: 69720
+        billing_cycle: 'monthly',
+        max_restaurants: 5,
+        max_users: 25,
+        is_active: true,
+        is_popular: true,
+        subscriber_count: 28,
+        revenue: 69720,
+        plan_id: 2,
+        setup_fee: 500,
+        trial_days: 14,
+        created_at: '01-01-2026',
+        updated_at: '01-01-2026',
+        created_by: 1,
+        updated_by: 1
       },
       {
-        id: 'enterprise',
+        id: 3,
         name: 'enterprise',
-        displayName: 'Enterprise Plan',
+        display_name: 'Enterprise Plan',
         description: 'Complete solution for large restaurant chains with advanced analytics',
         price: 4999,
         currency: 'INR',
-        billingCycle: 'monthly',
-        maxRestaurants: -1, // unlimited
-        maxUsers: -1, // unlimited
-        features: ['basic_pos', 'menu_management', 'order_management', 'advanced_reports', 'inventory_management', 'staff_management', 'customer_loyalty', 'advanced_analytics', 'api_access', 'white_label', 'priority_support'],
-        isActive: true,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date(),
-        subscriberCount: 8,
-        revenue: 39920
+        billing_cycle: 'monthly',
+        max_restaurants: -1,
+        max_users: -1,
+        is_active: true,
+        is_popular: false,
+        subscriber_count: 8,
+        revenue: 39920,
+        plan_id: 3,
+        setup_fee: 1000,
+        trial_days: 14,
+        created_at: '01-01-2026',
+        updated_at: '01-01-2026',
+        created_by: 1,
+        updated_by: 1
       }
     ];
 
@@ -7506,7 +7524,7 @@ export class MockDataService {
     return this.planFeatures$;
   }
 
-  getPlanById(planId: string): SubscriptionPlan | undefined {
+  getPlanById(planId: number): SubscriptionPlan | undefined {
     return this.subscriptionPlansSubject.value.find(plan => plan.id === planId);
   }
 

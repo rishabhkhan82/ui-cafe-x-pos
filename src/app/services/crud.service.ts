@@ -271,6 +271,27 @@ export class CrudService {
     return this.getData(`user-roles/${id}`);
   }
 
+  // Subscription plan operations
+  getSubscriptionPlans(params?: CrudParams): Observable<any> {
+    return this.getData('subscription-plans', params);
+  }
+
+  createSubscriptionPlan(payload: any): Observable<any> {
+    return this.postData('subscription-plans', payload);
+  }
+
+  updateSubscriptionPlan(id: string | number, payload: any): Observable<any> {
+    return this.putData('subscription-plans', payload, {}, id);
+  }
+
+  deleteSubscriptionPlan(id: string | number): Observable<any> {
+    return this.deleteData('subscription-plans', {}, id);
+  }
+
+  getSubscriptionPlanById(id: string | number): Observable<any> {
+    return this.getData(`subscription-plans/${id}`);
+  }
+
   // Menu access permission operations
   getMenuAccessPermissions(params?: CrudParams): Observable<any> {
     return this.getData('menu-access-permissions', params);

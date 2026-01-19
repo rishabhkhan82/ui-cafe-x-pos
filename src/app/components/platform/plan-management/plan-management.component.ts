@@ -1,7 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { SubscriptionPlan, PlanFeature, MockDataService } from '../../../services/mock-data.service';
+import { Router } from '@angular/router';
+import { CrudService } from '../../../services/crud.service';
+import { LoadingService } from '../../../services/loading.service';
+import { SubscriptionPlan, MockDataService } from '../../../services/mock-data.service';
+import { AuthService } from '../../../services/auth.service';
+import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
+import { NotificationService } from '../../../services/notification.service';
+import { ValidationService } from '../../../services/validation.service';
 
 @Component({
   selector: 'app-plan-management',
@@ -12,57 +19,138 @@ import { SubscriptionPlan, PlanFeature, MockDataService } from '../../../service
 })
 export class PlanManagementComponent implements OnInit {
   plans: SubscriptionPlan[] = [];
-  filteredPlans: SubscriptionPlan[] = [];
   selectedPlan: SubscriptionPlan | null = null;
-  availableFeatures: PlanFeature[] = [];
+  searchTerm = '';
   statusFilter = 'all';
-  showCreateForm = false;
-  showEditForm = false;
+  showAddForm = false;
   showViewForm = false;
   editingPlan: SubscriptionPlan | null = null;
   viewingPlan: SubscriptionPlan | null = null;
   expandedSections: { [key: string]: boolean } = {};
+  errorMessage = '';
 
-  newPlan: Partial<SubscriptionPlan> = {
+// ...existing code...
+
+  planForm: SubscriptionPlan = {
+    id: 0,
     name: '',
-    displayName: '',
+    display_name: '',
     description: '',
     price: 0,
     currency: 'INR',
-    billingCycle: 'monthly',
-    maxRestaurants: 1,
-    maxUsers: 5,
-    features: [],
-    isActive: true,
-    subscriberCount: 0,
-    revenue: 0
+    billing_cycle: 'monthly',
+    max_restaurants: 1,
+    max_users: 5,
+    is_active: true,
+    is_popular: false,
+    subscriber_count: 0,
+    revenue: 0,
+    plan_id: 0,
+    setup_fee: 0,
+    trial_days: 0,
+    created_at: new Date().toISOString(),
+    updated_at: '',
+    created_by: 0,
+    updated_by: 0
   };
 
-  constructor(private mockDataService: MockDataService) {}
+// ...existing code...
+
+  // Pagination
+  currentPage = 1;
+  itemsPerPage = 10;
+  totalPages = 1;
+  totalElements = 0;
+  itemsPerPageOptions = [5, 10, 15, 20, 25, 50];
+
+  // Field validation errors
+  fieldErrors: { [key: string]: string } = {};
+
+  constructor(
+    private router: Router,
+    private crudService: CrudService,
+    private loadingService: LoadingService,
+    private mockDataService: MockDataService,
+    private authService: AuthService,
+    private confirmationService: ConfirmationDialogService,
+    private notificationService: NotificationService,
+    private validationService: ValidationService
+  ) {}
 
   ngOnInit(): void {
     this.loadPlans();
-    this.loadAvailableFeatures();
   }
 
   loadPlans(): void {
-    this.mockDataService.getSubscriptionPlans().subscribe(plans => {
-      this.plans = plans;
-      this.filteredPlans = [...this.plans];
+    this.loadingService.show();
+    this.errorMessage = '';
+
+    const params: any = {
+      page: this.currentPage,
+      size: this.itemsPerPage
+    };
+
+    if (this.searchTerm && this.searchTerm.trim()) {
+      params.name = this.searchTerm.trim();
+    }
+
+    if (this.statusFilter !== 'all') {
+      params.isActive = this.statusFilter === 'active' ? 'true' : 'false';
+    }
+
+    this.crudService.getSubscriptionPlans(params).subscribe({
+      next: (response: any) => {
+        this.plans = response.data || response;
+        this.totalPages = response.pageCount || 1;
+        this.totalElements = response.totalRowCount || this.plans.length;
+        this.loadingService.hide();
+      },
+      error: (error) => {
+        console.error('Error loading plans:', error);
+        this.errorMessage = 'Failed to load plans. Please try again.';
+        this.notificationService.error('Error', 'Failed to load plans');
+        this.loadingService.hide();
+      }
     });
   }
 
-  loadAvailableFeatures(): void {
-    this.mockDataService.getPlanFeatures().subscribe(features => {
-      this.availableFeatures = features;
-    });
-  }
 
   filterPlans(): void {
-    this.filteredPlans = this.plans.filter(plan => {
-      const matchesStatus = this.statusFilter === 'all' || (this.statusFilter === 'active' ? plan.isActive : !plan.isActive);
-      return matchesStatus;
-    });
+    this.loadPlans();
+  }
+
+  clearFilters(): void {
+    this.searchTerm = '';
+    this.statusFilter = 'all';
+    this.currentPage = 1;
+    this.loadPlans();
+  }
+
+  changePage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.loadPlans();
+    }
+  }
+
+  changeItemsPerPage(newLimit: number): void {
+    this.itemsPerPage = newLimit;
+    this.currentPage = 1;
+    this.loadPlans();
+  }
+
+  onItemsPerPageChange(event: any): void {
+    this.itemsPerPage = +event.target.value;
+    this.currentPage = 1;
+    this.loadPlans();
+  }
+
+  get pageNumbers(): number[] {
+    const pages: number[] = [];
+    for (let i = 1; i <= this.totalPages; i++) {
+      pages.push(i);
+    }
+    return pages;
   }
 
   selectPlan(plan: SubscriptionPlan): void {
@@ -70,147 +158,307 @@ export class PlanManagementComponent implements OnInit {
   }
 
   showCreatePlanForm(): void {
-    this.showCreateForm = true;
-    this.newPlan = {
-      name: '',
-      displayName: '',
-      description: '',
-      price: 0,
-      currency: 'INR',
-      billingCycle: 'monthly',
-      maxRestaurants: 1,
-      maxUsers: 5,
-      features: [],
-      isActive: true,
-      subscriberCount: 0,
-      revenue: 0
-    };
+    this.showAddForm = true;
+    this.clearPlanForm();
   }
 
-  cancelCreate(): void {
-    this.showCreateForm = false;
-    this.newPlan = {};
+  showPlanForm(plan?: SubscriptionPlan): void {
+    this.showAddForm = true;
+    this.editingPlan = plan || null;
+    if (plan) {
+      // Editing existing plan
+      this.planForm = { ...plan };
+    } else {
+      // Adding new plan
+      this.clearPlanForm();
+    }
   }
 
   viewPlan(plan: SubscriptionPlan): void {
-    this.viewingPlan = { ...plan };
-    this.showViewForm = true;
-  }
-
-  editPlan(plan: SubscriptionPlan): void {
-    this.editingPlan = { ...plan };
-    this.newPlan = { ...plan };
-    this.showEditForm = true;
-  }
-
-  cancelEdit(): void {
-    this.showEditForm = false;
-    this.editingPlan = null;
-    this.newPlan = {};
+    this.selectedPlan = plan;
   }
 
   cancelView(): void {
+    this.selectedPlan = null;
+  }
+
+  cancelForm(): void {
+    this.showAddForm = false;
+    this.clearPlanForm();
+    this.editingPlan = null;
+    this.fieldErrors = {};
+    this.errorMessage = '';
+  }
+
+  reloadComponent(): void {
+    // Reset all component state
+    this.plans = [];
+    this.selectedPlan = null;
+    this.editingPlan = null;
+    this.searchTerm = '';
+    this.statusFilter = 'all';
+    this.showAddForm = false;
     this.showViewForm = false;
-    this.viewingPlan = null;
+    this.errorMessage = '';
+    this.currentPage = 1;
+    this.itemsPerPage = 10;
+    this.totalPages = 1;
+    this.totalElements = 0;
+    this.fieldErrors = {};
+
+    // Reset plan form
+    this.clearPlanForm();
+
+    // Reload data
+    this.loadPlans();
   }
 
-  updatePlan(): void {
-    if (this.editingPlan && this.newPlan.name && this.newPlan.displayName && this.newPlan.price && this.newPlan.price > 0) {
-      // In a real app, this would call an API to update the plan
-      console.log('Updating plan:', this.editingPlan.id, this.newPlan);
-      this.showEditForm = false;
-      this.editingPlan = null;
-      this.newPlan = {};
-      // Reload plans
-      this.loadPlans();
+  getStatusBadgeClass(isActive: boolean): string {
+    return isActive
+      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+      : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+  }
+
+  getStatusText(isActive: boolean): string {
+    return isActive ? 'Active' : 'Inactive';
+  }
+
+  formatDate(date: string): string {
+    return new Intl.DateTimeFormat('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    }).format(new Date(date));
+  }
+
+  // Helper for template Math operations
+  Math = Math;
+
+  // Check if any filters are currently active
+  get hasActiveFilters(): boolean {
+    return !!(this.searchTerm?.trim() || this.statusFilter !== 'all');
+  }
+
+  onSubmitForm(): void {
+    this.fieldErrors = {};
+    this.errorMessage = '';
+
+    const isUpdate = !!this.editingPlan;
+    let hasErrors = false;
+
+    // Validate all fields
+    this.validateName();
+    this.validateDisplayName();
+    this.validatePrice();
+    this.validateDescription();
+
+    hasErrors = Object.keys(this.fieldErrors).length > 0;
+
+    if (hasErrors) {
+      const errorMessages = Object.values(this.fieldErrors);
+      this.notificationService.error('Validation Error', errorMessages.join('. '));
+      return;
+    }
+
+    if (isUpdate) {
+      this.onUpdateForm();
+    } else {
+      this.onSaveForm();
     }
   }
 
-  createPlan(): void {
-    if (this.newPlan.name && this.newPlan.displayName && this.newPlan.price && this.newPlan.price > 0) {
-      // In a real app, this would call an API to create the plan
-      console.log('Creating new plan:', this.newPlan);
-      this.showCreateForm = false;
-      this.newPlan = {};
-      // Reload plans
-      this.loadPlans();
+  // Validation methods
+  validateName(): void {
+    const validation = this.validationService.name(this.planForm.name || '', 'Plan Name');
+    if (!validation.isValid) {
+      this.fieldErrors['name'] = validation.message!;
+    } else {
+      delete this.fieldErrors['name'];
     }
+  }
+
+  validateDisplayName(): void {
+    const validation = this.validationService.required(this.planForm.display_name || '', 'Display Name');
+    if (!validation.isValid) {
+      this.fieldErrors['display_name'] = validation.message!;
+    } else {
+      delete this.fieldErrors['display_name'];
+    }
+  }
+
+  validatePrice(): void {
+    const validation = this.validationService.min(this.planForm.price || 0, 0, 'Price');
+    if (!validation.isValid) {
+      this.fieldErrors['price'] = validation.message!;
+    } else {
+      delete this.fieldErrors['price'];
+    }
+  }
+
+  validateDescription(): void {
+    const validation = this.validationService.required(this.planForm.description || '', 'Description');
+    if (!validation.isValid) {
+      this.fieldErrors['description'] = validation.message!;
+    } else {
+      delete this.fieldErrors['description'];
+    }
+  }
+
+  private onSaveForm(): void {
+    this.loadingService.show();
+
+    const currentTime = new Date().toISOString();
+    const planRequest = {
+      name: this.planForm.name,
+      display_name: this.planForm.display_name,
+      description: this.planForm.description,
+      price: this.planForm.price,
+      currency: this.planForm.currency,
+      billing_cycle: this.planForm.billing_cycle,
+      max_restaurants: this.planForm.max_restaurants,
+      max_users: this.planForm.max_users,
+      is_active: this.planForm.is_active,
+      subscriber_count: this.planForm.subscriber_count,
+      revenue: this.planForm.revenue,
+      plan_id: this.planForm.plan_id,
+      setup_fee: this.planForm.setup_fee,
+      trial_days: this.planForm.trial_days,
+      created_at: currentTime,
+      updated_at: currentTime,
+      created_by: this.authService.getCurrentUser()?.id || 'system'
+    };
+
+    this.crudService.createSubscriptionPlan(planRequest).subscribe({
+      next: (response) => {
+        console.log('Plan created successfully:', response);
+        this.notificationService.success('Plan Created', 'The plan has been successfully created.');
+        this.resetForm();
+        this.loadPlans();
+      },
+      error: (error) => {
+        console.error('Error creating plan:', error);
+        this.notificationService.error('Creation Failed', 'Failed to create plan. Please try again.');
+        this.errorMessage = 'Failed to create plan. Please try again.';
+        this.loadingService.hide();
+      }
+    });
+  }
+
+  private onUpdateForm(): void {
+    this.loadingService.show();
+
+    const currentTime = new Date().toISOString();
+    const planRequest = {
+      id: this.planForm.id,
+      name: this.planForm.name,
+      display_name: this.planForm.display_name,
+      description: this.planForm.description,
+      price: this.planForm.price,
+      currency: this.planForm.currency,
+      billing_cycle: this.planForm.billing_cycle,
+      max_restaurants: this.planForm.max_restaurants,
+      max_users: this.planForm.max_users,
+      is_active: this.planForm.is_active,
+      subscriber_count: this.planForm.subscriber_count,
+      revenue: this.planForm.revenue,
+      plan_id: this.planForm.plan_id,
+      setup_fee: this.planForm.setup_fee,
+      trial_days: this.planForm.trial_days,
+      created_at: this.editingPlan!.created_at,
+      updated_at: currentTime,
+      created_by: this.editingPlan!.created_by,
+      updated_by: this.authService.getCurrentUser()?.id || 'system'
+    };
+
+    this.crudService.updateSubscriptionPlan(this.editingPlan!.id, planRequest).subscribe({
+      next: (response) => {
+        console.log('Plan updated successfully:', response);
+        this.notificationService.success('Plan Updated', 'The plan has been successfully updated.');
+        this.resetForm();
+        this.loadPlans();
+        this.loadingService.hide();
+      },
+      error: (error) => {
+        console.error('Error updating plan:', error);
+        this.notificationService.error('Update Failed', 'Failed to update plan. Please try again.');
+        this.errorMessage = 'Failed to update plan. Please try again.';
+        this.loadingService.hide();
+      }
+    });
+  }
+
+  private resetForm(): void {
+    this.showAddForm = false;
+    this.clearPlanForm();
+    this.editingPlan = null;
   }
 
   togglePlanStatus(plan: SubscriptionPlan): void {
-    plan.isActive = !plan.isActive;
-    // In a real app, this would call an API to update the plan status
-    console.log('Toggled plan status:', plan.id, plan.isActive);
+    this.loadingService.show();
+    const updatedPlan = { ...plan, is_active: !plan.is_active, updated_at: new Date().toISOString() };
+
+    this.crudService.updateSubscriptionPlan(plan.id, updatedPlan).subscribe({
+      next: (response) => {
+        console.log('Plan status updated successfully:', response);
+        plan.is_active = !plan.is_active;
+        this.loadingService.hide();
+      },
+      error: (error) => {
+        console.error('Error updating plan status:', error);
+        this.errorMessage = 'Failed to update plan status. Please try again.';
+        this.loadingService.hide();
+      }
+    });
   }
 
-  deletePlan(plan: SubscriptionPlan): void {
-    if (confirm(`Are you sure you want to delete the "${plan.displayName}" plan? This action cannot be undone.`)) {
-      // In a real app, this would call an API to delete the plan
-      console.log('Deleting plan:', plan.id);
-      this.plans = this.plans.filter(p => p.id !== plan.id);
-      this.filterPlans();
-      if (this.selectedPlan?.id === plan.id) {
-        this.selectedPlan = null;
-      }
+  async deletePlan(plan: SubscriptionPlan): Promise<void> {
+    const confirmed = await this.confirmationService.confirm(
+      `Are you sure you want to delete "${plan.display_name}"? This action cannot be undone.`,
+      'Delete Plan',
+      'Delete',
+      'Cancel'
+    );
+
+    if (confirmed) {
+      this.loadingService.show();
+      this.errorMessage = '';
+
+      this.crudService.deleteSubscriptionPlan(plan.id).subscribe({
+        next: () => {
+          console.log('Plan deleted successfully:', plan.id);
+          if (this.selectedPlan?.id === plan.id) {
+            this.selectedPlan = null;
+          }
+          this.loadPlans();
+          this.loadingService.hide();
+        },
+        error: (error) => {
+          console.error('Error deleting plan:', error);
+          this.errorMessage = 'Failed to delete plan. Please try again.';
+          this.loadingService.hide();
+        }
+      });
     }
   }
 
   duplicatePlan(plan: SubscriptionPlan): void {
-    const duplicate: Partial<SubscriptionPlan> = {
+    this.planForm = {
       ...plan,
-      id: undefined,
+      id: 0,
+      plan_id: 0,
       name: `${plan.name}_copy`,
-      displayName: `${plan.displayName} (Copy)`,
-      subscriberCount: 0,
+      display_name: `${plan.display_name} (Copy)`,
+      subscriber_count: 0,
       revenue: 0,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      created_at: new Date().toISOString(),
+      updated_at: '',
+      created_by: 0,
+      updated_by: 0
     };
-    // In a real app, this would create a new plan
-    console.log('Duplicating plan:', duplicate);
+    this.editingPlan = null;
+    this.showAddForm = true;
   }
 
-  toggleFeature(plan: SubscriptionPlan, featureId: string): void;
-  toggleFeature(featureId: string): void;
-  toggleFeature(planOrFeatureId: SubscriptionPlan | string, featureId?: string): void {
-    if (typeof planOrFeatureId === 'string') {
-      // For new plan creation
-      const feature = planOrFeatureId;
-      if (!this.newPlan.features) {
-        this.newPlan.features = [];
-      }
-      const index = this.newPlan.features.indexOf(feature);
-      if (index > -1) {
-        this.newPlan.features.splice(index, 1);
-      } else {
-        this.newPlan.features.push(feature);
-      }
-    } else {
-      // For existing plan editing
-      const plan = planOrFeatureId;
-      const featId = featureId!;
-      const index = plan.features.indexOf(featId);
-      if (index > -1) {
-        plan.features.splice(index, 1);
-      } else {
-        plan.features.push(featId);
-      }
-      // In a real app, this would call an API to update the plan features
-      console.log('Updated plan features:', plan.id, plan.features);
-    }
-  }
-
-  hasFeature(plan: SubscriptionPlan, featureId: string): boolean {
-    return plan.features.includes(featureId);
-  }
-
-  getFeatureById(featureId: string): PlanFeature | undefined {
-    return this.mockDataService.getFeatureById(featureId);
-  }
-
-  getFeaturesByCategory(category: string): PlanFeature[] {
-    return this.mockDataService.getFeaturesByCategory(category);
-  }
 
   formatCurrency(amount: number, currency: string = 'INR'): string {
     return new Intl.NumberFormat('en-IN', {
@@ -219,8 +467,9 @@ export class PlanManagementComponent implements OnInit {
     }).format(amount);
   }
 
-  formatNumber(num: number): string {
+  formatNumber(num: number | undefined): string {
     if (num === -1) return 'Unlimited';
+    if (num === undefined) return 'N/A';
     return num.toLocaleString();
   }
 
@@ -229,14 +478,39 @@ export class PlanManagementComponent implements OnInit {
   }
 
   getTotalSubscribers(): number {
-    return this.plans.reduce((sum, plan) => sum + plan.subscriberCount, 0);
+    return this.plans.reduce((sum, plan) => sum + plan.subscriber_count, 0);
   }
 
   getActivePlansCount(): number {
-    return this.plans.filter(p => p.isActive).length;
+    return this.plans.filter(p => p.is_active).length;
   }
 
   toggleAccordion(section: string): void {
     this.expandedSections[section] = !this.expandedSections[section];
+  }
+
+  clearPlanForm() {
+    this.planForm = {
+      id: 0,
+      name: '',
+      display_name: '',
+      description: '',
+      price: 0,
+      currency: 'INR',
+      billing_cycle: 'monthly',
+      max_restaurants: 1,
+      max_users: 5,
+      is_active: true,
+      is_popular: false,
+      subscriber_count: 0,
+      revenue: 0,
+      plan_id: 0,
+      setup_fee: 0,
+      trial_days: 0,
+      created_at: new Date().toISOString(),
+      updated_at: '',
+      created_by: 0,
+      updated_by: 0
+    };
   }
 }

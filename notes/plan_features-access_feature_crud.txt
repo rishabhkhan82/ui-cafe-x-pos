@@ -1,0 +1,1171 @@
+Your proposed separation is an excellent simplification that eliminates the overlap and creates clear, single-responsibility components. I fully agree with this approach - it's cleaner, more maintainable, and reduces complexity.
+
+## My Opinion: Strongly Agree
+
+### Why This Architecture Works Better
+
+**1. Plan Management (Simplified)**
+- Focus purely on subscription plan administration
+- Handle pricing tiers, billing cycles, user/restaurant limits
+- No feature logic - plans become simple pricing containers
+- Easier to manage plan changes without affecting feature access
+
+**2. Feature Access Control (Streamlined)**
+- Single source for all feature permissions
+- Clear on/off toggles for plan-based and role-based access
+- No confusion about "assignment vs access"
+- Centralized permission management
+
+**3. Feature Management (New Addition)**
+- Dedicated CRUD for the feature catalog
+- Manage feature definitions, categories, and lifecycle
+- Independent of plans and roles
+- Can add features without touching plan or access logic
+
+### Benefits of This Approach
+
+- **Reduced Complexity**: Each component has one job
+- **No Overlap**: Features handled in exactly one place per concern
+- **Easier Testing**: Clear boundaries between functionalities
+- **Scalable**: Adding new features or plans doesn't require changes across multiple components
+- **Business Logic Clarity**: Plans define pricing, features define capabilities, access control defines permissions
+
+### Implementation Considerations
+
+- **Data Relationships**: Features are enabled per plan/role combination, not assigned to plans
+- **Default Access**: Consider how new features get default access settings
+- **Migration**: Existing plan features would need to be migrated to the access control system
+- **UI/UX**: Plan selection might need to show available features for user decision-making
+
+This is a much cleaner architecture that follows single responsibility principle perfectly.
+
+
+------------------------------------------------------------------------------------------------------------------
+
+## How Plan and Role Feature Access Works
+
+### The Hierarchy: Plan → Role → User
+
+**1. Plan Level (Organization Features)**
+- Defines which features are available to the entire restaurant/organization
+- Example: Starter plan enables 4 inventory features, Professional enables 8
+- This is the "base access" - if a plan doesn't include a feature, no one in that organization can use it
+
+**2. Role Level (User Permissions)**
+- Within the enabled plan features, roles can have different access levels
+- Example: In a Professional plan (8 inventory features enabled), the "Manager" role might have access to all 8, while "Cashier" role only has access to 3
+
+**3. User Level (Final Access)**
+- User gets features where: Plan enables it AND User's role enables it
+- Features are shown/hidden in UI based on this combined check
+
+Ah, now I understand! You're describing a hierarchical, plan-dependent role access system. Let me correct my understanding.
+
+## Corrected: Plan-Role Feature Combinations
+
+You're right - role feature access depends on the plan context. Features available to roles are limited by what the plan enables.
+
+### How It Actually Works
+
+**Plan Level**: Defines the feature ceiling for that subscription tier
+- Starter Plan: Enables features A, B, C
+- Professional Plan: Enables features A, B, C, D, E
+
+**Role Level**: Within each plan's enabled features, roles get different access
+- For Starter Plan (features A, B, C available):
+  - Manager Role: Access to A, B, C
+  - Cashier Role: Access to A, B (C disabled for this role)
+  - Kitchen Role: Access to C (A, B disabled for this role)
+
+- For Professional Plan (features A, B, C, D, E available):
+  - Manager Role: Access to A, B, C, D, E
+  - Cashier Role: Access to A, B, D (C, E disabled)
+  - Kitchen Role: Access to C, E (A, B, D disabled)
+
+## UI Implementation
+
+### Plan View
+- Dropdown: Starter, Professional, Enterprise
+- Shows features enabled for selected plan
+- Toggle on/off per feature for that plan
+
+### Role View  
+- First dropdown: Select Plan (Starter/Professional/Enterprise)
+- Second dropdown: Select Role (Manager/Cashier/Kitchen)
+- Shows only features enabled for that plan
+- Toggle which of those features the selected role can access
+
+## Data Structure
+
+```typescript
+// Plan Feature Access
+planFeatureAccess = {
+  starter: { feature_a: true, feature_b: true, feature_c: true },
+  professional: { feature_a: true, feature_b: true, feature_c: true, feature_d: true, feature_e: true }
+}
+
+// Role Feature Access (scoped to plans)
+roleFeatureAccess = {
+  starter: {
+    manager: { feature_a: true, feature_b: true, feature_c: true },
+    cashier: { feature_a: true, feature_b: true, feature_c: false },
+    kitchen: { feature_a: false, feature_b: false, feature_c: true }
+  },
+  professional: {
+    manager: { feature_a: true, feature_b: true, feature_c: true, feature_d: true, feature_e: true },
+    cashier: { feature_a: true, feature_b: true, feature_c: false, feature_d: true, feature_e: false },
+    kitchen: { feature_a: false, feature_b: false, feature_c: true, feature_d: false, feature_e: true }
+  }
+}
+```
+
+## Runtime Logic
+
+```typescript
+isFeatureEnabled(featureId: string, user: User): boolean {
+  const planId = user.organization.plan.id;
+  const roleId = user.role.id;
+  
+  // Check if plan enables the feature
+  if (!planFeatureAccess[planId][featureId]) return false;
+  
+  // Check if role enables the feature within this plan
+  return roleFeatureAccess[planId][roleId][featureId];
+}
+```
+
+This creates a proper hierarchy: Plan sets the maximum features available, roles control access within that limit. Perfect for subscription-based feature gating!
+
+====================================== Rought Notes ============================================
+
+Plan Managment - plantable (crud)
+
+Feature access control - 
+planFeatureAccesss (updating the features plan and role wise ) - planfeaturetable, roleFeatureAccess - rolefeature table. 
+
+feature management - featuremanagementtable (crud). 
+
+just tell me one thing is this understanding correct regarding the tables. 
+
+
+----------------------------------------------------------
+
+Task to do - 
+
+1] Plan Management (Crud) - Table (subscription_plans)
+2] Feature Access Control (Updating Features Plan/Role Wise) (Plan Feature, Features Access) Tables
+3] Feature Management (Crud) - (Table - plan_features
+
+-------------------------------------------------------------------------
+
+Plan Features - 
+
+          <!-- Features Configuration -->
+          <div class="space-y-6">
+            <h4 class="text-lg font-bold text-gray-900 dark:text-white flex items-center">
+              <i class="fas fa-cogs mr-3 text-red-500"></i>Plan Features Configuration
+            </h4>
+
+            <!-- General Features -->
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-2xl p-6 border border-gray-200 dark:border-gray-600">
+              <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <i class="fas fa-globe mr-3 text-blue-500"></i>General Features
+              </h5>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Duration -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                      <span class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                        <i class="fas fa-clock text-sm"></i>
+                      </span>
+                      <span class="font-medium text-gray-900 dark:text-white">Duration</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('duration')"
+                        (change)="toggleFeature('duration')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">No time limits - Forever free</p>
+                </div>
+
+                <!-- Server -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                      <span class="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center">
+                        <i class="fas fa-server text-sm"></i>
+                      </span>
+                      <span class="font-medium text-gray-900 dark:text-white">Server</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('server')"
+                        (change)="toggleFeature('server')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">XAMPP server + Your laptop + Your wifi</p>
+                </div>
+
+                <!-- Training -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                      <span class="w-10 h-10 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 flex items-center justify-center">
+                        <i class="fas fa-graduation-cap text-sm"></i>
+                      </span>
+                      <span class="font-medium text-gray-900 dark:text-white">Training</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('training')"
+                        (change)="toggleFeature('training')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">Onsite training included</p>
+                </div>
+
+                <!-- Support -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                      <span class="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 flex items-center justify-center">
+                        <i class="fas fa-headset text-sm"></i>
+                      </span>
+                      <span class="font-medium text-gray-900 dark:text-white">Support</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('support')"
+                        (change)="toggleFeature('support')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">Email, chat, phone & onsite support</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Customer Features -->
+            <div class="bg-purple-50 dark:bg-purple-900/10 rounded-2xl p-6 border border-purple-200 dark:border-purple-800">
+              <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <i class="fas fa-users mr-3 text-purple-500"></i>Customer Features
+              </h5>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- QR Code Ordering -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">QR Code Ordering</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('qr-ordering')"
+                        (change)="toggleFeature('qr-ordering')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Menu Browsing -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Menu Browsing</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('menu-browsing')"
+                        (change)="toggleFeature('menu-browsing')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Order Tracking -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Order Tracking</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('order-tracking')"
+                        (change)="toggleFeature('order-tracking')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Basic Profile -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Basic Profile</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('basic-profile')"
+                        (change)="toggleFeature('basic-profile')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Order History -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Order History</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('order-history')"
+                        (change)="toggleFeature('order-history')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Offers/Referral/Loyalty Points -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Offers/Referral/Loyalty Points</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('offers-loyalty')"
+                        (change)="toggleFeature('offers-loyalty')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Customer Feedback -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Customer Feedback</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('customer-feedback')"
+                        (change)="toggleFeature('customer-feedback')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Unlimited Customer -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Unlimited Customer</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('unlimited-customer')"
+                        (change)="toggleFeature('unlimited-customer')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Owner Features -->
+            <div class="bg-amber-50 dark:bg-amber-900/10 rounded-2xl p-6 border border-amber-200 dark:border-amber-800">
+              <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <i class="fas fa-crown mr-3 text-amber-500"></i>Owner Features
+              </h5>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Dashboard overview -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Dashboard overview</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('dashboard-overview')"
+                        (change)="toggleFeature('dashboard-overview')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Menu management -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Menu management</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('menu-management')"
+                        (change)="toggleFeature('menu-management')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Financial overview -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Financial overview</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('financial-overview')"
+                        (change)="toggleFeature('financial-overview')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Staff Creation -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Staff Creation</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('staff-creation')"
+                        (change)="toggleFeature('staff-creation')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Staff management -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Staff management</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('staff-management')"
+                        (change)="toggleFeature('staff-management')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Inventory -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Inventory</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('inventory')"
+                        (change)="toggleFeature('inventory')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Settings & config -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Settings & config</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('settings-config')"
+                        (change)="toggleFeature('settings-config')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Revenue tracking -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Revenue tracking</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('revenue-tracking')"
+                        (change)="toggleFeature('revenue-tracking')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Advanced analytics & reports -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Advanced analytics & reports</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('advanced-analytics')"
+                        (change)="toggleFeature('advanced-analytics')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Multiple owners -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Multiple owners</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('multiple-owners')"
+                        (change)="toggleFeature('multiple-owners')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Manager Features -->
+            <div class="bg-blue-50 dark:bg-blue-900/10 rounded-2xl p-6 border border-blue-200 dark:border-blue-800">
+              <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <i class="fas fa-user-tie mr-3 text-blue-500"></i>Manager Features
+              </h5>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Daily operations -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Daily operations</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('daily-operations')"
+                        (change)="toggleFeature('daily-operations')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Staff creation -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Staff creation</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('staff-creation')"
+                        (change)="toggleFeature('staff-creation')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Staff scheduling -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Staff scheduling</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('staff-scheduling')"
+                        (change)="toggleFeature('staff-scheduling')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Staff management -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Staff management</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('staff-management')"
+                        (change)="toggleFeature('staff-management')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Inventory -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Inventory</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('inventory')"
+                        (change)="toggleFeature('inventory')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Menu updates -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Menu updates</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('menu-updates')"
+                        (change)="toggleFeature('menu-updates')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Shift reports -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Shift reports</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('shift-reports')"
+                        (change)="toggleFeature('shift-reports')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Performance monitoring -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Performance monitoring</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('performance-monitoring')"
+                        (change)="toggleFeature('performance-monitoring')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Multiple managers -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Multiple managers</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('multiple-managers')"
+                        (change)="toggleFeature('multiple-managers')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Kitchen Manager Features -->
+            <div class="bg-green-50 dark:bg-green-900/10 rounded-2xl p-6 border border-green-200 dark:border-green-800">
+              <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <i class="fas fa-utensils mr-3 text-green-500"></i>Kitchen Manager Features
+              </h5>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- KDS (Kitchen Display) -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">KDS (Kitchen Display)</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('kds-kitchen-display')"
+                        (change)="toggleFeature('kds-kitchen-display')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Order queue -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Order queue</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('order-queue')"
+                        (change)="toggleFeature('order-queue')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Prep time tracking -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Prep time tracking</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('prep-time-tracking')"
+                        (change)="toggleFeature('prep-time-tracking')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Order prioritization -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Order prioritization</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('order-prioritization')"
+                        (change)="toggleFeature('order-prioritization')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Quality control -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Quality control</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('quality-control')"
+                        (change)="toggleFeature('quality-control')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Recipe management -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Recipe management</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('recipe-management')"
+                        (change)="toggleFeature('recipe-management')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Food safety checklists -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Food safety checklists</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('food-safety-checklists')"
+                        (change)="toggleFeature('food-safety-checklists')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Kitchen efficiency metrics -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Kitchen efficiency metrics</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('kitchen-efficiency-metrics')"
+                        (change)="toggleFeature('kitchen-efficiency-metrics')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Multiple kitchen managers -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Multiple kitchen managers</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('multiple-kitchen-managers')"
+                        (change)="toggleFeature('multiple-kitchen-managers')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cashier Features -->
+            <div class="bg-yellow-50 dark:bg-yellow-900/10 rounded-2xl p-6 border border-yellow-200 dark:border-yellow-800">
+              <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <i class="fas fa-cash-register mr-3 text-yellow-500"></i>Cashier Features
+              </h5>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- POS terminal -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">POS terminal</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('pos-terminal')"
+                        (change)="toggleFeature('pos-terminal')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Payment processing -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Payment processing</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('payment-processing')"
+                        (change)="toggleFeature('payment-processing')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Bill generation -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Bill generation</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('bill-generation')"
+                        (change)="toggleFeature('bill-generation')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Receipt printing -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Receipt printing</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('receipt-printing')"
+                        (change)="toggleFeature('receipt-printing')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Tax calculations -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Tax calculations</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('tax-calculations')"
+                        (change)="toggleFeature('tax-calculations')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Daily reconciliation -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Daily reconciliation</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('daily-reconciliation')"
+                        (change)="toggleFeature('daily-reconciliation')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Refund management -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Refund management</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('refund-management')"
+                        (change)="toggleFeature('refund-management')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Payment method tracking -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Payment method tracking</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('payment-method-tracking')"
+                        (change)="toggleFeature('payment-method-tracking')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Multiple cashiers -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Multiple cashiers</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('multiple-cashiers')"
+                        (change)="toggleFeature('multiple-cashiers')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Waiter Features -->
+            <div class="bg-indigo-50 dark:bg-indigo-900/10 rounded-2xl p-6 border border-indigo-200 dark:border-indigo-800">
+              <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <i class="fas fa-concierge-bell mr-3 text-indigo-500"></i>Waiter Features
+              </h5>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Order taking -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Order taking</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('order-taking')"
+                        (change)="toggleFeature('order-taking')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Order status updates -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Order status updates</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('order-status-updates')"
+                        (change)="toggleFeature('order-status-updates')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Analytics & Reports Features -->
+            <div class="bg-red-50 dark:bg-red-900/10 rounded-2xl p-6 border border-red-200 dark:border-red-800">
+              <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <i class="fas fa-chart-bar mr-3 text-red-500"></i>Analytics & Reports Features
+              </h5>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Sales reports -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Sales reports</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('sales-reports')"
+                        (change)="toggleFeature('sales-reports')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Top-selling items -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Top-selling items</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('top-selling-items')"
+                        (change)="toggleFeature('top-selling-items')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Revenue trends -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Revenue trends</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('revenue-trends')"
+                        (change)="toggleFeature('revenue-trends')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Customer analytics -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Customer analytics</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('customer-analytics')"
+                        (change)="toggleFeature('customer-analytics')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Staff performance -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Staff performance</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('staff-performance')"
+                        (change)="toggleFeature('staff-performance')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Peak hours analysis -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Peak hours analysis</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('peak-hours-analysis')"
+                        (change)="toggleFeature('peak-hours-analysis')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Profit margins -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Profit margins</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('profit-margins')"
+                        (change)="toggleFeature('profit-margins')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Custom reports -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Custom reports</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('custom-reports')"
+                        (change)="toggleFeature('custom-reports')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Export to Excel/PDF -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Export to Excel/PDF</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('export-excel-pdf')"
+                        (change)="toggleFeature('export-excel-pdf')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Real-time dashboards -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-gray-900 dark:text-white">Real-time dashboards</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="newPlan.features?.includes('real-time-dashboards')"
+                        (change)="toggleFeature('real-time-dashboards')"
+                        class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>

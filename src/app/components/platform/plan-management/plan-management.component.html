@@ -1,18 +1,26 @@
 <div class="p-6">
-   <div class="mb-6">
-     <div class="flex justify-between items-center">
-       <div>
-         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Plan Management</h1>
-         <p class="text-gray-600 dark:text-gray-300">Manage Cafe-X POS subscription plans and features</p>
-       </div>
-       <button
-         (click)="showCreatePlanForm()"
-         class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
-         <i class="fas fa-plus"></i>
-         <span>Create Plan</span>
-       </button>
-     </div>
-   </div>
+  <div class="mb-6">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Plan Management</h1>
+        <p class="text-gray-600 dark:text-gray-300">Manage subscription plans</p>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button
+          (click)="reloadComponent()"
+          class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 transition-colors"
+          title="Refresh">
+          <i class="fas fa-refresh"></i>
+        </button>
+        <button
+          (click)="showPlanForm()"
+          class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
+          <i class="fas fa-plus"></i>
+          <span>Add Plan</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Statistics Cards -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -61,13 +69,9 @@
     </div>
   </div>
 
-  <!-- Plans Grid -->
-  <div class="grid grid-cols-1 gap-6 mb-6">
-    <div class="contents">
-
-  <!-- Filters -->
-  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8 w-full">
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 w-full">
+  <!-- Filters and Search -->
+  <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div>
         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
           <i class="fas fa-search mr-2 text-red-500"></i>Search Plans
@@ -75,73 +79,51 @@
         <div class="relative">
           <input
             type="text"
-            placeholder="Search by plan name..."
+            [(ngModel)]="searchTerm"
+            placeholder="Search by name..."
             class="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
           <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
         </div>
       </div>
       <div>
         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-          <i class="fas fa-tag mr-2 text-blue-500"></i>Plan Status
+          <i class="fas fa-toggle-on mr-2 text-green-500"></i>Status Filter
         </label>
         <select
           [(ngModel)]="statusFilter"
-          (change)="filterPlans()"
           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
-          <option value="all">All Plans</option>
-          <option value="active">Active Only</option>
-          <option value="inactive">Inactive Only</option>
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
         </select>
       </div>
-      <div>
-        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-          <i class="fas fa-crown mr-2 text-green-500"></i>Plan Type
-        </label>
-        <select
-          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
-          <option value="all">All Types</option>
-          <option value="starter">Starter Plans</option>
-          <option value="professional">Professional Plans</option>
-          <option value="enterprise">Enterprise Plans</option>
-        </select>
-      </div>
-      <div class="flex items-end">
-        <div class="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 px-4 py-3 rounded-xl border border-red-200 dark:border-red-800">
-          <div class="text-sm text-gray-700 dark:text-gray-300">
-            <span class="font-bold text-red-600 dark:text-red-400">{{ filteredPlans.length }}</span> plans found
-          </div>
-        </div>
-      </div>
+    </div>
+    <div class="absolute -right-4 top-1/2 transform -translate-y-1/2 flex flex-col gap-2">
+      <button (click)="filterPlans()" class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 transition-colors">
+        <i class="fas fa-search text-sm"></i>
+      </button>
+      <button (click)="clearFilters()" class="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors">
+        <i class="fas fa-times text-sm"></i>
+      </button>
     </div>
   </div>
 
-  <!-- Create/Edit Plan Modal -->
-  <div *ngIf="showCreateForm || showEditForm || showViewForm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+  <!-- Add/Edit Plan Modal -->
+  <div *ngIf="showAddForm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
       <!-- Modal Header -->
       <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
         <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center"
-               [ngClass]="showCreateForm ? 'bg-gradient-to-br from-red-500 to-red-600' :
-                         showEditForm ? 'bg-gradient-to-br from-green-500 to-green-600' :
-                         'bg-gradient-to-br from-blue-500 to-blue-600'">
-            <i class="fas fa-plus text-white" *ngIf="showCreateForm"></i>
-            <i class="fas fa-edit text-white" *ngIf="showEditForm"></i>
-            <i class="fas fa-eye text-white" *ngIf="showViewForm"></i>
+          <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center">
+            <i [class]="!!editingPlan ? 'fas fa-user-edit' : 'fas fa-user-plus'" class="text-white"></i>
           </div>
           <div>
-            <h3 class="text-xl font-bold text-gray-900 dark:text-white">
-              {{ showCreateForm ? 'Create New Plan' : showEditForm ? 'Edit Plan' : 'View Plan Details' }}
-            </h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              {{ showCreateForm ? 'Add a new subscription plan for restaurants' :
-                 showEditForm ? editingPlan?.displayName :
-                 viewingPlan?.displayName }}
-            </p>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ !!editingPlan ? 'Edit Plan' : 'Add New Plan' }}</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">{{ !!editingPlan ? 'Update plan information' : 'Create a new plan' }}</p>
           </div>
         </div>
         <button
-          (click)="showCreateForm ? cancelCreate() : showEditForm ? cancelEdit() : cancelView()"
+          (click)="cancelForm()"
           class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
           <i class="fas fa-times text-gray-500 dark:text-gray-400"></i>
         </button>
@@ -149,119 +131,56 @@
 
       <!-- Modal Body -->
       <div class="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-red-500 scrollbar-track-gray-100 dark:scrollbar-track-gray-700">
-        <div *ngIf="showViewForm && viewingPlan" class="space-y-6">
-          <!-- Basic Plan Information -->
+        <div class="space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Plan Name</label>
-              <div class="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white">
-                {{ viewingPlan.name }}
-              </div>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Display Name</label>
-              <div class="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white">
-                {{ viewingPlan.displayName }}
-              </div>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Price ({{ viewingPlan.currency }})</label>
-              <div class="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white">
-                {{ formatCurrency(viewingPlan.price) }}
-              </div>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Billing Cycle</label>
-              <div class="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white">
-                {{ viewingPlan.billingCycle | titlecase }}
-              </div>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Max Restaurants</label>
-              <div class="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white">
-                {{ formatNumber(viewingPlan.maxRestaurants) }}
-              </div>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Max Users</label>
-              <div class="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white">
-                {{ formatNumber(viewingPlan.maxUsers) }}
-              </div>
-            </div>
-            <div class="md:col-span-2">
-              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</label>
-              <div class="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white">
-                {{ viewingPlan.description }}
-              </div>
-            </div>
-          </div>
-
-          <!-- Plan Features -->
-          <div class="space-y-6">
-            <h4 class="text-lg font-bold text-gray-900 dark:text-white flex items-center">
-              <i class="fas fa-cogs mr-3 text-blue-500"></i>Plan Features
-            </h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div *ngFor="let featureId of viewingPlan.features" class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                <div class="flex items-center gap-3">
-                  <span class="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center">
-                    <i class="fas fa-check text-sm"></i>
-                  </span>
-                  <div>
-                    <span class="font-medium text-gray-900 dark:text-white">{{ getFeatureById(featureId)?.name }}</span>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ getFeatureById(featureId)?.description }}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <form *ngIf="showCreateForm || showEditForm" (ngSubmit)="showCreateForm ? createPlan() : updatePlan()" class="space-y-6">
-          <!-- Basic Plan Information -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Plan Name -->
+            <!-- Name -->
             <div>
               <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                <i class="fas fa-tag mr-2 text-red-500"></i>Plan Name
+                <i class="fas fa-tag mr-2 text-red-500"></i>Plan Name <span class="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                [(ngModel)]="newPlan.name"
-                name="name"
-                required
+                [(ngModel)]="planForm.name"
+                (input)="validateName()"
                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
-                placeholder="starter, professional, enterprise">
+                placeholder="Enter plan name">
+              <div *ngIf="fieldErrors['name']" class="text-red-500 text-sm mt-1">
+                {{ fieldErrors['name'] }}
+              </div>
             </div>
 
             <!-- Display Name -->
             <div>
               <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                <i class="fas fa-heading mr-2 text-blue-500"></i>Display Name
+                <i class="fas fa-eye mr-2 text-blue-500"></i>Display Name <span class="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                [(ngModel)]="newPlan.displayName"
-                name="displayName"
-                required
+                [(ngModel)]="planForm.display_name"
+                (input)="validateDisplayName()"
                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
-                placeholder="Starter Plan">
+                placeholder="Display name">
+              <div *ngIf="fieldErrors['display_name']" class="text-red-500 text-sm mt-1">
+                {{ fieldErrors['display_name'] }}
+              </div>
             </div>
 
             <!-- Price -->
             <div>
               <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                <i class="fas fa-indian-rupee-sign mr-2 text-green-500"></i>Price ({{ newPlan.currency }})
+                <i class="fas fa-indian-rupee-sign mr-2 text-green-500"></i>Price <span class="text-red-500">*</span>
               </label>
               <input
                 type="number"
-                [(ngModel)]="newPlan.price"
-                name="price"
-                required
-                min="0"
-                step="0.01"
+                [(ngModel)]="planForm.price"
+                (input)="validatePrice()"
                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
-                placeholder="999">
+                placeholder="0.00"
+                min="0"
+                step="0.01">
+              <div *ngIf="fieldErrors['price']" class="text-red-500 text-sm mt-1">
+                {{ fieldErrors['price'] }}
+              </div>
             </div>
 
             <!-- Billing Cycle -->
@@ -270,8 +189,7 @@
                 <i class="fas fa-calendar mr-2 text-purple-500"></i>Billing Cycle
               </label>
               <select
-                [(ngModel)]="newPlan.billingCycle"
-                name="billingCycle"
+                [(ngModel)]="planForm.billing_cycle"
                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
                 <option value="monthly">Monthly</option>
                 <option value="yearly">Yearly</option>
@@ -281,1091 +199,254 @@
             <!-- Max Restaurants -->
             <div>
               <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                <i class="fas fa-utensils mr-2 text-orange-500"></i>Max Restaurants
+                <i class="fas fa-store mr-2 text-indigo-500"></i>Max Restaurants
               </label>
               <input
                 type="number"
-                [(ngModel)]="newPlan.maxRestaurants"
-                name="maxRestaurants"
-                required
-                min="-1"
+                [(ngModel)]="planForm.max_restaurants"
                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
-                placeholder="1 (or -1 for unlimited)">
+                placeholder="-1 for unlimited"
+                min="-1">
             </div>
 
             <!-- Max Users -->
             <div>
               <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                <i class="fas fa-users mr-2 text-indigo-500"></i>Max Users
+                <i class="fas fa-users mr-2 text-teal-500"></i>Max Users
               </label>
               <input
                 type="number"
-                [(ngModel)]="newPlan.maxUsers"
-                name="maxUsers"
-                required
-                min="-1"
+                [(ngModel)]="planForm.max_users"
                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
-                placeholder="5 (or -1 for unlimited)">
+                placeholder="-1 for unlimited"
+                min="-1">
             </div>
 
-            <!-- Description -->
-            <div class="md:col-span-2">
+            <!-- Setup Fee -->
+            <div>
               <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                <i class="fas fa-file-alt mr-2 text-gray-500"></i>Description
+                <i class="fas fa-money-bill mr-2 text-yellow-500"></i>Setup Fee
               </label>
-              <textarea
-                [(ngModel)]="newPlan.description"
-                name="description"
-                rows="3"
-                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 resize-none"
-                placeholder="Describe what this plan offers..."></textarea>
+              <select
+                [(ngModel)]="planForm.setup_fee"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                <option [value]="0">Free</option>
+                <option [value]="3000">₹3,000</option>
+                <option [value]="5000">₹5,000</option>
+                <option [value]="10000">₹10,000</option>
+                <option [value]="15000">₹15,000</option>
+                <option [value]="20000">₹20,000</option>
+              </select>
+            </div>
+
+            <!-- Trial Days -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-calendar-check mr-2 text-purple-500"></i>Trial Days
+              </label>
+              <select
+                [(ngModel)]="planForm.trial_days"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                <option [value]="0">No Trial</option>
+                <option [value]="7">7 Days</option>
+                <option [value]="14">14 Days</option>
+                <option [value]="30">30 Days</option>
+                <option [value]="60">60 Days</option>
+                <option [value]="90">90 Days</option>
+              </select>
             </div>
           </div>
 
-          <!-- Features Configuration -->
-          <div class="space-y-6">
-            <h4 class="text-lg font-bold text-gray-900 dark:text-white flex items-center">
-              <i class="fas fa-cogs mr-3 text-red-500"></i>Plan Features Configuration
-            </h4>
-
-            <!-- General Features -->
-            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-2xl p-6 border border-gray-200 dark:border-gray-600">
-              <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                <i class="fas fa-globe mr-3 text-blue-500"></i>General Features
-              </h5>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Duration -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-3">
-                      <span class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                        <i class="fas fa-clock text-sm"></i>
-                      </span>
-                      <span class="font-medium text-gray-900 dark:text-white">Duration</span>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('duration')"
-                        (change)="toggleFeature('duration')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">No time limits - Forever free</p>
-                </div>
-
-                <!-- Server -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-3">
-                      <span class="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center">
-                        <i class="fas fa-server text-sm"></i>
-                      </span>
-                      <span class="font-medium text-gray-900 dark:text-white">Server</span>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('server')"
-                        (change)="toggleFeature('server')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">XAMPP server + Your laptop + Your wifi</p>
-                </div>
-
-                <!-- Training -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-3">
-                      <span class="w-10 h-10 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 flex items-center justify-center">
-                        <i class="fas fa-graduation-cap text-sm"></i>
-                      </span>
-                      <span class="font-medium text-gray-900 dark:text-white">Training</span>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('training')"
-                        (change)="toggleFeature('training')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">Onsite training included</p>
-                </div>
-
-                <!-- Support -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-3">
-                      <span class="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 flex items-center justify-center">
-                        <i class="fas fa-headset text-sm"></i>
-                      </span>
-                      <span class="font-medium text-gray-900 dark:text-white">Support</span>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('support')"
-                        (change)="toggleFeature('support')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">Email, chat, phone & onsite support</p>
-                </div>
+          <!-- Status and Popular Plan -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Is Active -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-toggle-on mr-2 text-teal-500"></i>Status
+              </label>
+              <div class="flex items-center">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="planForm.is_active"
+                  class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Plan is active</span>
               </div>
             </div>
 
-            <!-- Customer Features -->
-            <div class="bg-purple-50 dark:bg-purple-900/10 rounded-2xl p-6 border border-purple-200 dark:border-purple-800">
-              <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                <i class="fas fa-users mr-3 text-purple-500"></i>Customer Features
-              </h5>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- QR Code Ordering -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">QR Code Ordering</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('qr-ordering')"
-                        (change)="toggleFeature('qr-ordering')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Menu Browsing -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Menu Browsing</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('menu-browsing')"
-                        (change)="toggleFeature('menu-browsing')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Order Tracking -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Order Tracking</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('order-tracking')"
-                        (change)="toggleFeature('order-tracking')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Basic Profile -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Basic Profile</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('basic-profile')"
-                        (change)="toggleFeature('basic-profile')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Order History -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Order History</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('order-history')"
-                        (change)="toggleFeature('order-history')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Offers/Referral/Loyalty Points -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Offers/Referral/Loyalty Points</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('offers-loyalty')"
-                        (change)="toggleFeature('offers-loyalty')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Customer Feedback -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Customer Feedback</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('customer-feedback')"
-                        (change)="toggleFeature('customer-feedback')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Unlimited Customer -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Unlimited Customer</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('unlimited-customer')"
-                        (change)="toggleFeature('unlimited-customer')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Owner Features -->
-            <div class="bg-amber-50 dark:bg-amber-900/10 rounded-2xl p-6 border border-amber-200 dark:border-amber-800">
-              <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                <i class="fas fa-crown mr-3 text-amber-500"></i>Owner Features
-              </h5>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Dashboard overview -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Dashboard overview</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('dashboard-overview')"
-                        (change)="toggleFeature('dashboard-overview')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Menu management -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Menu management</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('menu-management')"
-                        (change)="toggleFeature('menu-management')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Financial overview -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Financial overview</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('financial-overview')"
-                        (change)="toggleFeature('financial-overview')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Staff Creation -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Staff Creation</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('staff-creation')"
-                        (change)="toggleFeature('staff-creation')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Staff management -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Staff management</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('staff-management')"
-                        (change)="toggleFeature('staff-management')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Inventory -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Inventory</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('inventory')"
-                        (change)="toggleFeature('inventory')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Settings & config -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Settings & config</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('settings-config')"
-                        (change)="toggleFeature('settings-config')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Revenue tracking -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Revenue tracking</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('revenue-tracking')"
-                        (change)="toggleFeature('revenue-tracking')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Advanced analytics & reports -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Advanced analytics & reports</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('advanced-analytics')"
-                        (change)="toggleFeature('advanced-analytics')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Multiple owners -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Multiple owners</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('multiple-owners')"
-                        (change)="toggleFeature('multiple-owners')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Manager Features -->
-            <div class="bg-blue-50 dark:bg-blue-900/10 rounded-2xl p-6 border border-blue-200 dark:border-blue-800">
-              <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                <i class="fas fa-user-tie mr-3 text-blue-500"></i>Manager Features
-              </h5>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Daily operations -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Daily operations</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('daily-operations')"
-                        (change)="toggleFeature('daily-operations')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Staff creation -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Staff creation</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('staff-creation')"
-                        (change)="toggleFeature('staff-creation')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Staff scheduling -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Staff scheduling</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('staff-scheduling')"
-                        (change)="toggleFeature('staff-scheduling')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Staff management -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Staff management</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('staff-management')"
-                        (change)="toggleFeature('staff-management')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Inventory -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Inventory</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('inventory')"
-                        (change)="toggleFeature('inventory')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Menu updates -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Menu updates</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('menu-updates')"
-                        (change)="toggleFeature('menu-updates')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Shift reports -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Shift reports</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('shift-reports')"
-                        (change)="toggleFeature('shift-reports')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Performance monitoring -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Performance monitoring</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('performance-monitoring')"
-                        (change)="toggleFeature('performance-monitoring')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Multiple managers -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Multiple managers</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('multiple-managers')"
-                        (change)="toggleFeature('multiple-managers')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Kitchen Manager Features -->
-            <div class="bg-green-50 dark:bg-green-900/10 rounded-2xl p-6 border border-green-200 dark:border-green-800">
-              <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                <i class="fas fa-utensils mr-3 text-green-500"></i>Kitchen Manager Features
-              </h5>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- KDS (Kitchen Display) -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">KDS (Kitchen Display)</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('kds-kitchen-display')"
-                        (change)="toggleFeature('kds-kitchen-display')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Order queue -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Order queue</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('order-queue')"
-                        (change)="toggleFeature('order-queue')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Prep time tracking -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Prep time tracking</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('prep-time-tracking')"
-                        (change)="toggleFeature('prep-time-tracking')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Order prioritization -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Order prioritization</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('order-prioritization')"
-                        (change)="toggleFeature('order-prioritization')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Quality control -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Quality control</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('quality-control')"
-                        (change)="toggleFeature('quality-control')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Recipe management -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Recipe management</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('recipe-management')"
-                        (change)="toggleFeature('recipe-management')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Food safety checklists -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Food safety checklists</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('food-safety-checklists')"
-                        (change)="toggleFeature('food-safety-checklists')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Kitchen efficiency metrics -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Kitchen efficiency metrics</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('kitchen-efficiency-metrics')"
-                        (change)="toggleFeature('kitchen-efficiency-metrics')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Multiple kitchen managers -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Multiple kitchen managers</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('multiple-kitchen-managers')"
-                        (change)="toggleFeature('multiple-kitchen-managers')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Cashier Features -->
-            <div class="bg-yellow-50 dark:bg-yellow-900/10 rounded-2xl p-6 border border-yellow-200 dark:border-yellow-800">
-              <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                <i class="fas fa-cash-register mr-3 text-yellow-500"></i>Cashier Features
-              </h5>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- POS terminal -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">POS terminal</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('pos-terminal')"
-                        (change)="toggleFeature('pos-terminal')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Payment processing -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Payment processing</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('payment-processing')"
-                        (change)="toggleFeature('payment-processing')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Bill generation -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Bill generation</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('bill-generation')"
-                        (change)="toggleFeature('bill-generation')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Receipt printing -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Receipt printing</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('receipt-printing')"
-                        (change)="toggleFeature('receipt-printing')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Tax calculations -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Tax calculations</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('tax-calculations')"
-                        (change)="toggleFeature('tax-calculations')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Daily reconciliation -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Daily reconciliation</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('daily-reconciliation')"
-                        (change)="toggleFeature('daily-reconciliation')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Refund management -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Refund management</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('refund-management')"
-                        (change)="toggleFeature('refund-management')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Payment method tracking -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Payment method tracking</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('payment-method-tracking')"
-                        (change)="toggleFeature('payment-method-tracking')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Multiple cashiers -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Multiple cashiers</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('multiple-cashiers')"
-                        (change)="toggleFeature('multiple-cashiers')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Waiter Features -->
-            <div class="bg-indigo-50 dark:bg-indigo-900/10 rounded-2xl p-6 border border-indigo-200 dark:border-indigo-800">
-              <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                <i class="fas fa-concierge-bell mr-3 text-indigo-500"></i>Waiter Features
-              </h5>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Order taking -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Order taking</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('order-taking')"
-                        (change)="toggleFeature('order-taking')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Order status updates -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Order status updates</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('order-status-updates')"
-                        (change)="toggleFeature('order-status-updates')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Analytics & Reports Features -->
-            <div class="bg-red-50 dark:bg-red-900/10 rounded-2xl p-6 border border-red-200 dark:border-red-800">
-              <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                <i class="fas fa-chart-bar mr-3 text-red-500"></i>Analytics & Reports Features
-              </h5>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Sales reports -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Sales reports</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('sales-reports')"
-                        (change)="toggleFeature('sales-reports')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Top-selling items -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Top-selling items</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('top-selling-items')"
-                        (change)="toggleFeature('top-selling-items')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Revenue trends -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Revenue trends</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('revenue-trends')"
-                        (change)="toggleFeature('revenue-trends')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Customer analytics -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Customer analytics</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('customer-analytics')"
-                        (change)="toggleFeature('customer-analytics')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Staff performance -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Staff performance</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('staff-performance')"
-                        (change)="toggleFeature('staff-performance')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Peak hours analysis -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Peak hours analysis</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('peak-hours-analysis')"
-                        (change)="toggleFeature('peak-hours-analysis')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Profit margins -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Profit margins</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('profit-margins')"
-                        (change)="toggleFeature('profit-margins')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Custom reports -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Custom reports</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('custom-reports')"
-                        (change)="toggleFeature('custom-reports')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Export to Excel/PDF -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Export to Excel/PDF</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('export-excel-pdf')"
-                        (change)="toggleFeature('export-excel-pdf')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Real-time dashboards -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-gray-900 dark:text-white">Real-time dashboards</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="newPlan.features?.includes('real-time-dashboards')"
-                        (change)="toggleFeature('real-time-dashboards')"
-                        class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
-                    </label>
-                  </div>
-                </div>
+            <!-- Is Popular -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-star mr-2 text-yellow-500"></i>Popular Plan
+              </label>
+              <div class="flex items-center">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="planForm.is_popular"
+                  class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Mark as popular plan</span>
               </div>
             </div>
           </div>
-        </form>
+
+          <!-- Description -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <i class="fas fa-file-alt mr-2 text-green-500"></i>Description <span class="text-red-500">*</span>
+            </label>
+            <textarea
+              [(ngModel)]="planForm.description"
+              (input)="validateDescription()"
+              rows="3"
+              class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+              placeholder="Enter plan description"></textarea>
+            <div *ngIf="fieldErrors['description']" class="text-red-500 text-sm mt-1">
+              {{ fieldErrors['description'] }}
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Modal Footer -->
       <div class="flex justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
         <button
           type="button"
-          (click)="showCreateForm ? cancelCreate() : showEditForm ? cancelEdit() : cancelView()"
+          (click)="cancelForm()"
           class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-          {{ showViewForm ? 'Close' : 'Cancel' }}
+          Cancel
         </button>
         <button
-          *ngIf="!showViewForm"
           type="submit"
-          (click)="showCreateForm ? createPlan() : updatePlan()"
+          (click)="onSubmitForm()"
           class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
-          {{ showCreateForm ? 'Create Plan' : 'Update Plan' }}
+          {{ !!editingPlan ? 'Update Plan' : 'Add Plan' }}
+        </button>
+      </div>
+      
+    </div>
+  </div>
+
+  <!-- View Plan Modal -->
+  <div *ngIf="selectedPlan" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center">
+            <i class="fas fa-eye text-white"></i>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">Plan Details</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">View plan information</p>
+          </div>
+        </div>
+        <button
+          (click)="cancelView()"
+          class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+          <i class="fas fa-times text-gray-500 dark:text-gray-400"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="flex-1 overflow-y-auto p-6">
+        <div class="space-y-4">
+          <!-- Plan Information -->
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6">
+            <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+              <i class="fas fa-info-circle mr-3 text-red-500"></i>Plan Information
+            </h4>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                <span class="text-gray-600 dark:text-gray-400 font-medium">Plan Name:</span>
+                <span class="text-gray-900 dark:text-white font-semibold">{{ selectedPlan.name }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                <span class="text-gray-600 dark:text-gray-400 font-medium">Display Name:</span>
+                <span class="text-gray-900 dark:text-white font-semibold">{{ selectedPlan.display_name }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                <span class="text-gray-600 dark:text-gray-400 font-medium">Price:</span>
+                <span class="text-gray-900 dark:text-white font-semibold">{{ formatCurrency(selectedPlan.price) }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                <span class="text-gray-600 dark:text-gray-400 font-medium">Billing Cycle:</span>
+                <span class="text-gray-900 dark:text-white font-semibold">{{ selectedPlan.billing_cycle | titlecase }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                <span class="text-gray-600 dark:text-gray-400 font-medium">Status:</span>
+                <span [ngClass]="getStatusBadgeClass(selectedPlan.is_active)" class="px-2 py-1 text-xs rounded-full font-medium">
+                  {{ getStatusText(selectedPlan.is_active) }}
+                </span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                <span class="text-gray-600 dark:text-gray-400 font-medium">Max Restaurants:</span>
+                <span class="text-gray-900 dark:text-white font-semibold">{{ formatNumber(selectedPlan.max_restaurants) }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                 <span class="text-gray-600 dark:text-gray-400 font-medium">Max Users:</span>
+                 <span class="text-gray-900 dark:text-white font-semibold">{{ formatNumber(selectedPlan.max_users) }}</span>
+               </div>
+               <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                 <span class="text-gray-600 dark:text-gray-400 font-medium">Setup Fee:</span>
+                 <span class="text-gray-900 dark:text-white font-semibold">{{ formatCurrency(selectedPlan.setup_fee) }}</span>
+               </div>
+               <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                 <span class="text-gray-600 dark:text-gray-400 font-medium">Trial Days:</span>
+                 <span class="text-gray-900 dark:text-white font-semibold">{{ selectedPlan.trial_days }} days</span>
+               </div>
+               <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                 <span class="text-gray-600 dark:text-gray-400 font-medium">Popular:</span>
+                 <span class="text-gray-900 dark:text-white font-semibold">{{ selectedPlan.is_popular ? 'Yes' : 'No' }}</span>
+               </div>
+               <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                 <span class="text-gray-600 dark:text-gray-400 font-medium">Subscribers:</span>
+                 <span class="text-gray-900 dark:text-white font-semibold">{{ selectedPlan.subscriber_count }}</span>
+               </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                <span class="text-gray-600 dark:text-gray-400 font-medium">Revenue:</span>
+                <span class="text-gray-900 dark:text-white font-semibold">{{ formatCurrency(selectedPlan.revenue) }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                <span class="text-gray-600 dark:text-gray-400 font-medium">Created:</span>
+                <span class="text-gray-900 dark:text-white font-semibold">{{ formatDate(selectedPlan.created_at) }}</span>
+              </div>
+            </div>
+            <div class="mt-4">
+              <div class="flex justify-between items-start">
+                <span class="text-gray-600 dark:text-gray-400 font-medium">Description:</span>
+                <span class="text-gray-900 dark:text-white font-semibold ml-4 flex-1 text-right">{{ selectedPlan.description }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <button
+          (click)="cancelView()"
+          class="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors">
+          Close
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Plans Grid -->
   <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8 w-full">
     <!-- Header with Compact Pagination -->
     <div class="flex justify-between items-center mb-6">
       <h3 class="text-lg font-bold text-gray-900 dark:text-white">Subscription Plans</h3>
+      <div *ngIf="plans.length > 0" class="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 px-4 py-2 rounded-xl border border-red-200 dark:border-red-800 text-sm text-gray-700 dark:text-gray-300">
+        Showing {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, totalElements) }} of {{ totalElements }} plans
+      </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
       <div
-        *ngFor="let plan of filteredPlans"
-        class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300 group relative">
+        *ngFor="let plan of plans"
+        [ngClass]="plan.is_popular ? 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-400' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'"
+        class="rounded-xl shadow-sm border hover:shadow-lg transition-all duration-300 group relative">
         <!-- Popular Badge -->
-        <div *ngIf="plan.isPopular" class="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+        <div *ngIf="plan.is_popular" class="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
           <span class="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-4 py-1 text-xs rounded-full font-semibold shadow-lg">
             Most Popular
           </span>
@@ -1379,12 +460,12 @@
                 <i class="fas fa-crown text-white text-sm"></i>
               </div>
               <div>
-                <h3 class="font-bold text-gray-900 dark:text-white text-lg leading-tight">{{ plan.displayName }}</h3>
+                <h3 class="font-bold text-gray-900 dark:text-white text-lg leading-tight">{{ plan.display_name }}</h3>
                 <span
-                  [class]="plan.isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'"
+                  [class]="plan.is_active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'"
                   class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full">
-                  <span class="w-1.5 h-1.5 rounded-full mr-1.5" [class]="plan.isActive ? 'bg-emerald-500' : 'bg-red-500'"></span>
-                  {{ plan.isActive ? 'Active' : 'Inactive' }}
+                  <span class="w-1.5 h-1.5 rounded-full mr-1.5" [class]="plan.is_active ? 'bg-emerald-500' : 'bg-red-500'"></span>
+                  {{ plan.is_active ? 'Active' : 'Inactive' }}
                 </span>
               </div>
             </div>
@@ -1396,7 +477,7 @@
           <div class="mb-4">
             <div class="flex items-baseline space-x-1">
               <span class="text-3xl font-bold text-gray-900 dark:text-white">{{ formatCurrency(plan.price) }}</span>
-              <span class="text-sm text-gray-500 dark:text-gray-400">/{{ plan.billingCycle }}</span>
+              <span class="text-sm text-gray-500 dark:text-gray-400">/{{ plan.billing_cycle }}</span>
             </div>
           </div>
         </div>
@@ -1405,7 +486,7 @@
         <div class="px-6 pb-4">
           <div class="grid grid-cols-2 gap-4 text-sm">
             <div class="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-              <div class="text-lg font-semibold text-gray-900 dark:text-white">{{ plan.subscriberCount }}</div>
+              <div class="text-lg font-semibold text-gray-900 dark:text-white">{{ plan.subscriber_count }}</div>
               <div class="text-xs text-gray-500 dark:text-gray-400">Subscribers</div>
             </div>
             <div class="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
@@ -1420,11 +501,11 @@
           <div class="space-y-2 text-sm">
             <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
               <span class="text-gray-600 dark:text-gray-400">Max Restaurants</span>
-              <span class="font-medium text-gray-900 dark:text-white">{{ formatNumber(plan.maxRestaurants) }}</span>
+              <span class="font-medium text-gray-900 dark:text-white">{{ formatNumber(plan.max_restaurants) }}</span>
             </div>
             <div class="flex justify-between items-center py-2">
               <span class="text-gray-600 dark:text-gray-400">Max Users</span>
-              <span class="font-medium text-gray-900 dark:text-white">{{ formatNumber(plan.maxUsers) }}</span>
+              <span class="font-medium text-gray-900 dark:text-white">{{ formatNumber(plan.max_users) }}</span>
             </div>
           </div>
         </div>
@@ -1440,7 +521,7 @@
                 View
               </button>
               <button
-                (click)="editPlan(plan)"
+                (click)="showPlanForm(plan)"
                 class="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-lg text-green-700 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30 transition-all duration-200">
                 <i class="fas fa-edit mr-2"></i>
                 Edit
@@ -1449,10 +530,10 @@
             <div class="grid grid-cols-2 gap-2">
               <button
                 (click)="togglePlanStatus(plan)"
-                [class]="plan.isActive ? 'text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30' : 'text-green-700 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30'"
+                [class]="plan.is_active ? 'text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30' : 'text-green-700 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30'"
                 class="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200">
                 <i class="fas fa-power-off mr-2"></i>
-                {{ plan.isActive ? 'Deactivate' : 'Activate' }}
+                {{ plan.is_active ? 'Deactivate' : 'Activate' }}
               </button>
               <button
                 (click)="duplicatePlan(plan)"
@@ -1468,89 +549,86 @@
         <div class="absolute inset-0 bg-gradient-to-br from-red-500/5 to-red-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl"></div>
       </div>
     </div>
-  </div>
 
-  <!-- Plan Details Panel -->
-  <div *ngIf="selectedPlan" class="pos-card rounded-2xl p-6">
-    <div class="flex justify-between items-start mb-6">
-      <div>
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ selectedPlan.displayName }}</h2>
-        <p class="text-gray-600 dark:text-gray-300">{{ selectedPlan.description }}</p>
-      </div>
-      <div class="flex space-x-2">
+    <!-- Empty State -->
+    <div *ngIf="plans.length === 0" class="text-center py-12">
+      <i class="fas fa-list-alt text-gray-400 text-4xl mb-4"></i>
+      <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No plans found</h3>
+      <p class="text-gray-500 dark:text-gray-400 mb-4" *ngIf="!hasActiveFilters">Get started by creating your first plan.</p>
+      <p class="text-gray-500 dark:text-gray-400 mb-4" *ngIf="hasActiveFilters">Try adjusting your filters.</p>
+      <div class="flex justify-center" *ngIf="!hasActiveFilters">
         <button
-          (click)="duplicatePlan(selectedPlan)"
-          class="px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
-          Duplicate
-        </button>
-        <button
-          (click)="deletePlan(selectedPlan)"
-          class="px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
-          Delete Plan
+          (click)="showPlanForm()"
+          class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
+          <i class="fas fa-plus"></i>
+          <span>Add Plan</span>
         </button>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-      <div class="text-center">
-        <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ formatCurrency(selectedPlan.price) }}</div>
-        <div class="text-sm text-gray-500 dark:text-gray-400">Price per {{ selectedPlan.billingCycle }}</div>
+    <!-- Pagination Controls -->
+    <div *ngIf="plans.length > 0" class="flex justify-between items-center w-full mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+      <div class="flex items-center space-x-4">
+        <div class="text-sm text-gray-600 dark:text-gray-400">
+          Showing <span class="font-medium">{{ (currentPage - 1) * itemsPerPage + 1 }}</span> to
+          <span class="font-medium">{{ Math.min(currentPage * itemsPerPage, totalElements) }}</span>
+          of <span class="font-medium">{{ totalElements }}</span> plans
+        </div>
+        <div class="flex items-center space-x-2">
+          <select
+            [(ngModel)]="itemsPerPage"
+            (change)="onItemsPerPageChange($event)"
+            class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors">
+            <option *ngFor="let option of itemsPerPageOptions" [value]="option">{{ option }}</option>
+          </select>
+        </div>
       </div>
-      <div class="text-center">
-        <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ selectedPlan.subscriberCount }}</div>
-        <div class="text-sm text-gray-500 dark:text-gray-400">Active Subscribers</div>
-      </div>
-      <div class="text-center">
-        <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ formatCurrency(selectedPlan.revenue) }}</div>
-        <div class="text-sm text-gray-500 dark:text-gray-400">Monthly Revenue</div>
+      <div class="flex items-center space-x-1">
+        <!-- First Page Button -->
+        <button
+          (click)="changePage(1)"
+          [disabled]="currentPage === 1"
+          class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:text-gray-400 dark:disabled:text-gray-500 text-gray-900 dark:text-white transition-colors">
+          <i class="fas fa-angle-double-left"></i>
+        </button>
+
+        <!-- Previous Page Button -->
+        <button
+          (click)="changePage(currentPage - 1)"
+          [disabled]="currentPage === 1"
+          class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:text-gray-400 dark:disabled:text-gray-500 text-gray-900 dark:text-white transition-colors">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+
+        <!-- Page Number Buttons -->
+        <button
+          *ngFor="let page of pageNumbers"
+          (click)="changePage(page)"
+          [class.bg-primary-600]="page === currentPage"
+          [class.text-white]="page === currentPage"
+          [class.hover:bg-primary-700]="page === currentPage"
+          class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white transition-colors">
+          {{ page }}
+        </button>
+
+        <!-- Next Page Button -->
+        <button
+          (click)="changePage(currentPage + 1)"
+          [disabled]="currentPage === totalPages"
+          class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:text-gray-400 dark:disabled:text-gray-500 text-gray-900 dark:text-white transition-colors">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+
+        <!-- Last Page Button -->
+        <button
+          (click)="changePage(totalPages)"
+          [disabled]="currentPage === totalPages"
+          class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:text-gray-400 dark:disabled:text-gray-500 text-gray-900 dark:text-white transition-colors">
+          <i class="fas fa-angle-double-right"></i>
+        </button>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div>
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Plan Limits</h3>
-        <div class="space-y-3">
-          <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-            <span class="text-gray-700 dark:text-gray-300">Max Restaurants</span>
-            <span class="font-medium text-gray-900 dark:text-white">{{ formatNumber(selectedPlan.maxRestaurants) }}</span>
-          </div>
-          <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-            <span class="text-gray-700 dark:text-gray-300">Max Users</span>
-            <span class="font-medium text-gray-900 dark:text-white">{{ formatNumber(selectedPlan.maxUsers) }}</span>
-          </div>
-        </div>
-      </div>
 
-      <div>
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Plan Features</h3>
-        <div class="space-y-2 max-h-64 overflow-y-auto">
-          <div *ngFor="let featureId of selectedPlan.features" class="flex items-center space-x-3 p-2">
-            <i class="fas fa-check text-green-500"></i>
-            <span class="text-gray-900 dark:text-white">{{ getFeatureById(featureId)?.name }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Feature Management -->
-    <div class="mt-6">
-      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Manage Features</h3>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div *ngFor="let feature of availableFeatures" class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
-          <div>
-            <div class="font-medium text-gray-900 dark:text-white">{{ feature.name }}</div>
-            <div class="text-sm text-gray-500 dark:text-gray-400">{{ feature.description }}</div>
-          </div>
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              [checked]="hasFeature(selectedPlan, feature.id)"
-              (change)="toggleFeature(selectedPlan, feature.id)"
-              class="sr-only peer">
-            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
-          </label>
-        </div>
-      </div>
-    </div>
   </div>
 </div>
