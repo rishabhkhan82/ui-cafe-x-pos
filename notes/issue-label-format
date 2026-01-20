@@ -1,0 +1,96 @@
+1️⃣ Labels You Already Have (Keep Them As-Is ✅)
+
+These are standard & correct — do NOT delete them.
+
+Label	Purpose
+bug	Something isn't working
+documentation	Docs-related changes
+duplicate	Already exists
+enhancement	New feature or request
+good first issue	Beginner-friendly
+help wanted	Needs extra attention
+invalid	Not valid
+question	Clarification needed
+wontfix	Will not be worked on
+
+🟢 These handle triage & community flow
+
+2️⃣ Labels You Should ADD (Compared to My Suggested List)
+🔹 A. Component / Area Labels (VERY IMPORTANT)
+
+👉 These are missing completely right now.
+
+Label Name	Description	Hex Color
+api	Backend APIs & business logic	#1F6FEB
+ui	Frontend / UI / UX related	#A371F7
+db	Database schema, queries, migrations	#0E8A16
+auth	Authentication & authorization	#D73A4A
+inventory	Items, stock, crates, GRN	#FBCA04
+billing	POS billing, invoices, payments	#FF8C00
+reports	MIS, exports, analytics	#5319E7
+notifications	Email, SMS, WhatsApp	#00BFA5
+integration	Third-party services & APIs	#0366D6
+multi-tenant	Tenant isolation, org logic	#2EA44F
+
+🟢 These labels answer “WHERE is the issue?”
+
+🔹 B. Priority Labels (Execution clarity)
+Label Name	Description	Hex Color
+priority:critical	Production blocker	#B60205
+priority:high	Must be fixed soon	#D93F0B
+priority:medium	Normal priority	#FBCA04
+priority:low	Can wait	#0E8A16
+
+🟢 These help in planning, sprinting & escalation
+
+🔹 C. Workflow / Status Labels (Tracking)
+Label Name	Description	Hex Color
+status:in-progress	Actively being worked on	#0052CC
+status:blocked	Waiting on dependency	#B60205
+status:review	Code review / QA	#5319E7
+status:uat	Deployed on UAT	#0E8A16
+status:prod	Live in production	#2EA44F
+status:needs-info	More info required	#FBCA04
+
+🟢 These answer “WHAT STATE is this issue in?”
+
+3️⃣ Final Count After Adding
+
+Existing: 9
+
+New recommended: 20
+
+Total = 29 labels
+
+👉 This is perfectly healthy for a professional SaaS / POS system.
+
+4️⃣ Minimum Add-First Set (If You Want to Go Step-by-Step)
+
+If you don’t want to add all at once, start with these 10 👇
+
+api
+ui
+db
+inventory
+billing
+priority:high
+priority:medium
+status:in-progress
+status:uat
+status:prod
+
+5️⃣ How to Use Labels (Golden Rule)
+
+Each issue should have:
+
+✅ 1 type → bug / enhancement
+
+✅ 1 area → api / ui / db
+
+✅ 1 priority
+
+✅ 0–1 status
+
+Example:
+
+bug + api + inventory + priority:high + status:uat
