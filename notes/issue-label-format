@@ -1,96 +1,127 @@
-1️⃣ Labels You Already Have (Keep Them As-Is ✅)
+✅ GitHub Label Categorization (Final & Clean)
+🟦 Category 1: Issue Type / Nature
 
-These are standard & correct — do NOT delete them.
+👉 WHAT kind of issue is this?
+✔️ Exactly ONE label from this category per issue
 
-Label	Purpose
-bug	Something isn't working
-documentation	Docs-related changes
-duplicate	Already exists
-enhancement	New feature or request
-good first issue	Beginner-friendly
-help wanted	Needs extra attention
-invalid	Not valid
-question	Clarification needed
-wontfix	Will not be worked on
+(These are mostly your existing labels)
 
-🟢 These handle triage & community flow
+Label
+bug
+enhancement
+documentation
+question
+duplicate
+invalid
+wontfix
+good first issue
+help wanted
 
-2️⃣ Labels You Should ADD (Compared to My Suggested List)
-🔹 A. Component / Area Labels (VERY IMPORTANT)
+📌 Purpose:
 
-👉 These are missing completely right now.
+Classifies the nature of the issue
 
-Label Name	Description	Hex Color
-api	Backend APIs & business logic	#1F6FEB
-ui	Frontend / UI / UX related	#A371F7
-db	Database schema, queries, migrations	#0E8A16
-auth	Authentication & authorization	#D73A4A
-inventory	Items, stock, crates, GRN	#FBCA04
-billing	POS billing, invoices, payments	#FF8C00
-reports	MIS, exports, analytics	#5319E7
-notifications	Email, SMS, WhatsApp	#00BFA5
-integration	Third-party services & APIs	#0366D6
-multi-tenant	Tenant isolation, org logic	#2EA44F
+Helps triage & contribution flow
 
-🟢 These labels answer “WHERE is the issue?”
+🟦 Category 2: Component / Area
 
-🔹 B. Priority Labels (Execution clarity)
-Label Name	Description	Hex Color
-priority:critical	Production blocker	#B60205
-priority:high	Must be fixed soon	#D93F0B
-priority:medium	Normal priority	#FBCA04
-priority:low	Can wait	#0E8A16
+👉 WHERE in the system is the issue?
+✔️ ONE (max TWO) per issue
 
-🟢 These help in planning, sprinting & escalation
-
-🔹 C. Workflow / Status Labels (Tracking)
-Label Name	Description	Hex Color
-status:in-progress	Actively being worked on	#0052CC
-status:blocked	Waiting on dependency	#B60205
-status:review	Code review / QA	#5319E7
-status:uat	Deployed on UAT	#0E8A16
-status:prod	Live in production	#2EA44F
-status:needs-info	More info required	#FBCA04
-
-🟢 These answer “WHAT STATE is this issue in?”
-
-3️⃣ Final Count After Adding
-
-Existing: 9
-
-New recommended: 20
-
-Total = 29 labels
-
-👉 This is perfectly healthy for a professional SaaS / POS system.
-
-4️⃣ Minimum Add-First Set (If You Want to Go Step-by-Step)
-
-If you don’t want to add all at once, start with these 10 👇
-
+Label
 api
 ui
 db
+auth
 inventory
 billing
+reports
+notifications
+integration
+multi-tenant
+
+📌 Purpose:
+
+Helps developers & testers instantly know which module is impacted
+
+Useful for filtering & ownership
+
+🟦 Category 3: Priority
+
+👉 HOW urgent is this issue?
+✔️ Exactly ONE per issue
+
+Label
+priority:critical
 priority:high
 priority:medium
+priority:low
+
+📌 Purpose:
+
+Sprint planning
+
+Escalation
+
+Production readiness
+
+🟦 Category 4: Workflow / Status
+
+👉 WHAT is the current state of the issue?
+✔️ Optional (0 or 1 at a time)
+
+Label
 status:in-progress
+status:blocked
+status:review
 status:uat
 status:prod
+status:needs-info
 
-5️⃣ How to Use Labels (Golden Rule)
+📌 Purpose:
+
+Tracks issue lifecycle
+
+Enables GitHub to act as testing + release tracker
+
+🧩 How All 4 Categories Work Together (Example)
+Example Issue:
+
+“GRN CSV upload allows blank sale remark”
+
+Labels applied:
+
+bug                     → Issue Type
+api + inventory         → Component
+priority:high           → Priority
+status:uat              → Workflow
+
+
+✅ Anyone can understand the issue in 5 seconds
+
+🟢 Golden Rule (VERY IMPORTANT)
 
 Each issue should have:
 
-✅ 1 type → bug / enhancement
+✅ 1 Issue Type
 
-✅ 1 area → api / ui / db
+✅ 1 Component
 
-✅ 1 priority
+✅ 1 Priority
 
-✅ 0–1 status
+⭕ 0–1 Status
 
-Example:
+❌ Never apply two labels from the same category
+❌ Never skip Type or Priority
 
-bug + api + inventory + priority:high + status:uat
+🏁 Final Result
+
+With this structure:
+
+GitHub becomes Code Management + Testing Tool
+
+Testers & developers work together
+
+No external tracking needed
+
+Clean dashboards & filters
