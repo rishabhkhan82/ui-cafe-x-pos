@@ -271,6 +271,27 @@ export class CrudService {
     return this.getData(`user-roles/${id}`);
   }
 
+  // Feature operations
+  getFeatures(params?: CrudParams): Observable<any> {
+    return this.getData('plan-features', params);
+  }
+
+  createFeature(payload: any): Observable<any> {
+    return this.postData('plan-features', payload);
+  }
+
+  updateFeature(id: string | number, payload: any): Observable<any> {
+    return this.putData('plan-features', payload, {}, id);
+  }
+
+  deleteFeature(id: string | number): Observable<any> {
+    return this.deleteData('plan-features', {}, id);
+  }
+
+  getFeatureById(id: string | number): Observable<any> {
+    return this.getData(`plan-features/${id}`);
+  }
+
   // Subscription plan operations
   getSubscriptionPlans(params?: CrudParams): Observable<any> {
     return this.getData('subscription-plans', params);

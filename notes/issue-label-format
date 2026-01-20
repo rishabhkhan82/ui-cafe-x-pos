@@ -1,0 +1,127 @@
+✅ GitHub Label Categorization (Final & Clean)
+🟦 Category 1: Issue Type / Nature
+
+👉 WHAT kind of issue is this?
+✔️ Exactly ONE label from this category per issue
+
+(These are mostly your existing labels)
+
+Label
+bug
+enhancement
+documentation
+question
+duplicate
+invalid
+wontfix
+good first issue
+help wanted
+
+📌 Purpose:
+
+Classifies the nature of the issue
+
+Helps triage & contribution flow
+
+🟦 Category 2: Component / Area
+
+👉 WHERE in the system is the issue?
+✔️ ONE (max TWO) per issue
+
+Label
+api
+ui
+db
+auth
+inventory
+billing
+reports
+notifications
+integration
+multi-tenant
+
+📌 Purpose:
+
+Helps developers & testers instantly know which module is impacted
+
+Useful for filtering & ownership
+
+🟦 Category 3: Priority
+
+👉 HOW urgent is this issue?
+✔️ Exactly ONE per issue
+
+Label
+priority:critical
+priority:high
+priority:medium
+priority:low
+
+📌 Purpose:
+
+Sprint planning
+
+Escalation
+
+Production readiness
+
+🟦 Category 4: Workflow / Status
+
+👉 WHAT is the current state of the issue?
+✔️ Optional (0 or 1 at a time)
+
+Label
+status:in-progress
+status:blocked
+status:review
+status:uat
+status:prod
+status:needs-info
+
+📌 Purpose:
+
+Tracks issue lifecycle
+
+Enables GitHub to act as testing + release tracker
+
+🧩 How All 4 Categories Work Together (Example)
+Example Issue:
+
+“GRN CSV upload allows blank sale remark”
+
+Labels applied:
+
+bug                     → Issue Type
+api + inventory         → Component
+priority:high           → Priority
+status:uat              → Workflow
+
+
+✅ Anyone can understand the issue in 5 seconds
+
+🟢 Golden Rule (VERY IMPORTANT)
+
+Each issue should have:
+
+✅ 1 Issue Type
+
+✅ 1 Component
+
+✅ 1 Priority
+
+⭕ 0–1 Status
+
+❌ Never apply two labels from the same category
+❌ Never skip Type or Priority
+
+🏁 Final Result
+
+With this structure:
+
+GitHub becomes Code Management + Testing Tool
+
+Testers & developers work together
+
+No external tracking needed
+
+Clean dashboards & filters

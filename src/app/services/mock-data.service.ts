@@ -795,6 +795,22 @@ export interface Feature {
   };
 }
 
+export interface ManagedFeature {
+  id: number;
+  is_enabled: boolean;
+  sort_order: number;
+  feature_type: 'BASIC' | 'PREMIUM' | 'ENTERPRISE';
+  category: 'GENERAL' | 'POS' | 'INVENTORY' | 'ORDERS' | 'ANALYTICS' | 'CUSTOMERS' | 'STAFF' | 'INTEGRATION' | 'SECURITY' | 'BRANDING' | 'SUPPORT' | 'MENU' | 'CRM' | '';
+  description: string;
+  feature_id: string;
+  name: string;
+  category_icon?: string;
+  created_at: string;
+  updated_at: string;
+  created_by: number;
+  updated_by: number;
+}
+
 export interface PlanFeatureAccess {
   planId: string;
   planName: string;
@@ -1767,6 +1783,7 @@ export class MockDataService {
   private revenueDataSubject = new BehaviorSubject<RevenueData[]>([]);
   private broadcastMessagesSubject = new BehaviorSubject<BroadcastMessage[]>([]);
   private featuresSubject = new BehaviorSubject<Feature[]>([]);
+  private managedFeaturesSubject = new BehaviorSubject<ManagedFeature[]>([]);
   private planFeatureAccessSubject = new BehaviorSubject<PlanFeatureAccess[]>([]);
   private roleFeatureAccessSubject = new BehaviorSubject<RoleFeatureAccess[]>([]);
   private systemAlertsSubject = new BehaviorSubject<SystemAlert[]>([]);
@@ -1891,6 +1908,7 @@ export class MockDataService {
   revenueData$ = this.revenueDataSubject.asObservable();
   broadcastMessages$ = this.broadcastMessagesSubject.asObservable();
   features$ = this.featuresSubject.asObservable();
+  managedFeatures$ = this.managedFeaturesSubject.asObservable();
   planFeatureAccess$ = this.planFeatureAccessSubject.asObservable();
   roleFeatureAccess$ = this.roleFeatureAccessSubject.asObservable();
   systemAlerts$ = this.systemAlertsSubject.asObservable();
@@ -6174,6 +6192,130 @@ export class MockDataService {
       }
     ];
 
+    // Initialize managed features data for feature management component
+    const managedFeatures: ManagedFeature[] = [
+      {
+        id: 1,
+        is_enabled: true,
+        sort_order: 1,
+        feature_type: 'BASIC',
+        category: 'POS',
+        category_icon: 'fas fa-cash-register',
+        description: 'Essential point of sale functionality with order processing',
+        feature_id: 'basic_pos',
+        name: 'Basic POS System',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        created_by: 1,
+        updated_by: 1
+      },
+      {
+        id: 2,
+        is_enabled: true,
+        sort_order: 2,
+        feature_type: 'BASIC',
+        category: 'MENU',
+        category_icon: 'fas fa-utensils',
+        description: 'Create and manage digital menus with categories and pricing',
+        feature_id: 'menu_management',
+        name: 'Menu Management',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        created_by: 1,
+        updated_by: 1
+      },
+      {
+        id: 3,
+        is_enabled: true,
+        sort_order: 3,
+        feature_type: 'PREMIUM',
+        category: 'INVENTORY',
+        category_icon: 'fas fa-boxes',
+        description: 'Track stock levels, suppliers, and automatic reorder alerts',
+        feature_id: 'inventory_management',
+        name: 'Inventory Management',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        created_by: 1,
+        updated_by: 1
+      },
+      {
+        id: 4,
+        is_enabled: true,
+        sort_order: 4,
+        feature_type: 'PREMIUM',
+        category: 'STAFF',
+        category_icon: 'fas fa-users',
+        description: 'Employee scheduling, time tracking, and performance analytics',
+        feature_id: 'staff_management',
+        name: 'Staff Management',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        created_by: 1,
+        updated_by: 1
+      },
+      {
+        id: 5,
+        is_enabled: true,
+        sort_order: 5,
+        feature_type: 'PREMIUM',
+        category: 'CRM',
+        category_icon: 'fas fa-user-friends',
+        description: 'Loyalty points, rewards, and customer retention tools',
+        feature_id: 'customer_loyalty',
+        name: 'Customer Loyalty Program',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        created_by: 1,
+        updated_by: 1
+      },
+      {
+        id: 6,
+        is_enabled: true,
+        sort_order: 6,
+        feature_type: 'ENTERPRISE',
+        category: 'ANALYTICS',
+        category_icon: 'fas fa-chart-bar',
+        description: 'AI-powered insights, predictive analytics, and custom reports',
+        feature_id: 'advanced_analytics',
+        name: 'Advanced Analytics',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        created_by: 1,
+        updated_by: 1
+      },
+      {
+        id: 7,
+        is_enabled: true,
+        sort_order: 7,
+        feature_type: 'ENTERPRISE',
+        category: 'INTEGRATION',
+        category_icon: 'fas fa-plug',
+        description: 'Full REST API access for custom integrations',
+        feature_id: 'api_access',
+        name: 'API Access',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        created_by: 1,
+        updated_by: 1
+      },
+      {
+        id: 8,
+        is_enabled: true,
+        sort_order: 8,
+        feature_type: 'ENTERPRISE',
+        category: 'BRANDING',
+        category_icon: 'fas fa-palette',
+        description: 'Custom branding, domain, and white-label options',
+        feature_id: 'white_label',
+        name: 'White Label Solution',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        created_by: 1,
+        updated_by: 1
+      }
+    ];
+
     const planFeatureAccess: PlanFeatureAccess[] = [
       {
         planId: 'starter',
@@ -6639,6 +6781,7 @@ export class MockDataService {
     this.revenueDataSubject.next(revenueData);
     this.broadcastMessagesSubject.next(broadcastMessages);
     this.featuresSubject.next(features);
+    this.managedFeaturesSubject.next(managedFeatures);
     this.planFeatureAccessSubject.next(planFeatureAccess);
     this.roleFeatureAccessSubject.next(roleFeatureAccess);
     this.systemAlertsSubject.next(systemAlerts);
@@ -7610,6 +7753,10 @@ export class MockDataService {
     return this.features$;
   }
 
+  getManagedFeatures(): Observable<ManagedFeature[]> {
+    return this.managedFeatures$;
+  }
+
   getPlanFeatureAccess(): Observable<PlanFeatureAccess[]> {
     return this.planFeatureAccess$;
   }
@@ -7618,7 +7765,7 @@ export class MockDataService {
     return this.roleFeatureAccess$;
   }
 
-  updatePlanFeatureAccess(planId: string, featureId: string, enabled: boolean): void {
+  updatePlanFeatureAccess(planId: string, featureId: string | number, enabled: boolean): void {
     const plans = [...this.planFeatureAccessSubject.value];
     const plan = plans.find(p => p.planId === planId);
     if (plan) {
@@ -7627,7 +7774,7 @@ export class MockDataService {
     }
   }
 
-  updateRoleFeatureAccess(roleId: string, featureId: string, enabled: boolean): void {
+  updateRoleFeatureAccess(roleId: string, featureId: string | number, enabled: boolean): void {
     const roles = [...this.roleFeatureAccessSubject.value];
     const role = roles.find(r => r.roleId === roleId);
     if (role) {

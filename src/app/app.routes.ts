@@ -107,6 +107,12 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
 
+  {
+    path: 'feature-management',
+    loadComponent: () => import('./components/platform/feature-management/feature-management.component').then(m => m.FeatureManagementComponent),
+    canActivate: [authGuard]
+  },
+
   // Customer login (outside layout - no header/footer)
   {
     path: 'customer/login',

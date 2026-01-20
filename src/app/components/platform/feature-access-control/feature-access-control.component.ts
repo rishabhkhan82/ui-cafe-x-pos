@@ -68,21 +68,21 @@ export class FeatureAccessControlComponent implements OnInit, OnDestroy {
     return this.features.filter(f => f.category === category);
   }
 
-  hasFeatureAccess(planAccess: PlanFeatureAccess, featureId: string): boolean {
+  hasFeatureAccess(planAccess: PlanFeatureAccess, featureId: string | number): boolean {
     return planAccess.features[featureId] || false;
   }
 
-  hasRoleAccess(roleAccess: RoleFeatureAccess, featureId: string): boolean {
+  hasRoleAccess(roleAccess: RoleFeatureAccess, featureId: string | number): boolean {
     return roleAccess.features[featureId] || false;
   }
 
-  togglePlanFeatureAccess(planAccess: PlanFeatureAccess, featureId: string): void {
+  togglePlanFeatureAccess(planAccess: PlanFeatureAccess, featureId: string | number): void {
     const newValue = !planAccess.features[featureId];
     this.mockDataService.updatePlanFeatureAccess(planAccess.planId, featureId, newValue);
     console.log('Updated plan feature access:', planAccess.planId, featureId, newValue);
   }
 
-  toggleRoleFeatureAccess(roleAccess: RoleFeatureAccess, featureId: string): void {
+  toggleRoleFeatureAccess(roleAccess: RoleFeatureAccess, featureId: string | number): void {
     const newValue = !roleAccess.features[featureId];
     this.mockDataService.updateRoleFeatureAccess(roleAccess.roleId, featureId, newValue);
     console.log('Updated role feature access:', roleAccess.roleId, featureId, newValue);
