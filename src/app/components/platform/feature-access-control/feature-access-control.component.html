@@ -2,194 +2,268 @@
   <div class="mb-6">
     <div class="flex justify-between items-center">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Feature Access Control</h1>
-        <p class="text-gray-600 dark:text-gray-300">Manage feature availability across plans and user roles</p>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+          Feature Access Control
+        </h1>
+        <p class="text-gray-600 dark:text-gray-300">Configure feature permissions by plan and role</p>
       </div>
       <div class="flex space-x-3">
         <button
-          (click)="saveChanges()"
-          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2">
-          <i class="fas fa-save"></i>
-          <span>Save Changes</span>
+          type="button"
+          (click)="resetToDefaults()"
+          class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          Reset to Defaults
         </button>
         <button
-          (click)="resetToDefaults()"
-          class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center space-x-2">
-          <i class="fas fa-undo"></i>
-          <span>Reset</span>
+          (click)="saveChanges()"
+          class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
+          <i class="fas fa-plus"></i>
+          <span>Save Changes</span>
         </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- View Toggle and Filters -->
-  <div class="pos-card rounded-2xl p-6 mb-6">
-    <div class="flex flex-wrap gap-4 items-center">
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">View</label>
-        <div class="flex space-x-2">
-          <button
-            (click)="selectedView = 'plans'"
-            [class]="selectedView === 'plans' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'"
-            class="px-4 py-2 rounded-lg transition-colors">
-            By Plans
-          </button>
-          <button
-            (click)="selectedView = 'roles'"
-            [class]="selectedView === 'roles' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'"
-            class="px-4 py-2 rounded-lg transition-colors">
-            By Roles
-          </button>
-        </div>
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
-        <select
-          [(ngModel)]="selectedCategory"
-          class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
-          <option value="all">All Categories</option>
-          <option value="core">Core Features</option>
-          <option value="advanced">Advanced Features</option>
-          <option value="premium">Premium Features</option>
-        </select>
-      </div>
-
-      <div class="flex-1 min-w-64">
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search Features</label>
-        <input
-          type="text"
-          [(ngModel)]="searchTerm"
-          placeholder="Search features..."
-          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
-      </div>
-    </div>
-  </div>
-
-  <!-- Plans View -->
-  <div *ngIf="selectedView === 'plans'" class="space-y-6">
-    <div *ngFor="let plan of planAccess" class="pos-card rounded-2xl p-6">
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ plan.planName }}</h3>
-          <p class="text-gray-600 dark:text-gray-300">Configure feature access for this subscription plan</p>
-        </div>
-        <div class="text-right">
-          <div class="text-sm text-gray-500 dark:text-gray-400">Features Enabled</div>
-          <div class="text-2xl font-bold text-primary-600 dark:text-primary-400">
-            {{ getEnabledFeaturesCount(plan) }}/{{ getTotalFeaturesCount(plan) }}
-          </div>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div *ngFor="let feature of getFilteredFeatures()" class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-              <i [class]="getModuleIcon(feature.module)" class="text-gray-600 dark:text-gray-300"></i>
-            </div>
-            <div>
-              <div class="font-medium text-gray-900 dark:text-white">{{ feature.name }}</div>
-              <div class="text-sm text-gray-500 dark:text-gray-400">{{ feature.description }}</div>
-              <div class="flex items-center space-x-2 mt-1">
-                <span
-                  [class]="getCategoryColor(feature.category)"
-                  class="px-2 py-1 text-xs rounded-full">
-                  {{ feature.category | titlecase }}
-                </span>
-                <span class="text-xs text-gray-400">{{ feature.module }}</span>
-              </div>
-            </div>
-          </div>
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              [checked]="hasFeatureAccess(plan, feature.id)"
-              (change)="togglePlanFeatureAccess(plan, feature.id)"
-              class="sr-only peer">
-            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
-          </label>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Roles View -->
-  <div *ngIf="selectedView === 'roles'" class="space-y-6">
-    <div *ngFor="let role of roleAccess" class="pos-card rounded-2xl p-6">
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ role.roleName }}</h3>
-          <p class="text-gray-600 dark:text-gray-300">Configure feature permissions for this user role</p>
-        </div>
-        <div class="text-right">
-          <div class="text-sm text-gray-500 dark:text-gray-400">Features Accessible</div>
-          <div class="text-2xl font-bold text-primary-600 dark:text-primary-400">
-            {{ getEnabledRoleFeaturesCount(role) }}/{{ getTotalRoleFeaturesCount(role) }}
-          </div>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div *ngFor="let feature of getFilteredFeatures()" class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-          <div class="flex items-start justify-between mb-3">
-            <div class="flex items-center space-x-3">
-              <div class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                <i [class]="getModuleIcon(feature.module)" class="text-gray-600 dark:text-gray-300 text-sm"></i>
-              </div>
-              <div>
-                <div class="font-medium text-gray-900 dark:text-white">{{ feature.name }}</div>
-                <span
-                  [class]="getCategoryColor(feature.category)"
-                  class="px-2 py-1 text-xs rounded-full">
-                  {{ feature.category | titlecase }}
-                </span>
-              </div>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                [checked]="hasRoleAccess(role, feature.id)"
-                (change)="toggleRoleFeatureAccess(role, feature.id)"
-                class="sr-only peer">
-              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
-            </label>
-          </div>
-
-          <!-- Permissions for enabled features -->
-          <div *ngIf="hasRoleAccess(role, feature.id)" class="space-y-2">
-            <div class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Permissions:</div>
-            <div class="flex flex-wrap gap-1">
-              <span *ngFor="let permission of role.permissions[feature.id] || []"
-                    class="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 text-xs rounded-full">
-                {{ permission | titlecase }}
-              </span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
 
   <!-- Feature Overview -->
-  <div class="pos-card rounded-2xl p-6 mt-6">
-    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Feature Overview</h3>
+  <div class="pos-card rounded-2xl p-6 mb-6">
+    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+      <i class="fas fa-chart-bar mr-3 text-purple-600"></i>
+      Feature Overview
+    </h3>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="text-center">
-        <div class="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">{{ getFeaturesByCategory('core').length }}</div>
-        <div class="text-sm text-gray-500 dark:text-gray-400">Core Features</div>
-        <div class="text-xs text-gray-400 mt-1">Available to all plans</div>
+      <div class="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl">
+        <div class="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">{{ coreFeaturesCount }}</div>
+        <div class="text-sm font-medium text-gray-700 dark:text-gray-300">Core Features</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Essential functionality</div>
       </div>
-      <div class="text-center">
-        <div class="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">{{ getFeaturesByCategory('advanced').length }}</div>
-        <div class="text-sm text-gray-500 dark:text-gray-400">Advanced Features</div>
-        <div class="text-xs text-gray-400 mt-1">Professional+ plans</div>
+      <div class="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-xl">
+        <div class="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">{{ advancedFeaturesCount }}</div>
+        <div class="text-sm font-medium text-gray-700 dark:text-gray-300">Advanced Features</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Enhanced capabilities</div>
       </div>
-      <div class="text-center">
-        <div class="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">{{ getFeaturesByCategory('premium').length }}</div>
-        <div class="text-sm text-gray-500 dark:text-gray-400">Premium Features</div>
-        <div class="text-xs text-gray-400 mt-1">Enterprise only</div>
+      <div class="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-xl">
+        <div class="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">{{ premiumFeaturesCount }}</div>
+        <div class="text-sm font-medium text-gray-700 dark:text-gray-300">Premium Features</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Enterprise-grade tools</div>
       </div>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-crown mr-2 text-yellow-500"></i>Select Plan
+        </label>
+        <select
+          [(ngModel)]="tempSelectedPlan"
+          (ngModelChange)="onTempPlanChange($event)"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option [ngValue]="null" disabled>Select a plan...</option>
+          <option *ngFor="let plan of plans" [ngValue]="plan">
+            {{ plan.name }}
+          </option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-users mr-2 text-indigo-500"></i>Select Role (Optional)
+        </label>
+        <select
+          [(ngModel)]="tempSelectedRole"
+          [disabled]="true"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 disabled:bg-gray-100 disabled:dark:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed">
+          <option *ngFor="let role of availableRoles" [value]="role.id">
+            {{ role.name }}
+          </option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-filter mr-2 text-green-500"></i>Category
+        </label>
+        <select
+          [(ngModel)]="tempSelectedCategory"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Categories</option>
+          <option value="GENERAL">General</option>
+          <option value="POS">POS</option>
+          <option value="INVENTORY">Inventory</option>
+          <option value="ORDERS">Orders</option>
+          <option value="ANALYTICS">Analytics</option>
+          <option value="CUSTOMERS">Customers</option>
+          <option value="STAFF">Staff</option>
+          <option value="INTEGRATION">Integration</option>
+          <option value="SECURITY">Security</option>
+          <option value="BRANDING">Branding</option>
+          <option value="SUPPORT">Support</option>
+          <option value="MENU">Menu</option>
+          <option value="CRM">CRM</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-search mr-2 text-red-500"></i>Search Features
+        </label>
+        <div class="relative">
+          <input
+            type="text"
+            [(ngModel)]="tempSearchTerm"
+            placeholder="Search features..."
+            class="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+        </div>
+      </div>
+    </div>
+    <div class="absolute -right-4 top-1/2 transform -translate-y-1/2 flex flex-col gap-2">
+      <button (click)="applyFilters()" class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 transition-colors">
+        <i class="fas fa-search text-sm"></i>
+      </button>
+      <button (click)="resetFilters()" class="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors">
+        <i class="fas fa-times text-sm"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Feature Configuration -->
+  <div *ngIf="selectedPlan" class="pos-card rounded-2xl p-6">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white flex items-center">
+          <i class="fas fa-cogs mr-3 text-blue-600"></i>
+          {{ selectedPlan.name }} - Feature Configuration
+        </h3>
+        <p class="text-gray-600 dark:text-gray-300">
+          {{ selectedRole === 'all' ? 'Compare feature access across all roles' : selectedRole ? 'Configure role-specific feature access' : 'Configure plan-level feature availability' }}
+        </p>
+      </div>
+      <div class="text-right" *ngIf="selectedRole !== 'all'">
+        <div class="text-sm text-gray-500 dark:text-gray-400">Features {{ selectedRole ? 'Accessible' : 'Enabled' }}</div>
+        <div class="text-2xl font-bold text-primary-600 dark:text-primary-400">
+          {{ selectedRole ? enabledRoleFeaturesCount : enabledFeaturesCount }}/{{ selectedRole ? totalRoleFeaturesCount : totalFeaturesCount }}
+        </div>
+      </div>
+    </div>
+
+    <!-- All Roles View -->
+    <div *ngIf="selectedRole === 'all'" class="space-y-8">
+      <!-- Plan Level Features First -->
+      <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h4 class="text-lg font-bold text-gray-900 dark:text-white flex items-center">
+              <i class="fas fa-crown mr-3 text-gray-600 dark:text-gray-400"></i>
+              Plan Level Access
+            </h4>
+            <p class="text-gray-600 dark:text-gray-300 text-sm">Set base feature availability for {{ selectedPlan.name }}</p>
+          </div>
+          <div class="text-right">
+            <div class="text-sm text-gray-500 dark:text-gray-400">Features Enabled</div>
+            <div class="text-xl font-bold text-yellow-600 dark:text-yellow-400">
+              {{ enabledFeaturesCount }}/{{ totalFeaturesCount }}
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div *ngFor="let feature of filteredFeatures" class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 shadow-md hover:shadow-lg transition-all duration-300">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 flex items-center justify-center">
+                  <i [class]="moduleIcons[feature.category]" class="text-yellow-600 dark:text-yellow-400 text-sm"></i>
+                </div>
+                <div>
+                  <div class="font-medium text-gray-900 dark:text-white">{{ feature.name }}</div>
+                  <div class="text-sm py-1 text-gray-500 dark:text-gray-400">{{ feature.description }}</div>
+                  <div class="flex gap-2 mt-2">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                      {{ feature.feature_type | titlecase }}
+                    </span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                      {{ feature.category | titlecase }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  [checked]="featureStates[feature.feature_id].planEnabled"
+                  (change)="togglePlanFeature(feature.feature_id)"
+                  class="sr-only peer">
+                <div class="w-10 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-500"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Role Sections -->
+       <div *ngFor="let role of availableRoles.slice(1)" class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h4 class="text-lg font-bold text-gray-900 dark:text-white flex items-center">
+              <i class="fas fa-user-shield mr-3 text-blue-600"></i>
+              {{ role.name }} Access
+            </h4>
+            <p class="text-gray-600 dark:text-gray-300 text-sm">Configure feature permissions for {{ role.name }} role</p>
+          </div>
+
+          <div class="text-right">
+            <div class="text-sm text-gray-500 dark:text-gray-400">Features Accessible</div>
+            <div class="text-xl font-bold text-blue-600 dark:text-blue-400">
+              {{ roleFeatureCounts[role.id] || 0 }}/{{ getPlanEnabledFeaturesCount() }}
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <ng-container *ngFor="let feature of filteredFeatures">
+            <div *ngIf="featureStates[feature.feature_id]?.planEnabled" class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 shadow-md hover:shadow-lg transition-all duration-300">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 flex items-center justify-center">
+                  <i [class]="moduleIcons[feature.category]" class="text-yellow-600 dark:text-yellow-400 text-sm"></i>
+                </div>
+                <div>
+                  <div class="font-medium text-gray-900 dark:text-white">{{ feature.name }}</div>
+                  <div class="text-sm py-1 text-gray-500 dark:text-gray-400">{{ feature.description }}</div>
+                  <div class="flex gap-2 mt-2">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                      {{ feature.feature_type | titlecase }}
+                    </span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                      {{ feature.category | titlecase }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  [checked]="featureRoleStates[feature.feature_id][role.id]"
+                  (change)="toggleRoleFeatureForRole(feature.feature_id, role.id)"
+                  class="sr-only peer">
+                <div class="w-10 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-500"></div>
+              </label>
+            </div>
+          </div>
+        </ng-container>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- No Plan Selected Message -->
+  <div *ngIf="!selectedPlan" class="pos-card rounded-2xl p-12 text-center">
+    <div class="max-w-md mx-auto">
+      <i class="fas fa-crown text-6xl text-yellow-500 mb-4"></i>
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Select a Plan</h3>
+      <p class="text-gray-600 dark:text-gray-400">Choose a subscription plan to configure feature access permissions</p>
     </div>
   </div>
 </div>

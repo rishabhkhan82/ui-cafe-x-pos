@@ -78,7 +78,7 @@ export const routes: Routes = [
   },
 
   {
-    path: 'features',
+    path: 'features-access-control',
     loadComponent: () => import('./components/platform/feature-access-control/feature-access-control.component').then(m => m.FeatureAccessControlComponent ),
     canActivate: [authGuard]
   },

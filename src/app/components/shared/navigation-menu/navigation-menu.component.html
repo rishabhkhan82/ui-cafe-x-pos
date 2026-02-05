@@ -52,7 +52,7 @@
       </ng-container>
       <ng-template #singleMenu>
         <!-- Single menu item -->
-        <button *ngIf="menu.path" [ngClass]="{'bg-gradient-to-r from-red-100 to-pink-100 dark:from-red-900/30 dark:to-pink-900/30 shadow-md ring-2 ring-red-200 dark:ring-red-800': menu.is_active}" (click)="navigateToMenu(menu.path)" class="w-full text-left flex items-center px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 dark:hover:from-green-900/20 dark:hover:to-blue-900/20 rounded-xl transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-lg group" [style.padding-left.px]="level * 16 + 12">
+        <button *ngIf="menu.path" [title]="menu.path" [ngClass]="{'bg-gradient-to-r from-red-100 to-pink-100 dark:from-red-900/30 dark:to-pink-900/30 shadow-md ring-2 ring-red-200 dark:ring-red-800': menu.is_active}" (click)="navigateToMenu(menu.path)" class="w-full text-left flex items-center px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 dark:hover:from-green-900/20 dark:hover:to-blue-900/20 rounded-xl transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-lg group" [style.padding-left.px]="level * 16 + 12">
           <i [class]="menu.icon + ' mr-3 w-5 text-center text-green-600 dark:text-green-400 group-hover:animate-spin'"></i>
           {{ menu.name }}
         </button>

@@ -825,6 +825,29 @@ export interface RoleFeatureAccess {
   permissions: { [featureId: string]: string[] };
 }
 
+export interface PlanFeatureMapping {
+  id: number;
+  plan_id: number;
+  feature_id: string;
+  is_enabled: boolean;
+  created_at: string;
+  created_by: number | null;
+  updated_at: string;
+  updated_by: number | null;
+}
+
+export interface RoleFeatureMapping {
+  id: number;
+  plan_id: number;
+  role_id: number;
+  feature_id: string;
+  is_enabled: boolean;
+  created_at: string;
+  created_by: number | null;
+  updated_at: string;
+  updated_by: number | null;
+}
+
 export interface Integration {
   id: string;
   name: string;
@@ -1772,7 +1795,8 @@ export class MockDataService {
   private navigationRolesSubject = new BehaviorSubject<string[]>([]);
   private navigationStatusesSubject = new BehaviorSubject<string[]>([]);
   private subscriptionPlansSubject = new BehaviorSubject<SubscriptionPlan[]>([]);
-  private planFeaturesSubject = new BehaviorSubject<PlanFeature[]>([]);
+  // private planFeaturesMappingSubject = new BehaviorSubject<PlanFeatureMapping[]>([]);
+  private roleFeaturesMappingSubject = new BehaviorSubject<RoleFeatureMapping[]>([]);
   private platformDashboardDataSubject = new BehaviorSubject<any>(null);
   private restaurantsSubject = new BehaviorSubject<Restaurant[]>([]);
   private securityPoliciesSubject = new BehaviorSubject<SecurityPolicy[]>([]);
@@ -1897,7 +1921,7 @@ export class MockDataService {
   navigationRoles$ = this.navigationRolesSubject.asObservable();
   navigationStatuses$ = this.navigationStatusesSubject.asObservable();
   subscriptionPlans$ = this.subscriptionPlansSubject.asObservable();
-  planFeatures$ = this.planFeaturesSubject.asObservable();
+  // planFeatures$ = this.planFeaturesMappingSubject.asObservable();
   platformDashboardData$ = this.platformDashboardDataSubject.asObservable();
   restaurants$ = this.restaurantsSubject.asObservable();
   securityPolicies$ = this.securityPoliciesSubject.asObservable();
@@ -1909,6 +1933,8 @@ export class MockDataService {
   broadcastMessages$ = this.broadcastMessagesSubject.asObservable();
   features$ = this.featuresSubject.asObservable();
   managedFeatures$ = this.managedFeaturesSubject.asObservable();
+  // planFeaturesMapping$ = this.planFeaturesMappingSubject.asObservable();
+  roleFeaturesMapping$ = this.roleFeaturesMappingSubject.asObservable();
   planFeatureAccess$ = this.planFeatureAccessSubject.asObservable();
   roleFeatureAccess$ = this.roleFeatureAccessSubject.asObservable();
   systemAlerts$ = this.systemAlertsSubject.asObservable();
@@ -6415,6 +6441,77 @@ export class MockDataService {
       }
     ];
 
+    // Initialize plan features mapping (database table data)
+    const planFeaturesMapping: PlanFeatureMapping[] = [
+      // Starter Plan (ID: 1)
+      { id: 1, plan_id: 1, feature_id: 'basic_pos', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 2, plan_id: 1, feature_id: 'menu_management', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 3, plan_id: 1, feature_id: 'order_management', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 4, plan_id: 1, feature_id: 'basic_reports', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+
+      // Professional Plan (ID: 2)
+      { id: 5, plan_id: 2, feature_id: 'basic_pos', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 6, plan_id: 2, feature_id: 'menu_management', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 7, plan_id: 2, feature_id: 'order_management', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 8, plan_id: 2, feature_id: 'basic_reports', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 9, plan_id: 2, feature_id: 'advanced_reports', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 10, plan_id: 2, feature_id: 'inventory_management', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 11, plan_id: 2, feature_id: 'staff_management', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 12, plan_id: 2, feature_id: 'customer_loyalty', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+
+      // Enterprise Plan (ID: 3)
+      { id: 13, plan_id: 3, feature_id: 'basic_pos', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 14, plan_id: 3, feature_id: 'menu_management', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 15, plan_id: 3, feature_id: 'order_management', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 16, plan_id: 3, feature_id: 'basic_reports', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 17, plan_id: 3, feature_id: 'advanced_reports', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 18, plan_id: 3, feature_id: 'inventory_management', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 19, plan_id: 3, feature_id: 'staff_management', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 20, plan_id: 3, feature_id: 'customer_loyalty', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 21, plan_id: 3, feature_id: 'advanced_analytics', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 22, plan_id: 3, feature_id: 'api_access', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 23, plan_id: 3, feature_id: 'white_label', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 24, plan_id: 3, feature_id: 'priority_support', is_enabled: true, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 }
+    ];
+
+    // Initialize role features mapping (database table data)
+    const roleFeaturesMapping: RoleFeatureMapping[] = [
+      // Starter Plan + Roles (all set to false by default)
+      { id: 1, plan_id: 1, role_id: 1, feature_id: 'basic_pos', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 2, plan_id: 1, role_id: 1, feature_id: 'menu_management', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 3, plan_id: 1, role_id: 1, feature_id: 'order_management', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 4, plan_id: 1, role_id: 1, feature_id: 'basic_reports', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+
+      // Professional Plan + Roles (Manager) - all false by default
+      { id: 5, plan_id: 2, role_id: 1, feature_id: 'basic_pos', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 6, plan_id: 2, role_id: 1, feature_id: 'menu_management', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 7, plan_id: 2, role_id: 1, feature_id: 'order_management', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 8, plan_id: 2, role_id: 1, feature_id: 'basic_reports', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 9, plan_id: 2, role_id: 1, feature_id: 'advanced_reports', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 10, plan_id: 2, role_id: 1, feature_id: 'inventory_management', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 11, plan_id: 2, role_id: 1, feature_id: 'staff_management', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 12, plan_id: 2, role_id: 1, feature_id: 'customer_loyalty', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+
+      // Professional Plan + Roles (Cashier) - all false by default
+      { id: 13, plan_id: 2, role_id: 2, feature_id: 'basic_pos', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 14, plan_id: 2, role_id: 2, feature_id: 'order_management', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 15, plan_id: 2, role_id: 2, feature_id: 'basic_reports', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+
+      // Enterprise Plan + Roles (Manager) - all false by default
+      { id: 16, plan_id: 3, role_id: 1, feature_id: 'basic_pos', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 17, plan_id: 3, role_id: 1, feature_id: 'menu_management', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 18, plan_id: 3, role_id: 1, feature_id: 'order_management', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 19, plan_id: 3, role_id: 1, feature_id: 'basic_reports', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 20, plan_id: 3, role_id: 1, feature_id: 'advanced_reports', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 21, plan_id: 3, role_id: 1, feature_id: 'inventory_management', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 22, plan_id: 3, role_id: 1, feature_id: 'staff_management', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 23, plan_id: 3, role_id: 1, feature_id: 'customer_loyalty', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 24, plan_id: 3, role_id: 1, feature_id: 'advanced_analytics', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 25, plan_id: 3, role_id: 1, feature_id: 'api_access', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 26, plan_id: 3, role_id: 1, feature_id: 'white_label', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 },
+      { id: 27, plan_id: 3, role_id: 1, feature_id: 'priority_support', is_enabled: false, created_at: '2026-01-01T00:00:00.000000', created_by: 1, updated_at: '2026-01-01T00:00:00.000000', updated_by: 1 }
+    ];
+
         // Initialize system alerts
     const systemAlerts: SystemAlert[] = [
       {
@@ -6770,7 +6867,8 @@ export class MockDataService {
     this.navigationRolesSubject.next(navigationRoles);
     this.navigationStatusesSubject.next(navigationStatuses);
     this.subscriptionPlansSubject.next(subscriptionPlans);
-    this.planFeaturesSubject.next(planFeatures);
+    // this.planFeaturesMappingSubject.next(planFeaturesMapping);
+    this.roleFeaturesMappingSubject.next(roleFeaturesMapping);
     this.platformDashboardDataSubject.next(platformDashboardData);
     this.restaurantsSubject.next(restaurants);
     this.securityPoliciesSubject.next(securityPolicies);
@@ -7663,20 +7761,24 @@ export class MockDataService {
     return this.subscriptionPlans$;
   }
 
-  getPlanFeatures(): Observable<PlanFeature[]> {
-    return this.planFeatures$;
+  // getPlanFeaturesMapping(): Observable<PlanFeatureMapping[]> {
+  //   return this.planFeaturesMapping$;
+  // }
+
+  getRoleFeaturesMapping(): Observable<RoleFeatureMapping[]> {
+    return this.roleFeaturesMapping$;
   }
 
   getPlanById(planId: number): SubscriptionPlan | undefined {
     return this.subscriptionPlansSubject.value.find(plan => plan.id === planId);
   }
 
-  getFeatureById(featureId: string): PlanFeature | undefined {
-    return this.planFeaturesSubject.value.find(feature => feature.id === featureId);
+  getFeatureById(featureId: string): Feature | undefined {
+    return this.featuresSubject.value.find(feature => feature.id === featureId);
   }
 
-  getFeaturesByCategory(category: string): PlanFeature[] {
-    return this.planFeaturesSubject.value.filter(feature => feature.category === category);
+  getFeaturesByCategory(category: string): Feature[] {
+    return this.featuresSubject.value.filter(feature => feature.category === category);
   }
 
   // Platform dashboard methods
