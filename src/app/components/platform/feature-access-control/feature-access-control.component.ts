@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { ManagedFeature, PlanFeatureMapping, RoleFeatureMapping, SubscriptionPlan, MockDataService } from '../../../services/mock-data.service';
+import { CrudService } from '../../../services/crud.service';
 
 @Component({
   selector: 'app-feature-access-control',
@@ -72,12 +73,16 @@ export class FeatureAccessControlComponent implements OnInit, OnDestroy {
 
   private subscriptions: Subscription[] = [];
 
-  constructor(private mockDataService: MockDataService) {}
+  constructor(
+    private mockDataService: MockDataService,
+    private crudService: CrudService
+  ) {}
 
   ngOnInit(): void {
     this.loadFeatures();
     this.loadPlans();
-    // this.loadPlanFeatures();
+    this.loadRoles();
+    this.loadPlanFeatures();
     this.loadRoleFeatures();
   }
 
@@ -115,38 +120,129 @@ export class FeatureAccessControlComponent implements OnInit, OnDestroy {
   }
 
   loadFeatures(): void {
-    const subscription = this.mockDataService.getManagedFeatures().subscribe(features => {
-      this.features = features;
-      this.updateComputedProperties();
+    // Features list comes from plan-features API (which includes feature definitions and their plan mappings)
+    const subscription = this.crudService.getFeatures().subscribe({
+      next: (response: any) => {
+        // The plan-features API returns feature definitions with their plan mappings
+        // Extract feature definitions from the response
+        const features = response.data || response || [];
+        
+        // Build features list with plan-feature mappings
+        this.features = features.map((feature: any) => ({
+          feature_id: feature.feature_id || feature.id,
+          name: feature.name || feature.feature_name,
+          description: feature.description || '',
+          category: feature.category || 'GENERAL',
+          feature_type: feature.feature_type || 'BASIC',
+          is_enabled: feature.is_enabled ?? true
+        }));
+        
+        this.updateComputedProperties();
+      },
+      error: (error) => {
+        console.error('Error loading features:', error);
+        // Fallback to mock data on error
+        this.mockDataService.getManagedFeatures().subscribe(features => {
+          this.features = features;
+          this.updateComputedProperties();
+        });
+      }
     });
     this.subscriptions.push(subscription);
   }
 
   loadPlans(): void {
-    const subscription = this.mockDataService.getSubscriptionPlans().subscribe(plans => {
-      this.plans = plans;
-      // Auto-select first plan
-      if (this.plans.length > 0) {
-        this.selectedPlan = this.plans[0];
-        this.tempSelectedPlan = this.plans[0];
+    const subscription = this.crudService.getSubscriptionPlans().subscribe({
+      next: (response: any) => {
+        this.plans = response.data || response || [];
+        // Auto-select first plan
+        if (this.plans.length > 0) {
+          this.selectedPlan = this.plans[0];
+          this.tempSelectedPlan = this.plans[0];
+        }
+        this.updateComputedProperties();
+      },
+      error: (error) => {
+        console.error('Error loading plans:', error);
+        // Fallback to mock data on error
+        this.mockDataService.getSubscriptionPlans().subscribe(plans => {
+          this.plans = plans;
+          if (this.plans.length > 0) {
+            this.selectedPlan = this.plans[0];
+            this.tempSelectedPlan = this.plans[0];
+          }
+          this.updateComputedProperties();
+        });
       }
-      this.updateComputedProperties();
     });
     this.subscriptions.push(subscription);
   }
 
-  // loadPlanFeatures(): void {
-  //   const subscription = this.mockDataService.getPlanFeaturesMapping().subscribe(planFeatures => {
-  //     this.planFeatures = planFeatures;
-  //     this.updateComputedProperties();
-  //   });
-  //   this.subscriptions.push(subscription);
-  // }
+  loadRoles(): void {
+    const subscription = this.crudService.getUserRoles().subscribe({
+      next: (response: any) => {
+        const roles = response.data || response || [];
+        // Build availableRoles array with 'All Roles' option
+        this.availableRoles = [
+          { id: 'all', name: 'All Roles' },
+          ...roles.map((role: any) => ({
+            id: role.id?.toString() || role.role_id?.toString() || role.code,
+            name: role.name || role.role_name
+          }))
+        ];
+        this.updateComputedProperties();
+      },
+      error: (error) => {
+        console.error('Error loading roles:', error);
+        // Keep hardcoded roles as fallback
+      }
+    });
+    this.subscriptions.push(subscription);
+  }
+
+  loadPlanFeatures(): void {
+    // Fetch plan-feature mapping from API (which features are enabled for each plan)
+    const subscription = this.crudService.getPlanFeatureMapping().subscribe({
+      next: (response: any) => {
+        // The plan-features-mapping API returns feature access mappings for plans
+        const features = response.data || response || [];
+        this.planFeatures = features.map((feature: any) => ({
+          id: feature.id,
+          plan_id: feature.plan_id,
+          feature_id: feature.feature_id || feature.id,
+          is_enabled: feature.is_enabled ?? true,
+          created_at: feature.created_at,
+          created_by: feature.created_by,
+          updated_at: feature.updated_at,
+          updated_by: feature.updated_by
+        }));
+        this.updateComputedProperties();
+      },
+      error: (error: any) => {
+        console.error('Error loading plan feature mapping:', error);
+        // Keep empty array on error
+        this.planFeatures = [];
+        this.updateComputedProperties();
+      }
+    });
+    this.subscriptions.push(subscription);
+  }
 
   loadRoleFeatures(): void {
-    const subscription = this.mockDataService.getRoleFeaturesMapping().subscribe(roleFeatures => {
-      this.roleFeatures = roleFeatures;
-      this.updateComputedProperties();
+    // Fetch role-feature mapping from API (which features are enabled for each role within plans)
+    const subscription = this.crudService.getRoleFeatureMapping().subscribe({
+      next: (response: any) => {
+        this.roleFeatures = response.data || response || [];
+        this.updateComputedProperties();
+      },
+      error: (error: any) => {
+        console.error('Error loading role feature mapping:', error);
+        // Fallback to mock data on error
+        this.mockDataService.getRoleFeaturesMapping().subscribe(roleFeatures => {
+          this.roleFeatures = roleFeatures;
+          this.updateComputedProperties();
+        });
+      }
     });
     this.subscriptions.push(subscription);
   }
@@ -194,8 +290,18 @@ export class FeatureAccessControlComponent implements OnInit, OnDestroy {
 
     if (existingFeature) {
       existingFeature.is_enabled = !existingFeature.is_enabled;
-      // In real app, call API to update
-      console.log('Updated plan feature:', this.selectedPlan.name, featureId, existingFeature.is_enabled);
+      // Call API to update
+      this.crudService.updatePlanFeatureMapping(existingFeature.id, { is_enabled: existingFeature.is_enabled }).subscribe({
+        next: () => {
+          console.log('Updated plan feature:', this.selectedPlan!.name, featureId, existingFeature.is_enabled);
+        },
+        error: (error) => {
+          console.error('Error updating plan feature:', error);
+          // Revert on error
+          existingFeature.is_enabled = !existingFeature.is_enabled;
+          this.updateComputedProperties();
+        }
+      });
     } else {
       // Create new plan feature entry
       const newFeature: PlanFeatureMapping = {
@@ -209,7 +315,30 @@ export class FeatureAccessControlComponent implements OnInit, OnDestroy {
         updated_by: 1
       };
       this.planFeatures.push(newFeature);
-      console.log('Created new plan feature:', this.selectedPlan.name, featureId);
+
+      // Call API to create
+      this.crudService.createPlanFeatureMapping({
+        plan_id: this.selectedPlan!.id,
+        feature_id: featureId,
+        is_enabled: true
+      }).subscribe({
+        next: (response: any) => {
+          // Update with real ID from server
+          if (response.id) {
+            const localFeature = this.planFeatures.find(f => f.feature_id === featureId && f.plan_id === this.selectedPlan!.id);
+            if (localFeature) {
+              localFeature.id = response.id;
+            }
+          }
+          console.log('Created new plan feature:', this.selectedPlan!.name, featureId);
+        },
+        error: (error: any) => {
+          console.error('Error creating plan feature:', error);
+          // Remove on error
+          this.planFeatures = this.planFeatures.filter(f => !(f.feature_id === featureId && f.plan_id === this.selectedPlan!.id));
+          this.updateComputedProperties();
+        }
+      });
     }
     this.updateComputedProperties();
   }
@@ -337,8 +466,18 @@ export class FeatureAccessControlComponent implements OnInit, OnDestroy {
 
     if (existingFeature) {
       existingFeature.is_enabled = !existingFeature.is_enabled;
-      // In real app, call API to update
-      console.log('Updated role feature:', this.selectedPlan.name, roleId, featureId, existingFeature.is_enabled);
+      // Call API to update
+      this.crudService.updateRoleFeatureMapping(existingFeature.id, { is_enabled: existingFeature.is_enabled }).subscribe({
+        next: () => {
+          console.log('Updated role feature:', this.selectedPlan!.name, roleId, featureId, existingFeature.is_enabled);
+        },
+        error: (error) => {
+          console.error('Error updating role feature:', error);
+          // Revert on error
+          existingFeature.is_enabled = !existingFeature.is_enabled;
+          this.updateComputedProperties();
+        }
+      });
     } else {
       // Create new role feature entry
       const newFeature: RoleFeatureMapping = {
@@ -353,19 +492,44 @@ export class FeatureAccessControlComponent implements OnInit, OnDestroy {
         updated_by: 1
       };
       this.roleFeatures.push(newFeature);
-      console.log('Created new role feature:', this.selectedPlan.name, roleId, featureId);
+
+      // Call API to create
+      this.crudService.createRoleFeatureMapping({
+        plan_id: this.selectedPlan!.id,
+        role_id: parseInt(roleId),
+        feature_id: featureId,
+        is_enabled: true
+      }).subscribe({
+        next: (response: any) => {
+          // Update with real ID from server
+          if (response.id) {
+            const localFeature = this.roleFeatures.find(f =>
+              f.feature_id === featureId &&
+              f.plan_id === this.selectedPlan!.id &&
+              f.role_id.toString() === roleId
+            );
+            if (localFeature) {
+              localFeature.id = response.id;
+            }
+          }
+          console.log('Created new role feature mapping:', this.selectedPlan!.name, roleId, featureId);
+        },
+        error: (error: any) => {
+          console.error('Error creating role feature mapping:', error);
+          // Remove on error
+          this.roleFeatures = this.roleFeatures.filter(f =>
+            !(f.feature_id === featureId && f.plan_id === this.selectedPlan!.id && f.role_id.toString() === roleId)
+          );
+          this.updateComputedProperties();
+        }
+      });
     }
     this.updateComputedProperties();
   }
 
-  // Get available roles (simplified for demo)
+  // Get available roles (uses API-loaded data)
   getAvailableRoles(): {id: string, name: string}[] {
-    return [
-      { id: 'all', name: 'All Roles' },
-      { id: '1', name: 'Manager' },
-      { id: '2', name: 'Cashier' },
-      { id: '3', name: 'Kitchen Staff' }
-    ];
+    return this.availableRoles;
   }
 
   getCategoryColor(featureType: string): string {

@@ -358,4 +358,38 @@ export class CrudService {
   getHeaderToken(): any {
     return { 'Authorization': `Bearer ${sessionStorage.getItem('accessToken') || ''}` };
   }
+
+  // Plan Feature Mapping operations (for plan-feature access mappings)
+  getPlanFeatureMapping(params?: CrudParams): Observable<any> {
+    return this.getData('plan-features-mapping', params);
+  }
+
+  createPlanFeatureMapping(payload: any): Observable<any> {
+    return this.postData('plan-features-mapping', payload);
+  }
+
+  updatePlanFeatureMapping(id: string | number, payload: any): Observable<any> {
+    return this.putData('plan-features-mapping', payload, {}, id);
+  }
+
+  deletePlanFeatureMapping(id: string | number): Observable<any> {
+    return this.deleteData('plan-features-mapping', {}, id);
+  }
+
+  // Role Feature Mapping operations (for role-based feature access within plans)
+  getRoleFeatureMapping(params?: CrudParams): Observable<any> {
+    return this.getData('role-features-mapping', params);
+  }
+
+  createRoleFeatureMapping(payload: any): Observable<any> {
+    return this.postData('role-features-mapping', payload);
+  }
+
+  updateRoleFeatureMapping(id: string | number, payload: any): Observable<any> {
+    return this.putData('role-features-mapping', payload, {}, id);
+  }
+
+  deleteRoleFeatureMapping(id: string | number): Observable<any> {
+    return this.deleteData('role-features-mapping', {}, id);
+  }
 }
