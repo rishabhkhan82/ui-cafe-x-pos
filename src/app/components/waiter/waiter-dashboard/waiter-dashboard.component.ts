@@ -7,18 +7,21 @@ import { CrudService } from '../../../services/crud.service';
 import { LoadingService } from '../../../services/loading.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ValidationService } from '../../../services/validation.service';
+import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
 import { OrderCardComponent } from '../../common/order-card/order-card.component';
 import { OrderDetailsDialogComponent } from '../../common/order-details/order-details-dialog.component';
+import { ConfirmationDialogComponent } from '../../common/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-waiter-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgxSkeletonLoaderModule, OrderCardComponent, OrderDetailsDialogComponent],
+  imports: [CommonModule, FormsModule, NgxSkeletonLoaderModule, OrderCardComponent, OrderDetailsDialogComponent, ConfirmationDialogComponent],
   templateUrl: './waiter-dashboard.component.html',
   styleUrl: './waiter-dashboard.component.css'
 })
 export class WaiterDashboardComponent implements OnInit {
   orders: Order[] = [];
+  allOrders: Order[] = []; // Store full list for filtering
   selectedOrder: Order | null = null;
   showOrderDetailsModal: boolean = false;
   userRole: string = 'waiter';
@@ -51,7 +54,8 @@ export class WaiterDashboardComponent implements OnInit {
     private crudService: CrudService,
     private loadingService: LoadingService,
     private notificationService: NotificationService,
-    private validationService: ValidationService
+    private validationService: ValidationService,
+    private confirmationService: ConfirmationDialogService
   ) {}
 
   ngOnInit(): void {
@@ -62,27 +66,11 @@ export class WaiterDashboardComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-    const today = new Date().toISOString().split('T')[0];
-
-    const params: any = {
-      page: this.currentPage,
-      size: this.itemsPerPage,
-      date: today
-    };
-
-    if (this.searchTerm && this.searchTerm.trim()) {
-      params.customer_name = this.searchTerm.trim();
-    }
-
-    if (this.statusFilter !== 'all') {
-      params.status = this.statusFilter;
-    }
-
-    this.crudService.getOrders(params).subscribe({
+    this.crudService.getCurrentOrders().subscribe({
       next: (response: any) => {
-        this.orders = response.data || response || [];
-        this.totalPages = response.pageCount || 1;
-        this.totalElements = response.totalRowCount || this.orders.length;
+        this.allOrders = response || [];
+        // Apply client-side filtering and pagination
+        this.applyFiltersAndPagination();
         this.isLoading = false;
       },
       error: (error) => {
@@ -91,22 +79,42 @@ export class WaiterDashboardComponent implements OnInit {
         this.notificationService.error('Error', 'Failed to load orders');
         this.isLoading = false;
         this.orders = [];
+        this.allOrders = [];
       }
     });
+  }
+
+  private applyFiltersAndPagination(): void {
+    let filteredOrders = this.allOrders;
+
+    if (this.searchTerm && this.searchTerm.trim()) {
+      filteredOrders = filteredOrders.filter(order =>
+        order.customer_name.toLowerCase().includes(this.searchTerm.toLowerCase())
+      );
+    }
+
+    if (this.statusFilter !== 'all') {
+      filteredOrders = filteredOrders.filter(order => order.status === this.statusFilter);
+    }
+
+    this.totalElements = filteredOrders.length;
+    this.totalPages = Math.ceil(this.totalElements / this.itemsPerPage);
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    this.orders = filteredOrders.slice(startIndex, startIndex + this.itemsPerPage);
   }
 
 
 
   filterOrders(): void {
     this.currentPage = 1; // Reset to first page
-    this.loadOrders();
+    this.applyFiltersAndPagination();
   }
 
   clearFilters(): void {
     this.searchTerm = '';
     this.statusFilter = 'READY';
     this.currentPage = 1; // Reset to first page
-    this.loadOrders();
+    this.applyFiltersAndPagination();
   }
 
   selectStatus(status: string): void {
@@ -117,20 +125,20 @@ export class WaiterDashboardComponent implements OnInit {
   changePage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
-      this.loadOrders();
+      this.applyFiltersAndPagination();
     }
   }
 
   changeItemsPerPage(newLimit: number): void {
     this.itemsPerPage = newLimit;
     this.currentPage = 1; // Reset to first page
-    this.loadOrders();
+    this.applyFiltersAndPagination();
   }
 
   onItemsPerPageChange(event: any): void {
     this.itemsPerPage = +event.target.value;
     this.currentPage = 1;
-    this.loadOrders();
+    this.applyFiltersAndPagination();
   }
 
   get pageNumbers(): number[] {
@@ -232,14 +240,26 @@ export class WaiterDashboardComponent implements OnInit {
     return !!(this.searchTerm?.trim() || this.statusFilter !== 'READY');
   }
 
-  markOnTheWay(order: Order): void {
+  async markOnTheWay(order: Order): Promise<void> {
+    const confirmed = await this.confirmationService.confirm(
+      'Are you sure you want to mark this order as On the Way?',
+      'Confirm Action'
+    );
+    if (!confirmed) return;
+
     order.status = 'ON_THE_WAY';
     order.updated_at = new Date();
     this.updateOrder(order);
     this.notificationService.success('Order Updated', `Order #ORD-${order.order_id.split('-').pop()} marked as On the Way`);
   }
 
-  markServed(order: Order): void {
+  async markServed(order: Order): Promise<void> {
+    const confirmed = await this.confirmationService.confirm(
+      'Are you sure you want to mark this order as Served?',
+      'Confirm Action'
+    );
+    if (!confirmed) return;
+
     order.status = 'SERVED';
     order.updated_at = new Date();
     this.updateOrder(order);
@@ -262,6 +282,7 @@ export class WaiterDashboardComponent implements OnInit {
       priority: order.priority,
       tax_amount: order.tax_amount,
       order_items: order.items.map(item => ({
+        order_id: order.id,
         menu_item_id: item.menu_item_id,
         menu_item_name: item.menu_item_name,
         quantity: item.quantity,
@@ -281,6 +302,11 @@ export class WaiterDashboardComponent implements OnInit {
         const index = this.orders.findIndex(o => o.id === order.id);
         if (index !== -1) {
           this.orders[index] = { ...this.orders[index], ...order };
+        }
+        // Update in allOrders
+        const allIndex = this.allOrders.findIndex(o => o.id === order.id);
+        if (allIndex !== -1) {
+          this.allOrders[allIndex] = { ...this.allOrders[allIndex], ...order };
         }
         this.loadingService.hide();
       },

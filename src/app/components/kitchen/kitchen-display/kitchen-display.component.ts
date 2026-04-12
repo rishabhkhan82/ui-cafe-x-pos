@@ -4,17 +4,26 @@ import { interval, Subscription } from 'rxjs';
 import { Order, OrderStatus } from '../../../services/mock-data.service';
 import { RealtimeService } from '../../../services/realtime.service';
 import { MockDataService } from '../../../services/mock-data.service';
+import { CrudService } from '../../../services/crud.service';
+import { LoadingService } from '../../../services/loading.service';
+import { NotificationService } from '../../../services/notification.service';
+import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
+import { ConfirmationDialogComponent } from '../../common/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-kitchen-display',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ConfirmationDialogComponent],
   templateUrl: './kitchen-display.component.html',
   styleUrls: ['./kitchen-display.component.css']
 })
 export class KitchenDisplayComponent implements OnInit, OnDestroy {
   private realtimeService = inject(RealtimeService);
   private mockDataService = inject(MockDataService);
+  private crudService = inject(CrudService);
+  private loadingService = inject(LoadingService);
+  private notificationService = inject(NotificationService);
+  private confirmationService = inject(ConfirmationDialogService);
   private subscriptions: Subscription[] = [];
 
   // Component state
@@ -57,9 +66,18 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
   }
 
   private loadOrders(): void {
-    // Load orders from mock data service
-    this.orders = this.mockDataService.getKitchenDisplayOrders();
-    this.filterOrders();
+    // Load current orders from API
+    this.crudService.getCurrentOrders().subscribe({
+      next: (response: any) => {
+        this.orders = response || [];
+        this.filterOrders();
+      },
+      error: (error) => {
+        console.error('Error loading orders:', error);
+        this.orders = [];
+        this.filterOrders();
+      }
+    });
   }
 
   private setupRealtimeSubscriptions(): void {
@@ -243,7 +261,14 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
     return labels[currentStatus as keyof typeof labels] || 'Update';
   }
 
-  updateOrderStatus(order: Order, newStatus: string): void {
+  async updateOrderStatus(order: Order, newStatus: string): Promise<void> {
+    const action = newStatus === 'CANCELLED' ? 'cancel' : 'update';
+    const confirmed = await this.confirmationService.confirm(
+      `Are you sure you want to ${action} this order to ${newStatus}?`,
+      'Confirm Action'
+    );
+    if (!confirmed) return;
+
     // Update local state
     const orderIndex = this.orders.findIndex(o => o.id === order.id);
     if (orderIndex !== -1) {
@@ -257,10 +282,16 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
 
       this.filterOrders();
 
+      // Update order via API
+      this.updateOrder(this.orders[orderIndex]);
+
       // Deduct inventory when order is marked as ready
       if (newStatus === 'READY') {
         this.deductInventoryForOrder(order);
       }
+
+      // Show notification
+      this.notificationService.success('Order Updated', `Order #ORD-${order.order_id.split('-').pop()} status updated to ${newStatus}`);
 
       // Show browser notification
       this.realtimeService.triggerTestNotification();
@@ -281,8 +312,49 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
     });
   }
 
+  private updateOrder(order: Order): void {
+    this.loadingService.show();
+
+    const orderRequest = {
+      order_id: order.order_id,
+      customer_name: order.customer_name,
+      table_number: order.table_number,
+      status: order.status,
+      total_amount: order.total_amount,
+      special_instructions: order.special_instructions,
+      payment_status: order.payment_status,
+      payment_method: order.payment_method,
+      order_type: order.order_type,
+      priority: order.priority,
+      tax_amount: order.tax_amount,
+      order_items: order.items.map(item => ({
+        order_id: order.id,
+        menu_item_id: item.menu_item_id,
+        menu_item_name: item.menu_item_name,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total_price: item.total_price,
+        category: item.category,
+        special_instructions: item.special_instructions,
+        status: item.status,
+        id: item.id
+      }))
+    };
+
+    this.crudService.updateOrder(order.id, orderRequest).subscribe({
+      next: (response) => {
+        console.log('Order updated successfully:', response);
+        this.loadingService.hide();
+      },
+      error: (error) => {
+        console.error('Error updating order:', error);
+        this.loadingService.hide();
+      }
+    });
+  }
+
   markOrderServed(order: Order): void {
-    this.updateOrderStatus(order, 'served');
+    this.updateOrderStatus(order, 'SERVED');
   }
 
   viewOrderDetails(order: Order): void {

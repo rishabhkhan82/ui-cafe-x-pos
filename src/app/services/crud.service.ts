@@ -195,6 +195,10 @@ export class CrudService {
     return this.getData('orders', params);
   }
 
+  getCurrentOrders(): Observable<any> {
+    return this.getData('current-orders');
+  }
+
   getOrderById(id: string | number): Observable<any> {
     return this.getData(`orders/${id}`);
   }
