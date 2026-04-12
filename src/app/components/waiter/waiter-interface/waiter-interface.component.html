@@ -110,7 +110,7 @@
             <p class="text-xs text-gray-500 dark:text-gray-400">{{ table.capacity }} seats</p>
             <p class="text-xs text-gray-500 dark:text-gray-400">{{ getTableStatusText(table) }}</p>
             <div *ngIf="table.currentOrder" class="mt-2">
-              <p class="text-xs text-blue-600 dark:text-blue-400">{{ table.currentOrder.customerName }}</p>
+              <p class="text-xs text-blue-600 dark:text-blue-400">{{ table.currentOrder.customer_name }}</p>
               <p class="text-xs text-gray-500 dark:text-gray-400">{{ table.currentOrder.items.length }} items</p>
             </div>
           </div>
@@ -135,8 +135,8 @@
               </div>
             </div>
             <div *ngIf="table.currentOrder" class="text-right">
-              <p class="text-sm text-blue-600 dark:text-blue-400">{{ table.currentOrder.customerName }}</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">{{ table.currentOrder.items.length }} items • ₹{{ table.currentOrder.totalAmount }}</p>
+              <p class="text-sm text-blue-600 dark:text-blue-400">{{ table.currentOrder.customer_name }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">{{ table.currentOrder.items.length }} items • ₹{{ table.currentOrder.total_amount }}</p>
             </div>
           </div>
         </div>
@@ -246,11 +246,11 @@
         <div *ngFor="let cartItem of cart" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
           <div class="flex items-center justify-between">
             <div class="flex-1">
-              <h3 class="font-semibold text-gray-900 dark:text-white">{{ cartItem.menuItem.name }}</h3>
-              <p class="text-sm text-gray-600 dark:text-gray-400">₹{{ cartItem.menuItem.price }} each</p>
-              <div *ngIf="cartItem.specialInstructions" class="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+              <h3 class="font-semibold text-gray-900 dark:text-white">{{ cartItem.menu_item.name }}</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400">₹{{ cartItem.menu_item.price }} each</p>
+              <div *ngIf="cartItem.special_instructions" class="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
                 <p class="text-sm text-yellow-700 dark:text-yellow-300">
-                  <i class="fas fa-sticky-note mr-1"></i>{{ cartItem.specialInstructions }}
+                  <i class="fas fa-sticky-note mr-1"></i>{{ cartItem.special_instructions }}
                 </p>
               </div>
             </div>
@@ -264,7 +264,7 @@
                   <i class="fas fa-plus text-xs"></i>
                 </button>
               </div>
-              <span class="font-semibold text-gray-900 dark:text-white">₹{{ cartItem.totalPrice }}</span>
+              <span class="font-semibold text-gray-900 dark:text-white">₹{{ cartItem.total_price }}</span>
               <button (click)="removeFromCart(cartItem)" class="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50">
                 <i class="fas fa-trash text-xs"></i>
               </button>
@@ -316,9 +316,9 @@
              class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border-l-4 border-green-500">
           <div class="flex items-center justify-between">
             <div>
-              <p class="font-semibold text-gray-900 dark:text-white">#{{ order.id.split('-').pop() }} • Table {{ order.tableNumber }}</p>
-              <p class="text-sm text-gray-500 dark:text-gray-400">{{ order.customerName }} • {{ order.items.length }} items</p>
-              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ formatOrderTime(order.createdAt) }}</p>
+              <p class="font-semibold text-gray-900 dark:text-white">#{{ order.order_id.split('-').pop() }} • Table {{ order.table_number }}</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400">{{ order.customer_name }} • {{ order.items.length }} items</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ formatOrderTime(order.created_at) }}</p>
             </div>
             <div class="flex items-center space-x-2">
               <button (click)="markAsOnTheWay(order)" class="px-3 py-1.5 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold transition-colors">
@@ -353,13 +353,13 @@
              class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border-l-4 border-orange-500">
           <div class="flex items-center justify-between">
             <div>
-              <p class="font-semibold text-gray-900 dark:text-white">#{{ order.id.split('-').pop() }} • Table {{ order.tableNumber }}</p>
-              <p class="text-sm text-gray-500 dark:text-gray-400">{{ order.customerName }} • {{ order.items.length }} items</p>
-              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Picked up {{ formatTimeAgo(order.deliveredAt) }}</p>
+              <p class="font-semibold text-gray-900 dark:text-white">#{{ order.order_id.split('-').pop() }} • Table {{ order.table_number }}</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400">{{ order.customer_name }} • {{ order.items.length }} items</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Picked up {{ formatTimeAgo(order.delivered_at) }}</p>
             </div>
             <div class="flex items-center space-x-2">
               <button (click)="markAsDelivered(order)" class="px-3 py-1.5 rounded-full bg-green-500 hover:bg-green-600 text-white text-xs font-semibold transition-colors">
-                <i class="fas fa-check mr-1"></i>Delivered
+                <i class="fas fa-check mr-1"></i>Served
               </button>
               <button (click)="callForHelp(order)" class="px-3 py-1.5 rounded-full bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs">
                 <i class="fas fa-exclamation-triangle mr-1"></i>Help
@@ -498,15 +498,15 @@
       <div class="space-y-4">
         <div class="flex items-center justify-between">
           <span class="text-sm text-gray-600 dark:text-gray-400">Order ID:</span>
-          <span class="font-semibold">#{{ selectedOrder.id.split('-').pop() }}</span>
+          <span class="font-semibold">#{{ selectedOrder.order_id.split('-').pop() }}</span>
         </div>
         <div class="flex items-center justify-between">
           <span class="text-sm text-gray-600 dark:text-gray-400">Table:</span>
-          <span class="font-semibold">{{ selectedOrder.tableNumber }}</span>
+          <span class="font-semibold">{{ selectedOrder.table_number }}</span>
         </div>
         <div class="flex items-center justify-between">
           <span class="text-sm text-gray-600 dark:text-gray-400">Customer:</span>
-          <span class="font-semibold">{{ selectedOrder.customerName }}</span>
+          <span class="font-semibold">{{ selectedOrder.customer_name }}</span>
         </div>
         <div class="flex items-center justify-between">
           <span class="text-sm text-gray-600 dark:text-gray-400">Status:</span>
@@ -522,29 +522,29 @@
             <div *ngFor="let item of selectedOrder.items"
                  class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
               <div class="flex-1">
-                <div class="font-medium text-sm">{{ item.quantity }}x {{ item.menuItemName }}</div>
-                <div *ngIf="item.specialInstructions" class="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                  {{ item.specialInstructions }}
+                <div class="font-medium text-sm">{{ item.quantity }}x {{ item.menu_item_name }}</div>
+                <div *ngIf="item.special_instructions" class="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                  {{ item.special_instructions }}
                 </div>
               </div>
               <div class="text-right">
-                <div class="text-sm font-semibold">₹{{ item.totalPrice }}</div>
+                <div class="text-sm font-semibold">₹{{ item.total_price }}</div>
               </div>
             </div>
           </div>
         </div>
 
-        <div *ngIf="selectedOrder.specialInstructions" class="border-t border-gray-200 dark:border-gray-700 pt-4">
+        <div *ngIf="selectedOrder.special_instructions" class="border-t border-gray-200 dark:border-gray-700 pt-4">
           <h4 class="font-semibold mb-2">Special Instructions</h4>
           <p class="text-sm text-gray-600 dark:text-gray-300 bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg">
-            {{ selectedOrder.specialInstructions }}
+            {{ selectedOrder.special_instructions }}
           </p>
         </div>
 
         <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
           <div class="flex items-center justify-between font-bold">
             <span>Total Amount:</span>
-            <span>₹{{ selectedOrder.totalAmount }}</span>
+            <span>₹{{ selectedOrder.total_amount }}</span>
           </div>
         </div>
 
@@ -555,9 +555,10 @@
             Mark On the Way
           </button>
           <button *ngIf="canMarkAsDelivered(selectedOrder)"
-                  (click)="markAsDelivered(selectedOrder)"
-                  class="flex-1 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition-colors">
-            Mark Delivered
+                  (click)="markAsDelivered(selectedOrder); closeOrderDetails()"
+                  class="flex-1 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2">
+            <i class="fas fa-check-circle"></i>
+            <span>Mark Served</span>
           </button>
           <button (click)="closeOrderDetails()"
                   class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg font-semibold transition-colors">

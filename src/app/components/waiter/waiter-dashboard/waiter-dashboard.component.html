@@ -1,0 +1,156 @@
+<main class="px-4 py-4 pb-20">
+  <!-- Welcome Banner -->
+  <div class="mb-6 animate__animated animate__fadeInUp">
+    <div class="gradient-bg rounded-2xl p-6 text-white relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+      <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
+      <div class="relative z-10">
+          <h2 class="text-2xl font-bold mb-2">Real Time Orders <i class="fas fa-clock ml-2"></i></h2>
+        <p class="text-white/90">Select an order to change the status</p>
+      </div>
+    </div>
+  </div>
+
+   <!-- Order Filters -->
+   <div class="flex space-x-3 overflow-x-auto pb-2 mt-6 animate__animated animate__fadeInUp animate__delay-1s">
+      <button
+        (click)="selectStatus('PENDING')"
+        class="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
+        [class]="statusFilter === 'PENDING' ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'">
+        <i class="fas fa-clock mr-2"></i>Pending
+      </button>
+      <button
+        (click)="selectStatus('PREPARING')"
+        class="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
+        [class]="statusFilter === 'PREPARING' ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'">
+        <i class="fas fa-utensils mr-2"></i>Preparing
+      </button>
+     <button
+       (click)="selectStatus('READY')"
+       class="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
+       [class]="statusFilter === 'READY' ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'">
+       <i class="fas fa-check-circle mr-2"></i>Ready
+     </button>
+     <button
+       (click)="selectStatus('ON_THE_WAY')"
+       class="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
+       [class]="statusFilter === 'ON_THE_WAY' ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'">
+       <i class="fas fa-user-tie mr-2"></i>On the Way
+     </button>
+     <button
+       (click)="selectStatus('SERVED')"
+       class="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
+       [class]="statusFilter === 'SERVED' ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'">
+       <i class="fas fa-utensils mr-2"></i>Served
+     </button>
+      <button
+        (click)="selectStatus('COMPLETED')"
+        class="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
+        [class]="statusFilter === 'COMPLETED' ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'">
+        <i class="fas fa-check mr-2"></i>Completed
+      </button>
+      <button
+        (click)="selectStatus('CONFIRMED')"
+        class="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
+        [class]="statusFilter === 'CONFIRMED' ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'">
+        <i class="fas fa-check-circle mr-2"></i>Confirmed
+      </button>
+      <button
+        (click)="selectStatus('BILLING_REQUESTED')"
+        class="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
+        [class]="statusFilter === 'BILLING_REQUESTED' ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'">
+        <i class="fas fa-file-invoice-dollar mr-2"></i>Billing Requested
+      </button>
+      <button
+        (click)="selectStatus('CANCELLED')"
+        class="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
+        [class]="statusFilter === 'CANCELLED' ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'">
+        <i class="fas fa-times mr-2"></i>Cancelled
+      </button>
+   </div>
+
+  <!-- Orders List -->
+  <section class="mt-6">
+     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate__animated animate__fadeInUp animate__delay-2s">
+       <!-- Skeleton Loading Cards -->
+       <div *ngIf="isLoading" class="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-200 dark:border-gray-700">
+         <div class="flex justify-between mb-4">
+           <div class="flex-1">
+             <ngx-skeleton-loader count="1" [theme]="{width: '70%', height: '16px', 'background-color': 'rgba(239, 68, 68, 0.1)'}" class="mb-2"></ngx-skeleton-loader>
+             <ngx-skeleton-loader count="1" [theme]="{width: '50%', height: '16px', 'background-color': 'rgba(239, 68, 68, 0.1)'}"></ngx-skeleton-loader>
+           </div>
+           <div class="text-right">
+              <ngx-skeleton-loader count="1" [theme]="{width: '80px', height: '16px', 'background-color': 'rgba(239, 68, 68, 0.1)'}" class="mb-2"></ngx-skeleton-loader>
+              <ngx-skeleton-loader count="1" [theme]="{width: '60px', height: '16px', 'background-color': 'rgba(239, 68, 68, 0.1)'}" class="mb-2"></ngx-skeleton-loader>
+           </div>
+         </div>
+        <div>
+          <ngx-skeleton-loader count="1" [theme]="{width: '100%', height: '16px', 'background-color': 'rgba(239, 68, 68, 0.1)'}" class="mb-2"></ngx-skeleton-loader>
+          <ngx-skeleton-loader count="1" [theme]="{width: '100%', height: '16px', 'background-color': 'rgba(239, 68, 68, 0.1)'}"></ngx-skeleton-loader>
+        </div>
+      </div>
+      <div *ngIf="isLoading" class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+        <div class="flex justify-between mb-4">
+          <div class="flex-1">
+            <ngx-skeleton-loader count="1" [theme]="{width: '70%', height: '16px', 'background-color': 'rgba(239, 68, 68, 0.1)'}" class="mb-2"></ngx-skeleton-loader>
+            <ngx-skeleton-loader count="1" [theme]="{width: '50%', height: '16px', 'background-color': 'rgba(239, 68, 68, 0.1)'}"></ngx-skeleton-loader>
+          </div>
+          <div class="text-right">
+            <ngx-skeleton-loader count="1" [theme]="{width: '80px', height: '16px', 'background-color': 'rgba(239, 68, 68, 0.1)'}" class="mb-2"></ngx-skeleton-loader>
+            <ngx-skeleton-loader count="1" [theme]="{width: '60px', height: '16px', 'background-color': 'rgba(239, 68, 68, 0.1)'}" class="mb-2"></ngx-skeleton-loader>
+          </div>
+        </div>
+        <div>
+          <ngx-skeleton-loader count="1" [theme]="{width: '100%', height: '16px', 'background-color': 'rgba(239, 68, 68, 0.1)'}" class="mb-2"></ngx-skeleton-loader>
+          <ngx-skeleton-loader count="1" [theme]="{width: '100%', height: '16px', 'background-color': 'rgba(239, 68, 68, 0.1)'}"></ngx-skeleton-loader>
+        </div>
+      </div>
+      <div *ngIf="isLoading" class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+        <div class="flex justify-between mb-4">
+          <div class="flex-1">
+            <ngx-skeleton-loader count="1" [theme]="{width: '70%', height: '16px', 'background-color': 'rgba(239, 68, 68, 0.1)'}" class="mb-2"></ngx-skeleton-loader>
+            <ngx-skeleton-loader count="1" [theme]="{width: '50%', height: '16px', 'background-color': 'rgba(239, 68, 68, 0.1)'}"></ngx-skeleton-loader>
+          </div>
+          <div class="text-right">
+            <ngx-skeleton-loader count="1" [theme]="{width: '80px', height: '16px', 'background-color': 'rgba(239, 68, 68, 0.1)'}" class="mb-2"></ngx-skeleton-loader>
+            <ngx-skeleton-loader count="1" [theme]="{width: '60px', height: '16px', 'background-color': 'rgba(239, 68, 68, 0.1)'}" class="mb-2"></ngx-skeleton-loader>
+          </div>
+        </div>
+        <div>
+          <ngx-skeleton-loader count="1" [theme]="{width: '100%', height: '16px', 'background-color': 'rgba(239, 68, 68, 0.1)'}" class="mb-2"></ngx-skeleton-loader>
+          <ngx-skeleton-loader count="1" [theme]="{width: '100%', height: '16px', 'background-color': 'rgba(239, 68, 68, 0.1)'}"></ngx-skeleton-loader>
+        </div>
+      </div>
+
+      <!-- Actual Order Cards -->
+      <ng-container *ngIf="!isLoading">
+        <app-order-card
+          *ngFor="let order of orders"
+          [order]="order"
+          [userRole]="userRole"
+          (viewOrder)="viewOrder($event)"
+          (markOnTheWay)="markOnTheWay($event)"
+          (markServed)="markServed($event)">
+        </app-order-card>
+      </ng-container>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && orders.length === 0" class="text-center py-8">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+        <i class="fas fa-utensils text-2xl text-gray-400"></i>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No orders found</h3>
+      <p class="text-gray-500 dark:text-gray-400">Try selecting a different filter.</p>
+    </div>
+  </section>
+</main>
+
+<app-order-details-dialog
+  *ngIf="showOrderDetailsModal && selectedOrder"
+  [order]="selectedOrder"
+  [userRole]="userRole"
+  (closeDialog)="closeOrderDetails()"
+  (markOnTheWay)="markOnTheWay($event)"
+  (markServed)="markServed($event)">
+</app-order-details-dialog>

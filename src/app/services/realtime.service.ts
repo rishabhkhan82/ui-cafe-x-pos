@@ -54,11 +54,11 @@ export class RealtimeService {
       // Get the latest order and emit it
       this.mockDataService.getOrders().subscribe(orders => {
         const latestOrder = orders[orders.length - 1];
-        if (latestOrder && new Date(latestOrder.createdAt).getTime() > Date.now() - 5000) {
+        if (latestOrder && new Date(latestOrder.created_at).getTime() > Date.now() - 5000) {
           this.newOrderSubject.next(latestOrder);
           this.showBrowserNotification(
             'New Order Received',
-            `Order ${latestOrder.id} for ${latestOrder.customerName}`,
+            `Order ${latestOrder.id} for ${latestOrder.customer_name}`,
             'order'
           );
         }

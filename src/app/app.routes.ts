@@ -113,6 +113,32 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
 
+  // Waiter Specific Routings
+  {
+    path: 'waiter-dashboard',
+    loadComponent: () => import('./components/waiter/waiter-dashboard/waiter-dashboard.component').then(m => m.WaiterDashboardComponent),
+    canActivate: [authGuard]
+  },
+  
+  {
+    path: 'waiter-interface',
+    loadComponent: () => import('./components/waiter/waiter-interface/waiter-interface.component').then(m => m.WaiterInterfaceComponent),
+    canActivate: [authGuard]
+  },
+
+  // Kitchen Manager Specific Routings
+  // {
+  //   path: 'kitchen-dashboard',
+  //   loadComponent: () => import('./components/kitchen/kitchen-dashboard/kitchen-dashboard.component').then(m => m.KitchenDashboardComponent),
+  //   canActivate: [authGuard]
+  // },
+  
+  {
+    path: 'kitchen-manager-display',
+    loadComponent: () => import('./components/kitchen/kitchen-display/kitchen-display.component').then(m => m.KitchenDisplayComponent),
+    canActivate: [authGuard]
+  },
+
   // Customer login (outside layout - no header/footer)
   {
     path: 'customer/login',

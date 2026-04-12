@@ -195,8 +195,20 @@ export class CrudService {
     return this.getData('orders', params);
   }
 
+  getOrderById(id: string | number): Observable<any> {
+    return this.getData(`orders/${id}`);
+  }
+
   createOrder(payload: any): Observable<any> {
     return this.postData('orders', payload);
+  }
+
+  updateOrder(id: string | number, payload: any): Observable<any> {
+    return this.putData('orders', payload, {}, id);
+  }
+
+  deleteOrder(id: string | number): Observable<any> {
+    return this.deleteData('orders', {}, id);
   }
 
   updateOrderStatus(id: string, status: string): Observable<any> {

@@ -83,36 +83,38 @@ export interface CustomizationOption {
 }
 
 export interface Order {
-  id: string;
-  customerId: string;
-  customerName: string;
-  tableNumber: string;
+  id: number;
+  order_id: string;
+  table_number: string;
+  customer_name: string;
   items: OrderItem[];
-  status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'on_the_way' | 'served' | 'completed' | 'cancelled' | 'billing_requested';
-  totalAmount: number;
-  createdAt: Date;
-  updatedAt: Date;
-  specialInstructions?: string;
-  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
-  paymentMethod?: string;
-  orderType?: 'dine_in' | 'takeaway' | 'delivery';
-  estimatedReadyTime?: Date;
-  deliveredAt?: Date;
-  priority?: 'low' | 'medium' | 'high';
-  taxAmount?: number;
+  total_amount: number;
+  status: 'PENDING' | 'PREPARING' | 'READY' | 'ON_THE_WAY' | 'SERVED' | 'COMPLETED' | 'CONFIRMED' | 'BILLING_REQUESTED' | 'CANCELLED';
+  created_at: Date;
+  updated_at: Date;
+  payment_status: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
+  special_instructions?: string;
+  tax_amount: number;
+  delivered_at?: Date;
+  estimated_ready_time?: Date;
+  customer_id: number;
+  restaurant_id: number;
+  order_type: 'DELIVERY' | 'DINE_IN' | 'TAKEAWAY';
+  priority: 'HIGH' | 'LOW' | 'MEDIUM';
+  payment_method?: string;
 }
 
 export interface OrderItem {
-  id: string;
-  menuItemId: string;
-  menuItemName: string;
+  id: number;
+  order_id: number;
+  menu_item_id: number;
+  menu_item_name: string;
   quantity: number;
-  unitPrice: number;
-  totalPrice: number;
-  category?: string;
-  customizations?: OrderCustomization[];
-  specialInstructions?: string;
-  status?: string;
+  unit_price: number;
+  total_price: number;
+  special_instructions?: string;
+  category: string;
+  status: string;
 }
 
 export interface OrderCustomization {
@@ -166,7 +168,7 @@ export interface Recipe {
   instructions: string[];
   costPerServing: number;
   isActive: boolean;
-  menuItemId?: string; // Link to menu item
+  menuItemId?: number; // Link to menu item
   createdAt: Date;
   updatedAt: Date;
 }
@@ -1429,10 +1431,10 @@ export interface Table {
 }
 
 export interface CartItem {
-  menuItem: MenuItem;
+  menu_item: MenuItem;
   quantity: number;
-  specialInstructions?: string;
-  totalPrice: number;
+  special_instructions?: string;
+  total_price: number;
 }
 
 export interface TokenResponse {
@@ -2278,141 +2280,364 @@ export class MockDataService {
     // Initialize orders
     const orders: Order[] = [
       {
-        id: 'ORD-2025-1045',
-        customerId: '6',
-        customerName: 'Amit Patil',
-        tableNumber: 'T-07',
+        id: 1,
+        order_id: 'ORD-001',
+        table_number: '5',
+        customer_name: 'John Doe',
         items: [
           {
-            id: 'item-1',
-            menuItemId: '1',
-            menuItemName: 'Hyderabadi Biryani',
+            id: 1,
+            order_id: 1,
+            menu_item_id: 1,
+            menu_item_name: 'Chicken Burger',
+            quantity: 2,
+            unit_price: 250,
+            total_price: 500,
+            category: 'Main Course',
+            status: 'active'
+          }
+        ],
+        total_amount: 500,
+        status: 'READY',
+        created_at: new Date(Date.now() - 30 * 60 * 1000), // 30 mins ago
+        updated_at: new Date(Date.now() - 10 * 60 * 1000),
+        payment_status: 'PENDING',
+        tax_amount: 0,
+        customer_id: 1,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'MEDIUM'
+      },
+      {
+        id: 2,
+        order_id: 'ORD-002',
+        table_number: '3',
+        customer_name: 'Jane Smith',
+        items: [
+          {
+            id: 2,
+            order_id: 2,
+            menu_item_id: 2,
+            menu_item_name: 'Veggie Salad',
             quantity: 1,
-            unitPrice: 280,
-            totalPrice: 280
+            unit_price: 180,
+            total_price: 180,
+            category: 'Appetizer',
+            status: 'active'
+          }
+        ],
+        total_amount: 180,
+        status: 'ON_THE_WAY',
+        created_at: new Date(Date.now() - 45 * 60 * 1000), // 45 mins ago
+        updated_at: new Date(Date.now() - 15 * 60 * 1000),
+        payment_status: 'PENDING',
+        tax_amount: 0,
+        customer_id: 2,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'LOW'
+      },
+      {
+        id: 3,
+        order_id: 'ORD-003',
+        table_number: '7',
+        customer_name: 'Mike Johnson',
+        items: [
+          {
+            id: 3,
+            order_id: 3,
+            menu_item_id: 3,
+            menu_item_name: 'Spicy Chicken Wings',
+            quantity: 3,
+            unit_price: 200,
+            total_price: 600,
+            category: 'Appetizer',
+            status: 'active'
+          }
+        ],
+        total_amount: 600,
+        status: 'PREPARING',
+        created_at: new Date(Date.now() - 15 * 60 * 1000), // 15 mins ago
+        updated_at: new Date(Date.now() - 5 * 60 * 1000),
+        payment_status: 'PENDING',
+        tax_amount: 0,
+        customer_id: 3,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'HIGH'
+      },
+      {
+        id: 4,
+        order_id: 'ORD-004',
+        table_number: '2',
+        customer_name: 'Sarah Wilson',
+        items: [
+          {
+            id: 4,
+            order_id: 4,
+            menu_item_id: 4,
+            menu_item_name: 'Premium Steak',
+            quantity: 1,
+            unit_price: 450,
+            total_price: 450,
+            category: 'Main Course',
+            status: 'active'
+          }
+        ],
+        total_amount: 450,
+        status: 'READY',
+        created_at: new Date(Date.now() - 5 * 60 * 1000), // 5 mins ago
+        updated_at: new Date(Date.now() - 2 * 60 * 1000),
+        payment_status: 'PENDING',
+        tax_amount: 0,
+        customer_id: 4,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'MEDIUM'
+      },
+      {
+        id: 5,
+        order_id: 'ORD-005',
+        table_number: '8',
+        customer_name: 'Guest',
+        items: [
+          {
+            id: 5,
+            order_id: 5,
+            menu_item_id: 5,
+            menu_item_name: 'Combo Meal Deal',
+            quantity: 2,
+            unit_price: 300,
+            total_price: 600,
+            special_instructions: 'Extra spicy',
+            category: 'Combo',
+            status: 'active'
+          }
+        ],
+        total_amount: 600,
+        status: 'READY',
+        created_at: new Date(Date.now() - 20 * 60 * 1000), // 20 mins ago
+        updated_at: new Date(Date.now() - 8 * 60 * 1000),
+        payment_status: 'PENDING',
+        tax_amount: 0,
+        customer_id: 5,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'MEDIUM'
+      },
+      {
+        id: 6,
+        order_id: 'ORD-006',
+        table_number: '4',
+        customer_name: 'Alex Brown',
+        items: [
+          {
+            id: 6,
+            order_id: 6,
+            menu_item_id: 6,
+            menu_item_name: 'Margherita Pizza',
+            quantity: 1,
+            unit_price: 350,
+            total_price: 350,
+            category: 'Main Course',
+            status: 'active'
           },
           {
-            id: 'item-2',
-            menuItemId: '4',
-            menuItemName: 'Caesar Salad',
+            id: 7,
+            order_id: 6,
+            menu_item_id: 7,
+            menu_item_name: 'Caesar Salad',
             quantity: 1,
-            unitPrice: 180,
-            totalPrice: 180
+            unit_price: 200,
+            total_price: 200,
+            category: 'Salad',
+            status: 'active'
           }
         ],
-        status: 'ready',
-        totalAmount: 460,
-        createdAt: new Date(Date.now() - 30 * 60 * 1000),
-        updatedAt: new Date(Date.now() - 5 * 60 * 1000),
-        paymentStatus: 'paid',
-        paymentMethod: 'UPI',
-        orderType: 'dine_in',
-        estimatedReadyTime: new Date(Date.now() - 5 * 60 * 1000)
+        total_amount: 550,
+        status: 'SERVED',
+        created_at: new Date(Date.now() - 60 * 60 * 1000), // 1 hour ago
+        updated_at: new Date(Date.now() - 20 * 60 * 1000),
+        payment_status: 'PAID',
+        tax_amount: 0,
+        customer_id: 6,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'LOW'
       },
       {
-        id: 'ORD-2025-1044',
-        customerId: '7',
-        customerName: 'Sarah Johnson',
-        tableNumber: 'T-12',
+        id: 7,
+        order_id: 'ORD-007',
+        table_number: '6',
+        customer_name: 'Emma Davis',
         items: [
           {
-            id: 'item-3',
-            menuItemId: '2',
-            menuItemName: 'Margherita Pizza',
-            quantity: 1,
-            unitPrice: 250,
-            totalPrice: 250
-          }
-        ],
-        status: 'preparing',
-        totalAmount: 250,
-        createdAt: new Date(Date.now() - 45 * 60 * 1000),
-        updatedAt: new Date(Date.now() - 15 * 60 * 1000),
-        paymentStatus: 'paid',
-        paymentMethod: 'Card',
-        orderType: 'dine_in',
-        estimatedReadyTime: new Date(Date.now() + 10 * 60 * 1000)
-      },
-      // Kitchen display sample orders
-      {
-        id: 'ORD-2025-1046',
-        customerId: 'user-1',
-        customerName: 'Amit Patil',
-        tableNumber: 'T-07',
-        items: [
-          {
-            id: 'order-item-1',
-            menuItemId: 'item-1',
-            menuItemName: 'Hyderabadi Biryani',
+            id: 8,
+            order_id: 7,
+            menu_item_id: 8,
+            menu_item_name: 'Tofu Stir Fry',
             quantity: 2,
-            unitPrice: 280,
-            totalPrice: 560,
-            status: 'preparing'
-          },
-          {
-            id: 'order-item-2',
-            menuItemId: 'item-2',
-            menuItemName: 'Margherita Pizza',
-            quantity: 1,
-            unitPrice: 250,
-            totalPrice: 250,
-            status: 'preparing'
+            unit_price: 220,
+            total_price: 440,
+            category: 'Main Course',
+            status: 'active'
           }
         ],
-        status: 'preparing',
-        orderType: 'dine_in',
-        paymentStatus: 'paid',
-        totalAmount: 810,
-        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        updatedAt: new Date(Date.now() - 30 * 60 * 1000),
-        estimatedReadyTime: new Date(Date.now() + 15 * 60 * 1000)
+        total_amount: 440,
+        status: 'PREPARING',
+        created_at: new Date(Date.now() - 10 * 60 * 1000), // 10 mins ago
+        updated_at: new Date(Date.now() - 5 * 60 * 1000),
+        payment_status: 'PENDING',
+        tax_amount: 0,
+        customer_id: 7,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'MEDIUM'
       },
       {
-        id: 'ORD-2025-1047',
-        customerId: 'user-2',
-        customerName: 'Sarah Johnson',
-        tableNumber: 'T-12',
+        id: 8,
+        order_id: 'ORD-008',
+        table_number: '9',
+        customer_name: 'Tom Wilson',
         items: [
           {
-            id: 'order-item-3',
-            menuItemId: 'item-2',
-            menuItemName: 'Margherita Pizza',
+            id: 9,
+            order_id: 8,
+            menu_item_id: 9,
+            menu_item_name: 'Hot & Spicy Noodles',
+            quantity: 1,
+            unit_price: 280,
+            total_price: 280,
+            category: 'Main Course',
+            status: 'active'
+          }
+        ],
+        total_amount: 280,
+        status: 'COMPLETED',
+        created_at: new Date(Date.now() - 25 * 60 * 1000), // 25 mins ago
+        updated_at: new Date(Date.now() - 10 * 60 * 1000),
+        payment_status: 'PAID',
+        tax_amount: 0,
+        customer_id: 8,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'LOW'
+      },
+      {
+        id: 9,
+        order_id: 'ORD-009',
+        table_number: '1',
+        customer_name: 'Alice Johnson',
+        items: [
+          {
+            id: 10,
+            order_id: 9,
+            menu_item_id: 10,
+            menu_item_name: 'Caesar Salad',
+            quantity: 1,
+            unit_price: 150,
+            total_price: 150,
+            category: 'Appetizer',
+            status: 'active'
+          }
+        ],
+        total_amount: 150,
+        status: 'PENDING',
+        created_at: new Date(Date.now() - 5 * 60 * 1000), // 5 mins ago
+        updated_at: new Date(Date.now() - 5 * 60 * 1000),
+        payment_status: 'PENDING',
+        tax_amount: 0,
+        customer_id: 9,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'MEDIUM'
+      },
+      {
+        id: 10,
+        order_id: 'ORD-010',
+        table_number: '10',
+        customer_name: 'Bob Smith',
+        items: [
+          {
+            id: 11,
+            order_id: 10,
+            menu_item_id: 11,
+            menu_item_name: 'Grilled Chicken',
             quantity: 2,
-            unitPrice: 250,
-            totalPrice: 500,
-            status: 'ready'
+            unit_price: 300,
+            total_price: 600,
+            category: 'Main Course',
+            status: 'active'
           }
         ],
-        status: 'ready',
-        orderType: 'dine_in',
-        paymentStatus: 'paid',
-        totalAmount: 500,
-        createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
-        updatedAt: new Date(Date.now() - 45 * 60 * 1000),
-        estimatedReadyTime: new Date(Date.now() - 10 * 60 * 1000)
+        total_amount: 600,
+        status: 'CONFIRMED',
+        created_at: new Date(Date.now() - 10 * 60 * 1000), // 10 mins ago
+        updated_at: new Date(Date.now() - 5 * 60 * 1000),
+        payment_status: 'PENDING',
+        tax_amount: 0,
+        customer_id: 10,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'HIGH'
       },
       {
-        id: 'ORD-2025-1048',
-        customerId: 'user-3',
-        customerName: 'Raj Kumar',
-        tableNumber: 'T-05',
+        id: 11,
+        order_id: 'ORD-011',
+        table_number: '11',
+        customer_name: 'Charlie Brown',
         items: [
           {
-            id: 'order-item-4',
-            menuItemId: 'item-3',
-            menuItemName: 'Butter Chicken',
+            id: 12,
+            order_id: 11,
+            menu_item_id: 12,
+            menu_item_name: 'Ice Cream Sundae',
             quantity: 1,
-            unitPrice: 320,
-            totalPrice: 320,
-            status: 'confirmed'
+            unit_price: 120,
+            total_price: 120,
+            category: 'Dessert',
+            status: 'active'
           }
         ],
-        status: 'confirmed',
-        orderType: 'dine_in',
-        paymentStatus: 'pending',
-        totalAmount: 320,
-        createdAt: new Date(Date.now() - 10 * 60 * 1000),
-        updatedAt: new Date(Date.now() - 5 * 60 * 1000)
+        total_amount: 120,
+        status: 'BILLING_REQUESTED',
+        created_at: new Date(Date.now() - 30 * 60 * 1000), // 30 mins ago
+        updated_at: new Date(Date.now() - 5 * 60 * 1000),
+        payment_status: 'PENDING',
+        tax_amount: 0,
+        customer_id: 11,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'LOW'
+      },
+      {
+        id: 12,
+        order_id: 'ORD-012',
+        table_number: '12',
+        customer_name: 'Diana Prince',
+        items: [
+          {
+            id: 13,
+            order_id: 12,
+            menu_item_id: 13,
+            menu_item_name: 'Vegetable Stir Fry',
+            quantity: 1,
+            unit_price: 180,
+            total_price: 180,
+            category: 'Main Course',
+            status: 'active'
+          }
+        ],
+        total_amount: 180,
+        status: 'CANCELLED',
+        created_at: new Date(Date.now() - 20 * 60 * 1000), // 20 mins ago
+        updated_at: new Date(Date.now() - 15 * 60 * 1000),
+        payment_status: 'PENDING',
+        tax_amount: 0,
+        customer_id: 12,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'MEDIUM'
       }
     ];
 
@@ -2556,7 +2781,7 @@ export class MockDataService {
         type: 'prepare_on_order',
         prepTime: 25,
         servings: 1,
-        menuItemId: '1',
+        menuItemId: 1,
         ingredients: [
           {
             ingredientId: '4',
@@ -2613,7 +2838,7 @@ export class MockDataService {
         type: 'prepare_on_order',
         prepTime: 15,
         servings: 1,
-        menuItemId: '2',
+        menuItemId: 2,
         ingredients: [
           {
             ingredientId: '6',
@@ -2656,7 +2881,7 @@ export class MockDataService {
         type: 'prepare_on_order',
         prepTime: 20,
         servings: 1,
-        menuItemId: '3',
+        menuItemId: 3,
         ingredients: [
           {
             ingredientId: '3',
@@ -2706,7 +2931,7 @@ export class MockDataService {
         type: 'prepare_on_order',
         prepTime: 10,
         servings: 1,
-        menuItemId: '4',
+        menuItemId: 4,
         ingredients: [
           {
             ingredientId: '1',
@@ -2742,7 +2967,7 @@ export class MockDataService {
         type: 'prepared',
         prepTime: 5,
         servings: 1,
-        menuItemId: '5',
+        menuItemId: 5,
         ingredients: [
           {
             ingredientId: '5',
@@ -4963,82 +5188,364 @@ export class MockDataService {
     const now = new Date();
     const sampleOrders: Order[] = [
       {
-        id: 'ORD-2025-1045',
-        customerId: 'customer-1',
-        customerName: 'Amit Patil',
-        tableNumber: 'T-07',
+        id: 1,
+        order_id: 'ORD-001',
+        table_number: '5',
+        customer_name: 'John Doe',
         items: [
           {
-            id: 'order-item-1',
-            menuItemId: 'item-1',
-            menuItemName: 'Hyderabadi Biryani',
+            id: 1,
+            order_id: 1,
+            menu_item_id: 1,
+            menu_item_name: 'Chicken Burger',
             quantity: 2,
-            unitPrice: 280,
-            totalPrice: 560,
-            status: 'ready'
+            unit_price: 250,
+            total_price: 500,
+            category: 'Main Course',
+            status: 'active'
+          }
+        ],
+        total_amount: 500,
+        status: 'READY',
+        created_at: new Date(Date.now() - 30 * 60 * 1000), // 30 mins ago
+        updated_at: new Date(Date.now() - 10 * 60 * 1000),
+        payment_status: 'PENDING',
+        tax_amount: 0,
+        customer_id: 1,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'MEDIUM'
+      },
+      {
+        id: 2,
+        order_id: 'ORD-002',
+        table_number: '3',
+        customer_name: 'Jane Smith',
+        items: [
+          {
+            id: 2,
+            order_id: 2,
+            menu_item_id: 2,
+            menu_item_name: 'Veggie Salad',
+            quantity: 1,
+            unit_price: 180,
+            total_price: 180,
+            category: 'Appetizer',
+            status: 'active'
+          }
+        ],
+        total_amount: 180,
+        status: 'ON_THE_WAY',
+        created_at: new Date(Date.now() - 45 * 60 * 1000), // 45 mins ago
+        updated_at: new Date(Date.now() - 15 * 60 * 1000),
+        payment_status: 'PENDING',
+        tax_amount: 0,
+        customer_id: 2,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'LOW'
+      },
+      {
+        id: 3,
+        order_id: 'ORD-003',
+        table_number: '7',
+        customer_name: 'Mike Johnson',
+        items: [
+          {
+            id: 3,
+            order_id: 3,
+            menu_item_id: 3,
+            menu_item_name: 'Spicy Chicken Wings',
+            quantity: 3,
+            unit_price: 200,
+            total_price: 600,
+            category: 'Appetizer',
+            status: 'active'
+          }
+        ],
+        total_amount: 600,
+        status: 'PREPARING',
+        created_at: new Date(Date.now() - 15 * 60 * 1000), // 15 mins ago
+        updated_at: new Date(Date.now() - 5 * 60 * 1000),
+        payment_status: 'PENDING',
+        tax_amount: 0,
+        customer_id: 3,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'HIGH'
+      },
+      {
+        id: 4,
+        order_id: 'ORD-004',
+        table_number: '2',
+        customer_name: 'Sarah Wilson',
+        items: [
+          {
+            id: 4,
+            order_id: 4,
+            menu_item_id: 4,
+            menu_item_name: 'Premium Steak',
+            quantity: 1,
+            unit_price: 450,
+            total_price: 450,
+            category: 'Main Course',
+            status: 'active'
+          }
+        ],
+        total_amount: 450,
+        status: 'READY',
+        created_at: new Date(Date.now() - 5 * 60 * 1000), // 5 mins ago
+        updated_at: new Date(Date.now() - 2 * 60 * 1000),
+        payment_status: 'PENDING',
+        tax_amount: 0,
+        customer_id: 4,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'MEDIUM'
+      },
+      {
+        id: 5,
+        order_id: 'ORD-005',
+        table_number: '8',
+        customer_name: 'Guest',
+        items: [
+          {
+            id: 5,
+            order_id: 5,
+            menu_item_id: 5,
+            menu_item_name: 'Combo Meal Deal',
+            quantity: 2,
+            unit_price: 300,
+            total_price: 600,
+            special_instructions: 'Extra spicy',
+            category: 'Combo',
+            status: 'active'
+          }
+        ],
+        total_amount: 600,
+        status: 'READY',
+        created_at: new Date(Date.now() - 20 * 60 * 1000), // 20 mins ago
+        updated_at: new Date(Date.now() - 8 * 60 * 1000),
+        payment_status: 'PENDING',
+        tax_amount: 0,
+        customer_id: 5,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'MEDIUM'
+      },
+      {
+        id: 6,
+        order_id: 'ORD-006',
+        table_number: '4',
+        customer_name: 'Alex Brown',
+        items: [
+          {
+            id: 6,
+            order_id: 6,
+            menu_item_id: 6,
+            menu_item_name: 'Margherita Pizza',
+            quantity: 1,
+            unit_price: 350,
+            total_price: 350,
+            category: 'Main Course',
+            status: 'active'
           },
           {
-            id: 'order-item-2',
-            menuItemId: 'item-2',
-            menuItemName: 'Margherita Pizza',
+            id: 7,
+            order_id: 6,
+            menu_item_id: 7,
+            menu_item_name: 'Caesar Salad',
             quantity: 1,
-            unitPrice: 250,
-            totalPrice: 250,
-            status: 'ready'
+            unit_price: 200,
+            total_price: 200,
+            category: 'Salad',
+            status: 'active'
           }
         ],
-        status: 'ready',
-        orderType: 'dine_in',
-        paymentStatus: 'pending',
-        totalAmount: 810,
-        createdAt: new Date(now.getTime() - 2 * 60 * 60 * 1000),
-        updatedAt: new Date(now.getTime() - 30 * 60 * 1000)
+        total_amount: 550,
+        status: 'SERVED',
+        created_at: new Date(Date.now() - 60 * 60 * 1000), // 1 hour ago
+        updated_at: new Date(Date.now() - 20 * 60 * 1000),
+        payment_status: 'PAID',
+        tax_amount: 0,
+        customer_id: 6,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'LOW'
       },
       {
-        id: 'ORD-2025-1044',
-        customerId: 'customer-2',
-        customerName: 'Sarah Johnson',
-        tableNumber: 'T-12',
+        id: 7,
+        order_id: 'ORD-007',
+        table_number: '6',
+        customer_name: 'Emma Davis',
         items: [
           {
-            id: 'order-item-3',
-            menuItemId: 'item-2',
-            menuItemName: 'Margherita Pizza',
+            id: 8,
+            order_id: 7,
+            menu_item_id: 8,
+            menu_item_name: 'Tofu Stir Fry',
             quantity: 2,
-            unitPrice: 250,
-            totalPrice: 500,
-            status: 'ready'
+            unit_price: 220,
+            total_price: 440,
+            category: 'Main Course',
+            status: 'active'
           }
         ],
-        status: 'ready',
-        orderType: 'dine_in',
-        paymentStatus: 'pending',
-        totalAmount: 500,
-        createdAt: new Date(now.getTime() - 3 * 60 * 60 * 1000),
-        updatedAt: new Date(now.getTime() - 45 * 60 * 1000)
+        total_amount: 440,
+        status: 'PREPARING',
+        created_at: new Date(Date.now() - 10 * 60 * 1000), // 10 mins ago
+        updated_at: new Date(Date.now() - 5 * 60 * 1000),
+        payment_status: 'PENDING',
+        tax_amount: 0,
+        customer_id: 7,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'MEDIUM'
       },
       {
-        id: 'ORD-2025-1043',
-        customerId: 'customer-3',
-        customerName: 'Raj Kumar',
-        tableNumber: 'T-05',
+        id: 8,
+        order_id: 'ORD-008',
+        table_number: '9',
+        customer_name: 'Tom Wilson',
         items: [
           {
-            id: 'order-item-4',
-            menuItemId: 'item-3',
-            menuItemName: 'Butter Chicken',
+            id: 9,
+            order_id: 8,
+            menu_item_id: 9,
+            menu_item_name: 'Hot & Spicy Noodles',
             quantity: 1,
-            unitPrice: 320,
-            totalPrice: 320,
-            status: 'preparing'
+            unit_price: 280,
+            total_price: 280,
+            category: 'Main Course',
+            status: 'active'
           }
         ],
-        status: 'preparing',
-        orderType: 'dine_in',
-        paymentStatus: 'pending',
-        totalAmount: 320,
-        createdAt: new Date(now.getTime() - 10 * 60 * 1000),
-        updatedAt: new Date(now.getTime() - 5 * 60 * 1000)
+        total_amount: 280,
+        status: 'COMPLETED',
+        created_at: new Date(Date.now() - 25 * 60 * 1000), // 25 mins ago
+        updated_at: new Date(Date.now() - 10 * 60 * 1000),
+        payment_status: 'PAID',
+        tax_amount: 0,
+        customer_id: 8,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'LOW'
+      },
+      {
+        id: 9,
+        order_id: 'ORD-009',
+        table_number: '1',
+        customer_name: 'Alice Johnson',
+        items: [
+          {
+            id: 10,
+            order_id: 9,
+            menu_item_id: 10,
+            menu_item_name: 'Caesar Salad',
+            quantity: 1,
+            unit_price: 150,
+            total_price: 150,
+            category: 'Appetizer',
+            status: 'active'
+          }
+        ],
+        total_amount: 150,
+        status: 'PENDING',
+        created_at: new Date(Date.now() - 5 * 60 * 1000), // 5 mins ago
+        updated_at: new Date(Date.now() - 5 * 60 * 1000),
+        payment_status: 'PENDING',
+        tax_amount: 0,
+        customer_id: 9,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'MEDIUM'
+      },
+      {
+        id: 10,
+        order_id: 'ORD-010',
+        table_number: '10',
+        customer_name: 'Bob Smith',
+        items: [
+          {
+            id: 11,
+            order_id: 10,
+            menu_item_id: 11,
+            menu_item_name: 'Grilled Chicken',
+            quantity: 2,
+            unit_price: 300,
+            total_price: 600,
+            category: 'Main Course',
+            status: 'active'
+          }
+        ],
+        total_amount: 600,
+        status: 'CONFIRMED',
+        created_at: new Date(Date.now() - 10 * 60 * 1000), // 10 mins ago
+        updated_at: new Date(Date.now() - 5 * 60 * 1000),
+        payment_status: 'PENDING',
+        tax_amount: 0,
+        customer_id: 10,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'HIGH'
+      },
+      {
+        id: 11,
+        order_id: 'ORD-011',
+        table_number: '11',
+        customer_name: 'Charlie Brown',
+        items: [
+          {
+            id: 12,
+            order_id: 11,
+            menu_item_id: 12,
+            menu_item_name: 'Ice Cream Sundae',
+            quantity: 1,
+            unit_price: 120,
+            total_price: 120,
+            category: 'Dessert',
+            status: 'active'
+          }
+        ],
+        total_amount: 120,
+        status: 'BILLING_REQUESTED',
+        created_at: new Date(Date.now() - 30 * 60 * 1000), // 30 mins ago
+        updated_at: new Date(Date.now() - 5 * 60 * 1000),
+        payment_status: 'PENDING',
+        tax_amount: 0,
+        customer_id: 11,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'LOW'
+      },
+      {
+        id: 12,
+        order_id: 'ORD-012',
+        table_number: '12',
+        customer_name: 'Diana Prince',
+        items: [
+          {
+            id: 13,
+            order_id: 12,
+            menu_item_id: 13,
+            menu_item_name: 'Vegetable Stir Fry',
+            quantity: 1,
+            unit_price: 180,
+            total_price: 180,
+            category: 'Main Course',
+            status: 'active'
+          }
+        ],
+        total_amount: 180,
+        status: 'CANCELLED',
+        created_at: new Date(Date.now() - 20 * 60 * 1000), // 20 mins ago
+        updated_at: new Date(Date.now() - 15 * 60 * 1000),
+        payment_status: 'PENDING',
+        tax_amount: 0,
+        customer_id: 12,
+        restaurant_id: 1,
+        order_type: 'DINE_IN',
+        priority: 'MEDIUM'
       }
     ];
 
@@ -6977,16 +7484,16 @@ export class MockDataService {
     return this.orders$;
   }
 
-  getOrderById(id: string): Order | undefined {
+  getOrderById(id: number): Order | undefined {
     return this.ordersSubject.value.find(order => order.id === id);
   }
 
-  updateOrderStatus(orderId: string, status: Order['status']): void {
+  updateOrderStatus(orderId: number, status: Order['status']): void {
     const orders = [...this.ordersSubject.value];
     const orderIndex = orders.findIndex(order => order.id === orderId);
     if (orderIndex !== -1) {
       orders[orderIndex].status = status;
-      orders[orderIndex].updatedAt = new Date();
+      orders[orderIndex].updated_at = new Date();
       this.ordersSubject.next(orders);
     }
   }
@@ -7045,7 +7552,7 @@ export class MockDataService {
     return this.recipesSubject.value.find(recipe => recipe.id === id);
   }
 
-  getRecipeByMenuItemId(menuItemId: string): Recipe | undefined {
+  getRecipeByMenuItemId(menuItemId: number): Recipe | undefined {
     return this.recipesSubject.value.find(recipe => recipe.menuItemId === menuItemId);
   }
 
@@ -8239,7 +8746,7 @@ export class MockDataService {
   // Kitchen display methods
   getKitchenDisplayOrders(): Order[] {
     return this.ordersSubject.value.filter(order =>
-      ['pending', 'confirmed', 'preparing', 'ready'].includes(order.status)
+      ['PENDING', 'PREPARING', 'READY'].includes(order.status)
     );
   }
 

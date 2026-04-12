@@ -48,7 +48,7 @@
   <section class="mb-8 animate__animated animate__fadeInUp animate__delay-1s" *ngIf="liveOrder">
     <div class="flex items-center justify-between mb-3">
       <h3 class="text-lg font-bold text-gray-900 dark:text-white">Live Order</h3>
-      <span class="text-xs text-white bg-primary-500 px-2 py-1 rounded-full">#{{ liveOrder.id.split('-').pop() }}</span>
+      <span class="text-xs text-white bg-primary-500 px-2 py-1 rounded-full">#{{ liveOrder.order_id.split('-').pop() }}</span>
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
       <div class="flex items-center justify-between">
@@ -87,7 +87,7 @@
 
       <div class="mt-4 flex items-center justify-between">
         <div class="text-sm text-gray-600 dark:text-gray-300">
-          Items: {{ liveOrder.items.length }} • Amount: <span class="font-semibold text-gray-900 dark:text-white">₹{{ liveOrder.totalAmount }}</span>
+          Items: {{ liveOrder.items.length }} • Amount: <span class="font-semibold text-gray-900 dark:text-white">₹{{ liveOrder.total_amount }}</span>
         </div>
         <div class="space-x-2">
           <button (click)="helpWithOrder()" class="px-3 py-2 rounded-xl bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-sm text-gray-700 dark:text-gray-200">Help</button>
@@ -109,12 +109,9 @@
            class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm menu-item-hover">
         <div class="flex items-center justify-between">
           <div>
-            <p class="font-semibold text-gray-900 dark:text-white">#{{ order.id.split('-').pop() }} • {{ getOrderStatusText(order.status) }}</p>
-            <p class="text-sm text-gray-500 dark:text-gray-400">{{ getOrderItemsText(order.items) }}</p>
-            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ formatOrderDate(order.createdAt) }}</p>
-          </div>
-          <div class="text-right">
-            <p class="font-semibold text-gray-900 dark:text-white">₹{{ order.totalAmount }}</p>
+            <p class="font-semibold text-gray-900 dark:text-white">#{{ order.order_id.split('-').pop() }} • {{ getOrderStatusText(order.status) }}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ formatOrderDate(order.created_at) }}</p>
+            <p class="font-semibold text-gray-900 dark:text-white">₹{{ order.total_amount }}</p>
             <div class="mt-2 space-x-2">
               <button (click)="viewOrderDetails(order)" class="px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs">View</button>
               <button (click)="reorder(order)" class="px-3 py-1.5 rounded-full bg-primary-500 text-white text-xs">Reorder</button>
@@ -196,7 +193,7 @@
       <div class="space-y-4">
         <div class="flex items-center justify-between">
           <span class="text-sm text-gray-500 dark:text-gray-400">Order ID:</span>
-          <span class="font-semibold">#{{ selectedOrder.id.split('-').pop() }}</span>
+          <span class="font-semibold">#{{ selectedOrder.order_id.split('-').pop() }}</span>
         </div>
         <div class="flex items-center justify-between">
           <span class="text-sm text-gray-500 dark:text-gray-400">Status:</span>
@@ -207,7 +204,7 @@
         </div>
         <div class="flex items-center justify-between">
           <span class="text-sm text-gray-500 dark:text-gray-400">Date:</span>
-          <span class="text-sm">{{ formatOrderDate(selectedOrder.createdAt) }}</span>
+          <span class="text-sm">{{ formatOrderDate(selectedOrder.created_at) }}</span>
         </div>
 
         <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
@@ -216,13 +213,11 @@
             <div *ngFor="let item of selectedOrder.items"
                  class="flex items-center justify-between py-2">
               <div class="flex-1">
-                <div class="font-medium text-sm">{{ item.quantity }}x {{ item.menuItemName }}</div>
-                <div *ngIf="item.specialInstructions" class="text-xs text-orange-600 dark:text-orange-400">
-                  {{ item.specialInstructions }}
+                <div class="font-medium text-sm">{{ item.quantity }}x {{ item.menu_item_name }}</div>
+                <div *ngIf="item.special_instructions" class="text-xs text-orange-600 dark:text-orange-400">
+                  {{ item.special_instructions }}
                 </div>
-              </div>
-              <div class="text-right">
-                <div class="font-semibold">₹{{ item.totalPrice }}</div>
+                <div class="font-semibold">₹{{ item.total_price }}</div>
               </div>
             </div>
           </div>
@@ -231,7 +226,7 @@
         <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
           <div class="flex items-center justify-between font-bold">
             <span>Total Amount:</span>
-            <span>₹{{ selectedOrder.totalAmount }}</span>
+            <span>₹{{ selectedOrder.total_amount }}</span>
           </div>
         </div>
 
