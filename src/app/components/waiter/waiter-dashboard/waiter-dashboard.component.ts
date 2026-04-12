@@ -149,6 +149,10 @@ export class WaiterDashboardComponent implements OnInit {
     return pages;
   }
 
+  getStatusCount(status: string): number {
+    return this.allOrders.filter(order => order.status === status).length;
+  }
+
   getOrderStatusBorderClass(order: Order): string {
     // Not used since we have fixed red border, but keeping for consistency
     return 'border-red-500';

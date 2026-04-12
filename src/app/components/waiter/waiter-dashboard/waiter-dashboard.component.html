@@ -12,68 +12,42 @@
   </div>
 
    <!-- Order Filters -->
-   <div class="flex space-x-3 overflow-x-auto pb-2 mt-6 animate__animated animate__fadeInUp animate__delay-1s">
-      <button
-        (click)="selectStatus('PENDING')"
-        class="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
-        [class]="statusFilter === 'PENDING' ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'">
-        <i class="fas fa-clock mr-2"></i>Pending
-      </button>
+    <div class="flex space-x-3 overflow-x-auto pb-2 mt-6 animate__animated animate__fadeInUp animate__delay-1s">
       <button
         (click)="selectStatus('PREPARING')"
         class="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
         [class]="statusFilter === 'PREPARING' ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'">
         <i class="fas fa-utensils mr-2"></i>Preparing
+        <span class="ml-2 px-2 py-0.5 rounded-full text-xs" [class]="statusFilter === 'PREPARING' ? 'bg-white bg-opacity-20 text-white' : 'bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200'">{{ getStatusCount('PREPARING') }}</span>
       </button>
      <button
-       (click)="selectStatus('READY')"
-       class="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
-       [class]="statusFilter === 'READY' ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'">
-       <i class="fas fa-check-circle mr-2"></i>Ready
-     </button>
-     <button
-       (click)="selectStatus('ON_THE_WAY')"
-       class="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
-       [class]="statusFilter === 'ON_THE_WAY' ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'">
-       <i class="fas fa-user-tie mr-2"></i>On the Way
-     </button>
-     <button
-       (click)="selectStatus('SERVED')"
-       class="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
-       [class]="statusFilter === 'SERVED' ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'">
-       <i class="fas fa-utensils mr-2"></i>Served
-     </button>
-      <button
-        (click)="selectStatus('COMPLETED')"
+        (click)="selectStatus('READY')"
         class="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
-        [class]="statusFilter === 'COMPLETED' ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'">
-        <i class="fas fa-check mr-2"></i>Completed
+        [class]="statusFilter === 'READY' ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'">
+        <i class="fas fa-check-circle mr-2"></i>Ready
+        <span class="ml-2 px-2 py-0.5 rounded-full text-xs" [class]="statusFilter === 'READY' ? 'bg-white bg-opacity-20 text-white' : 'bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200'">{{ getStatusCount('READY') }}</span>
       </button>
       <button
-        (click)="selectStatus('CONFIRMED')"
+        (click)="selectStatus('ON_THE_WAY')"
         class="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
-        [class]="statusFilter === 'CONFIRMED' ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'">
-        <i class="fas fa-check-circle mr-2"></i>Confirmed
+        [class]="statusFilter === 'ON_THE_WAY' ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'">
+        <i class="fas fa-user-tie mr-2"></i>On the Way
+        <span class="ml-2 px-2 py-0.5 rounded-full text-xs" [class]="statusFilter === 'ON_THE_WAY' ? 'bg-white bg-opacity-20 text-white' : 'bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200'">{{ getStatusCount('ON_THE_WAY') }}</span>
       </button>
       <button
-        (click)="selectStatus('BILLING_REQUESTED')"
+        (click)="selectStatus('SERVED')"
         class="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
-        [class]="statusFilter === 'BILLING_REQUESTED' ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'">
-        <i class="fas fa-file-invoice-dollar mr-2"></i>Billing Requested
+        [class]="statusFilter === 'SERVED' ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'">
+        <i class="fas fa-utensils mr-2"></i>Served
+        <span class="ml-2 px-2 py-0.5 rounded-full text-xs" [class]="statusFilter === 'SERVED' ? 'bg-white bg-opacity-20 text-white' : 'bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200'">{{ getStatusCount('SERVED') }}</span>
       </button>
-      <button
-        (click)="selectStatus('CANCELLED')"
-        class="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
-        [class]="statusFilter === 'CANCELLED' ? 'bg-primary-500 text-white hover:bg-primary-600' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'">
-        <i class="fas fa-times mr-2"></i>Cancelled
-      </button>
-   </div>
+    </div>
 
   <!-- Orders List -->
   <section class="mt-6">
      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate__animated animate__fadeInUp animate__delay-2s">
        <!-- Skeleton Loading Cards -->
-       <div *ngIf="isLoading" class="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-200 dark:border-gray-700">
+       <!-- <div *ngIf="isLoading" class="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-200 dark:border-gray-700">
          <div class="flex justify-between mb-4">
            <div class="flex-1">
              <ngx-skeleton-loader count="1" [theme]="{width: '70%', height: '16px', 'background-color': 'rgba(239, 68, 68, 0.1)'}" class="mb-2"></ngx-skeleton-loader>
@@ -120,7 +94,7 @@
           <ngx-skeleton-loader count="1" [theme]="{width: '100%', height: '16px', 'background-color': 'rgba(239, 68, 68, 0.1)'}" class="mb-2"></ngx-skeleton-loader>
           <ngx-skeleton-loader count="1" [theme]="{width: '100%', height: '16px', 'background-color': 'rgba(239, 68, 68, 0.1)'}"></ngx-skeleton-loader>
         </div>
-      </div>
+      </div> -->
 
       <!-- Actual Order Cards -->
       <ng-container *ngIf="!isLoading">
