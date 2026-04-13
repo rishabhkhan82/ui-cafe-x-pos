@@ -113,16 +113,16 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
 
-  // Waiter Specific Routings
+  // Restaurant Owner Specific Routings
   {
-    path: 'waiter-dashboard',
-    loadComponent: () => import('./components/waiter/waiter-dashboard/waiter-dashboard.component').then(m => m.WaiterDashboardComponent),
+    path: 'restaurant-dashboard',
+    loadComponent: () => import('./components/restaurant/owner-dashboard-mobile/owner-dashboard-mobile.component').then(m => m.OwnerDashboardMobileComponent),
     canActivate: [authGuard]
   },
-  
+
   {
-    path: 'waiter-interface',
-    loadComponent: () => import('./components/waiter/waiter-interface/waiter-interface.component').then(m => m.WaiterInterfaceComponent),
+    path: 'addons-mobile',
+    loadComponent: () => import('./components/restaurant/add-ons-mobile/add-ons-mobile.component').then(m => m.AddOnsMobileComponent),
     canActivate: [authGuard]
   },
 
@@ -135,7 +135,20 @@ export const routes: Routes = [
   
   {
     path: 'kitchen-manager-display',
-    loadComponent: () => import('./components/kitchen/kitchen-display/kitchen-display.component').then(m => m.KitchenDisplayComponent),
+    loadComponent: () => import('./components/kitchen/kitchen-display-mobile/kitchen-display-mobile.component').then(m => m.KitchenDisplayMobileComponent),
+    canActivate: [authGuard]
+  },
+
+  // Waiter Specific Routings
+  {
+    path: 'waiter-dashboard',
+    loadComponent: () => import('./components/waiter/waiter-dashboard/waiter-dashboard.component').then(m => m.WaiterDashboardComponent),
+    canActivate: [authGuard]
+  },
+  
+  {
+    path: 'waiter-interface',
+    loadComponent: () => import('./components/waiter/waiter-interface/waiter-interface.component').then(m => m.WaiterInterfaceComponent),
     canActivate: [authGuard]
   },
 

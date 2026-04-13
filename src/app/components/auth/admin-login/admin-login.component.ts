@@ -82,7 +82,7 @@ export class AdminLoginComponent implements OnInit, OnDestroy {
             this.router.navigate(['/platform-dashboard']);
             break;
           case 'restaurant_owner':
-            this.router.navigate(['/restaurant-owner-dashboard']);
+            this.router.navigate(['/restaurant-dashboard']);
             break;
           case 'restaurant_manager':
             this.router.navigate(['/restaurant-manager-dashboard']);

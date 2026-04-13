@@ -1,0 +1,361 @@
+<!-- Kitchen Display System Header -->
+<!-- <header class="bg-gray-900 text-white p-4 border-b border-gray-700">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center space-x-4">
+      <div>
+        <h1 class="text-2xl font-bold">Kitchen Display System</h1>
+        <p class="text-gray-300 text-sm">Cafe-X Downtown • Live Orders</p>
+      </div>
+    </div>
+    <div class="flex items-center space-x-4">
+      <div class="text-right">
+        <div class="text-sm text-gray-300">Current Time</div>
+        <div class="text-lg font-mono">{{ currentTime }}</div>
+      </div>
+      <div class="text-right">
+        <div class="text-sm text-gray-300">Active Orders</div>
+        <div class="text-2xl font-bold text-green-400">{{ activeOrdersCount }}</div>
+      </div>
+    </div>
+  </div>
+</header> -->
+
+<!-- Main KDS Content -->
+<main class="flex-1 bg-gray-100 dark:bg-gray-900 p-4 min-h-screen">
+  <div class="max-w-full">
+
+    <!-- Order Status Filters -->
+    <div class="mb-6 flex gap-2 overflow-x-auto hide-scrollbar"
+         (touchstart)="onTouchStart($event)"
+         (touchmove)="onTouchMove($event)"
+         (touchend)="onTouchEnd()">
+      <button
+        *ngFor="let status of orderStatuses"
+        (click)="setActiveStatus(status.key)"
+        [class]="getStatusButtonClass(status.key)">
+        <i [class]="status.icon" class="mr-2"></i>
+        {{ status.label }}
+        <span class="ml-2 px-2 py-0.5 rounded-full text-xs"
+              [class]="getStatusCountClass(status.key)">
+          {{ getOrdersByStatus(status.key).length }}
+        </span>
+      </button>
+    </div>
+
+    <!-- Orders Grid -->
+    <div class="grid grid-cols-2 gap-4">
+
+      <!-- Order Cards -->
+      <div *ngFor="let order of filteredOrders; trackBy: trackByOrderId"
+           [class]="getOrderCardClass(order)"
+           class="rounded-xl shadow-lg overflow-hidden">
+
+        <!-- Order Header -->
+        <div class="p-3 border-b" [class]="getOrderHeaderClass(order)">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="text-base font-bold">#{{ order.order_id.split('-').pop() }}</span>
+              <span [class]="getPriorityBadgeClass(order)" class="px-2 py-0.5 rounded-full text-xs font-medium">
+                {{ getOrderPriority(order) }}
+              </span>
+            </div>
+            <div class="text-right">
+              <div class="text-xs opacity-90">{{ order.order_type === 'DINE_IN' ? 'Table' : 'Takeaway' }}</div>
+              <div class="font-semibold text-sm">{{ order.table_number || 'T/A' }}</div>
+            </div>
+          </div>
+          <div class="flex items-center justify-between text-sm mt-1">
+            <span class="font-medium">{{ order.customer_name }}</span>
+            <span class="font-mono text-xs">{{ formatTime(order.created_at) }}</span>
+          </div>
+          <div class="flex items-center justify-between mt-1">
+            <div class="flex items-center space-x-1">
+              <i class="fas fa-clock text-white/70 text-xs"></i>
+              <span class="font-mono text-sm">{{ getElapsedTime(order.created_at) }}</span>
+            </div>
+            <span class="text-xs opacity-90">{{ order.status }}</span>
+          </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="p-3 bg-white dark:bg-gray-800">
+          <div class="flex items-center justify-between font-semibold text-sm">
+            <span class="text-gray-900 dark:text-white">Total: ₹{{ order.total_amount }}</span>
+            <span (click)="viewOrderItems(order)" class="cursor-pointer text-blue-500 hover:text-blue-600 text-xs">{{ order.items.length }} items</span>
+          </div>
+        </div>
+
+        <!-- Order Actions -->
+        <div class="p-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
+          <div class="flex items-center space-x-2">
+            <button *ngIf="canMoveToNextStatus(order)"
+                    (click)="updateOrderStatus(order, getNextStatus(order.status))"
+                    class="flex-1 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-sm font-medium">
+              <i class="fas fa-check mr-1"></i>{{ getNextStatusLabel(order.status) }}
+            </button>
+
+            <button *ngIf="order.status === 'READY'"
+                    (click)="updateOrderStatus(order, 'CANCELLED')"
+                    class="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors text-sm font-medium">
+              <i class="fas fa-times mr-1"></i>Cancel
+            </button>
+
+            <button (click)="viewOrderDetails(order)"
+                    class="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm font-medium">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="filteredOrders.length === 0"
+           class="col-span-full flex items-center justify-center py-16">
+        <div class="text-center">
+          <div class="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-utensils text-2xl text-gray-400"></i>
+          </div>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No orders in {{ activeStatusLabel }}</h3>
+          <p class="text-gray-500 dark:text-gray-400">Orders will appear here when customers place them.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div *ngIf="selectedOrder"
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-slate-600 to-slate-700 rounded-t-2xl p-6 text-white relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-12 translate-x-12"></div>
+          <div class="relative z-10">
+            <div class="flex items-center justify-between">
+               <div>
+                 <h3 class="text-xl font-bold">Order Details</h3>
+                  <p class="text-blue-100">#ORD-{{ selectedOrder.order_id.split('-').pop() }}</p>
+               </div>
+              <button (click)="closeOrderDetails()" class="text-white/80 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors">
+                <i class="fas fa-times text-lg"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="p-6">
+          <!-- Order Info Cards -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+              <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                  <i class="fas fa-utensils text-blue-600 dark:text-blue-400"></i>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Table</p>
+                  <p class="font-semibold text-gray-900 dark:text-white">{{ selectedOrder.table_number || 'Takeaway' }}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+              <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                  <i class="fas fa-user text-green-600 dark:text-green-400"></i>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Customer</p>
+                  <p class="font-semibold text-gray-900 dark:text-white">{{ selectedOrder.customer_name }}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+              <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center"
+                     [class]="getStatusBadgeClass(selectedOrder.status)">
+                  <i class="fas fa-circle text-xs"></i>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Status</p>
+                  <p class="font-semibold text-gray-900 dark:text-white">{{ selectedOrder.status }}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+              <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                  <i class="fas fa-clock text-purple-600 dark:text-purple-400"></i>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Created</p>
+                  <p class="font-semibold text-gray-900 dark:text-white text-sm">{{ formatTime(selectedOrder.created_at) }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Items Section -->
+          <div class="mb-6">
+            <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+              <i class="fas fa-shopping-cart mr-2 text-blue-500"></i>
+              Order Items
+            </h4>
+            <div class="overflow-x-auto">
+              <table class="w-full table-auto border-collapse border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+                <thead>
+                  <tr class="bg-gray-100 dark:bg-gray-700">
+                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-300 dark:border-gray-600">Item</th>
+                    <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-300 dark:border-gray-600 border-l border-gray-300 dark:border-gray-600">Quantity</th>
+                    <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-300 dark:border-gray-600 border-l border-gray-300 dark:border-gray-600">Unit Price</th>
+                    <th class="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-300 dark:border-gray-600 border-l border-gray-300 dark:border-gray-600">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of selectedOrder.items" class="border-b border-gray-200 dark:border-gray-600">
+                    <td class="px-4 py-3 border-r border-gray-200 dark:border-gray-600">
+                      <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-lg flex items-center justify-center">
+                          <i class="fas fa-utensils text-blue-600 dark:text-blue-400 text-xs"></i>
+                        </div>
+                         <div>
+                           <p class="font-medium text-gray-900 dark:text-white">{{ item.menu_item_name }}</p>
+                           <div *ngIf="item.special_instructions" class="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                             {{ item.special_instructions }}
+                           </div>
+                         </div>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600">
+                      <span class="font-semibold text-gray-900 dark:text-white">{{ item.quantity }}</span>
+                    </td>
+                    <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600">
+                      <span class="text-gray-700 dark:text-gray-300">₹{{ item.unit_price }}</span>
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                      <span class="font-semibold text-gray-900 dark:text-white">₹{{ item.total_price }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Total Section -->
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6 mb-6">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-lg flex items-center justify-center">
+                  <i class="fas fa-receipt text-green-600 dark:text-green-400"></i>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Amount</p>
+                  <p class="text-2xl font-bold text-gray-900 dark:text-white">₹{{ selectedOrder.total_amount }}</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="flex items-center space-x-4 text-sm">
+                  <div class="flex items-center space-x-1">
+                    <i class="fas fa-clock text-gray-400"></i>
+                    <span class="text-gray-600 dark:text-gray-400">{{ getElapsedTime(selectedOrder.created_at) }}</span>
+                  </div>
+                  <div class="flex items-center space-x-1">
+                    <i class="fas fa-shopping-cart text-gray-400"></i>
+                    <span class="text-gray-600 dark:text-gray-400">{{ selectedOrder.items.length }} items</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex items-center justify-end space-x-3">
+            <button (click)="printOrder(selectedOrder)"
+                    class="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium flex items-center">
+              <i class="fas fa-print mr-2"></i>Print Order
+            </button>
+
+            <button *ngIf="canMoveToNextStatus(selectedOrder)"
+                    (click)="updateOrderStatus(selectedOrder, getNextStatus(selectedOrder.status)); closeOrderDetails()"
+                    class="px-6 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors font-medium flex items-center">
+              <i class="fas fa-check mr-2"></i>{{ getNextStatusLabel(selectedOrder.status) }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Order Items Modal -->
+<div *ngIf="selectedOrderItems"
+     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-slate-600 to-slate-700 rounded-t-2xl p-6 text-white relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-12 translate-x-12"></div>
+      <div class="relative z-10">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-xl font-bold">Order Items</h3>
+            <p class="text-blue-100">#ORD-{{ selectedOrderItems.order_id.split('-').pop() }}</p>
+          </div>
+          <button (click)="closeOrderItems()" class="text-white/80 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors">
+            <i class="fas fa-times text-lg"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Items Section -->
+    <div class="p-6">
+      <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+        <i class="fas fa-shopping-cart mr-2 text-blue-500"></i>
+        Order Items
+      </h4>
+      <div class="overflow-x-auto">
+        <table class="w-full table-auto border-collapse border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+          <thead>
+            <tr class="bg-gray-100 dark:bg-gray-700">
+              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-300 dark:border-gray-600">Item</th>
+              <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-300 dark:border-gray-600 border-l border-gray-300 dark:border-gray-600">Quantity</th>
+              <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-300 dark:border-gray-600 border-l border-gray-300 dark:border-gray-600">Unit Price</th>
+              <th class="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-300 dark:border-gray-600 border-l border-gray-300 dark:border-gray-600">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of selectedOrderItems.items" class="border-b border-gray-200 dark:border-gray-600">
+              <td class="px-4 py-3 border-r border-gray-200 dark:border-gray-600">
+                <div class="flex items-center space-x-3">
+                  <div class="w-8 h-8 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-utensils text-blue-600 dark:text-blue-400 text-xs"></i>
+                  </div>
+                  <div>
+                    <p class="font-medium text-gray-900 dark:text-white">{{ item.menu_item_name }}</p>
+                    <div *ngIf="item.special_instructions" class="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                      {{ item.special_instructions }}
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600">
+                <span class="font-semibold text-gray-900 dark:text-white">{{ item.quantity }}</span>
+              </td>
+              <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600">
+                <span class="text-gray-700 dark:text-gray-300">₹{{ item.unit_price }}</span>
+              </td>
+              <td class="px-4 py-3 text-right">
+                <span class="font-semibold text-gray-900 dark:text-white">₹{{ item.total_price }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation Dialog -->
+<app-confirmation-dialog></app-confirmation-dialog>
