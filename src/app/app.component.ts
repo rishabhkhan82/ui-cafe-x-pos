@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, AfterViewInit, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, RouterOutlet, Router } from '@angular/router';
 import { Observable } from 'rxjs';
@@ -8,6 +8,7 @@ import { NavigationMenuComponent } from './components/shared/navigation-menu/nav
 import { LoadingService } from './services/loading.service';
 import { ToastNotifierComponent } from './components/common/toast-notifier/app-toast-notifier';
 import { ConfirmationDialogComponent } from './components/common/confirmation-dialog/confirmation-dialog.component';
+import { NavigationMenu } from './services/mock-data.service';
 
 interface User {
   id: string;
@@ -33,6 +34,8 @@ export class AppComponent implements OnInit {
   showNotificationPrompt = false;
   isLoggedIn: boolean = false;
   isLoading = false;
+  isProfileMenuOpen: boolean = false;
+  pendingOrdersCount: number = 2;
 
   // Header properties
   currentDateTime: string = '';
@@ -42,6 +45,8 @@ export class AppComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private loadingService = inject(LoadingService);
+
+  @ViewChild(NavigationMenuComponent) navMenu!: NavigationMenuComponent;
 
   ngOnInit() {
     // Load theme preference
@@ -253,5 +258,25 @@ export class AppComponent implements OnInit {
 
   logout(): void {
     this.authService.logout();
+  }
+
+  get actionMenus(): NavigationMenu[] {
+    if (!this.navMenu?.hierarchicalMenus) return [];
+
+    const actions: NavigationMenu[] = [];
+
+    const collectActions = (menus: NavigationMenu[]) => {
+      menus.forEach(menu => {
+        if (menu.type === 'ACTION') {
+          actions.push(menu);
+        }
+        if (menu.children) {
+          collectActions(menu.children);
+        }
+      });
+    };
+
+    collectActions(this.navMenu.hierarchicalMenus);
+    return actions;
   }
 }

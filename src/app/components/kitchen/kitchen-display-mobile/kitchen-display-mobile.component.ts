@@ -41,7 +41,7 @@ export class KitchenDisplayMobileComponent implements OnInit, OnDestroy {
 
   // Order statuses for filtering
   orderStatuses: OrderStatus[] = [
-    { key: 'all', label: 'All Orders', icon: 'fas fa-list', color: 'bg-gray-500' },
+    { key: 'all', label: 'All', icon: 'fas fa-list', color: 'bg-gray-500' },
     { key: 'PENDING', label: 'Pending', icon: 'fas fa-clock', color: 'bg-yellow-500' },
     { key: 'PREPARING', label: 'Preparing', icon: 'fas fa-utensils', color: 'bg-orange-500' },
     { key: 'READY', label: 'Ready', icon: 'fas fa-check-double', color: 'bg-green-500' }
