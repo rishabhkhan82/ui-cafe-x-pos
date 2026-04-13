@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { interval, Subscription } from 'rxjs';
 import { Order, OrderStatus } from '../../../services/mock-data.service';
 import { RealtimeService } from '../../../services/realtime.service';
@@ -13,7 +14,7 @@ import { ConfirmationDialogComponent } from '../../common/confirmation-dialog/co
 @Component({
   selector: 'app-kitchen-display-mobile',
   standalone: true,
-  imports: [CommonModule, ConfirmationDialogComponent],
+  imports: [CommonModule, FormsModule, ConfirmationDialogComponent],
   templateUrl: './kitchen-display-mobile.component.html',
   styleUrls: ['./kitchen-display-mobile.component.css']
 })
@@ -34,6 +35,9 @@ export class KitchenDisplayMobileComponent implements OnInit, OnDestroy {
   selectedOrderItems: Order | null = null;
   orders: Order[] = [];
   filteredOrders: Order[] = [];
+
+  // Search state
+  searchTerm: string = '';
 
   // Swipe handling
   private touchStartX: number = 0;
@@ -115,21 +119,33 @@ export class KitchenDisplayMobileComponent implements OnInit, OnDestroy {
     this.filterOrders();
   }
 
+
+
+  onSearchChange(): void {
+    this.filterOrders();
+  }
+
   private filterOrders(): void {
-    if (this.activeStatus === 'all') {
-      this.filteredOrders = this.orders.filter(order =>
-        ['PENDING', 'PREPARING', 'READY'].includes(order.status)
-      );
-    } else {
-      this.filteredOrders = this.orders.filter(order => order.status === this.activeStatus);
+    let filtered = this.orders.filter(order =>
+      ['PENDING', 'PREPARING', 'READY'].includes(order.status)
+    );
+
+    if (this.activeStatus !== 'all') {
+      filtered = filtered.filter(order => order.status === this.activeStatus);
     }
+
+    if (this.searchTerm.trim()) {
+      filtered = filtered.filter(order => order.order_id.toLowerCase().includes(this.searchTerm.toLowerCase()));
+    }
+
+    this.filteredOrders = filtered;
 
     // Sort by priority and time
     this.filteredOrders.sort((a, b) => {
       // Priority: PENDING > PREPARING > READY
       const priorityOrder = { 'PENDING': 3, 'PREPARING': 2, 'READY': 1 };
       const priorityDiff = (priorityOrder[b.status as keyof typeof priorityOrder] || 0) -
-                           (priorityOrder[a.status as keyof typeof priorityOrder] || 0);
+                            (priorityOrder[a.status as keyof typeof priorityOrder] || 0);
 
       if (priorityDiff !== 0) return priorityDiff;
 
@@ -155,15 +171,17 @@ export class KitchenDisplayMobileComponent implements OnInit, OnDestroy {
 
   // UI Helper Methods
   getStatusButtonClass(status: string): string {
-    const baseClass = 'px-4 py-2 rounded-lg font-medium transition-colors flex items-center text-white text-sm';
+    const baseClass = 'px-4 py-2 rounded-lg font-medium transition-colors flex items-center text-sm border';
     const isActive = this.activeStatus === status;
 
     if (isActive) {
-      return `${baseClass} bg-opacity-100 shadow-lg transform scale-105`;
+      const statusConfig = this.orderStatuses.find(s => s.key === status);
+      const colorBase = statusConfig?.color.replace('bg-', '');
+      return `${baseClass} bg-transparent border-${colorBase} text-${colorBase}`;
     }
 
     const statusConfig = this.orderStatuses.find(s => s.key === status);
-    return `${baseClass} ${statusConfig?.color} bg-opacity-80 hover:bg-opacity-100`;
+    return `${baseClass} ${statusConfig?.color} bg-opacity-80 hover:bg-opacity-100 text-white border-transparent`;
   }
 
   getStatusCountClass(status: string): string {

@@ -21,29 +21,43 @@
 </header> -->
 
 <!-- Main KDS Content -->
-<main class="flex-1 bg-gray-100 dark:bg-gray-900 p-4 min-h-screen">
-  <div class="max-w-full">
+<main class="flex-1 bg-gray-100 dark:bg-gray-900 p-4 min-h-screen" style="overflow-x: hidden;">
+   <div class="max-w-full">
 
-    <!-- Order Status Filters -->
-    <div class="mb-6 flex gap-2 overflow-x-auto hide-scrollbar"
-         (touchstart)="onTouchStart($event)"
-         (touchmove)="onTouchMove($event)"
-         (touchend)="onTouchEnd()">
-      <button
-        *ngFor="let status of orderStatuses"
-        (click)="setActiveStatus(status.key)"
-        [class]="getStatusButtonClass(status.key)">
-        <i [class]="status.icon" class="mr-2"></i>
-        {{ status.label }}
-        <span class="ml-2 px-2 py-0.5 rounded-full text-xs"
-              [class]="getStatusCountClass(status.key)">
-          {{ getOrdersByStatus(status.key).length }}
-        </span>
-      </button>
+     <!-- Fixed Search and Order Filter -->
+     <div class="fixed left-0 right-0 z-10 bg-gray-100 dark:bg-gray-900 pb-0" style="top: 68px;">
+      <!-- Search -->
+      <div class="mb-4 relative" style="">
+        <input
+          [(ngModel)]="searchTerm"
+          (input)="onSearchChange()"
+          placeholder="Search by order number..."
+          class="w-full px-4 py-2 pr-10 border-b border-gray-300 dark:border-gray-600 bg-transparent text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors duration-200"
+        />
+        <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500"></i>
+      </div>
+  
+      <!-- Order Status Filters -->
+      <div class="pl-4 mb-0 flex gap-2 overflow-x-auto hide-scrollbar border-b border-gray-200 dark:border-gray-700 pb-4"
+           (touchstart)="onTouchStart($event)"
+           (touchmove)="onTouchMove($event)"
+           (touchend)="onTouchEnd()">
+        <button
+          *ngFor="let status of orderStatuses"
+          (click)="setActiveStatus(status.key)"
+          [class]="getStatusButtonClass(status.key)">
+          <i [class]="status.icon" class="mr-2"></i>
+          {{ status.label }}
+          <span class="ml-2 px-2 py-0.5 rounded-full text-xs"
+                [class]="getStatusCountClass(status.key)">
+            {{ getOrdersByStatus(status.key).length }}
+          </span>
+        </button>
+      </div>
     </div>
 
-    <!-- Orders Grid -->
-    <div class="grid grid-cols-2 gap-4">
+     <!-- Orders Grid -->
+     <div class="grid grid-cols-2 gap-4" style="padding-top: 112px;">
 
       <!-- Order Cards -->
       <div *ngFor="let order of filteredOrders; trackBy: trackByOrderId"
@@ -55,19 +69,19 @@
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2">
               <span class="text-base font-bold">#{{ order.order_id.split('-').pop() }}</span>
-              <span [class]="getPriorityBadgeClass(order)" class="px-2 py-0.5 rounded-full text-xs font-medium">
+              <!-- <span [class]="getPriorityBadgeClass(order)" class="px-2 py-0.5 rounded-full text-xs font-medium">
                 {{ getOrderPriority(order) }}
-              </span>
+              </span> -->
             </div>
             <div class="text-right">
-              <div class="text-xs opacity-90">{{ order.order_type === 'DINE_IN' ? 'Table' : 'Takeaway' }}</div>
-              <div class="font-semibold text-sm">{{ order.table_number || 'T/A' }}</div>
+              <div class="text-xs opacity-90">{{ order.order_type === 'DINE_IN' ? 'Table' : 'Takeaway' }} <span class="font-semibold text-sm">{{ order.table_number || 'T/A' }}</span></div>
+              <!-- <div class="font-semibold text-sm">{{ order.table_number || 'T/A' }}</div> -->
             </div>
           </div>
-          <div class="flex items-center justify-between text-sm mt-1">
+          <!-- <div class="flex items-center justify-between text-sm mt-1">
             <span class="font-medium">{{ order.customer_name }}</span>
             <span class="font-mono text-xs">{{ formatTime(order.created_at) }}</span>
-          </div>
+          </div> -->
           <div class="flex items-center justify-between mt-1">
             <div class="flex items-center space-x-1">
               <i class="fas fa-clock text-white/70 text-xs"></i>
@@ -113,7 +127,7 @@
            class="col-span-full flex items-center justify-center py-16">
         <div class="text-center">
           <div class="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-utensils text-2xl text-gray-400"></i>
+            <i class="fas fa-receipt text-2xl text-gray-400"></i>
           </div>
           <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No orders in {{ activeStatusLabel }}</h3>
           <p class="text-gray-500 dark:text-gray-400">Orders will appear here when customers place them.</p>
