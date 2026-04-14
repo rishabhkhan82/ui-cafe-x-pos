@@ -13,13 +13,13 @@ import { OrderCardComponent } from '../../common/order-card/order-card.component
 import { ConfirmationDialogComponent } from '../../common/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
-  selector: 'app-waiter-dashboard',
+  selector: 'app-waiter-orders',
   standalone: true,
   imports: [CommonModule, FormsModule, NgxSkeletonLoaderModule, OrderCardComponent, ConfirmationDialogComponent],
-  templateUrl: './waiter-dashboard.component.html',
-  styleUrl: './waiter-dashboard.component.css'
+  templateUrl: './waiter-orders.component.html',
+  styleUrl: './waiter-orders.component.css'
 })
-export class WaiterDashboardComponent implements OnInit {
+export class WaiterOrdersComponent implements OnInit {
   orders: Order[] = [];
   allOrders: Order[] = []; // Store full list for filtering
   selectedOrder: Order | null = null;

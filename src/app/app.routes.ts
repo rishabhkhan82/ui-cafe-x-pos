@@ -115,8 +115,50 @@ export const routes: Routes = [
 
   // Restaurant Owner Specific Routings
   {
-    path: 'restaurant-dashboard',
-    loadComponent: () => import('./components/restaurant/owner-dashboard-mobile/owner-dashboard-mobile.component').then(m => m.OwnerDashboardMobileComponent),
+    path: 'restaurant-navigation-mobile',
+    loadComponent: () => import('./components/shared/admin-uses-navigation-mobile/admin-uses-navigation-mobile.component').then(m => m.AdminUsesNavigationMobileComponent),
+    canActivate: [authGuard]
+  },
+
+  {
+    path: 'owner-menus-mobile',
+    loadComponent: () => import('./components/restaurant/owner-menus-mobile/owner-menus-mobile.component').then(m => m.OwnerMenusMobileComponent),
+    canActivate: [authGuard]
+  },
+
+  {
+    path: 'owner-orders-mobile',
+    loadComponent: () => import('./components/restaurant/owner-orders-mobile/owner-orders-mobile.component').then(m => m.OwnerOrdersMobileComponent),
+    canActivate: [authGuard]
+  },
+
+  {
+    path: 'owner-plans-mobile',
+    loadComponent: () => import('./components/restaurant/owner-plans-mobile/owner-plans-mobile.component').then(m => m.OwnerPlansMobileComponent),
+    canActivate: [authGuard]
+  },
+
+  {
+    path: 'restaurant-owner-profile-mobile',
+    loadComponent: () => import('./components/shared/admin-user-profile-mobile/admin-user-profile-mobile.component').then(m => m.AdminUserProfileMobileComponent),
+    canActivate: [authGuard]
+  },
+
+  {
+    path: 'owner-staff-mobile',
+    loadComponent: () => import('./components/restaurant/owner-staff-mobile/owner-staff-mobile.component').then(m => m.OwnerStaffMobileComponent),
+    canActivate: [authGuard]
+  },
+
+  {
+    path: 'owner-reports-mobile',
+    loadComponent: () => import('./components/restaurant/owner-reports-mobile/owner-reports-mobile.component').then(m => m.OwnerReportsMobileComponent),
+    canActivate: [authGuard]
+  },
+
+  {
+    path: 'owner-offers-mobile',
+    loadComponent: () => import('./components/restaurant/owner-offers-mobile/owner-offers-mobile.component').then(m => m.OwnerOffersMobileComponent),
     canActivate: [authGuard]
   },
 
@@ -127,22 +169,48 @@ export const routes: Routes = [
   },
 
   // Kitchen Manager Specific Routings
+
   // {
   //   path: 'kitchen-dashboard',
   //   loadComponent: () => import('./components/kitchen/kitchen-dashboard/kitchen-dashboard.component').then(m => m.KitchenDashboardComponent),
   //   canActivate: [authGuard]
   // },
-  
+
   {
-    path: 'kitchen-manager-display',
+    path: 'kitchen-navigation-mobile',
+    loadComponent: () => import('./components/shared/admin-uses-navigation-mobile/admin-uses-navigation-mobile.component').then(m => m.AdminUsesNavigationMobileComponent),
+    canActivate: [authGuard]
+  },
+
+  {
+    path: 'kitchen-orders',
     loadComponent: () => import('./components/kitchen/kitchen-display-mobile/kitchen-display-mobile.component').then(m => m.KitchenDisplayMobileComponent),
     canActivate: [authGuard]
   },
 
-  // Waiter Specific Routings
   {
-    path: 'waiter-dashboard',
-    loadComponent: () => import('./components/waiter/waiter-dashboard/waiter-dashboard.component').then(m => m.WaiterDashboardComponent),
+    path: 'kitchen-profile-mobile',
+    loadComponent: () => import('./components/shared/admin-user-profile-mobile/admin-user-profile-mobile.component').then(m => m.AdminUserProfileMobileComponent),
+    canActivate: [authGuard]
+  },
+
+  // Waiter Specific Routings
+
+  {
+    path: 'waiter-navigation-mobile',
+    loadComponent: () => import('./components/shared/admin-uses-navigation-mobile/admin-uses-navigation-mobile.component').then(m => m.AdminUsesNavigationMobileComponent),
+    canActivate: [authGuard]
+  },
+
+  {
+    path: 'waiter-orders',
+    loadComponent: () => import('./components/waiter/waiter-orders/waiter-orders.component').then(m => m.WaiterOrdersComponent),
+    canActivate: [authGuard]
+  },
+
+  {
+    path: 'waiter-profile-mobile',
+    loadComponent: () => import('./components/shared/admin-user-profile-mobile/admin-user-profile-mobile.component').then(m => m.AdminUserProfileMobileComponent),
     canActivate: [authGuard]
   },
   

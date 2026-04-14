@@ -82,19 +82,22 @@ export class AdminLoginComponent implements OnInit, OnDestroy {
             this.router.navigate(['/platform-dashboard']);
             break;
           case 'restaurant_owner':
-            this.router.navigate(['/restaurant-dashboard']);
+            this.router.navigate(['/restaurant-navigation-mobile']); // /restaurant-dashboard
             break;
           case 'restaurant_manager':
             this.router.navigate(['/restaurant-manager-dashboard']);
             break;
           case 'kitchen_manager':
-            this.router.navigate(['/kitchen-manager-display']);
+            this.router.navigate(['/kitchen-navigation-mobile']); // kitchen-navigation mobile
             break;
           case 'cashier':
             this.router.navigate(['/cashier-dashboard']);
             break;
           case 'waiter':
-            this.router.navigate(['/waiter-dashboard']);
+            this.router.navigate(['/waiter-navigation-mobile']);
+            break;
+          case 'customer':
+            this.router.navigate(['/customer-dashboard']);
             break;
           default:
             this.errorMessage = 'Invalid user role for admin access';

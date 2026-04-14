@@ -233,6 +233,10 @@ export class CrudService {
     return this.getData('users', params);
   }
 
+  getUserById(id: number): Observable<any> {
+    return this.getData(`users/${id}`);
+  }
+
   createUser(payload: any): Observable<any> {
     return this.postData('users', payload);
   }
