@@ -45,7 +45,7 @@
         <button
           *ngFor="let status of orderStatuses"
           (click)="setActiveStatus(status.key)"
-          [class]="getStatusButtonClass(status.key)">
+          [class]="getStatusButtonClass(status.key) + ' flex-shrink-0'">
           <i [class]="status.icon" class="mr-2"></i>
           {{ status.label }}
           <span class="ml-2 px-2 py-0.5 rounded-full text-xs"

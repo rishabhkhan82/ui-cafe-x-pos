@@ -9,13 +9,13 @@ import { NotificationService } from '../../../services/notification.service';
 import { ValidationService } from '../../../services/validation.service';
 import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
 import { OrderCardComponent } from '../../common/order-card/order-card.component';
-import { OrderDetailsDialogComponent } from '../../common/order-details/order-details-dialog.component';
+
 import { ConfirmationDialogComponent } from '../../common/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-waiter-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgxSkeletonLoaderModule, OrderCardComponent, OrderDetailsDialogComponent, ConfirmationDialogComponent],
+  imports: [CommonModule, FormsModule, NgxSkeletonLoaderModule, OrderCardComponent, ConfirmationDialogComponent],
   templateUrl: './waiter-dashboard.component.html',
   styleUrl: './waiter-dashboard.component.css'
 })
@@ -23,11 +23,27 @@ export class WaiterDashboardComponent implements OnInit {
   orders: Order[] = [];
   allOrders: Order[] = []; // Store full list for filtering
   selectedOrder: Order | null = null;
-  showOrderDetailsModal: boolean = false;
+  selectedOrderItems: Order | null = null;
   userRole: string = 'waiter';
   errorMessage = '';
   searchTerm = '';
-  statusFilter = 'READY';
+
+
+  activeStatus: string = 'all';
+  activeStatusLabel: string = 'All Orders';
+
+  // Swipe handling
+  private touchStartX: number = 0;
+  private touchEndX: number = 0;
+
+  // Order statuses for filtering
+  orderStatuses = [
+    { key: 'all', label: 'All', icon: 'fas fa-list', color: 'bg-gray-500' },
+    { key: 'PREPARING', label: 'Preparing', icon: 'fas fa-utensils', color: 'bg-orange-500' },
+    { key: 'READY', label: 'Ready', icon: 'fas fa-check-double', color: 'bg-green-500' },
+    { key: 'ON_THE_WAY', label: 'On the Way', icon: 'fas fa-user-tie', color: 'bg-blue-500' },
+    { key: 'SERVED', label: 'Served', icon: 'fas fa-utensils', color: 'bg-purple-500' }
+  ];
   isLoading: boolean = false;
 
   // Pagination
@@ -85,16 +101,16 @@ export class WaiterDashboardComponent implements OnInit {
   }
 
   private applyFiltersAndPagination(): void {
-    let filteredOrders = this.allOrders;
+    let filteredOrders = this.allOrders.filter(order =>
+      ['PREPARING', 'READY', 'ON_THE_WAY', 'SERVED'].includes(order.status)
+    );
 
-    if (this.searchTerm && this.searchTerm.trim()) {
-      filteredOrders = filteredOrders.filter(order =>
-        order.customer_name.toLowerCase().includes(this.searchTerm.toLowerCase())
-      );
+    if (this.searchTerm.trim()) {
+      filteredOrders = filteredOrders.filter(order => order.order_id.toLowerCase().includes(this.searchTerm.toLowerCase()));
     }
 
-    if (this.statusFilter !== 'all') {
-      filteredOrders = filteredOrders.filter(order => order.status === this.statusFilter);
+    if (this.activeStatus !== 'all') {
+      filteredOrders = filteredOrders.filter(order => order.status === this.activeStatus);
     }
 
     this.totalElements = filteredOrders.length;
@@ -112,14 +128,20 @@ export class WaiterDashboardComponent implements OnInit {
 
   clearFilters(): void {
     this.searchTerm = '';
-    this.statusFilter = 'READY';
+    this.activeStatus = 'all';
+    this.activeStatusLabel = 'All Orders';
     this.currentPage = 1; // Reset to first page
     this.applyFiltersAndPagination();
   }
 
-  selectStatus(status: string): void {
-    this.statusFilter = status;
+  setActiveStatus(status: string): void {
+    this.activeStatus = status;
+    this.activeStatusLabel = this.orderStatuses.find(s => s.key === status)?.label || 'All Orders';
     this.filterOrders();
+  }
+
+  onSearchChange(): void {
+    this.applyFiltersAndPagination();
   }
 
   changePage(page: number): void {
@@ -211,22 +233,21 @@ export class WaiterDashboardComponent implements OnInit {
 
   viewOrder(order: Order): void {
     this.selectedOrder = order;
-    this.showOrderDetailsModal = true;
   }
 
   closeOrderDetails(): void {
     this.selectedOrder = null;
-    this.showOrderDetailsModal = false;
   }
 
   reloadComponent(): void {
     // Reset all component state
     this.orders = [];
     this.selectedOrder = null;
-    this.showOrderDetailsModal = false;
+    this.selectedOrderItems = null;
     this.errorMessage = '';
     this.searchTerm = '';
-    this.statusFilter = 'READY';
+    this.activeStatus = 'all';
+    this.activeStatusLabel = 'All Orders';
     this.currentPage = 1;
     this.itemsPerPage = 10;
     this.totalPages = 1;
@@ -241,7 +262,7 @@ export class WaiterDashboardComponent implements OnInit {
 
   // Check if any filters are currently active
   get hasActiveFilters(): boolean {
-    return !!(this.searchTerm?.trim() || this.statusFilter !== 'READY');
+    return !!(this.searchTerm?.trim() || this.activeStatus !== 'all');
   }
 
   async markOnTheWay(order: Order): Promise<void> {
@@ -320,5 +341,130 @@ export class WaiterDashboardComponent implements OnInit {
         this.loadingService.hide();
       }
     });
+  }
+
+  getStatusButtonClass(status: string): string {
+    const baseClass = 'px-4 py-2 rounded-lg font-medium transition-colors flex items-center text-sm border';
+    const isActive = this.activeStatus === status;
+
+    if (isActive) {
+      const statusConfig = this.orderStatuses.find(s => s.key === status);
+      const colorBase = statusConfig?.color.replace('bg-', '');
+      return `${baseClass} bg-transparent border-${colorBase} text-${colorBase}`;
+    }
+
+    const statusConfig = this.orderStatuses.find(s => s.key === status);
+    return `${baseClass} ${statusConfig?.color} bg-opacity-80 hover:bg-opacity-100 text-white border-transparent`;
+  }
+
+  getStatusCountClass(status: string): string {
+    const count = this.getOrdersByStatus(status).length;
+    if (count === 0) return 'bg-gray-600 text-gray-300';
+    if (count < 3) return 'bg-green-600 text-green-100';
+    if (count < 5) return 'bg-yellow-600 text-yellow-100';
+    return 'bg-red-600 text-red-100';
+  }
+
+  getOrdersByStatus(status: string): Order[] {
+    if (status === 'all') {
+      return this.allOrders.filter(order =>
+        ['PREPARING', 'READY', 'ON_THE_WAY', 'SERVED'].includes(order.status)
+      );
+    }
+    return this.allOrders.filter(order => order.status === status);
+  }
+
+  getOrderCardClass(order: Order): string {
+    const baseClass = 'transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1';
+    const elapsedMinutes = (Date.now() - new Date(order.created_at).getTime()) / (1000 * 60);
+    if (order.status === 'ON_THE_WAY' && elapsedMinutes > 10) {
+      return `${baseClass} animate-pulse border-2 border-red-500`;
+    }
+    return baseClass;
+  }
+
+  getOrderHeaderClass(order: Order): string {
+    const statusColors = {
+      'PREPARING': 'bg-orange-500 text-white',
+      'READY': 'bg-green-500 text-white',
+      'ON_THE_WAY': 'bg-blue-500 text-white',
+      'SERVED': 'bg-purple-500 text-white',
+      'COMPLETED': 'bg-gray-500 text-white'
+    };
+    return statusColors[order.status as keyof typeof statusColors] || 'bg-gray-500 text-white';
+  }
+
+  getElapsedTime(createdAt: Date | string): string {
+    const now = Date.now();
+    const created = new Date(createdAt).getTime();
+    const elapsed = now - created;
+    const minutes = Math.floor(elapsed / (1000 * 60));
+    const seconds = Math.floor((elapsed % (1000 * 60)) / 1000);
+    if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
+    }
+    return `${seconds}s`;
+  }
+
+  trackByOrderId(index: number, order: Order): string {
+    return order.order_id;
+  }
+
+  onTouchStart(event: TouchEvent): void {
+    this.touchStartX = event.touches[0].clientX;
+  }
+
+  onTouchMove(event: TouchEvent): void {
+    this.touchEndX = event.touches[0].clientX;
+  }
+
+  onTouchEnd(): void {
+    const deltaX = this.touchStartX - this.touchEndX;
+    const minSwipeDistance = 50;
+    if (Math.abs(deltaX) > minSwipeDistance) {
+      if (deltaX > 0) {
+        this.swipeToNextFilter();
+      } else {
+        this.swipeToPreviousFilter();
+      }
+    }
+    this.touchStartX = 0;
+    this.touchEndX = 0;
+  }
+
+  private swipeToNextFilter(): void {
+    const currentIndex = this.orderStatuses.findIndex(s => s.key === this.activeStatus);
+    const nextIndex = (currentIndex + 1) % this.orderStatuses.length;
+    this.setActiveStatus(this.orderStatuses[nextIndex].key);
+  }
+
+  private swipeToPreviousFilter(): void {
+    const currentIndex = this.orderStatuses.findIndex(s => s.key === this.activeStatus);
+    const prevIndex = currentIndex === 0 ? this.orderStatuses.length - 1 : currentIndex - 1;
+    this.setActiveStatus(this.orderStatuses[prevIndex].key);
+  }
+
+  printOrder(order: Order): void {
+    console.log('Printing order:', order);
+    alert(`Printing order ${order.id}...`);
+  }
+
+  getStatusBadgeClass(status: string): string {
+    const classes = {
+      'PREPARING': 'px-2 py-1 text-xs rounded-full bg-orange-100 text-orange-800',
+      'READY': 'px-2 py-1 text-xs rounded-full bg-green-100 text-green-800',
+      'ON_THE_WAY': 'px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800',
+      'SERVED': 'px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800',
+      'COMPLETED': 'px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800'
+    };
+    return classes[status as keyof typeof classes] || classes['PREPARING'];
+  }
+
+  viewOrderItems(order: Order): void {
+    this.selectedOrderItems = order;
+  }
+
+  closeOrderItems(): void {
+    this.selectedOrderItems = null;
   }
 }
