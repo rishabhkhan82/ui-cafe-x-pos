@@ -1,1 +1,258 @@
-<p>owner-plans-mobile works!</p>
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <!-- Premium Header -->
+  <div class="fixed top-[68px] left-0 right-0 z-10 bg-gradient-to-r from-red-50 via-white to-red-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 border-b border-red-200 dark:border-gray-700 shadow-lg">
+    <div class="px-4 py-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <button
+            (click)="router.navigate(['/restaurant-navigation-mobile'])"
+            class="p-2 rounded-xl bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-md hover:shadow-lg border border-red-200 dark:border-gray-600">
+            <i class="fas fa-arrow-left text-red-600 dark:text-red-400 text-lg"></i>
+          </button>
+          <div>
+            <div class="flex items-center space-x-3">
+              <div class="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg">
+                <i class="fas fa-crown text-white text-sm"></i>
+              </div>
+              <div>
+                <h1 class="text-xl font-bold text-gray-900 dark:text-white">
+                  Subscription Plans
+                </h1>
+                <p class="text-xs text-gray-600 dark:text-gray-400">{{ showPlan ? 'Choose your plan' : 'Current subscription' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flex space-x-2">
+          <button
+            (click)="toggleView()"
+            class="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-sm">
+            <i class="fas fa-eye mr-2"></i>{{ showPlan ? 'Details' : 'Plan' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="px-6 py-8 pt-20 space-y-8">
+
+    <!-- Current Subscription Details -->
+    <div *ngIf="!showPlan" class="space-y-6 mt-4 mb-7">
+      <!-- Subscription Status Card -->
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div class="px-6 py-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-b border-gray-100 dark:border-gray-700">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+            <i class="fas fa-check-circle mr-3 text-green-600"></i>
+            Current Subscription
+          </h3>
+        </div>
+        <div class="p-6 space-y-6">
+          <div class="space-y-4">
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Plan</span>
+              <span class="text-sm text-gray-900 dark:text-white">Super Easy</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Status</span>
+              <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded-full">
+                Active
+              </span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Valid From</span>
+              <span class="text-sm text-gray-900 dark:text-white">Jan 1, 2026</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Valid To</span>
+              <span class="text-sm text-gray-900 dark:text-white">Jan 31, 2026</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Payment Method</span>
+              <span class="text-sm text-gray-900 dark:text-white">**** **** **** 1234</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Last Payment</span>
+              <span class="text-sm text-gray-900 dark:text-white">$29.00</span>
+            </div>
+          </div>
+          <div class="pt-4 border-t border-gray-100 dark:border-gray-700">
+            <button
+              class="w-full px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-sm flex items-center justify-center">
+              <i class="fas fa-cog mr-2"></i>Manage Subscription
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Plan Benefits Card -->
+      <div class="mb-10 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div class="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-b border-gray-100 dark:border-gray-700">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+            <i class="fas fa-gift mr-3 text-blue-600"></i>
+            Your Plan Benefits
+          </h3>
+        </div>
+        <div class="p-6">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="text-center">
+              <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-2">
+                <i class="fas fa-clipboard-list text-blue-600"></i>
+              </div>
+              <span class="text-xs text-gray-600 dark:text-gray-400">Order Management</span>
+            </div>
+            <div class="text-center">
+              <div class="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-2">
+                <i class="fas fa-utensils text-green-600"></i>
+              </div>
+              <span class="text-xs text-gray-600 dark:text-gray-400">Menu Control</span>
+            </div>
+            <div class="text-center">
+              <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center mx-auto mb-2">
+                <i class="fas fa-users text-purple-600"></i>
+              </div>
+              <span class="text-xs text-gray-600 dark:text-gray-400">Staff Management</span>
+            </div>
+            <div class="text-center">
+              <div class="w-12 h-12 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mx-auto mb-2">
+                <i class="fas fa-chart-bar text-red-600"></i>
+              </div>
+              <span class="text-xs text-gray-600 dark:text-gray-400">Reports</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Plan Card -->
+    <div *ngIf="showPlan">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <!-- Header -->
+      <div class="bg-red-500 text-white px-6 py-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-bold">Super Easy Plan</h2>
+            <p class="text-red-100 text-sm">Perfect for restaurants</p>
+          </div>
+          <div class="text-right">
+            <div class="text-2xl font-bold">$29</div>
+            <div class="text-sm text-red-100">per month</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="p-6">
+        <!-- Features -->
+        <div class="space-y-4 mb-6">
+          <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-3">What's Included</h3>
+          <div class="space-y-3">
+            <div class="flex items-center space-x-3">
+              <div class="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                <i class="fas fa-check text-green-600 text-xs"></i>
+              </div>
+              <span class="text-sm text-gray-700 dark:text-gray-300">Complete Order Management</span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <div class="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                <i class="fas fa-check text-green-600 text-xs"></i>
+              </div>
+              <span class="text-sm text-gray-700 dark:text-gray-300">Menu & Inventory Management</span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <div class="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                <i class="fas fa-check text-green-600 text-xs"></i>
+              </div>
+              <span class="text-sm text-gray-700 dark:text-gray-300">Staff & Role Management</span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <div class="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                <i class="fas fa-check text-green-600 text-xs"></i>
+              </div>
+              <span class="text-sm text-gray-700 dark:text-gray-300">Reports & Analytics</span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <div class="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                <i class="fas fa-check text-green-600 text-xs"></i>
+              </div>
+              <span class="text-sm text-gray-700 dark:text-gray-300">Mobile POS Access</span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <div class="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                <i class="fas fa-check text-green-600 text-xs"></i>
+              </div>
+              <span class="text-sm text-gray-700 dark:text-gray-300">24/7 Customer Support</span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <div class="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                <i class="fas fa-check text-green-600 text-xs"></i>
+              </div>
+              <span class="text-sm text-gray-700 dark:text-gray-300">Data Security & Backup</span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <div class="w-6 h-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                <i class="fas fa-check text-green-600 text-xs"></i>
+              </div>
+              <span class="text-sm text-gray-700 dark:text-gray-300">Real-time Notifications</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subscribe Button -->
+        <button class="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+          <i class="fas fa-credit-card mr-2"></i>
+          Subscribe Now
+        </button>
+      </div>
+    </div>
+
+    <!-- Current Subscription (if subscribed) -->
+    <!-- For demo, assuming not subscribed; uncomment and populate if needed -->
+    <!--
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div class="px-6 py-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-b border-gray-100 dark:border-gray-700">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+          <i class="fas fa-check-circle mr-3 text-green-600"></i>
+          Current Subscription
+        </h3>
+      </div>
+      <div class="p-6 space-y-6">
+        <div class="space-y-4">
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Plan</span>
+            <span class="text-sm text-gray-900 dark:text-white">Super Easy</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Status</span>
+            <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded-full">
+              Active
+            </span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Valid From</span>
+            <span class="text-sm text-gray-900 dark:text-white">Jan 1, 2026</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Valid To</span>
+            <span class="text-sm text-gray-900 dark:text-white">Jan 31, 2026</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Payment Method</span>
+            <span class="text-sm text-gray-900 dark:text-white">**** **** **** 1234</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Last Payment</span>
+            <span class="text-sm text-gray-900 dark:text-white">$29.00</span>
+          </div>
+        </div>
+        <div class="pt-4 border-t border-gray-100 dark:border-gray-700">
+          <button
+            class="w-full px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-sm flex items-center justify-center">
+            <i class="fas fa-cog mr-2"></i>Manage Subscription
+          </button>
+        </div>
+      </div>
+    </div>
+    -->
+
+  </div>
+</div>

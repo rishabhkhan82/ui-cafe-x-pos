@@ -26,6 +26,7 @@ export interface User {
   user_type: 'admin' | 'customer';
   avatar?: string;
   restaurant_id?: string;
+  restaurantId?: string;
   member_since?: Date;
   created_at?: Date;
   updated_at?: Date;
