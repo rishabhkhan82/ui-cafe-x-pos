@@ -378,7 +378,7 @@ export class WaiterOrdersComponent implements OnInit {
     const baseClass = 'transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1';
     const elapsedMinutes = (Date.now() - new Date(order.created_at).getTime()) / (1000 * 60);
     if (order.status === 'ON_THE_WAY' && elapsedMinutes > 10) {
-      return `${baseClass} animate-pulse border-2 border-red-500`;
+      return `${baseClass} animate-pulse border-2 border-blue-500`;
     }
     return baseClass;
   }

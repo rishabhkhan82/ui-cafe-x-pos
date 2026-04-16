@@ -71,23 +71,23 @@
 
         <!-- Order Actions -->
         <div class="p-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
-          <div class="flex items-center space-x-2">
-            <button *ngIf="order.status === 'READY'"
-                    (click)="markOnTheWay(order)"
-                    class="flex-1 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-sm font-medium">
-              <i class="fas fa-check mr-1"></i>On the Way
-            </button>
+          <div class="flex flex-col gap-2">
+             <button *ngIf="order.status === 'READY'"
+                     (click)="markOnTheWay(order)"
+                     class="flex-1 py-3 px-4 bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-600 hover:via-green-600 hover:to-emerald-700 text-white rounded-xl transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-emerald-500/50 hover:shadow-2xl transform hover:scale-105 hover:-translate-y-0.5 border border-emerald-400/30">
+               <i class="fas fa-check mr-2 text-emerald-100"></i>On the Way
+             </button>
 
-            <button *ngIf="order.status === 'ON_THE_WAY'"
-                    (click)="markServed(order)"
-                    class="flex-1 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-sm font-medium">
-              <i class="fas fa-check mr-1"></i>Served
-            </button>
+             <button *ngIf="order.status === 'ON_THE_WAY'"
+                     (click)="markServed(order)"
+                     class="flex-1 py-3 px-4 bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-600 hover:via-green-600 hover:to-emerald-700 text-white rounded-xl transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-emerald-500/50 hover:shadow-2xl transform hover:scale-105 hover:-translate-y-0.5 border border-emerald-400/30">
+               <i class="fas fa-check mr-2 text-emerald-100"></i>Served
+             </button>
 
-            <button (click)="viewOrder(order)"
-                    class="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm font-medium">
-              <i class="fas fa-eye"></i>
-            </button>
+             <button (click)="viewOrder(order)"
+                     class="px-4 py-3 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 text-white rounded-xl transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-blue-500/50 hover:shadow-2xl transform hover:scale-105 hover:-translate-y-0.5 border border-blue-400/30">
+               <i class="fas fa-eye mr-2 text-blue-100"></i>View Order
+             </button>
           </div>
         </div>
       </div>

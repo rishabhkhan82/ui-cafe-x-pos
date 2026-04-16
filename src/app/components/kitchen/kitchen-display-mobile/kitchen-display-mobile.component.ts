@@ -198,7 +198,7 @@ export class KitchenDisplayMobileComponent implements OnInit, OnDestroy {
     // Add animation for urgent orders (preparing > 10 minutes)
     const elapsedMinutes = (Date.now() - new Date(order.created_at).getTime()) / (1000 * 60);
     if (order.status === 'PREPARING' && elapsedMinutes > 10) {
-      return `${baseClass} animate-pulse border-2 border-red-500`;
+      return `${baseClass} animate-pulse border-2 border-orange-500`;
     }
 
     return baseClass;

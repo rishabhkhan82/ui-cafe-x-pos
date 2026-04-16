@@ -376,9 +376,8 @@ export class OwnerOrdersMobileComponent implements OnInit {
 
   getOrderCardClass(order: Order): string {
     const baseClass = 'transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1';
-    const elapsedMinutes = (Date.now() - new Date(order.created_at).getTime()) / (1000 * 60);
-    if (order.status === 'ON_THE_WAY' && elapsedMinutes > 10) {
-      return `${baseClass} animate-pulse border-2 border-red-500`;
+    if (order.status === 'BILLING_REQUESTED') {
+      return `${baseClass} animate-pulse border-2 border-indigo-500`;
     }
     return baseClass;
   }
