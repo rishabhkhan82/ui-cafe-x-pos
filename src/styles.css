@@ -124,6 +124,7 @@ input[type="checkbox"] {
   position: relative;
   transition: all 0.2s ease;
   outline: none;
+  display: none;
 }
 
 .dark input[type="checkbox"] {

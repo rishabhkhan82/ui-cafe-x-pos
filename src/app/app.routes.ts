@@ -128,7 +128,7 @@ export const routes: Routes = [
 
   {
     path: 'owner-orders-mobile',
-    loadComponent: () => import('./components/restaurant/owner-orders-mobile/owner-orders-mobile.component').then(m => m.OwnerOrdersMobileComponent),
+    loadComponent: () => import('./components/shared/orders-mobile/orders-mobile.component').then(m => m.OrdersMobileComponent),
     canActivate: [authGuard]
   },
 
@@ -184,7 +184,7 @@ export const routes: Routes = [
 
   {
     path: 'kitchen-orders',
-    loadComponent: () => import('./components/kitchen/kitchen-display-mobile/kitchen-display-mobile.component').then(m => m.KitchenDisplayMobileComponent),
+    loadComponent: () => import('./components/shared/orders-mobile/orders-mobile.component').then(m => m.OrdersMobileComponent),
     canActivate: [authGuard]
   },
 
@@ -204,7 +204,7 @@ export const routes: Routes = [
 
   {
     path: 'waiter-orders',
-    loadComponent: () => import('./components/waiter/waiter-orders/waiter-orders.component').then(m => m.WaiterOrdersComponent),
+    loadComponent: () => import('./components/shared/orders-mobile/orders-mobile.component').then(m => m.OrdersMobileComponent),
     canActivate: [authGuard]
   },
 
@@ -214,11 +214,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   
-  {
-    path: 'waiter-interface',
-    loadComponent: () => import('./components/waiter/waiter-interface/waiter-interface.component').then(m => m.WaiterInterfaceComponent),
-    canActivate: [authGuard]
-  },
+  // {
+  //   path: 'waiter-interface',
+  //   loadComponent: () => import('./components/waiter/waiter-interface/waiter-interface.component').then(m => m.WaiterInterfaceComponent),
+  //   canActivate: [authGuard]
+  // },
 
   // Customer login (outside layout - no header/footer)
   {

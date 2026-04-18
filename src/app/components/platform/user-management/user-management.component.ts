@@ -235,7 +235,7 @@ export class UserManagementComponent implements OnInit {
         role: 'customer',
         user_type: 'admin',
         avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face',
-        restaurant_id: '',
+      restaurant_id: '',
         member_since: undefined,
         created_at: undefined,
         updated_at: undefined,

@@ -173,21 +173,25 @@ export class CrudService {
   // CONVENIENCE METHODS FOR COMMON OPERATIONS
   // ===============================
 
-  // Menu operations
+  // Menu Item operations
   getMenuItems(params?: CrudParams): Observable<any> {
-    return this.getData('menu', params);
+    return this.getData('menu-items', params);
+  }
+
+  getMenuItemById(id: string | number): Observable<any> {
+    return this.getData(`menu-items/${id}`);
   }
 
   createMenuItem(payload: any): Observable<any> {
-    return this.postData('menu', payload);
+    return this.postData('menu-items', payload);
   }
 
-  updateMenuItem(id: string, payload: any): Observable<any> {
-    return this.putData('menu', payload, {}, id);
+  updateMenuItem(id: string | number, payload: any): Observable<any> {
+    return this.putData('menu-items', payload, {}, id);
   }
 
-  deleteMenuItem(id: string): Observable<any> {
-    return this.deleteData('menu', {}, id);
+  deleteMenuItem(id: string | number): Observable<any> {
+    return this.deleteData('menu-items', {}, id);
   }
 
   // Order operations

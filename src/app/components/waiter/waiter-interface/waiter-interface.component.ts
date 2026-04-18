@@ -366,9 +366,9 @@ export class WaiterInterfaceComponent implements OnInit, OnDestroy {
       customer_id: this.currentCustomer.id ? parseInt(this.currentCustomer.id) : 0,
       restaurant_id: 1,
       items: orderItems.map(item => ({
-        id: parseInt(item.menuItemId),
+        id: item.menuItemId,
         order_id: order.id,
-        menu_item_id: parseInt(item.menuItemId),
+        menu_item_id: item.menuItemId,
         menu_item_name: item.menuItemName,
         quantity: item.quantity,
         unit_price: item.unitPrice,

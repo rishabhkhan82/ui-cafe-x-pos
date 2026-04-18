@@ -85,6 +85,7 @@ export interface CustomizationOption {
 
 export interface Order {
   id: number;
+  active?: boolean;
   order_id: string;
   table_number: string;
   customer_name: string;
