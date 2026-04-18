@@ -5,11 +5,13 @@ import { Router } from '@angular/router';
 import { LoadingService } from '../../../services/loading.service';
 import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
 import { AuthService } from '../../../services/auth.service';
-import { FileUploadService } from '../../../services/file-upload.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ValidationService } from '../../../services/validation.service';
 import { CrudService } from '../../../services/crud.service';
 import { MenuItem } from '../../../interfaces';
+import { environment } from '../../../environments/environment';
+import { Subject, Observable } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-owner-menus-mobile',
@@ -26,6 +28,9 @@ export class OwnerMenusMobileComponent implements OnInit {
   categoryFilter = 'all';
   statusFilter = 'all';
   showAddForm = false;
+  showSearchBar = false;
+  searchInput = '';
+  searchSubject = new Subject<string>();
   errorMessage = '';
   selectedFile: File | null = null;
 
@@ -88,7 +93,6 @@ export class OwnerMenusMobileComponent implements OnInit {
     private loadingService: LoadingService,
     private confirmationService: ConfirmationDialogService,
     private authService: AuthService,
-    private fileUploadService: FileUploadService,
     private notificationService: NotificationService,
     private crudService: CrudService,
     private validationService: ValidationService
@@ -96,12 +100,33 @@ export class OwnerMenusMobileComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadMenus();
+    this.setupSearch();
   }
 
   loadMenus(): void {
     this.loadingService.show();
     this.errorMessage = '';
 
+    this.getMenusObservable(this.buildParams()).subscribe({
+      next: (response: any) => {
+        this.menus = this.mapApiMenuItemsToMenuItems(response.data);
+        this.totalPages = response.pageCount;
+        this.totalElements = response.totalRowCount;
+        this.loadingService.hide();
+      },
+      error: (error) => {
+        console.error('Error loading menu items:', error);
+        this.errorMessage = 'Failed to load menu items. Please try again.';
+        this.loadingService.hide();
+      }
+    });
+  }
+
+  private getMenusObservable(params: any): Observable<any> {
+    return this.crudService.getMenuItems(params);
+  }
+
+  private buildParams(): any {
     const currentUser = this.authService.getCurrentUser();
     const params: any = {
       page: this.currentPage,
@@ -122,8 +147,19 @@ export class OwnerMenusMobileComponent implements OnInit {
     }
 
     console.log(params);
+    return params;
+  }
 
-    this.crudService.getMenuItems(params).subscribe({
+  private setupSearch(): void {
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(term => {
+        this.searchTerm = term;
+        this.currentPage = 1;
+        return this.getMenusObservable(this.buildParams());
+      })
+    ).subscribe({
       next: (response: any) => {
         this.menus = this.mapApiMenuItemsToMenuItems(response.data);
         this.totalPages = response.pageCount;
@@ -131,8 +167,7 @@ export class OwnerMenusMobileComponent implements OnInit {
         this.loadingService.hide();
       },
       error: (error) => {
-        console.error('Error loading menu items:', error);
-        this.errorMessage = 'Failed to load menu items. Please try again.';
+        console.error('Error searching menu items:', error);
         this.loadingService.hide();
       }
     });
@@ -175,6 +210,18 @@ export class OwnerMenusMobileComponent implements OnInit {
     this.statusFilter = 'all';
     this.currentPage = 1; // Reset to first page
     this.loadMenus();
+  }
+
+  toggleSearchBar(): void {
+    this.showSearchBar = !this.showSearchBar;
+    if (!this.showSearchBar) {
+      this.searchInput = '';
+      this.searchSubject.next('');
+    }
+  }
+
+  onSearchInputChange(value: string): void {
+    this.searchSubject.next(value);
   }
 
   changePage(page: number): void {
@@ -269,7 +316,7 @@ export class OwnerMenusMobileComponent implements OnInit {
     const file = event.target.files[0];
     if (file) {
       // Validate file
-      const validation = this.fileUploadService.validateFileForCategory(file, 'menu_image');
+      const validation = this.validateFile(file, 'menu_image');
       if (!validation.isValid) {
         this.notificationService.error('Invalid File', validation.message || 'Invalid file selected');
         this.selectedFile = null;
@@ -383,13 +430,12 @@ export class OwnerMenusMobileComponent implements OnInit {
     this.loadingService.show();
 
     try {
-      let imageUrl = this.menuForm.image;
+      let imageBase64: string | undefined;
 
-      // Upload image if a file was selected
+      // Convert selected file to base64 if provided
       if (this.selectedFile) {
-        const uploadResult = await this.fileUploadService.uploadFile(this.selectedFile, 'menu_image').toPromise();
-        imageUrl = uploadResult?.fileUrl || imageUrl;
-        this.selectedFile = null; // Clear the selected file after upload
+        imageBase64 = await this.fileToBase64(this.selectedFile);
+        this.selectedFile = null; // Clear the selected file
       }
 
       const currentTime = new Date();
@@ -399,7 +445,7 @@ export class OwnerMenusMobileComponent implements OnInit {
         description: this.menuForm.description,
         price: this.menuForm.price,
         category: this.menuForm.category,
-        image: imageUrl,
+        image: imageBase64 || this.menuForm.image, // Use base64 if available, else keep existing
         item_id: this.menuForm.item_id,
         discount: this.menuForm.discount,
         original_price: this.menuForm.original_price,
@@ -411,8 +457,8 @@ export class OwnerMenusMobileComponent implements OnInit {
         is_veg: this.menuForm.is_veg,
         is_vegetarian: this.menuForm.is_vegetarian,
         restaurant_id: currentUser?.restaurantId || 1,
-        created_at: currentTime,
-        updated_at: currentTime,
+        created_at: currentTime.toISOString(),
+        updated_at: currentTime.toISOString(),
         created_by: Number(currentUser?.id) || 1,
         updated_by: Number(currentUser?.id) || 1
       };
@@ -433,9 +479,9 @@ export class OwnerMenusMobileComponent implements OnInit {
         }
       });
     } catch (error) {
-      console.error('Error uploading image:', error);
-      this.notificationService.error('Upload Failed', 'Failed to upload image. Please try again.');
-      this.errorMessage = 'Failed to upload image. Please try again.';
+      console.error('Error processing image:', error);
+      this.notificationService.error('Processing Failed', 'Failed to process image. Please try again.');
+      this.errorMessage = 'Failed to process image. Please try again.';
       this.loadingService.hide();
     }
   }
@@ -444,13 +490,12 @@ export class OwnerMenusMobileComponent implements OnInit {
     this.loadingService.show();
 
     try {
-      let imageUrl = this.menuForm.image;
+      let imageBase64: string | undefined;
 
-      // Upload image if a file was selected
+      // Convert selected file to base64 if provided
       if (this.selectedFile) {
-        const uploadResult = await this.fileUploadService.uploadFile(this.selectedFile, 'menu_image').toPromise();
-        imageUrl = uploadResult?.fileUrl || imageUrl;
-        this.selectedFile = null; // Clear the selected file after upload
+        imageBase64 = await this.fileToBase64(this.selectedFile);
+        this.selectedFile = null; // Clear the selected file
       }
 
       const currentTime = new Date();
@@ -460,7 +505,7 @@ export class OwnerMenusMobileComponent implements OnInit {
         description: this.menuForm.description,
         price: this.menuForm.price,
         category: this.menuForm.category,
-        image: imageUrl,
+        image: imageBase64 || this.menuForm.image, // Use base64 if available, else keep existing
         item_id: this.menuForm.item_id,
         discount: this.menuForm.discount,
         original_price: this.menuForm.original_price,
@@ -472,8 +517,8 @@ export class OwnerMenusMobileComponent implements OnInit {
         is_veg: this.menuForm.is_veg,
         is_vegetarian: this.menuForm.is_vegetarian,
         restaurant_id: this.menuForm.restaurant_id,
-        created_at: this.editingMenu!.created_at,
-        updated_at: currentTime,
+        created_at: this.editingMenu!.created_at?.toISOString() || currentTime.toISOString(),
+        updated_at: currentTime.toISOString(),
         created_by: this.editingMenu!.created_by,
         updated_by: Number(currentUser?.id) || 1
       };
@@ -496,9 +541,9 @@ export class OwnerMenusMobileComponent implements OnInit {
         }
       });
     } catch (error) {
-      console.error('Error uploading image:', error);
-      this.notificationService.error('Upload Failed', 'Failed to upload image. Please try again.');
-      this.errorMessage = 'Failed to upload image. Please try again.';
+      console.error('Error processing image:', error);
+      this.notificationService.error('Processing Failed', 'Failed to process image. Please try again.');
+      this.errorMessage = 'Failed to process image. Please try again.';
       this.loadingService.hide();
     }
   }
@@ -550,5 +595,52 @@ export class OwnerMenusMobileComponent implements OnInit {
     const start = (this.currentPage - 1) * this.itemsPerPage + 1;
     const end = Math.min(this.currentPage * this.itemsPerPage, this.totalElements);
     return `${start}-${end}`;
+  }
+
+  // Helper method to convert file to base64
+  private fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        resolve(reader.result as string);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Helper method to get full image URL
+  getFullImageUrl(imagePath: string): string {
+    if (!imagePath) return '';
+    if (imagePath.startsWith('data:')) {
+      // It's a base64 data URL, return as is
+      return imagePath;
+    }
+    // It's a relative path, concat with baseImgUrl
+    return environment.api.baseUrl + imagePath;
+  }
+
+  // Helper method to validate file
+  private validateFile(file: File, category: string): { isValid: boolean; message?: string } {
+    const maxFileSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+    // Check file size
+    if (file.size > maxFileSize) {
+      return {
+        isValid: false,
+        message: `File size exceeds maximum allowed size of 5MB`
+      };
+    }
+
+    // Check file type
+    if (!allowedTypes.includes(file.type)) {
+      return {
+        isValid: false,
+        message: `File type ${file.type} is not allowed. Allowed types: JPEG, PNG, WebP`
+      };
+    }
+
+    return { isValid: true };
   }
 }

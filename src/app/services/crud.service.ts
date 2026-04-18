@@ -23,6 +23,17 @@ export class CrudService {
     return this.http.get(url, { headers: httpHeaders, params: httpParams });
   }
 
+  getOrdersForReports(startDate: string, endDate: string, status: string = 'COMPLETED'): Observable<any> {
+    const url = this.buildUrl('orders/reports');
+    const httpParams = this.buildParams({
+      startDate: startDate,
+      endDate: endDate,
+      status: status
+    });
+
+    return this.http.get(url, { params: httpParams });
+  }
+
   // ===============================
   // POST OPERATIONS
   // ===============================

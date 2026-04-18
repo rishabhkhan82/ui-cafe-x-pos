@@ -1,0 +1,30 @@
+/* Ensure date input calendar icon is visible in both light and dark modes */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: brightness(0.8) contrast(1.2);
+  opacity: 0.9;
+  cursor: pointer;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  filter: brightness(0.9) contrast(1.3);
+}
+
+/* Firefox specific styling */
+input[type="date"]::-moz-calendar-picker-indicator {
+  filter: brightness(0.8) contrast(1.2);
+  opacity: 0.9;
+  cursor: pointer;
+}
+
+input[type="date"]::-moz-calendar-picker-indicator:hover {
+  opacity: 1;
+  filter: brightness(0.9) contrast(1.3);
+}
+
+/* Additional styling for better cross-browser support */
+input[type="date"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
