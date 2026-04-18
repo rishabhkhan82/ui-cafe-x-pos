@@ -133,9 +133,14 @@ export class OwnerReportsMobileComponent implements OnInit {
       })) : [],
       period
     };
-  }
+   }
 
-  // Helper methods for dynamic item styling
+   clearReport() {
+     this.reportData = null;
+     this.notificationService.success('Report Cleared', 'Report data has been cleared');
+   }
+
+   // Helper methods for dynamic item styling
   getItemCardClasses(index: number): string {
     const colors = [
       'bg-gradient-to-r from-orange-50 via-orange-100 to-orange-50 dark:from-orange-900/20 dark:via-orange-800/20 dark:to-orange-900/20 border-orange-200/50 dark:border-orange-700/30',

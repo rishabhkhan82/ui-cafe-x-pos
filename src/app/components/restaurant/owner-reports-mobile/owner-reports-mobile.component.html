@@ -1,10 +1,10 @@
 <!-- Main Container -->
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900 mb-7">
   <!-- Fixed Header -->
-  <div class="fixed top-[68px] left-0 right-0 z-10 bg-gradient-to-r from-red-50 via-white to-red-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 border-b border-red-200 dark:border-gray-700 shadow-lg">
+  <div class="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-red-50 via-white to-red-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 border-b border-red-200 dark:border-gray-700 shadow-lg">
     <div class="px-4 py-3">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-4">
+      <div class="flex items-center">
+        <div class="flex items-center space-x-4 flex-1">
           <button
             (click)="router.navigate(['/restaurant-navigation-mobile'])"
             class="p-2 rounded-xl bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-md hover:shadow-lg border border-red-200 dark:border-gray-600">
@@ -19,16 +19,28 @@
                 Reports
               </h1>
               <p class="text-xs text-gray-600 dark:text-gray-400">View your sales reports</p>
-            </div>
           </div>
+        </div>
+        <div class="flex space-x-2" style="margin-left: auto;">
+          <button
+            (click)="generateReport()"
+            class="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
+            <i class="fas fa-refresh"></i>
+          </button>
+          <button
+            (click)="clearReport()"
+            class="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-sm">
+            <i class="fas fa-times mr-2"></i>Clear
+          </button>
+        </div>
         </div>
       </div>
     </div>
-  </div>
+    </div>
 
-  <div class="px-6 py-8 pt-24 space-y-6">
+  <div class="px-6 py-8 space-y-6">
     <!-- Date Selection -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-4 px-6">
       <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Select Date Range</h2>
       <div class="grid grid-cols-2 gap-4">
         <div>
@@ -53,17 +65,17 @@
             type="date"
             [(ngModel)]="toDate"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white bg-white dark:bg-gray-700"
-          >
+           >
         </div>
       </div>
       <button
         (click)="generateReport()"
-        [disabled]="isLoading"
-        class="mt-4 w-full px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl font-medium disabled:cursor-not-allowed">
-        <i *ngIf="isLoading" class="fas fa-spinner fa-spin mr-2"></i>
-        {{ isLoading ? 'Generating Report...' : 'Generate Report' }}
-      </button>
-    </div>
+          [disabled]="isLoading"
+          class="mt-4 w-full px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl font-medium disabled:cursor-not-allowed">
+          <i *ngIf="isLoading" class="fas fa-spinner fa-spin mr-2"></i>
+          {{ isLoading ? 'Generating Report...' : 'Generate Report' }}
+        </button>
+      </div>
 
      <!-- Report Display -->
      <div *ngIf="reportData && !isLoading" class="space-y-6">
@@ -158,11 +170,11 @@
               </div>
               <div class="text-right">
                 <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">${{ reportData.takeawayRevenue }}</div>
-                <div class="text-sm text-gray-500 dark:text-gray-500">Revenue</div>
-              </div>
-            </div>
+                <div class="text-sm text-gray-500 dark:text-gray-500">Revenue            </div>
           </div>
         </div>
+      </div>
+    </div>
       </div>
 
       <!-- Popular Items Widget -->
