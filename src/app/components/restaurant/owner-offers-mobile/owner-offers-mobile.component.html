@@ -1,1 +1,541 @@
-<p>owner-offers-mobile works!</p>
+<!-- Main Container -->
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <!-- Premium Fixed Header -->
+  <div *ngIf="!showAddForm" class="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-red-50 via-white to-red-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 border-b border-red-200 dark:border-gray-700 shadow-lg">
+    <div class="px-4 py-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4 flex-1">
+          <button
+            (click)="router.navigate(['/restaurant-navigation-mobile'])"
+            class="p-2 rounded-xl bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-md hover:shadow-lg border border-red-200 dark:border-gray-600">
+            <i class="fas fa-arrow-left text-red-600 dark:text-red-400 text-lg"></i>
+          </button>
+
+          <!-- Header Content (Shown when not searching) -->
+          <div *ngIf="!showSearchBar" class="flex items-center space-x-3 flex-1">
+            <div class="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg">
+              <i class="fas fa-percentage text-white text-sm"></i>
+            </div>
+            <div>
+              <h1 class="text-xl font-bold text-gray-900 dark:text-white">
+                Offers
+              </h1>
+              <p class="text-xs text-gray-600 dark:text-gray-400">Manage Your Offers</p>
+            </div>
+          </div>
+
+          <!-- Simple Search Bar (Shown when searching) -->
+          <div *ngIf="showSearchBar" class="flex-1 ml-4 animate-fadeInSlide">
+            <div class="relative">
+              <input
+                type="text"
+                [(ngModel)]="searchInput"
+                (ngModelChange)="onSearchInputChange($event)"
+                placeholder="search by name or code"
+                class="w-full px-4 py-2 pl-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-[2rem] shadow-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                autofocus
+              >
+              <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex space-x-2 ml-4">
+          <button
+            *ngIf="!showSearchBar"
+            (click)="toggleSearchBar()"
+            class="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
+            <i class="fas fa-search"></i>
+          </button>
+          <button
+            *ngIf="showSearchBar"
+            (click)="toggleSearchBar()"
+            class="p-2 bg-red-100 dark:bg-red-900/20 hover:bg-red-200 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
+            <i class="fas fa-times"></i>
+          </button>
+          <button
+            (click)="loadOffers()"
+            class="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
+            <i class="fas fa-refresh"></i>
+          </button>
+          <button
+            (click)="showOfferForm()"
+            class="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-sm">
+            <i class="fas fa-plus mr-2"></i>Add
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="px-6 py-8 space-y-6 mb-20" *ngIf="!showAddForm">
+
+    <!-- Results Header -->
+    <div *ngIf="totalElements > 0" class="flex items-center justify-between mt-2">
+      <div class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+        <i class="fas fa-percentage mr-2"></i>
+        {{ totalElements }} offers found
+      </div>
+      <div class="text-xs text-gray-500 dark:text-gray-400">
+        Page {{ currentPage }} of {{ totalPages }}
+      </div>
+    </div>
+
+    <!-- Offers Grid -->
+    <div class="grid gap-6 grid-cols-1">
+      <div
+        *ngFor="let offer of offers"
+        class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer group"
+        (click)="selectOffer(offer)">
+        <div class="relative">
+          <div class="absolute top-2 right-2">
+            <div
+              [class]="offer.is_active ? 'w-3 h-3 rounded-full bg-green-500' : 'w-3 h-3 rounded-full bg-gray-400'"
+              class="ring-2 ring-white dark:ring-gray-700"></div>
+          </div>
+        </div>
+        <div class="p-4">
+          <div class="flex items-start justify-between mb-2">
+            <div class="flex-1 min-w-0">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white truncate">{{ offer.title }}</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400">{{ offer.code }}</p>
+              <div class="flex items-center space-x-2 mt-1">
+                <span
+                  [class]="getOfferTypeColor(offer.type)"
+                  class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium">
+                  {{ offer.type }}
+                </span>
+                <span *ngIf="offer.auto_apply" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                  <i class="fas fa-magic mr-1"></i>Auto
+                </span>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-xl font-bold text-red-600 dark:text-red-400">{{ offer.discount_value }}%</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">off</p>
+            </div>
+          </div>
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 flex-1">{{ offer.description }}</p>
+            <div class="flex items-center text-xs text-gray-500 dark:text-gray-400 ml-2">
+              <i class="fas fa-calendar mr-1"></i>{{ formatDate(offer.end_date) }}
+            </div>
+          </div>
+          <div class="flex space-x-1">
+            <button
+              (click)="selectOffer(offer); $event.stopPropagation()"
+              class="flex-1 px-2 py-2 rounded-md bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors text-xs font-medium text-center">
+              <i class="fas fa-eye mr-1"></i>View
+            </button>
+            <button
+              (click)="showOfferForm(offer); $event.stopPropagation()"
+              class="flex-1 px-2 py-2 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-xs font-medium text-center">
+              <i class="fas fa-edit mr-1"></i>Edit
+            </button>
+            <button
+              (click)="deleteOffer(offer); $event.stopPropagation()"
+              class="flex-1 px-2 py-2 rounded-md bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-xs font-medium text-center">
+              <i class="fas fa-trash mr-1"></i>Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="totalElements === 0" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div class="px-6 py-8 bg-gradient-to-r from-red-50 to-red-50 dark:from-red-900/20 dark:to-red-900/10 border-b border-gray-100 dark:border-gray-700">
+        <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-red-500 to-red-600 mx-auto mb-4 flex items-center justify-center">
+          <i class="fas fa-percentage text-white text-3xl"></i>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-900 dark:text-white text-center">No offers found</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-300 text-center mt-2" *ngIf="!hasActiveFilters">
+          Get started by creating your first offer.
+        </p>
+        <p class="text-sm text-gray-600 dark:text-gray-300 text-center mt-2" *ngIf="hasActiveFilters">
+          Try adjusting your search filters or clear them to see all offers.
+        </p>
+      </div>
+      <div class="p-6 text-center">
+        <button
+          *ngIf="!hasActiveFilters"
+          (click)="showOfferForm()"
+          class="px-6 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl">
+          <i class="fas fa-plus mr-2"></i>
+          Add First Offer
+        </button>
+        <button
+          *ngIf="hasActiveFilters"
+          (click)="clearFilters()"
+          class="px-6 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600">
+          <i class="fas fa-times mr-2"></i>
+          Clear Filters
+        </button>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="totalElements > 0 && !showAddForm" class="fixed bottom-20 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-10 py-2 px-4">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+          <div class="text-sm text-gray-700 dark:text-gray-300">
+            {{ paginationRange }} of {{ totalElements }}
+          </div>
+          <div class="flex items-center space-x-1">
+            <span class="text-xs text-gray-500 dark:text-gray-400">Show:</span>
+            <select
+              [(ngModel)]="itemsPerPage"
+              (change)="onItemsPerPageChange($event)"
+              class="px-2 py-1 text-xs w-14 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded">
+              <option *ngFor="let option of itemsPerPageOptions" [value]="option">{{ option }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-1">
+          <button
+            (click)="changePage(1)"
+            [disabled]="currentPage === 1"
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+            <i class="fas fa-angle-double-left text-xs"></i>
+          </button>
+          <button
+            (click)="changePage(currentPage - 1)"
+            [disabled]="currentPage === 1"
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+            <i class="fas fa-chevron-left text-xs"></i>
+          </button>
+          <button
+            *ngFor="let page of pageNumbers"
+            (click)="changePage(page)"
+            [class]="page === currentPage ? 'w-7 h-7 rounded bg-red-500 text-white flex items-center justify-center text-xs' : 'w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center text-xs'">
+            {{ page }}
+          </button>
+          <button
+            (click)="changePage(currentPage + 1)"
+            [disabled]="currentPage === totalPages"
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+            <i class="fas fa-chevron-right text-xs"></i>
+          </button>
+          <button
+            (click)="changePage(totalPages)"
+            [disabled]="currentPage === totalPages"
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+            <i class="fas fa-angle-double-right text-xs"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Offer Modal -->
+  <div *ngIf="showAddForm" class="fixed top-0 bottom-20 left-0 right-0 bg-white dark:bg-gray-800 z-50 overflow-y-auto">
+    <div class="h-full flex flex-col">
+      <div class="fixed top-0 left-0 right-0 px-6 py-4 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 flex items-center justify-between z-[100]">
+        <div class="flex items-center space-x-4">
+          <button (click)="cancelAdd()" class="w-8 h-8 rounded-lg hover:bg-red-100 dark:hover:bg-gray-700 flex items-center justify-center transition-colors duration-200">
+            <i class="fas fa-arrow-left text-red-600 dark:text-red-400"></i>
+          </button>
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ editingOffer ? 'Edit Offer' : 'Add New Offer' }}</h3>
+        </div>
+        <button
+          (click)="onSubmitForm()"
+          class="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-sm">
+          <i class="fas fa-save mr-2"></i>{{ editingOffer ? 'Update' : 'Save' }}
+        </button>
+      </div>
+
+      <div class="flex-1 pt-20 p-6 overflow-y-auto">
+        <form class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-signature mr-2 text-red-500"></i>Title <span class="text-red-500">*</span></label>
+              <input
+                type="text"
+                [(ngModel)]="offerForm.title"
+                name="title"
+                (blur)="validateTitle()"
+                (input)="validateTitle()"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
+                placeholder="Enter offer title">
+              <div *ngIf="fieldErrors['title']" class="mt-1 text-xs text-red-500">{{ fieldErrors['title'] }}</div>
+            </div>
+
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-tag mr-2 text-blue-500"></i>Name <span class="text-red-500">*</span></label>
+              <input
+                type="text"
+                [(ngModel)]="offerForm.name"
+                name="name"
+                (blur)="validateName()"
+                (input)="validateName()"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
+                placeholder="Enter offer name">
+              <div *ngIf="fieldErrors['name']" class="mt-1 text-xs text-red-500">{{ fieldErrors['name'] }}</div>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-align-left mr-2 text-green-500"></i>Description <span class="text-red-500">*</span></label>
+            <textarea
+              [(ngModel)]="offerForm.description"
+              name="description"
+              (blur)="validateDescription()"
+              (input)="validateDescription()"
+              rows="3"
+              class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white resize-none"
+              placeholder="Enter offer description"></textarea>
+            <div *ngIf="fieldErrors['description']" class="mt-1 text-xs text-red-500">{{ fieldErrors['description'] }}</div>
+          </div>
+
+           <div class="grid grid-cols-2 gap-4">
+             <div>
+               <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-hashtag mr-2 text-purple-500"></i>Code <span class="text-red-500">*</span></label>
+               <input
+                 type="text"
+                 [(ngModel)]="offerForm.code"
+                 name="code"
+                 (blur)="validateCode()"
+                 (input)="validateCode()"
+                 class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
+                 placeholder="SUMMER20">
+               <div *ngIf="fieldErrors['code']" class="mt-1 text-xs text-red-500">{{ fieldErrors['code'] }}</div>
+             </div>
+
+             <div>
+               <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-cogs mr-2 text-orange-500"></i>Type <span class="text-red-500">*</span></label>
+               <select
+                 [(ngModel)]="offerForm.type"
+                 name="type"
+                 (change)="validateType()"
+                 class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white">
+                 <option value="">Select Type</option>
+                 <option value="percentage">Percentage Discount</option>
+                 <option value="fixed">Fixed Amount</option>
+                 <!-- <option value="buy_one_get_one">Buy One Get One</option>
+                 <option value="free_delivery">Free Delivery</option> -->
+               </select>
+               <div *ngIf="fieldErrors['type']" class="mt-1 text-xs text-red-500">{{ fieldErrors['type'] }}</div>
+             </div>
+           </div>
+
+           <div class="grid grid-cols-2 gap-4">
+             <div>
+               <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-percent mr-2 text-red-500"></i>Discount Percentage <span *ngIf="offerForm.type === 'percentage'" class="text-red-500">*</span></label>
+               <input
+                 type="number"
+                 step="0.01"
+                 [(ngModel)]="offerForm.discount_value"
+                 name="discount_value"
+                 (blur)="validateDiscountValue()"
+                 (input)="validateDiscountValue()"
+                 [disabled]="offerForm.type !== 'percentage'"
+                 class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                 placeholder="20.00">
+               <div *ngIf="fieldErrors['discount_value']" class="mt-1 text-xs text-red-500">{{ fieldErrors['discount_value'] }}</div>
+             </div>
+             <div>
+               <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-dollar-sign mr-2 text-blue-500"></i>Value <span *ngIf="offerForm.type === 'fixed'" class="text-red-500">*</span></label>
+               <input
+                 type="number"
+                 step="0.01"
+                 [(ngModel)]="offerForm.value"
+                 name="value"
+                 [disabled]="offerForm.type !== 'fixed'"
+                 class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                 placeholder="10.00">
+               <div *ngIf="fieldErrors['value']" class="mt-1 text-xs text-red-500">{{ fieldErrors['value'] }}</div>
+             </div>
+           </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-shopping-cart mr-2 text-green-500"></i>Min Order Value</label>
+              <input
+                type="number"
+                step="0.01"
+                [(ngModel)]="offerForm.min_order_value"
+                name="min_order_value"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
+                placeholder="50.00">
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-user mr-2 text-orange-500"></i>Max Usage per Customer</label>
+              <input
+                type="number"
+                [(ngModel)]="offerForm.max_usage_per_customer"
+                name="max_usage_per_customer"
+                min="1"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
+                placeholder="1">
+            </div>
+          </div>
+
+           <div>
+             <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-chart-bar mr-2 text-cyan-500"></i>Usage Limit</label>
+             <input
+               type="number"
+               [(ngModel)]="offerForm.usage_limit"
+               name="usage_limit"
+               min="0"
+               class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
+               placeholder="100">
+           </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-calendar-plus mr-2 text-green-500"></i>Start Date</label>
+              <input
+                type="datetime-local"
+                [(ngModel)]="offerForm.start_date"
+                name="start_date"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white">
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-calendar-minus mr-2 text-red-500"></i>End Date</label>
+              <input
+                type="datetime-local"
+                [(ngModel)]="offerForm.end_date"
+                name="end_date"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white">
+            </div>
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-scroll mr-2 text-purple-500"></i>Terms</label>
+            <textarea
+              [(ngModel)]="offerForm.terms"
+              name="terms"
+              rows="3"
+              class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white resize-none"
+              placeholder="Enter terms and conditions"></textarea>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex items-center">
+              <label class="flex items-center cursor-pointer">
+                <input type="checkbox" [(ngModel)]="offerForm.is_active" name="is_active" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-500 relative"></div>
+                <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">{{ offerForm.is_active ? 'Active' : 'Inactive' }}</span>
+              </label>
+            </div>
+            <div class="flex items-center">
+              <label class="flex items-center cursor-pointer">
+                <input type="checkbox" [(ngModel)]="offerForm.auto_apply" name="auto_apply" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-500 relative"></div>
+                <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">Auto Apply</span>
+              </label>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Offer Details Modal -->
+  <div *ngIf="selectedOffer" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden">
+      <div class="px-6 py-4 bg-gradient-to-r from-red-50 to-red-50 dark:from-red-900/20 dark:to-red-900/10 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white">Offer Details</h3>
+        <button (click)="selectedOffer = null" class="w-8 h-8 rounded-lg hover:bg-red-100 dark:hover:bg-gray-700 flex items-center justify-center">
+          <i class="fas fa-times text-red-600 dark:text-red-400"></i>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto max-h-[60vh]">
+        <div class="flex items-center space-x-4 mb-6">
+          <div class="w-20 h-20 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+            <i class="fas fa-percentage text-white text-3xl"></i>
+          </div>
+          <div class="flex-1">
+            <h4 class="text-xl font-semibold text-gray-900 dark:text-white">{{ selectedOffer!.title }}</h4>
+            <p class="text-sm text-gray-600 dark:text-gray-400">{{ selectedOffer!.code }}</p>
+            <div class="flex items-center space-x-2 mt-1">
+              <span [class]="getOfferTypeColor(selectedOffer!.type)" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium">
+                {{ selectedOffer!.type }}
+              </span>
+              <span *ngIf="selectedOffer!.auto_apply" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                <i class="fas fa-magic mr-1"></i>Auto
+              </span>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ selectedOffer!.is_active ? 'Active' : 'Inactive' }}</p>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+                <i class="fas fa-percent text-red-600 dark:text-red-400"></i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Discount</p>
+                <p class="text-lg font-bold text-red-600 dark:text-red-400">{{ selectedOffer!.discount_value }}%</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                <i class="fas fa-hashtag text-blue-600 dark:text-blue-400"></i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Code</p>
+                <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedOffer!.code }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
+              <i class="fas fa-align-left text-green-600 dark:text-green-400"></i>
+            </div>
+            <div class="flex-1">
+              <p class="text-xs text-gray-500 dark:text-gray-400">Description</p>
+              <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedOffer!.description }}</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center">
+                <i class="fas fa-calendar text-orange-600 dark:text-orange-400"></i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Valid Until</p>
+                <p class="text-sm text-gray-700 dark:text-gray-300">{{ formatDate(selectedOffer!.end_date) }}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center">
+                <i class="fas fa-users text-purple-600 dark:text-purple-400"></i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Usage</p>
+                <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedOffer!.usage_count }} / {{ selectedOffer!.usage_limit }}</p>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="selectedOffer!.terms" class="flex items-start space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">
+              <i class="fas fa-file-contract text-indigo-600 dark:text-indigo-400"></i>
+            </div>
+            <div class="flex-1">
+              <p class="text-xs text-gray-500 dark:text-gray-400">Terms & Conditions</p>
+              <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedOffer!.terms }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex space-x-3">
+        <button
+          (click)="showOfferForm(selectedOffer!)"
+          class="flex-1 px-4 py-3 rounded-xl font-medium bg-red-500 text-white hover:bg-red-600 transition-colors">
+          <i class="fas fa-edit mr-2"></i>Edit
+        </button>
+        <button
+          (click)="deleteOffer(selectedOffer!)"
+          class="flex-1 px-4 py-3 rounded-xl font-medium bg-red-500 text-white hover:bg-red-600 transition-colors">
+          <i class="fas fa-trash mr-2"></i>Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

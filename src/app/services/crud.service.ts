@@ -205,6 +205,27 @@ export class CrudService {
     return this.deleteData('menu-items', {}, id);
   }
 
+  // Offer operations
+  getOffers(params?: CrudParams): Observable<any> {
+    return this.getData('offers', params);
+  }
+
+  getOfferById(id: string | number): Observable<any> {
+    return this.getData(`offers/${id}`);
+  }
+
+  createOffer(payload: any): Observable<any> {
+    return this.postData('offers', payload);
+  }
+
+  updateOffer(id: string | number, payload: any): Observable<any> {
+    return this.putData('offers', payload, {}, id);
+  }
+
+  deleteOffer(id: string | number): Observable<any> {
+    return this.deleteData('offers', {}, id);
+  }
+
   // Order operations
   getOrders(params?: CrudParams): Observable<any> {
     return this.getData('orders', params);
