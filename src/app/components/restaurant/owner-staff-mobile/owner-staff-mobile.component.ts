@@ -7,7 +7,7 @@ import { LoadingService } from '../../../services/loading.service';
 import { MockDataService, User, Restaurant } from '../../../services/mock-data.service';
 import { AuthService } from '../../../services/auth.service';
 import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
-import { FileUploadService } from '../../../services/file-upload.service';
+import { environment } from '../../../environments/environment';
 import { NotificationService } from '../../../services/notification.service';
 import { ValidationService } from '../../../services/validation.service';
 
@@ -83,7 +83,6 @@ export class OwnerStaffMobileComponent implements OnInit {
     private mockDataService: MockDataService,
     private authService: AuthService,
     private confirmationService: ConfirmationDialogService,
-    private fileUploadService: FileUploadService,
     private notificationService: NotificationService,
     private validationService: ValidationService
   ) {}
@@ -414,13 +413,12 @@ export class OwnerStaffMobileComponent implements OnInit {
     this.loadingService.show();
 
     try {
-      let avatarUrl = this.userForm.avatar;
+      let avatarBase64: string | undefined;
 
-      // Upload avatar if a file was selected
+      // Convert selected file to base64 if provided
       if (this.selectedFile) {
-        const uploadResult = await this.fileUploadService.uploadFile(this.selectedFile, 'profile').toPromise();
-        avatarUrl = uploadResult!.fileUrl;
-        this.selectedFile = null; // Clear the selected file after upload
+        avatarBase64 = await this.fileToBase64(this.selectedFile);
+        this.selectedFile = null; // Clear the selected file after conversion
       }
 
       const currentTime = new Date();
@@ -432,7 +430,7 @@ export class OwnerStaffMobileComponent implements OnInit {
         phone: this.userForm.phone,
         role: this.userForm.role,
         user_type: this.userForm.user_type,
-        avatar: avatarUrl,
+        avatar: avatarBase64 || this.userForm.avatar, // Use base64 if available, else keep existing
         restaurant_id: this.userForm.restaurant_id,
         is_active: this.userForm.is_active,
         member_since: currentTime,
@@ -458,9 +456,9 @@ export class OwnerStaffMobileComponent implements OnInit {
         }
       });
     } catch (error) {
-      console.error('Error uploading avatar:', error);
-      this.notificationService.error('Upload Failed', 'Failed to upload avatar. Please try again.');
-      this.errorMessage = 'Failed to upload avatar. Please try again.';
+      console.error('Error processing avatar:', error);
+      this.notificationService.error('Processing Failed', 'Failed to process avatar. Please try again.');
+      this.errorMessage = 'Failed to process avatar. Please try again.';
       this.loadingService.hide();
     }
   }
@@ -469,7 +467,13 @@ export class OwnerStaffMobileComponent implements OnInit {
     this.loadingService.show();
 
     try {
-      let avatarUrl = this.userForm.avatar;
+      let avatarBase64: string | undefined;
+
+      // Convert selected file to base64 if provided
+      if (this.selectedFile) {
+        avatarBase64 = await this.fileToBase64(this.selectedFile);
+        this.selectedFile = null; // Clear the selected file after conversion
+      }
 
       const currentTime = new Date();
       const userRequest = {
@@ -480,7 +484,7 @@ export class OwnerStaffMobileComponent implements OnInit {
         phone: this.userForm.phone,
         role: this.userForm.role,
         user_type: this.userForm.user_type,
-        avatar: avatarUrl,
+        avatar: avatarBase64 || this.userForm.avatar, // Use base64 if available, else keep existing
         restaurant_id: this.userForm.restaurant_id,
         is_active: this.userForm.is_active,
         member_since: this.editingUser!.member_since,
@@ -509,8 +513,9 @@ export class OwnerStaffMobileComponent implements OnInit {
         }
       });
     } catch (error) {
-      console.error('Error uploading avatar:', error);
-      this.errorMessage = 'Failed to upload avatar. Please try again.';
+      console.error('Error processing avatar:', error);
+      this.notificationService.error('Processing Failed', 'Failed to process avatar. Please try again.');
+      this.errorMessage = 'Failed to process avatar. Please try again.';
       this.loadingService.hide();
     }
   }
@@ -543,7 +548,7 @@ export class OwnerStaffMobileComponent implements OnInit {
     const file = event.target.files[0];
     if (file) {
       // Validate file
-      const validation = this.fileUploadService.validateFileForCategory(file, 'profile');
+      const validation = this.validateFile(file, 'avatar');
       if (!validation.isValid) {
         this.notificationService.error('Invalid File', validation.message || 'Invalid file selected');
         this.selectedFile = null;
@@ -709,6 +714,57 @@ export class OwnerStaffMobileComponent implements OnInit {
     return !!(this.searchTerm?.trim() ||
               this.restaurantFilter !== 'all' ||
               this.roleFilter !== 'all' ||
-              this.statusFilter !== 'all' || this.userTypeFilter !== 'all'); 
+              this.statusFilter !== 'all' || this.userTypeFilter !== 'all');
+  }
+
+  // Helper method to convert file to base64
+  private fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        resolve(reader.result as string);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Helper method to get full image URL
+  getFullImageUrl(imagePath: string | undefined): string {
+    if (!imagePath) return '';
+    if (imagePath.startsWith('data:')) {
+      // It's a base64 data URL, return as is
+      return imagePath;
+    }
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      // It's already a full URL, return as is
+      return imagePath;
+    }
+    // It's a relative path, concat with baseImgUrl
+    return environment.api.baseUrl + imagePath;
+  }
+
+  // Helper method to validate file
+  private validateFile(file: File, category: string): { isValid: boolean; message?: string } {
+    const maxFileSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+    // Check file size
+    if (file.size > maxFileSize) {
+      return {
+        isValid: false,
+        message: `File size exceeds maximum allowed size of 5MB`
+      };
+    }
+
+    // Check file type
+    if (!allowedTypes.includes(file.type)) {
+      return {
+        isValid: false,
+        message: `File type ${file.type} is not allowed. Allowed types: JPEG, PNG, WebP`
+      };
+    }
+
+    return { isValid: true };
   }
 }
