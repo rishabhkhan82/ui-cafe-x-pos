@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { CrudService } from '../../../services/crud.service';
 import { LoadingService } from '../../../services/loading.service';
 import { MockDataService, User, Restaurant } from '../../../services/mock-data.service';
@@ -23,6 +25,8 @@ export class OwnerStaffMobileComponent implements OnInit {
   selectedUser: User | null = null;
   editingUser: User | null = null;
   searchTerm = '';
+  showSearchBar = false;
+  searchInput = '';
   restaurantFilter = 'all';
   roleFilter = 'all';
   statusFilter = 'all';
@@ -38,6 +42,7 @@ export class OwnerStaffMobileComponent implements OnInit {
   totalPages = 1;
   totalElements = 0;
   itemsPerPageOptions = [5, 10, 15, 20, 25, 50];
+  searchSubject = new Subject<string>();
 
   // Field validation errors
   fieldErrors: { [key: string]: string } = {};
@@ -90,6 +95,7 @@ export class OwnerStaffMobileComponent implements OnInit {
   ngOnInit(): void {
     this.loadUsers();
     this.loadRestaurants();
+    this.setupSearch();
   }
 
   loadUsers(): void {
@@ -169,6 +175,17 @@ export class OwnerStaffMobileComponent implements OnInit {
     });
   }
 
+  private setupSearch(): void {
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(term => {
+      this.searchTerm = term;
+      this.currentPage = 1;
+      this.loadUsers();
+    });
+  }
+
   filterUsers(): void {
     this.currentPage = 1; // Reset to first page when filters change
     this.loadUsers();
@@ -176,12 +193,26 @@ export class OwnerStaffMobileComponent implements OnInit {
 
   clearFilters(): void {
     this.searchTerm = '';
+    this.showSearchBar = false;
+    this.searchInput = '';
     this.restaurantFilter = 'all';
     this.userTypeFilter = 'all';
     this.roleFilter = 'all';
     this.statusFilter = 'all';
     this.currentPage = 1; // Reset to first page
     this.loadUsers();
+  }
+
+  toggleSearchBar(): void {
+    this.showSearchBar = !this.showSearchBar;
+    if (!this.showSearchBar) {
+      this.searchInput = '';
+      this.searchSubject.next('');
+    }
+  }
+
+  onSearchInputChange(value: string): void {
+    this.searchSubject.next(value);
   }
 
 
