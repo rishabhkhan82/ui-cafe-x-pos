@@ -7,7 +7,7 @@ import { LoadingService } from '../../../services/loading.service';
 import { MockDataService, User, Restaurant } from '../../../services/mock-data.service';
 import { AuthService } from '../../../services/auth.service';
 import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
-import { FileUploadService } from '../../../services/file-upload.service';
+import { environment } from '../../../environments/environment';
 import { NotificationService } from '../../../services/notification.service';
 import { ValidationService } from '../../../services/validation.service';
 
@@ -38,7 +38,7 @@ export class AdminUserProfileMobileComponent implements OnInit {
   private mockDataService = inject(MockDataService);
   private authService = inject(AuthService);
   private confirmationService = inject(ConfirmationDialogService);
-  private fileUploadService = inject(FileUploadService);
+
   private notificationService = inject(NotificationService);
   private validationService = inject(ValidationService);
   public router = inject(Router);
@@ -133,7 +133,7 @@ export class AdminUserProfileMobileComponent implements OnInit {
   onFileSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
-      const validation = this.fileUploadService.validateFileForCategory(file, 'profile');
+      const validation = this.validateFile(file, 'avatar');
       if (!validation.isValid) {
         this.notificationService.error('Invalid File', validation.message || 'Invalid file selected');
         return;
@@ -184,20 +184,30 @@ export class AdminUserProfileMobileComponent implements OnInit {
     this.loadingService.show();
 
     try {
-      let avatarUrl = this.userForm.avatar;
+      let avatarBase64: string | undefined;
 
-      // Upload new avatar if selected
+      // Convert selected file to base64 if available
       if (this.selectedFile) {
-        const uploadResult = await this.fileUploadService.uploadFile(this.selectedFile, 'profile').toPromise();
-        avatarUrl = uploadResult!.fileUrl || '';
+        avatarBase64 = await this.fileToBase64(this.selectedFile);
         this.selectedFile = null;
       }
 
+      // Construct the update payload using the user object data
       const updateData = {
+        username: this.user!.username,
         name: this.userForm.name,
         email: this.userForm.email,
         phone: this.userForm.phone,
-        avatar: avatarUrl
+        role: this.user!.role,
+        user_type: this.user!.user_type,
+        avatar: avatarBase64 || this.userForm.avatar, // Use base64 if available, else keep existing
+        restaurant_id: this.user!.restaurant_id,
+        is_active: this.user!.is_active,
+        member_since: this.user!.member_since,
+        created_at: this.user!.created_at,
+        updated_at: new Date(),
+        last_login: this.user!.last_login,
+        created_by: this.user!.created_by
       };
 
       this.crudService.updateUser(this.user.id, updateData).subscribe({
@@ -206,7 +216,7 @@ export class AdminUserProfileMobileComponent implements OnInit {
           this.user!.name = this.userForm.name;
           this.user!.email = this.userForm.email || '';
           this.user!.phone = this.userForm.phone || '';
-          this.user!.avatar = avatarUrl;
+          this.user!.avatar = response.avatar || this.userForm.avatar; // Use updated avatar from response if available
           this.isEditing = false;
           this.loadingService.hide();
 
@@ -217,7 +227,7 @@ export class AdminUserProfileMobileComponent implements OnInit {
             parsed.name = this.userForm.name;
             parsed.email = this.userForm.email;
             parsed.phone = this.userForm.phone;
-            parsed.avatar = avatarUrl;
+            parsed.avatar = this.user!.avatar;
             sessionStorage.setItem('currentUser', JSON.stringify(parsed));
           }
         },
@@ -228,8 +238,8 @@ export class AdminUserProfileMobileComponent implements OnInit {
         }
       });
     } catch (error) {
-      console.error('Error uploading avatar:', error);
-      this.notificationService.error('Error', 'Failed to upload avatar');
+      console.error('Error processing avatar:', error);
+      this.notificationService.error('Processing Failed', 'Failed to process avatar. Please try again.');
       this.loadingService.hide();
     }
   }
@@ -248,5 +258,56 @@ export class AdminUserProfileMobileComponent implements OnInit {
       month: 'short',
       day: 'numeric'
     }).format(date);
+  }
+
+  // Helper method to convert file to base64
+  private fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        resolve(reader.result as string);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Helper method to get full image URL
+  getFullImageUrl(imagePath: string | undefined): string {
+    if (!imagePath) return '';
+    if (imagePath.startsWith('data:')) {
+      // It's a base64 data URL, return as is
+      return imagePath;
+    }
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      // It's already a full URL, return as is
+      return imagePath;
+    }
+    // It's a relative path, concat with baseImgUrl
+    return environment.api.baseUrl + imagePath;
+  }
+
+  // Helper method to validate file
+  private validateFile(file: File, category: string): { isValid: boolean; message?: string } {
+    const maxFileSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+    // Check file size
+    if (file.size > maxFileSize) {
+      return {
+        isValid: false,
+        message: `File size exceeds maximum allowed size of 5MB`
+      };
+    }
+
+    // Check file type
+    if (!allowedTypes.includes(file.type)) {
+      return {
+        isValid: false,
+        message: `File type ${file.type} is not allowed. Allowed types: JPEG, PNG, WebP`
+      };
+    }
+
+    return { isValid: true };
   }
 }

@@ -1,6 +1,6 @@
 <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 mb-6">
   <!-- Premium Header -->
-  <div class="fixed top-[68px] left-0 right-0 z-10 bg-gradient-to-r from-red-50 via-white to-red-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 border-b border-red-200 dark:border-gray-700 shadow-lg">
+  <div class="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gradient-to-r dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 border-b border-gray-200 dark:border-gray-700 dark:shadow-lg">
     <div class="px-4 py-3">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4">
@@ -46,7 +46,7 @@
     </div>
   </div>
 
-  <div class="px-6 py-8 pt-20 space-y-8">
+  <div class="px-6 py-8 space-y-8">
 
     <!-- Profile Content -->
     <div *ngIf="user" class="space-y-8 pt-4">
@@ -56,7 +56,7 @@
           <div class="w-32 h-32 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 p-1 shadow-2xl">
             <div class="w-full h-full rounded-full bg-white dark:bg-gray-800 p-1">
               <img
-                [src]="isEditing ? userForm.avatar : user.avatar"
+                [src]="isEditing ? userForm.avatar : getFullImageUrl(user.avatar)"
                 [alt]="user.name"
                 class="w-full h-full rounded-full object-cover shadow-lg">
             </div>
