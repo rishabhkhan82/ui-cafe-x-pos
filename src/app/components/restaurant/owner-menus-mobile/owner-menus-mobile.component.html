@@ -1,7 +1,7 @@
 <!-- Main Container -->
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
   <!-- Premium Fixed Header -->
-  <div class="fixed top-[68px] left-0 right-0 z-10 bg-gradient-to-r from-red-50 via-white to-red-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 border-b border-red-200 dark:border-gray-700 shadow-lg">
+  <div class="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gradient-to-r dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 border-b border-gray-200 dark:border-gray-700 dark:shadow-lg">
     <div class="px-4 py-3">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4 flex-1">
@@ -31,7 +31,7 @@
                 type="text"
                 [(ngModel)]="searchInput"
                 (ngModelChange)="onSearchInputChange($event)"
-                placeholder="search by name"
+                placeholder="Search by name"
                 class="w-full px-4 py-2 pl-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-[2rem] shadow-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 autofocus
               >
@@ -68,10 +68,10 @@
     </div>
   </div>
 
-  <div class="px-6 py-8 pt-20 space-y-6 mb-20" *ngIf="!showAddForm">
+  <div class="px-6 py-8 space-y-6 mb-20" *ngIf="!showAddForm">
 
     <!-- Results Header -->
-    <div *ngIf="totalElements > 0" class="flex items-center justify-between mt-2">
+    <div *ngIf="totalElements > 0" class="flex items-center justify-between">
       <div class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
         <i class="fas fa-utensils mr-2"></i>
         {{ totalElements }} menu items found
@@ -195,7 +195,7 @@
             <select
               [(ngModel)]="itemsPerPage"
               (change)="onItemsPerPageChange($event)"
-              class="px-2 py-1 text-xs w-14 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded">
+              class="px-2 py-1 text-xs w-14 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-gray-900 dark:text-gray-300">
               <option *ngFor="let option of itemsPerPageOptions" [value]="option">{{ option }}</option>
             </select>
           </div>
@@ -205,31 +205,31 @@
           <button
             (click)="changePage(1)"
             [disabled]="currentPage === 1"
-            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
             <i class="fas fa-angle-double-left text-xs"></i>
           </button>
           <button
             (click)="changePage(currentPage - 1)"
             [disabled]="currentPage === 1"
-            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
             <i class="fas fa-chevron-left text-xs"></i>
           </button>
           <button
             *ngFor="let page of pageNumbers"
             (click)="changePage(page)"
-            [class]="page === currentPage ? 'w-7 h-7 rounded bg-red-500 text-white flex items-center justify-center text-xs' : 'w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center text-xs'">
+            [class]="page === currentPage ? 'w-7 h-7 rounded bg-red-500 text-white flex items-center justify-center text-xs' : 'w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center text-xs text-gray-900 dark:text-gray-300'">
             {{ page }}
           </button>
           <button
             (click)="changePage(currentPage + 1)"
             [disabled]="currentPage === totalPages"
-            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
             <i class="fas fa-chevron-right text-xs"></i>
           </button>
           <button
             (click)="changePage(totalPages)"
             [disabled]="currentPage === totalPages"
-            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
             <i class="fas fa-angle-double-right text-xs"></i>
           </button>
         </div>
@@ -238,9 +238,9 @@
   </div>
 
   <!-- Add/Edit Menu Modal -->
-  <div *ngIf="showAddForm" class="fixed top-[68px] bottom-0 left-0 right-0 bg-white dark:bg-gray-800 z-40 overflow-y-auto">
+  <div *ngIf="showAddForm" class="fixed top-0 bottom-20 left-0 right-0 bg-white dark:bg-gray-800 z-50 overflow-y-auto">
     <div class="h-full flex flex-col">
-      <div class="px-6 py-4 bg-gradient-to-r from-red-50 to-red-50 dark:from-red-900/20 dark:to-red-900/10 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+      <div class="fixed top-0 left-0 right-0 px-6 py-4 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 flex items-center justify-between z-[100]">
         <div class="flex items-center space-x-4">
           <button (click)="cancelAdd()" class="w-8 h-8 rounded-lg hover:bg-red-100 dark:hover:bg-gray-700 flex items-center justify-center">
             <i class="fas fa-arrow-left text-red-600 dark:text-red-400"></i>
@@ -254,7 +254,7 @@
         </button>
       </div>
 
-      <div class="flex-1 p-6 overflow-y-auto pb-24">
+      <div class="flex-1 pt-20 p-6 overflow-y-auto">
         <form class="space-y-4">
           <!-- Image Upload Section -->
           <div>

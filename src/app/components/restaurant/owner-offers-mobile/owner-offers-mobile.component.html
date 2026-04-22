@@ -214,7 +214,7 @@
             <select
               [(ngModel)]="itemsPerPage"
               (change)="onItemsPerPageChange($event)"
-              class="px-2 py-1 text-xs w-14 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded">
+              class="px-2 py-1 text-xs w-14 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-gray-900 dark:text-gray-300">
               <option *ngFor="let option of itemsPerPageOptions" [value]="option">{{ option }}</option>
             </select>
           </div>
@@ -224,31 +224,31 @@
           <button
             (click)="changePage(1)"
             [disabled]="currentPage === 1"
-            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
             <i class="fas fa-angle-double-left text-xs"></i>
           </button>
           <button
             (click)="changePage(currentPage - 1)"
             [disabled]="currentPage === 1"
-            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
             <i class="fas fa-chevron-left text-xs"></i>
           </button>
           <button
             *ngFor="let page of pageNumbers"
             (click)="changePage(page)"
-            [class]="page === currentPage ? 'w-7 h-7 rounded bg-red-500 text-white flex items-center justify-center text-xs' : 'w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center text-xs'">
+            [class]="page === currentPage ? 'w-7 h-7 rounded bg-red-500 text-white flex items-center justify-center text-xs' : 'w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center text-xs text-gray-900 dark:text-gray-300'">
             {{ page }}
           </button>
           <button
             (click)="changePage(currentPage + 1)"
             [disabled]="currentPage === totalPages"
-            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
             <i class="fas fa-chevron-right text-xs"></i>
           </button>
           <button
             (click)="changePage(totalPages)"
             [disabled]="currentPage === totalPages"
-            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
             <i class="fas fa-angle-double-right text-xs"></i>
           </button>
         </div>
