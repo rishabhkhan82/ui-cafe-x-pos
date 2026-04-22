@@ -1,4 +1,4 @@
-<main class="px-4 py-4 pb-20">
+<main class="px-6 py-8 space-y-6 pb-20">
   <!-- Back Button -->
   <div class="mb-4">
     <button
@@ -9,88 +9,46 @@
     </button>
   </div>
 
-  <!-- Welcome Banner -->
-  <div class="mb-6 animate__animated animate__fadeInUp">
-    <div class="gradient-bg rounded-2xl p-6 text-white relative overflow-hidden">
-      <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-      <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
-      <div class="relative z-10">
-        <h2 class="text-2xl font-bold mb-2">Feature Extensions <i class="fas fa-puzzle-piece ml-2"></i></h2>
-        <p class="text-white/90">Extend your POS system with powerful features</p>
+  <!-- Coming Soon Section -->
+  <div class="flex flex-col items-center justify-center min-h-[60vh] text-center">
+    <!-- Icon -->
+    <div class="w-24 h-24 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center mb-6 shadow-2xl">
+      <i class="fas fa-puzzle-piece text-white text-3xl"></i>
+    </div>
+
+    <!-- Title -->
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+      Coming Soon
+    </h1>
+
+    <!-- Description -->
+    <p class="text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-md">
+      We're working hard to bring you amazing add-ons and extensions for your POS system. Stay tuned for updates!
+    </p>
+
+    <!-- Features Teaser -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700 max-w-md w-full">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        What to Expect
+      </h3>
+      <div class="space-y-3 text-left">
+        <div class="flex items-center">
+          <i class="fas fa-check-circle text-green-500 mr-3"></i>
+          <span class="text-gray-700 dark:text-gray-300">Inventory Management</span>
+        </div>
+        <div class="flex items-center">
+          <i class="fas fa-check-circle text-green-500 mr-3"></i>
+          <span class="text-gray-700 dark:text-gray-300">Advanced Reporting</span>
+        </div>
+        <div class="flex items-center">
+          <i class="fas fa-check-circle text-green-500 mr-3"></i>
+          <span class="text-gray-700 dark:text-gray-300">Customer Loyalty Program</span>
+        </div>
+        <div class="flex items-center">
+          <i class="fas fa-check-circle text-green-500 mr-3"></i>
+          <span class="text-gray-700 dark:text-gray-300">And Much More...</span>
+        </div>
       </div>
     </div>
   </div>
-
-  <!-- Add-ons List -->
-  <section class="mt-6">
-    <div class="grid grid-cols-1 gap-4 animate__animated animate__fadeInUp animate__delay-1s">
-      <!-- Feature Extension 1 -->
-      <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center mr-4">
-              <i class="fas fa-boxes text-blue-600 dark:text-blue-400"></i>
-            </div>
-            <div>
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Inventory Management</h3>
-              <p class="text-gray-600 dark:text-gray-400 text-sm">Track stock levels and manage supplies</p>
-            </div>
-          </div>
-          <div class="text-right">
-            <div class="text-lg font-bold text-green-600 dark:text-green-400">₹999</div>
-            <div class="text-sm text-gray-500 dark:text-gray-400">Installed</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Feature Extension 2 -->
-      <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center mr-4">
-              <i class="fas fa-palette text-purple-600 dark:text-purple-400"></i>
-            </div>
-            <div>
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Branding</h3>
-              <p class="text-gray-600 dark:text-gray-400 text-sm">Customize your restaurant's look and feel</p>
-            </div>
-          </div>
-          <div class="text-right">
-            <div class="text-lg font-bold text-green-600 dark:text-green-400">₹499</div>
-            <div class="text-sm text-gray-500 dark:text-gray-400">Installed</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Feature Extension 3 -->
-      <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center mr-4">
-              <i class="fas fa-utensils text-green-600 dark:text-green-400"></i>
-            </div>
-            <div>
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Recipe Management</h3>
-              <p class="text-gray-600 dark:text-gray-400 text-sm">Manage recipes and ingredient costs</p>
-            </div>
-          </div>
-          <div class="text-right">
-            <div class="text-lg font-bold text-green-600 dark:text-green-400">₹799</div>
-            <div class="text-sm text-gray-500 dark:text-gray-400">Installed</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Install New Extension Card -->
-      <div class="bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 rounded-2xl p-4 shadow-lg border-2 border-dashed border-primary-200 dark:border-primary-700 hover:border-primary-300 dark:hover:border-primary-600 transition-colors cursor-pointer">
-        <div class="flex flex-col items-center justify-center py-4">
-          <div class="w-16 h-16 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center mb-3">
-            <i class="fas fa-download text-primary-600 dark:text-primary-400 text-2xl"></i>
-          </div>
-          <h3 class="text-lg font-semibold text-primary-900 dark:text-primary-100 mb-1">Install New Extension</h3>
-          <p class="text-primary-700 dark:text-primary-300 text-sm text-center">Browse and install additional features</p>
-        </div>
-      </div>
-    </div>
-  </section>
 </main>

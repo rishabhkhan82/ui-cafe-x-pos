@@ -11,6 +11,6 @@ export class AddOnsMobileComponent {
   constructor(private router: Router) {}
 
   goBack() {
-    this.router.navigate(['/owner-dashboard-mobile']);
+    this.router.navigate(['/restaurant-navigation-mobile']);
   }
 }
