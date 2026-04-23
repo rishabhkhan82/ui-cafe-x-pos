@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { Subscription, BehaviorSubject } from 'rxjs';
+import { Subscription, BehaviorSubject, forkJoin } from 'rxjs';
 import { CrudService } from '../../../services/crud.service';
 import { LoadingService } from '../../../services/loading.service';
 import { ManagedFeature, PlanFeatureMapping, SubscriptionPlan } from '../../../services/mock-data.service';
@@ -46,12 +46,35 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     this.loadingService.show();
     this.errorMessage = '';
 
-    // Load all data in parallel
-    this.loadPlans();
-    this.loadFeatures();
-    this.loadPlanFeatures();
-    this.loadCurrentSubscription();
-    this.loadSubscriptionHistory();
+    // Load all data in parallel using forkJoin
+    const plans$ = this.crudService.getSubscriptionPlans({ isActive: true });
+    const features$ = this.crudService.getFeatures();
+    const planFeatures$ = this.crudService.getPlanFeatureMapping();
+    const restaurantId = 1; // Assuming restaurant_id is 1 for now
+    const currentSub$ = this.crudService.getRestaurantSubscriptions({ restaurantId: restaurantId.toString(), status: 'active' });
+    const history$ = this.crudService.getSubscriptionHistories({ restaurantId: restaurantId.toString() });
+
+    forkJoin([plans$, features$, planFeatures$, currentSub$, history$]).subscribe({
+      next: ([plansResponse, featuresResponse, planFeaturesResponse, currentSubResponse, historyResponse]) => {
+        // Handle success responses
+        this.plans$.next((plansResponse.data || plansResponse || []) as SubscriptionPlan[]);
+        this.features = (featuresResponse.data || featuresResponse || []) as ManagedFeature[];
+        this.planFeatures = (planFeaturesResponse.data || planFeaturesResponse || []) as PlanFeatureMapping[];
+
+        const subscriptions = (currentSubResponse.data || currentSubResponse || []) as RestaurantSubscription[];
+        this.currentSubscription$.next(subscriptions.length > 0 ? subscriptions[0] : null);
+
+        this.subscriptionHistory$.next((historyResponse.data || historyResponse || []) as SubscriptionHistory[]);
+
+        this.updateComputedProperties();
+        this.loadingService.hide();
+      },
+      error: (error) => {
+        console.error('Error loading data:', error);
+        this.errorMessage = 'Failed to load data';
+        this.loadingService.hide();
+      }
+    });
   }
 
   private updateComputedProperties(): void {
@@ -77,99 +100,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     this.loadData();
   }
 
-  loadPlans(): void {
-    const params = { isActive: true };
-    const subscription = this.crudService.getSubscriptionPlans(params).subscribe({
-      next: (response: any) => {
-        this.plans$.next((response.data || response || []) as SubscriptionPlan[]);
-        this.updateComputedProperties();
-        this.checkLoadingComplete();
-      },
-      error: (error) => {
-        console.error('Error loading plans:', error);
-        this.errorMessage = 'Failed to load plans';
-        this.checkLoadingComplete();
-      }
-    });
-    this.subscriptions.push(subscription);
-  }
 
-  loadFeatures(): void {
-    const subscription = this.crudService.getFeatures().subscribe({
-      next: (response: any) => {
-        this.features = (response.data || response || []) as ManagedFeature[];
-        this.checkLoadingComplete();
-      },
-      error: (error) => {
-        console.error('Error loading features:', error);
-        this.errorMessage = 'Failed to load features';
-        this.checkLoadingComplete();
-      }
-    });
-    this.subscriptions.push(subscription);
-  }
-
-  loadPlanFeatures(): void {
-    const subscription = this.crudService.getPlanFeatureMapping().subscribe({
-      next: (response: any) => {
-        this.planFeatures = (response.data || response || []) as PlanFeatureMapping[];
-        this.checkLoadingComplete();
-      },
-      error: (error: any) => {
-        console.error('Error loading plan features:', error);
-        this.planFeatures = [] as PlanFeatureMapping[];
-        this.errorMessage = 'Failed to load plan features';
-        this.checkLoadingComplete();
-      }
-    });
-    this.subscriptions.push(subscription);
-  }
-
-  loadCurrentSubscription(): void {
-    // Assuming restaurant_id is 1 for now; in real app, get from session/user context
-    const restaurantId = 1;
-    const params = { restaurantId: restaurantId.toString(), status: 'active' };
-    const subscription = this.crudService.getRestaurantSubscriptions(params).subscribe({
-      next: (response: any) => {
-        const subscriptions = (response.data || response || []) as RestaurantSubscription[];
-        // Assuming the first active subscription is the current one
-        this.currentSubscription$.next(subscriptions.length > 0 ? subscriptions[0] : null);
-        this.updateComputedProperties();
-        this.checkLoadingComplete();
-      },
-      error: (error) => {
-        console.error('Error loading current subscription:', error);
-        this.errorMessage = 'Failed to load current subscription';
-        this.currentSubscription$.next(null);
-        this.checkLoadingComplete();
-      }
-    });
-    this.subscriptions.push(subscription);
-  }
-
-  loadSubscriptionHistory(): void {
-    // Assuming restaurant_id is 1 for now; in real app, get from session/user context
-    const restaurantId = 1;
-    const params = { restaurantId: restaurantId.toString() };
-    const subscription = this.crudService.getSubscriptionHistories(params).subscribe({
-      next: (response: any) => {
-        this.subscriptionHistory$.next((response.data || response || []) as SubscriptionHistory[]);
-        this.checkLoadingComplete();
-      },
-      error: (error) => {
-        console.error('Error loading subscription history:', error);
-        this.errorMessage = 'Failed to load subscription history';
-        this.subscriptionHistory$.next([]);
-        this.checkLoadingComplete();
-      }
-    });
-    this.subscriptions.push(subscription);
-  }
-
-  private checkLoadingComplete(): void {
-    // Simple check - in a real app, you'd use a more sophisticated approach
-    this.loadingService.hide();
-  }
 
   // Get features enabled for a specific plan
   getPlanFeatures(planId: number): ManagedFeature[] {
