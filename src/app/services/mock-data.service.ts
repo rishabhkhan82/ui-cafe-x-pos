@@ -898,7 +898,7 @@ export interface SubscriptionPlan {
   is_popular?: boolean;
   subscriber_count : number;
   revenue: number;
-  plan_id: number; // new in ui
+  plan_id: any; // new in ui
   setup_fee: number; // new in ui
   trial_days: number; // new in ui
   created_at: string;

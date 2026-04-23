@@ -259,7 +259,7 @@ export class FeatureManagementComponent implements OnInit {
 
   // Real-time validation methods
   validateName(): void {
-    const validation = this.validationService.name(this.featureForm.name, 'Feature Name');
+    const validation = this.validationService.required(this.featureForm.name, 'Feature Name');
     if (!validation.isValid) {
       this.fieldErrors['name'] = validation.message!;
     } else {
@@ -272,13 +272,7 @@ export class FeatureManagementComponent implements OnInit {
     if (!validation.isValid) {
       this.fieldErrors['feature_id'] = validation.message!;
     } else {
-      // Additional validation for feature_id format (alphanumeric and underscores only)
-      const featureIdPattern = /^[a-zA-Z0-9_]+$/;
-      if (!featureIdPattern.test(this.featureForm.feature_id)) {
-        this.fieldErrors['feature_id'] = 'Feature ID must contain only letters, numbers and underscores';
-      } else {
-        delete this.fieldErrors['feature_id'];
-      }
+      delete this.fieldErrors['feature_id'];
     }
   }
 

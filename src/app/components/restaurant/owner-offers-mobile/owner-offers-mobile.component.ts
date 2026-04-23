@@ -290,7 +290,7 @@ export class OwnerOffersMobileComponent implements OnInit {
         terms: '',
         auto_apply: false,
         is_active: true,
-        restaurant_id: 1,
+        restaurant_id: 7,
         created_at: undefined,
         updated_at: undefined,
         created_by: undefined,

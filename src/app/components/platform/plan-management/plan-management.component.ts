@@ -45,7 +45,7 @@ export class PlanManagementComponent implements OnInit {
     is_popular: false,
     subscriber_count: 0,
     revenue: 0,
-    plan_id: 0,
+    plan_id: '',
     setup_fee: 0,
     trial_days: 0,
     created_at: new Date().toISOString(),
@@ -318,14 +318,15 @@ export class PlanManagementComponent implements OnInit {
       max_restaurants: this.planForm.max_restaurants,
       max_users: this.planForm.max_users,
       is_active: this.planForm.is_active,
+      is_popular: this.planForm.is_popular,
       subscriber_count: this.planForm.subscriber_count,
       revenue: this.planForm.revenue,
-      plan_id: this.planForm.plan_id,
-      setup_fee: this.planForm.setup_fee,
-      trial_days: this.planForm.trial_days,
+      plan_id: this.planForm.plan_id || `plan_${Date.now()}`,
+      setup_fee: this.planForm.setup_fee || 0.0,
+      trial_days: this.planForm.trial_days || 0,
       created_at: currentTime,
       updated_at: currentTime,
-      created_by: this.authService.getCurrentUser()?.id || 'system'
+      created_by: this.authService.getCurrentUser()?.id || 1
     };
 
     this.crudService.createSubscriptionPlan(planRequest).subscribe({
@@ -359,15 +360,16 @@ export class PlanManagementComponent implements OnInit {
       max_restaurants: this.planForm.max_restaurants,
       max_users: this.planForm.max_users,
       is_active: this.planForm.is_active,
+      is_popular: this.planForm.is_popular,
       subscriber_count: this.planForm.subscriber_count,
       revenue: this.planForm.revenue,
       plan_id: this.planForm.plan_id,
-      setup_fee: this.planForm.setup_fee,
-      trial_days: this.planForm.trial_days,
+      setup_fee: this.planForm.setup_fee || 0.0,
+      trial_days: this.planForm.trial_days || 0,
       created_at: this.editingPlan!.created_at,
       updated_at: currentTime,
       created_by: this.editingPlan!.created_by,
-      updated_by: this.authService.getCurrentUser()?.id || 'system'
+      updated_by: this.authService.getCurrentUser()?.id || 1
     };
 
     this.crudService.updateSubscriptionPlan(this.editingPlan!.id, planRequest).subscribe({
@@ -445,7 +447,7 @@ export class PlanManagementComponent implements OnInit {
     this.planForm = {
       ...plan,
       id: 0,
-      plan_id: 0,
+      plan_id: `plan_${Date.now()}`,
       name: `${plan.name}_copy`,
       display_name: `${plan.display_name} (Copy)`,
       subscriber_count: 0,
@@ -504,7 +506,7 @@ export class PlanManagementComponent implements OnInit {
       is_popular: false,
       subscriber_count: 0,
       revenue: 0,
-      plan_id: 0,
+      plan_id: '',
       setup_fee: 0,
       trial_days: 0,
       created_at: new Date().toISOString(),
