@@ -25,20 +25,20 @@
    <div class="max-w-full">
 
      <!-- Fixed Search and Order Filter -->
-     <div class="fixed left-0 right-0 z-10 bg-gradient-to-r from-slate-50 via-gray-100 to-slate-50 dark:from-slate-900 dark:via-gray-900 dark:to-slate-900 pb-0 shadow-lg backdrop-blur-sm" style="top: 68px;">
+      <div class="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-slate-50 via-gray-100 to-slate-50 dark:from-slate-900 dark:via-gray-900 dark:to-slate-900 pb-0 shadow-lg backdrop-blur-sm" style="margin-top: 68px;">
       <!-- Search -->
-      <div class="mb-4 relative" style="">
+      <div class="flex mb-3 relative py-0 bg-red-500 dark:bg-gray-300 border-b border-gray-200 dark:border-gray-700">
         <input
           [(ngModel)]="searchTerm"
           (input)="onSearchChange()"
-          placeholder="Search by order number..."
-          class="w-full px-4 py-2 pr-10 border-b border-gray-300 dark:border-gray-600 bg-transparent text-gray-900 dark:text-white focus:outline-none focus:border-b-2 focus:border-red-500 transition-colors duration-200"
+          placeholder="Search By Order Number..."
+          class="w-full px-4 py-2 pr-12 border-t border-b border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800  backdrop-blur-sm text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 transition-all duration-300 shadow-sm hover:shadow-md"
         />
-        <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500"></i>
+        <i class="fas fa-search absolute right-4 top-1/2 transform -translate-y-1/2 text-red-500 text-lg opacity-75"></i>
       </div>
 
       <!-- Order Status Filters -->
-      <div class="px-4 mb-0 flex gap-2 overflow-x-auto hide-scrollbar border-b border-gray-200 dark:border-gray-700 pb-4"
+      <div class="px-4 mb-0 flex gap-2 overflow-x-auto hide-scrollbar border-b border-gray-200 dark:border-gray-700 pb-3"
            (touchstart)="onTouchStart($event)"
            (touchmove)="onTouchMove($event)"
            (touchend)="onTouchEnd()">
@@ -58,7 +58,7 @@
 
 
      <!-- Orders Grid -->
-     <div class="grid grid-cols-2 gap-4 pb-10" style="padding-top: 112px;">
+     <div class="grid grid-cols-2 gap-4 pb-9" style="padding-top: 104px;">
 
       <div *ngIf="realTimeLoader === true" class="col-span-2 w-full text-gray-500 dark:text-gray-400 flex items-center">
         <div class="animate-spin rounded-full h-4 w-4 border-2 border-red-500 border-t-transparent mr-2"></div>

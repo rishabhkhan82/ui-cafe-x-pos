@@ -12,6 +12,11 @@ export const routes: Routes = [
   },
 
   {
+    path: 'support',
+    loadComponent: () => import('./components/common/common-support/common-support.component').then(m => m.CommonSupportComponent)
+  },
+
+  {
     path: 'platform-dashboard',
     loadComponent: () => import('./components/platform/platform-dashboard/platform-dashboard.component').then(m => m.PlatformDashboardComponent),
     canActivate: [authGuard]

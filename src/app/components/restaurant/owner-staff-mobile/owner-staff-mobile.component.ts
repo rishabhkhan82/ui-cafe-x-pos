@@ -84,7 +84,7 @@ export class OwnerStaffMobileComponent implements OnInit {
   constructor(
     public router: Router,
     private crudService: CrudService,
-    private loadingService: LoadingService,
+    public loadingService: LoadingService,
     private mockDataService: MockDataService,
     private authService: AuthService,
     private confirmationService: ConfirmationDialogService,

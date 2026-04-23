@@ -35,7 +35,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
   constructor(
     public router: Router,
     private crudService: CrudService,
-    private loadingService: LoadingService
+    public loadingService: LoadingService
   ) {}
 
   ngOnInit(): void {

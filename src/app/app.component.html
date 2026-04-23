@@ -82,7 +82,7 @@
             <div *ngIf="isProfileMenuOpen" class="fixed inset-0 z-40" (click)="isProfileMenuOpen = false"></div>
             <!-- Mobile Profile Menu -->
             <div *ngIf="isProfileMenuOpen" class="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-50 border border-gray-200 dark:border-gray-700">
-              <ul class="pt-3">
+              <ul class="">
                 <!-- <li *ngFor="let menu of actionMenus">
                   <a [routerLink]="menu.path" class="block px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" (click)="isProfileMenuOpen = false">
                     <i [class]="menu.icon + ' mr-2'"></i>
@@ -90,13 +90,13 @@
                   </a>
                 </li> -->
                 <li>
-                  <a [routerLink]="'support'" class="block px-4 pb-4 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" (click)="isProfileMenuOpen = false">
+                  <a [routerLink]="'support'" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" (click)="isProfileMenuOpen = false">
                     <i [class]="'fas fa-headset mr-2'"></i>
                     Support
                   </a>
                 </li>
                 <li>
-                  <a [routerLink]="'about-cafex'" class="block px-4 pb-4 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" (click)="isProfileMenuOpen = false">
+                  <a href="https://www.cafexpos.in" target="_blank" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
                     <i [class]="'fas fa-coffee mr-2'"></i>
                     About Cafex Pos
                   </a>

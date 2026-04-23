@@ -90,7 +90,7 @@ export class OwnerMenusMobileComponent implements OnInit {
 
   constructor(
     public router: Router,
-    private loadingService: LoadingService,
+    public loadingService: LoadingService,
     private confirmationService: ConfirmationDialogService,
     private authService: AuthService,
     private notificationService: NotificationService,

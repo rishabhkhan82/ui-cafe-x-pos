@@ -44,7 +44,7 @@
   <div class="px-6 py-8 space-y-8">
 
     <!-- Unsubscribed State -->
-    <div *ngIf="!showPlan && !(currentSubscription$ | async)" class="space-y-6 mb-7">
+    <div *ngIf="!showPlan && !(currentSubscription$ | async) && ((this.loadingService.loading$ | async) === false)" class="space-y-6 mb-7">
       <!-- Subscription Prompt Card -->
       <div class="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-2xl shadow-lg border border-orange-200 dark:border-orange-700 overflow-hidden">
         <div class="px-6 py-6 text-center">

@@ -13,6 +13,7 @@ import { ConfirmationDialogService } from '../../../services/confirmation-dialog
 import { AuthService } from '../../../services/auth.service';
 import { ConfirmationDialogComponent } from '../../common/confirmation-dialog/confirmation-dialog.component';
 import { ElapsedTimePipe } from './elapsed-time.pipe';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-orders-mobile',
@@ -64,6 +65,10 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
 
   // Status options for filtering - role-based
   statusOptions: any[] = [];
+
+  constructor(public router: Router) {
+    
+  }
 
   ngOnInit(): void {
     const currentUser = this.authService.getCurrentUser();
