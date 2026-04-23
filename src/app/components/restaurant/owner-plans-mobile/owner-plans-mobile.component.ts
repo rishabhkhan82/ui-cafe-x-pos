@@ -23,82 +23,14 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
   selectedPlanForDetails: SubscriptionPlan | undefined | any;
   private subscriptions: Subscription[] = [];
 
-  // Hardcoded subscription history data
-  subscriptionHistory: SubscriptionHistory[] = [
-    {
-      id: 1,
-      history_id: 'hist_1234567890',
-      restaurant_id: 1,
-      change_type: 'subscription_created',
-      effective_date: new Date('2026-02-23T00:00:00.000Z'),
-      previous_plan_id: null,
-      new_plan_id: '7',
-      previous_price: null,
-      new_price: 499.00,
-      price_difference: 499.00,
-      prorated_amount: 0,
-      payment_id: 'pay_1234567890',
-      payment_status: 'paid',
-      initiated_by: 'restaurant_owner',
-      reason: 'Initial subscription',
-      cancellation_reason: null,
-      notes: 'Welcome to Super Easy Plan!',
-      billing_cycle_change: false,
-      churn_risk_score: 0.1,
-      retention_actions: null,
-      created_at: new Date('2026-02-23T00:00:00.000Z')
-    },
-    {
-      id: 2,
-      history_id: 'hist_1234567891',
-      restaurant_id: 1,
-      change_type: 'billing_cycle_renewal',
-      effective_date: new Date('2026-03-23T00:00:00.000Z'),
-      previous_plan_id: '7',
-      new_plan_id: '7',
-      previous_price: 499.00,
-      new_price: 499.00,
-      price_difference: 0,
-      prorated_amount: 0,
-      payment_id: 'pay_1234567891',
-      payment_status: 'paid',
-      initiated_by: 'system',
-      reason: 'Monthly renewal',
-      cancellation_reason: null,
-      notes: 'Automatic renewal payment processed',
-      billing_cycle_change: false,
-      churn_risk_score: 0.05,
-      retention_actions: null,
-      created_at: new Date('2026-03-23T00:00:00.000Z')
-    }
-  ];
+  // Dynamic subscription data
+  currentSubscription$ = new BehaviorSubject<RestaurantSubscription | null>(null);
+  subscriptionHistory$ = new BehaviorSubject<SubscriptionHistory[]>([]);
 
-  // Hardcoded subscription data based on restaurant_subscriptions table
-  currentSubscription: RestaurantSubscription = {
-    id: 1,
-    subscription_id: 'sub_1234567890',
-    restaurant_id: 1,
-    plan_id: 7,
-    status: 'active',
-    billing_cycle: 'monthly',
-    auto_renew: true,
-    cancel_at_period_end: false,
-    discount_amount: 0,
-    final_amount: 499.00,
-    cancelled_at: null,
-    created_at: new Date('2026-01-01T00:00:00.000Z'),
-    created_by: 1,
-    current_period_end: new Date('2026-01-31T23:59:59.999Z'),
-    current_period_start: new Date('2026-01-01T00:00:00.000Z'),
-    end_date: null,
-    next_billing_date: new Date('2026-02-01T00:00:00.000Z'),
-    start_date: new Date('2026-01-01T00:00:00.000Z'),
-    trial_end_date: null,
-    updated_at: new Date('2026-01-01T00:00:00.000Z'),
-    cancellation_reason: null,
-    discount_code: null,
-    payment_method_id: 'pm_1234567890'
-  };
+  // Computed properties for template
+  currentPlan: SubscriptionPlan | null = null;
+  currentPlanFeatures: ManagedFeature[] = [];
+  isSubscribed: boolean = false;
 
   constructor(
     public router: Router,
@@ -118,6 +50,16 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     this.loadPlans();
     this.loadFeatures();
     this.loadPlanFeatures();
+    this.loadCurrentSubscription();
+    this.loadSubscriptionHistory();
+  }
+
+  private updateComputedProperties(): void {
+    const currentSub = this.currentSubscription$.value;
+    const plans = this.plans$.value;
+    this.currentPlan = currentSub ? plans.find(plan => plan.id === currentSub.plan_id) || null : null;
+    this.currentPlanFeatures = this.currentPlan ? this.getPlanFeatures(this.currentPlan.id) : [];
+    this.isSubscribed = !!this.currentPlan;
   }
 
   ngOnDestroy(): void {
@@ -140,6 +82,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     const subscription = this.crudService.getSubscriptionPlans(params).subscribe({
       next: (response: any) => {
         this.plans$.next((response.data || response || []) as SubscriptionPlan[]);
+        this.updateComputedProperties();
         this.checkLoadingComplete();
       },
       error: (error) => {
@@ -182,6 +125,47 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     this.subscriptions.push(subscription);
   }
 
+  loadCurrentSubscription(): void {
+    // Assuming restaurant_id is 1 for now; in real app, get from session/user context
+    const restaurantId = 1;
+    const params = { restaurantId: restaurantId.toString(), status: 'active' };
+    const subscription = this.crudService.getRestaurantSubscriptions(params).subscribe({
+      next: (response: any) => {
+        const subscriptions = (response.data || response || []) as RestaurantSubscription[];
+        // Assuming the first active subscription is the current one
+        this.currentSubscription$.next(subscriptions.length > 0 ? subscriptions[0] : null);
+        this.updateComputedProperties();
+        this.checkLoadingComplete();
+      },
+      error: (error) => {
+        console.error('Error loading current subscription:', error);
+        this.errorMessage = 'Failed to load current subscription';
+        this.currentSubscription$.next(null);
+        this.checkLoadingComplete();
+      }
+    });
+    this.subscriptions.push(subscription);
+  }
+
+  loadSubscriptionHistory(): void {
+    // Assuming restaurant_id is 1 for now; in real app, get from session/user context
+    const restaurantId = 1;
+    const params = { restaurantId: restaurantId.toString() };
+    const subscription = this.crudService.getSubscriptionHistories(params).subscribe({
+      next: (response: any) => {
+        this.subscriptionHistory$.next((response.data || response || []) as SubscriptionHistory[]);
+        this.checkLoadingComplete();
+      },
+      error: (error) => {
+        console.error('Error loading subscription history:', error);
+        this.errorMessage = 'Failed to load subscription history';
+        this.subscriptionHistory$.next([]);
+        this.checkLoadingComplete();
+      }
+    });
+    this.subscriptions.push(subscription);
+  }
+
   private checkLoadingComplete(): void {
     // Simple check - in a real app, you'd use a more sophisticated approach
     this.loadingService.hide();
@@ -198,16 +182,9 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     );
   }
 
-  // Get the current subscribed plan based on subscription data
-  getCurrentPlan(): SubscriptionPlan | null {
-    const plans = this.plans$.value;
-    return plans.find(plan => plan.id === this.currentSubscription.plan_id) || null;
-  }
 
-  // Check if a plan is subscribed based on current subscription
-  isPlanSubscribed(planId: number): boolean {
-    return planId === this.currentSubscription.plan_id;
-  }
+
+
 
   // Handle subscribe button click
   subscribeToPlan(plan: SubscriptionPlan): void {

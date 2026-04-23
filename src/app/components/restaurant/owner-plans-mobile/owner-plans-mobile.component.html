@@ -44,7 +44,7 @@
   <div class="px-6 py-8 space-y-8">
 
     <!-- Unsubscribed State -->
-    <div *ngIf="!showPlan && !currentSubscription" class="space-y-6 mb-7">
+    <div *ngIf="!showPlan && !(currentSubscription$ | async)" class="space-y-6 mb-7">
       <!-- Subscription Prompt Card -->
       <div class="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-2xl shadow-lg border border-orange-200 dark:border-orange-700 overflow-hidden">
         <div class="px-6 py-6 text-center">
@@ -66,7 +66,7 @@
     </div>
 
     <!-- Current Subscription Details -->
-    <div *ngIf="!showPlan && currentSubscription" class="space-y-6 mb-7">
+    <div *ngIf="!showPlan && (currentSubscription$ | async)" class="space-y-6 mb-7">
       <!-- Subscription Status Card -->
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
         <div class="px-6 py-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-b border-gray-100 dark:border-gray-700">
@@ -79,30 +79,30 @@
           <div class="space-y-4">
             <div class="flex justify-between items-center">
               <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Plan</span>
-              <span class="text-sm text-gray-900 dark:text-white">{{ getCurrentPlan()?.display_name || getCurrentPlan()?.name || 'No Plan' }}</span>
+              <span class="text-sm text-gray-900 dark:text-white">{{ currentPlan?.display_name || currentPlan?.name || 'No Plan' }}</span>
             </div>
-             <div class="flex justify-between items-center">
-               <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Status</span>
-               <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded-full">
-                 {{ currentSubscription.status | titlecase }}
-               </span>
-             </div>
-             <div class="flex justify-between items-center">
-               <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Valid From</span>
-               <span class="text-sm text-gray-900 dark:text-white">{{ currentSubscription.current_period_start | date:'MMM d, yyyy' }}</span>
-             </div>
-             <div class="flex justify-between items-center">
-               <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Valid To</span>
-               <span class="text-sm text-gray-900 dark:text-white">{{ currentSubscription.current_period_end | date:'MMM d, yyyy' }}</span>
-             </div>
-             <div class="flex justify-between items-center">
-               <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Payment Method</span>
-               <span class="text-sm text-gray-900 dark:text-white">**** **** **** {{ currentSubscription.payment_method_id?.slice(-4) || '1234' }}</span>
-             </div>
-             <div class="flex justify-between items-center">
-               <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Last Payment</span>
-               <span class="text-sm text-gray-900 dark:text-white">₹{{ currentSubscription.final_amount }}</span>
-             </div>
+              <div class="flex justify-between items-center" *ngIf="currentSubscription$ | async as sub">
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Status</span>
+                <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded-full">
+                  {{ sub.status | titlecase }}
+                </span>
+              </div>
+              <div class="flex justify-between items-center" *ngIf="currentSubscription$ | async as sub">
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Valid From</span>
+                <span class="text-sm text-gray-900 dark:text-white">{{ sub.current_period_start | date:'MMM d, yyyy' }}</span>
+              </div>
+              <div class="flex justify-between items-center" *ngIf="currentSubscription$ | async as sub">
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Valid To</span>
+                <span class="text-sm text-gray-900 dark:text-white">{{ sub.current_period_end | date:'MMM d, yyyy' }}</span>
+              </div>
+              <div class="flex justify-between items-center" *ngIf="currentSubscription$ | async as sub">
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Payment Method</span>
+                <span class="text-sm text-gray-900 dark:text-white">**** **** **** {{ sub.payment_method_id?.slice(-4) || '1234' }}</span>
+              </div>
+              <div class="flex justify-between items-center" *ngIf="currentSubscription$ | async as sub">
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Last Payment</span>
+                <span class="text-sm text-gray-900 dark:text-white">₹{{ sub.final_amount }}</span>
+              </div>
           </div>
           <div class="pt-4 border-t border-gray-100 dark:border-gray-700">
             <button
@@ -123,8 +123,8 @@
           </h3>
         </div>
         <div class="p-6">
-          <div class="grid grid-cols-2 gap-4" *ngIf="getCurrentPlan(); else noCurrentPlan">
-            <div *ngFor="let feature of getPlanFeatures(getCurrentPlan()!.id).slice(0, 4)" class="text-center">
+          <div class="grid grid-cols-2 gap-4" *ngIf="currentPlan; else noCurrentPlan">
+            <div *ngFor="let feature of currentPlanFeatures.slice(0, 4)" class="text-center">
               <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-2">
                 <i class="fas fa-star text-blue-600"></i>
               </div>
@@ -148,21 +148,22 @@
           </h3>
         </div>
         <div class="p-6">
-          <div class="space-y-4" *ngIf="subscriptionHistory.length > 0; else noHistory">
-            <div *ngFor="let history of subscriptionHistory.slice(0, 3)" class="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+        <div *ngIf="subscriptionHistory$ | async as history">
+          <div class="space-y-4" *ngIf="history && history.length > 0; else noHistory">
+            <div *ngFor="let historyItem of history.slice(0, 3)" class="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center flex-shrink-0">
                 <i class="fas fa-calendar text-purple-600 text-sm"></i>
               </div>
               <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between">
-                  <h4 class="text-sm font-medium text-gray-900 dark:text-white">{{ history.change_type | titlecase }}</h4>
-                  <span class="text-xs text-gray-500 dark:text-gray-400">{{ history.effective_date | date:'MMM d, yyyy' }}</span>
+                  <h4 class="text-sm font-medium text-gray-900 dark:text-white">{{ historyItem.change_type | titlecase }}</h4>
+                  <span class="text-xs text-gray-500 dark:text-gray-400">{{ historyItem.effective_date | date:'MMM d, yyyy' }}</span>
                 </div>
-                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">{{ history.reason }}</p>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">{{ historyItem.reason }}</p>
                 <div class="flex items-center space-x-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  <span>₹{{ history.new_price }}</span>
+                  <span>₹{{ historyItem.new_price }}</span>
                   <span class="inline-flex items-center px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded-full">
-                    {{ history.payment_status }}
+                    {{ historyItem.payment_status }}
                   </span>
                 </div>
               </div>
@@ -235,14 +236,14 @@
 
           <!-- Subscribe/View Details Button -->
           <button
-            *ngIf="!isPlanSubscribed(plan.id)"
+            *ngIf="plan.id !== currentPlan?.id"
             (click)="subscribeToPlan(plan)"
             class="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
             <i class="fas fa-credit-card mr-2"></i>
             Subscribe Now
           </button>
           <button
-            *ngIf="isPlanSubscribed(plan.id)"
+            *ngIf="plan.id === currentPlan?.id"
             (click)="viewPlanDetails(plan)"
             class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
             <i class="fas fa-eye mr-2"></i>

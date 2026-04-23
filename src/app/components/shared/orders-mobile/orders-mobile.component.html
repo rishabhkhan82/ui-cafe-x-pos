@@ -38,7 +38,7 @@
       </div>
 
       <!-- Order Status Filters -->
-      <div class="pl-4 mb-0 flex gap-2 overflow-x-auto hide-scrollbar border-b border-gray-200 dark:border-gray-700 pb-4"
+      <div class="px-4 mb-0 flex gap-2 overflow-x-auto hide-scrollbar border-b border-gray-200 dark:border-gray-700 pb-4"
            (touchstart)="onTouchStart($event)"
            (touchmove)="onTouchMove($event)"
            (touchend)="onTouchEnd()">
@@ -56,8 +56,14 @@
       </div>
     </div>
 
+
      <!-- Orders Grid -->
-     <div class="grid grid-cols-2 gap-4" style="padding-top: 112px;">
+     <div class="grid grid-cols-2 gap-4 pb-10" style="padding-top: 112px;">
+
+      <div *ngIf="realTimeLoader === true" class="col-span-2 w-full text-gray-500 dark:text-gray-400 flex items-center">
+        <div class="animate-spin rounded-full h-4 w-4 border-2 border-red-500 border-t-transparent mr-2"></div>
+        Loading Real Time Data...
+      </div>
 
       <!-- Order Cards -->
       <div *ngFor="let order of orders; trackBy: trackByOrderId"
@@ -95,7 +101,7 @@
         </div>
 
         <!-- Order Actions -->
-        <div class="p-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
+        <div class="p-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 h-full">
           <div class="flex flex-col gap-2">
             <!-- Kitchen: Next Status -->
             <button *ngIf="userRole === 'kitchen' && canMoveToNextStatus(order)"
@@ -149,7 +155,7 @@
       </div>
 
       <!-- Empty State -->
-      <div *ngIf="orders.length === 0"
+      <div *ngIf="orders.length === 0 && realTimeLoader === false"
            class="col-span-full flex items-center justify-center py-16">
         <div class="text-center">
           <div class="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">

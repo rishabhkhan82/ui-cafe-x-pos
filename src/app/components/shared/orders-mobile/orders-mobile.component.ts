@@ -31,6 +31,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   private confirmationService = inject(ConfirmationDialogService);
   private authService = inject(AuthService);
   private subscriptions: Subscription[] = [];
+  public realTimeLoader : boolean = true;
 
   // Component state
   currentTime: string = '';
@@ -152,16 +153,19 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   private loadOrders(): void {
+    this.realTimeLoader = true;
     // Load current orders from API
     this.crudService.getCurrentOrders().subscribe({
       next: (response: any) => {
         this.allOrders = response || [];
         this.filterOrders();
+        this.realTimeLoader = false;
       },
       error: (error) => {
         console.error('Error loading orders:', error);
         this.allOrders = [];
         this.filterOrders();
+        this.realTimeLoader = false;
       }
     });
   }

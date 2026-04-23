@@ -448,4 +448,46 @@ export class CrudService {
   deleteRoleFeatureMapping(id: string | number): Observable<any> {
     return this.deleteData('role-features-mapping', {}, id);
   }
+
+  // Restaurant Subscription operations
+  getRestaurantSubscriptions(params?: CrudParams): Observable<any> {
+    return this.getData('restaurant-subscriptions', params);
+  }
+
+  getRestaurantSubscriptionById(id: string | number): Observable<any> {
+    return this.getData(`restaurant-subscriptions/${id}`);
+  }
+
+  createRestaurantSubscription(payload: any): Observable<any> {
+    return this.postData('restaurant-subscriptions', payload);
+  }
+
+  updateRestaurantSubscription(id: string | number, payload: any): Observable<any> {
+    return this.putData('restaurant-subscriptions', payload, {}, id);
+  }
+
+  deleteRestaurantSubscription(id: string | number): Observable<any> {
+    return this.deleteData('restaurant-subscriptions', {}, id);
+  }
+
+  // Subscription History operations
+  getSubscriptionHistories(params?: CrudParams): Observable<any> {
+    return this.getData('subscription-histories', params);
+  }
+
+  getSubscriptionHistoryById(id: string | number): Observable<any> {
+    return this.getData(`subscription-histories/${id}`);
+  }
+
+  createSubscriptionHistory(payload: any): Observable<any> {
+    return this.postData('subscription-histories', payload);
+  }
+
+  updateSubscriptionHistory(id: string | number, payload: any): Observable<any> {
+    return this.putData('subscription-histories', payload, {}, id);
+  }
+
+  deleteSubscriptionHistory(id: string | number): Observable<any> {
+    return this.deleteData('subscription-histories', {}, id);
+  }
 }
