@@ -27,6 +27,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
   selectedMonthsMap: Map<number, number> = new Map();
   selectedPlanForPlanId: number | null = null;
   selectedPlan: SubscriptionPlan | null = null;
+  expandedFeaturesMap: Map<number, boolean> = new Map();
   private subscriptions: Subscription[] = [];
 
   // Dynamic subscription data
@@ -510,6 +511,17 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
   closePlanDetails(): void {
     this.selectedPlanForDetails = undefined;
     this.showPlan = true; // Show plan list again
+  }
+
+  // Toggle expanded features view
+  toggleFeaturesExpansion(planId: number): void {
+    const currentState = this.expandedFeaturesMap.get(planId) || false;
+    this.expandedFeaturesMap.set(planId, !currentState);
+  }
+
+  // Check if features are expanded for a plan
+  isFeaturesExpanded(planId: number): boolean {
+    return this.expandedFeaturesMap.get(planId) || false;
   }
 
   // Handle back navigation when in plan details
