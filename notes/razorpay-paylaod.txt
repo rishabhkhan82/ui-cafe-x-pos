@@ -1,0 +1,46 @@
+api - http://localhost:8080/api/restaurant-subscriptions
+
+payload - {
+    "subscription_id": "order_Shf4lA8T3KDbWW",
+    "restaurant_id": 1,
+    "plan_id": 7,
+    "status": "active",
+    "start_date": "2026-04-25T08:51:39.754Z",
+    "end_date": "2027-04-25T08:51:39.754Z",
+    "billing_cycle": "monthly",
+    "cancel_at_period_end": false,
+    "auto_renew": true,
+    "discount_amount": 1497,
+    "final_amount": 4491,
+    "payment_method_id": "pay_ShfM2i0pykle82"
+}
+
+res - {"status":"success","code":"RESTAURANT_SUBSCRIPTION_CREATED","id":2,"data":null}
+
+---------------------------------------------------------------------------------------------------
+
+api - http://localhost:8080/api/subscription-histories
+
+{
+    "history_id": "order_Shf4lA8T3KDbWW",
+    "restaurant_id": 1,
+    "change_type": "new_subscription",
+    "effective_date": "2026-04-25T08:51:39.754Z",
+    "previous_plan_id": null,
+    "new_plan_id": "7",
+    "previous_price": null,
+    "new_price": 499,
+    "price_difference": 0,
+    "prorated_amount": 0,
+    "payment_id": "pay_ShfM2i0pykle82",
+    "payment_status": "completed",
+    "initiated_by": "user",
+    "reason": "New subscription purchase",
+    "cancellation_reason": null,
+    "notes": "Subscribed for 12 months with discount 1497",
+    "billing_cycle_change": false,
+    "churn_risk_score": 0,
+    "retention_actions": null
+}
+
+res  {"status":"success","code":"SUBSCRIPTION_HISTORY_CREATED","id":3,"data":null}
