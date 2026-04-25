@@ -2,9 +2,10 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Subscription, BehaviorSubject, forkJoin } from 'rxjs';
+import { Subscription, BehaviorSubject, forkJoin, of } from 'rxjs';
 import { CrudService } from '../../../services/crud.service';
 import { LoadingService } from '../../../services/loading.service';
+import { NotificationService } from '../../../services/notification.service';
 import { ManagedFeature, PlanFeatureMapping, SubscriptionPlan } from '../../../services/mock-data.service';
 import { RestaurantSubscription, SubscriptionHistory } from '../../../interfaces';
 import { AuthService } from '../../../services/auth.service';
@@ -37,10 +38,17 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
   currentPlanFeatures: ManagedFeature[] = [];
   isSubscribed: boolean = false;
 
+  // Trial-related properties
+  isOnTrial: boolean = false;
+  trialDaysRemaining: number = 0;
+  trialEndDate: Date | null = null;
+  isTrialEligible: boolean = false;
+
   constructor(
     public router: Router,
     private crudService: CrudService,
     public loadingService: LoadingService,
+    private notificationService: NotificationService,
     public authService: AuthService
   ) {}
 
@@ -52,29 +60,57 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     this.loadingService.show();
     this.errorMessage = '';
 
+    // Get current user for all operations
+    const currentUser = this.authService.getCurrentUser();
+    const restaurantId = currentUser?.restaurantId;
+
+    if (!restaurantId) {
+      console.error('No restaurant ID found for current user');
+      this.errorMessage = 'Unable to load subscription data. Please login again.';
+      this.loadingService.hide();
+      return;
+    }
+
     // Load all data in parallel using forkJoin
     const plans$ = this.crudService.getSubscriptionPlans({ isActive: true });
     const features$ = this.crudService.getFeatures();
     const planFeatures$ = this.crudService.getPlanFeatureMapping();
-    const restaurantId = 1; // Assuming restaurant_id is 1 for now
-    const currentSub$ = this.crudService.getRestaurantSubscriptions({ restaurantId: restaurantId.toString(), status: 'active' });
+    // Fetch all subscriptions for this restaurant (trial, active, expired, etc.)
+    const currentSub$ = this.crudService.getRestaurantSubscriptions({
+      restaurantId: restaurantId.toString()
+    });
     const history$ = this.crudService.getSubscriptionHistories({ restaurantId: restaurantId.toString() });
 
-    forkJoin([plans$, features$, planFeatures$, currentSub$, history$]).subscribe({
-      next: ([plansResponse, featuresResponse, planFeaturesResponse, currentSubResponse, historyResponse]) => {
+    // Check trial eligibility
+    const trialCheck$ = restaurantId ? this.crudService.getData(`restaurant-subscriptions/trial/check/${restaurantId}`) : of(false);
+
+    forkJoin([plans$, features$, planFeatures$, currentSub$, history$, trialCheck$]).subscribe({
+      next: ([plansResponse, featuresResponse, planFeaturesResponse, currentSubResponse, historyResponse, trialEligibility]) => {
         // Handle success responses
         this.plans$.next((plansResponse.data || plansResponse || []) as SubscriptionPlan[]);
         this.features = (featuresResponse.data || featuresResponse || []) as ManagedFeature[];
         this.planFeatures = (planFeaturesResponse.data || planFeaturesResponse || []) as PlanFeatureMapping[];
 
-        const subscriptions = (currentSubResponse.data || currentSubResponse || []) as RestaurantSubscription[];
+        // Handle paginated response - extract data array
+        const subscriptionResponse = currentSubResponse.data || currentSubResponse || { data: [] };
+        const allSubscriptions = Array.isArray(subscriptionResponse) ? subscriptionResponse : (subscriptionResponse.data || []);
+
+        // Find the most recent active or trial subscription
+        const subscriptions = allSubscriptions.filter((sub: RestaurantSubscription) =>
+          sub.status === 'active' || sub.status === 'trial'
+        ).sort((a: RestaurantSubscription, b: RestaurantSubscription) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
         this.currentSubscription$.next(subscriptions.length > 0 ? subscriptions[0] : null);
 
         this.subscriptionHistory$.next((historyResponse.data || historyResponse || []) as SubscriptionHistory[]);
 
+        // Set trial eligibility
+        this.isTrialEligible = trialEligibility as boolean;
+
         this.updateComputedProperties();
         this.loadingService.hide();
-        console.log('Data loaded - Plans:', this.plans$.value.length, 'Current sub:', this.currentSubscription$.value);
+        console.log('Data loaded - Plans:', this.plans$.value.length, 'Current sub:', this.currentSubscription$.value, 'Trial eligible:', this.isTrialEligible);
       },
       error: (error) => {
         console.error('Error loading data:', error);
@@ -87,9 +123,39 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
   private updateComputedProperties(): void {
     const currentSub = this.currentSubscription$.value;
     const plans = this.plans$.value;
-    this.currentPlan = currentSub ? plans.find(plan => plan.id === currentSub.plan_id) || null : null;
+
+    // Ensure both IDs are numbers for comparison (API may return plan_id as string)
+    const subscriptionPlanId = typeof currentSub?.plan_id === 'string' ? parseInt(currentSub.plan_id, 10) : currentSub?.plan_id;
+    this.currentPlan = currentSub ? plans.find(plan => plan.id === subscriptionPlanId) || null : null;
+
     this.currentPlanFeatures = this.currentPlan ? this.getPlanFeatures(this.currentPlan.id) : [];
     this.isSubscribed = !!this.currentPlan;
+
+    // Update trial-related properties
+    this.updateTrialProperties();
+  }
+
+  private updateTrialProperties(): void {
+    const currentSub = this.currentSubscription$.value;
+
+    if (currentSub && currentSub.status === 'trial' && currentSub.trial_end_date) {
+      this.isOnTrial = true;
+      this.trialEndDate = new Date(currentSub.trial_end_date);
+
+      const now = new Date();
+      const timeDiff = this.trialEndDate.getTime() - now.getTime();
+      this.trialDaysRemaining = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+      // If trial has expired, mark as not on trial
+      if (this.trialDaysRemaining < 0) {
+        this.isOnTrial = false;
+        this.trialDaysRemaining = 0;
+      }
+    } else {
+      this.isOnTrial = false;
+      this.trialDaysRemaining = 0;
+      this.trialEndDate = null;
+    }
   }
 
   ngOnDestroy(): void {
@@ -130,10 +196,17 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
 
   // Handle subscribe button click
   openSubscriptionForPlan(plan: SubscriptionPlan): void {
+    const currentUser = this.authService.getCurrentUser();
+    const restaurantId = currentUser?.restaurantId;
+
+    if (!restaurantId) {
+      this.notificationService.error('Authentication Required', 'Unable to process subscription. Please login again.');
+      return;
+    }
+
     const selectedMonths = this.getSelectedMonths(plan.id);
     const finalAmount = this.getFinalAmount(plan);
     const discountAmount = this.getDiscountAmount(plan);
-    const restaurantId = 1;
 
     // 1) Tell backend to create a Razorpay order
     this.crudService.postData('payments/create-order', {
@@ -167,7 +240,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Failed to create Razorpay order', err);
-        alert('Could not start payment. Please try again.');
+        this.notificationService.error('Payment Failed', 'Could not start payment. Please try again.');
       }
     });
   }
@@ -227,11 +300,17 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
   }
 
   proceedToPaymentDirect(plan: SubscriptionPlan, months: number, finalAmount: number, discountAmount: number): void {
-    const restaurantId = 1; // From earlier code
+    const currentUser = this.authService.getCurrentUser();
+    const restaurantId = currentUser?.restaurantId;
+
+    if (!restaurantId) {
+      this.notificationService.error('Authentication Required', 'Unable to process payment. Please login again.');
+      return;
+    }
 
     // Call API to create Razorpay order
     const payload = {
-      planId: plan.id,
+      planId: plan.id.toString(),
       months: months,
       calculatedAmount: finalAmount,
       restaurantId: restaurantId
@@ -244,7 +323,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error creating order:', error);
-        alert('Failed to create payment order. Please try again.');
+        this.notificationService.error('Payment Error', 'Failed to create payment order. Please try again.');
       }
     });
   }
@@ -277,7 +356,15 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
   }
 
   private saveSubscription(razorpayResponse: any, plan: SubscriptionPlan, months: number, finalAmount: number, discountAmount: number): void {
-    const restaurantId = 1;
+    const currentUser = this.authService.getCurrentUser();
+    const restaurantId = currentUser?.restaurantId;
+
+    if (!restaurantId) {
+      console.error('No restaurant ID found for current user');
+      this.notificationService.error('Subscription Error', 'Payment successful but failed to save subscription. Please contact support.');
+      return;
+    }
+
     const now = new Date();
     const endDate = new Date();
     endDate.setMonth(now.getMonth() + months);
@@ -300,12 +387,43 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     this.crudService.createRestaurantSubscription(subscriptionPayload).subscribe({
       next: (response: any) => {
         console.log('Subscription saved:', response);
-        alert('Subscription activated successfully!');
+        this.notificationService.success('Subscription Activated', 'Your subscription has been activated successfully!');
         this.loadData(); // Refresh data
       },
       error: (error) => {
         console.error('Error saving subscription:', error);
-        alert('Payment successful but failed to save subscription. Contact support.');
+        this.notificationService.error('Subscription Error', 'Payment successful but failed to save subscription. Contact support.');
+      }
+    });
+  }
+
+  startTrial(plan: SubscriptionPlan): void {
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser?.restaurantId || !currentUser?.id) {
+      this.notificationService.error('Authentication Required', 'User information not available. Please login again.');
+      return;
+    }
+
+    if (!this.isTrialEligible) {
+      this.notificationService.warning('Trial Unavailable', 'You have already used your trial period.');
+      return;
+    }
+
+    this.loadingService.show();
+    this.crudService.postData('restaurant-subscriptions/trial', {
+      restaurantId: currentUser.restaurantId.toString(),
+      planId: plan.id.toString(),
+      userId: currentUser.id.toString()
+    }).subscribe({
+      next: (response: any) => {
+        console.log('Trial subscription created:', response);
+        this.notificationService.success('Trial Activated', 'Trial subscription activated! You have 15 days to try all features.');
+        this.loadData(); // Refresh data to show trial status
+      },
+      error: (error) => {
+        console.error('Error creating trial:', error);
+        this.notificationService.error('Trial Failed', 'Failed to start trial. Please try again.');
+        this.loadingService.hide();
       }
     });
   }
@@ -365,19 +483,19 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
         this.crudService.createSubscriptionHistory(historyPayload).subscribe({
           next: (historyResponse: any) => {
             console.log('Subscription history saved:', historyResponse);
-            alert('Subscription activated successfully!');
+            this.notificationService.success('Subscription Activated', 'Your subscription has been activated successfully!');
             this.loadData(); // Refresh data
           },
           error: (historyError) => {
             console.error('Error saving subscription history:', historyError);
-            alert('Subscription saved but failed to save history. Contact support.');
+            this.notificationService.warning('Partial Success', 'Subscription saved but failed to save history. Contact support.');
             this.loadData(); // Still refresh data
           }
         });
       },
       error: (error) => {
         console.error('Error saving subscription:', error);
-        alert('Payment successful but failed to save subscription. Contact support.');
+        this.notificationService.error('Subscription Error', 'Payment successful but failed to save subscription. Contact support.');
       }
     });
   }

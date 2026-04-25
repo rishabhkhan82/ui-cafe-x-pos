@@ -33,6 +33,11 @@ export interface User {
   is_active: string;
   last_login?: Date;
   created_by?: string;
+  // Computed display properties for performance
+  restaurantName?: string;
+  roleDisplayName?: string;
+  formattedMemberSince?: string;
+  avatarUrl?: string;
 }
 
 export interface Role {
