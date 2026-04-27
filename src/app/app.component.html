@@ -25,18 +25,19 @@
 <app-confirmation-dialog></app-confirmation-dialog>
 
 <!-- POS Header - Only show when logged in -->
-<header *ngIf="isLoggedIn" class="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gradient-to-r dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700">
+<header *ngIf="isLoggedIn" class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700">
   <div class="px-4 py-3">
     <div class="flex items-center justify-between">
       <!-- Logo & Brand -->
       <div class="flex items-center space-x-4">
         <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg boxFlip">
-            <i class="fas fa-coffee text-white text-lg"></i>
+
+          <div class="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-lg">
+            <div class="relative"><i class="fas fa-coffee text-white text-lg"></i></div>
           </div>
           <div>
-            <h1 class="text-lg md:text-xl font-bold tracking-wide">CafeX POS</h1>
-            <p class="text-xs text-gray-500 dark:text-gray-500">Super Easy POS Ever</p>
+            <h1 class="font-bold text-gray-900 dark:text-white text-lg">Cafe-X POS</h1>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Super Easy Pos Ever</p>
           </div>
         </div>
       </div>
