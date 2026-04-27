@@ -9,7 +9,7 @@ import { LoadingService } from './services/loading.service';
 import { ToastNotifierComponent } from './components/common/toast-notifier/app-toast-notifier';
 import { ConfirmationDialogComponent } from './components/common/confirmation-dialog/confirmation-dialog.component';
 import { NavigationMenu } from './services/mock-data.service';
-
+import { environment } from './environments/environment';
 interface User {
   id: string;
   name: string;
@@ -29,7 +29,7 @@ interface User {
 export class AppComponent implements OnInit {
   title = 'cafe-x-pos';
 
-  currentUser: User | null = null;
+  currentUser: User | any = "";
   notificationPermission: NotificationPermission = 'default';
   showNotificationPrompt = false;
   isLoggedIn: boolean = false;
@@ -69,7 +69,7 @@ export class AppComponent implements OnInit {
           name: user.name,
           email: '', // AuthService doesn't have email, so we'll leave it empty
           role: user.role as any,
-          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face' // Default avatar
+          avatar: user.avatar ? `${environment.api.baseUrl}/${user.avatar.replace(/^\//, '')}` : user.avatar
         };
         this.isLoggedIn = true;
       } else {
@@ -101,7 +101,7 @@ export class AppComponent implements OnInit {
         name: currentUser.name,
         email: '',
         role: currentUser.role as any,
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face'
+        avatar: currentUser.avatar ? `${environment.api.baseUrl}/${currentUser.avatar.replace(/^\//, '')}` : currentUser.avatar
       };
     } else {
       this.isLoggedIn = false;
@@ -244,16 +244,6 @@ export class AppComponent implements OnInit {
 
   triggerTestNotification(): void {
     this.realtimeService.triggerTestNotification();
-  }
-
-  login(): void {
-    // For demo purposes, simulate login by setting a user
-    this.currentUser = {
-      id: '1',
-      name: 'Demo User',
-      email: 'demo@cafex.com',
-      role: 'platform_owner'
-    };
   }
 
   logout(): void {

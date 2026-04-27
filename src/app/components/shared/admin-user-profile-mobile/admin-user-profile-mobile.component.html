@@ -1,6 +1,6 @@
 <div  class="min-h-screen via-white to-slate-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 mb-6">
   <!-- Premium Header -->
-  <div class="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gradient-to-r dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 border-b border-gray-200 dark:border-gray-700 dark:shadow-lg">
+  <div class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 dark:shadow-lg" style="min-height: 73px;">
     <div class="px-4 py-3">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4">
@@ -46,7 +46,7 @@
     </div>
   </div>
 
-  <main *ngIf="((this.loadingService.loading$ | async) === false)" class="px-4 py-4 pb-10 pt-5">
+  <main *ngIf="((this.loadingService.loading$ | async) === false)" class="px-4 py-4 pb-10 pt-6">
     <!-- Welcome Banner -->
     <div class="mb-6 animate__animated animate__fadeInUp">
       <div class="gradient-bg rounded-2xl p-6 text-white relative overflow-hidden">
