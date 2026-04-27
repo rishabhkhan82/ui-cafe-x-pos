@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CrudService } from '../../../services/crud.service';
 import { LoadingService } from '../../../services/loading.service';
 import { MockDataService, User, Restaurant } from '../../../services/mock-data.service';
@@ -14,7 +14,7 @@ import { ValidationService } from '../../../services/validation.service';
 @Component({
   selector: 'app-admin-user-profile-mobile',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './admin-user-profile-mobile.component.html',
   styleUrl: './admin-user-profile-mobile.component.css'
 })
@@ -33,8 +33,12 @@ export class AdminUserProfileMobileComponent implements OnInit {
     avatar: ''
   };
 
+  preferences = {
+    darkMode: false
+  };
+
   private crudService = inject(CrudService);
-  private loadingService = inject(LoadingService);
+  public loadingService = inject(LoadingService);
   private mockDataService = inject(MockDataService);
   private authService = inject(AuthService);
   private confirmationService = inject(ConfirmationDialogService);
@@ -309,5 +313,15 @@ export class AdminUserProfileMobileComponent implements OnInit {
     }
 
     return { isValid: true };
+  }
+
+  toggleTheme(): void {
+    this.preferences.darkMode = !this.preferences.darkMode;
+    // Apply theme change
+    document.documentElement.classList.toggle('dark', this.preferences.darkMode);
+  }
+
+  logout(): void {
+    this.authService.logout();
   }
 }

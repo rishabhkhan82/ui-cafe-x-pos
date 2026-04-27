@@ -21,138 +21,130 @@
 </header>
 
 <!-- Main KDS Content -->
-<main class="flex-1 bg-gray-100 dark:bg-gray-900 p-4 min-h-screen" style="overflow-x: hidden;">
-   <div class="max-w-full">
-
-     <!-- Fixed Search and Order Filter -->
-      <div class="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-slate-50 via-gray-100 to-slate-50 dark:from-slate-900 dark:via-gray-900 dark:to-slate-900 pb-0 shadow-lg backdrop-blur-sm" style="margin-top: 68px;">
-      <!-- Search -->
-      <div class="flex mb-3 relative py-0 bg-red-500 dark:bg-gray-300 border-b border-gray-200 dark:border-gray-700">
-        <input
-          [(ngModel)]="searchTerm"
-          (input)="onSearchChange()"
-          placeholder="Search By Order Number..."
-          class="w-full px-4 py-2 pr-12 border-t border-b border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800  backdrop-blur-sm text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 transition-all duration-300 shadow-sm hover:shadow-md"
-        />
-        <i class="fas fa-search absolute right-4 top-1/2 transform -translate-y-1/2 text-red-500 text-lg opacity-75"></i>
-      </div>
-
-      <!-- Order Status Filters -->
-      <div class="px-4 mb-0 flex gap-2 overflow-x-auto hide-scrollbar border-b border-gray-200 dark:border-gray-700 pb-3"
-           (touchstart)="onTouchStart($event)"
-           (touchmove)="onTouchMove($event)"
-           (touchend)="onTouchEnd()">
-        <button
-          *ngFor="let status of orderStatuses"
-          (click)="setActiveStatus(status.key)"
-          [class]="getStatusButtonClass(status.key) + ' flex-shrink-0'">
-          <i [class]="status.icon" class="mr-2"></i>
-          {{ status.label }}
-          <span class="ml-2 px-2 py-0.5 rounded-full text-xs"
-                [class]="getStatusCountClass(status.key)">
-            {{ getOrdersByStatus(status.key).length }}
-          </span>
-        </button>
+<main class="flex-1 bg-gray-100 dark:bg-gray-900 p-4 min-h-screen">
+  <!-- Fixed Search and Order Filter -->
+  <div class="p-3 fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-slate-50 via-gray-100 to-slate-50 dark:from-slate-900 dark:via-gray-900 dark:to-slate-900 pb-0 shadow-lg backdrop-blur-sm border-b border-gray-200 dark:border-gray-700" style="margin-top: 69px;">
+    <!-- Search -->
+    <div class="relative mb-4">
+      <input [(ngModel)]="searchTerm"
+             (input)="onSearchChange()"
+             type="text"
+             placeholder="Search by order number or customer"
+             class="w-full pl-12 pr-4 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300">
+      <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+        <i class="fas fa-search text-gray-400"></i>
       </div>
     </div>
+    <!-- Order Status Filters -->
+    <div class="flex space-x-3 overflow-x-auto pb-3">
+      <button *ngFor="let status of orderStatuses"
+              (click)="setActiveStatus(status.key)"
+              [class]="getStatusButtonClass(status.key)">
+        <i [class]="status.icon" class="mr-2"></i>{{ status.label }}
+        <span class="ml-2 px-2 py-0.5 rounded-full text-xs"
+              [class]="getStatusCountClass(status.key)">
+          {{ getOrdersByStatus(status.key).length }}
+        </span>
+      </button>
+    </div>
+  </div>
+  <div class="max-w-full">
+      <!-- Orders Grid -->
+      <div class="grid grid-cols-1 gap-4 pb-9" style="padding-top: 140px;">
+        <div *ngIf="realTimeLoader === true" class="col-span-2 w-full text-gray-500 dark:text-gray-400 flex items-center">
+          <div class="animate-spin rounded-full h-4 w-4 border-2 border-red-500 border-t-transparent mr-2"></div>
+          Loading Real Time Data...
+        </div>
 
+       <!-- Order Cards -->
+       <div *ngFor="let ord of orders" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden mb-3">
 
-     <!-- Orders Grid -->
-     <div class="grid grid-cols-2 gap-4 pb-9" style="padding-top: 104px;">
+          <!-- Card Header -->
+          <div class="border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">
+            <div class="flex justify-between items-start">
+              <div>
+                <h4 class="text-lg font-bold text-gray-900 dark:text-white">#{{ ord.order_id.split('-').pop() }}</h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Table No: {{ ord.table_number || 'Takeaway' }}</p>
+                <div class="flex items-center space-x-2 mt-1">
+                  <span class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                    {{ ord.order_type === 'DINE_IN' ? 'Dine-in' : 'Takeaway' }}
+                  </span>
+                  <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border" [class]="getStatusBadgeClass(ord.status)">
+                    <span class="w-2 h-2 rounded-full mr-2" [class]="ord.status === 'PENDING' ? 'bg-yellow-400' : ord.status === 'CONFIRMED' ? 'bg-blue-400' : ord.status === 'PREPARING' ? 'bg-orange-400' : ord.status === 'READY' ? 'bg-green-400' : ord.status === 'ON_THE_WAY' ? 'bg-blue-400' : ord.status === 'SERVED' ? 'bg-purple-400' : ord.status === 'COMPLETED' ? 'bg-gray-400' : 'bg-red-400'"></span>
+                    {{ ord.status }}
+                  </div>
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="text-xl font-bold text-primary-600 dark:text-primary-400">₹{{ ord.total_amount }}</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">Total Amount</div>
+                <div class="flex items-center space-x-1 text-sm text-gray-500 dark:text-gray-400 mt-1 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
+                  <i class="fas fa-clock"></i>
+                  <span>{{ ord.created_at | elapsedTime }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
-      <div *ngIf="realTimeLoader === true" class="col-span-2 w-full text-gray-500 dark:text-gray-400 flex items-center">
-        <div class="animate-spin rounded-full h-4 w-4 border-2 border-red-500 border-t-transparent mr-2"></div>
-        Loading Real Time Data...
-      </div>
-
-      <!-- Order Cards -->
-      <div *ngFor="let order of orders; trackBy: trackByOrderId"
-           [class]="getOrderCardClass(order)"
-           class="rounded-xl shadow-lg overflow-hidden">
-
-        <!-- Order Header -->
-        <div class="p-3 border-b" [class]="getOrderHeaderClass(order)">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-              <span class="text-base font-bold">#{{ order.order_id.split('-').pop() }}</span>
-              <span *ngIf="userRole === 'kitchen'" [class]="getPriorityBadgeClass(order)" class="px-2 py-0.5 rounded-full text-xs font-medium">
-                {{ getOrderPriority(order) }}
+          <!-- Order Items -->
+          <div class="mb-4">
+            <div class="flex items-center space-x-2 mb-2">
+              <i class="fas fa-utensils text-gray-400 text-sm"></i>
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ ord.items.length }} item{{ ord.items.length > 1 ? 's' : '' }}</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <span *ngFor="let item of ord.items" class="inline-flex items-center px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-sm text-gray-700 dark:text-gray-300">
+                {{ item.menu_item_name }}
+                <span class="ml-2 px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full font-medium">{{ item.quantity }}</span>
               </span>
             </div>
-            <div class="text-right">
-              <div class="text-xs opacity-90">{{ order.order_type === 'DINE_IN' ? 'Table' : 'Takeaway' }} <span class="font-semibold text-sm">{{ order.table_number || 'T/A' }}</span></div>
-            </div>
           </div>
-          <div class="flex items-center justify-between mt-1">
-            <div class="flex items-center space-x-1">
-              <i class="fas fa-clock text-white/70 text-xs"></i>
-              <span class="font-mono text-sm">{{ order.created_at | elapsedTime }}</span>
-            </div>
-            <span class="text-xs opacity-90">{{ order.status }}</span>
-          </div>
-        </div>
 
-        <!-- Order Summary -->
-        <div class="p-3 bg-white dark:bg-gray-800">
-          <div class="flex items-center justify-between font-semibold text-sm">
-            <span class="text-gray-900 dark:text-white">Total: ₹{{ order.total_amount }}</span>
-            <span (click)="viewOrderItems(order)" class="cursor-pointer text-blue-500 hover:text-blue-600 text-xs">{{ order.items.length }} items</span>
-          </div>
-        </div>
+          <!-- Card Footer -->
+          <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+            <div class="flex flex-wrap items-center gap-2">
+                <button *ngIf="['kitchen', 'kitchen_manager'].includes(userRole) && canMoveToNextStatus(ord)"
+                        (click)="updateOrderStatus(ord, getNextStatus(ord.status))"
+                        class="flex-1 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
+                 <i class="fas fa-check mr-2"></i>{{ getNextStatusLabel(ord.status) }}
+               </button>
 
-        <!-- Order Actions -->
-        <div class="p-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 h-full">
-          <div class="flex flex-col gap-2">
-            <!-- Kitchen: Next Status -->
-            <button *ngIf="userRole === 'kitchen' && canMoveToNextStatus(order)"
-                    (click)="updateOrderStatus(order, getNextStatus(order.status))"
-                    class="w-full py-3 px-4 bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-600 hover:via-green-600 hover:to-emerald-700 text-white rounded-xl transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-emerald-500/50 hover:shadow-2xl transform hover:scale-105 hover:-translate-y-0.5 border border-emerald-400/30">
-              <i class="fas fa-check mr-2 text-emerald-100"></i>{{ getNextStatusLabel(order.status) }}
-            </button>
+               <button *ngIf="['kitchen', 'kitchen_manager'].includes(userRole) && ord.status === 'READY'"
+                       (click)="updateOrderStatus(ord, 'CANCELLED')"
+                       class="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
+                 <i class="fas fa-times mr-2"></i>Cancel
+               </button>
 
-            <!-- Kitchen: Cancel for READY -->
-            <button *ngIf="userRole === 'kitchen' && order.status === 'READY'"
-                    (click)="updateOrderStatus(order, 'CANCELLED')"
-                    class="w-full py-3 px-4 bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white rounded-xl transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-red-500/50 hover:shadow-2xl transform hover:scale-105 hover:-translate-y-0.5 border border-red-400/30">
-              <i class="fas fa-times mr-2 text-red-100"></i>Cancel
-            </button>
+              <button *ngIf="userRole === 'waiter' && ord.status === 'READY'"
+                      (click)="markOnTheWay(ord)"
+                      class="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
+                <i class="fas fa-route mr-2"></i>On the Way
+              </button>
 
-            <!-- Waiter: On the Way for READY -->
-            <button *ngIf="userRole === 'waiter' && order.status === 'READY'"
-                    (click)="markOnTheWay(order)"
-                    class="w-full py-3 px-4 bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-600 hover:via-green-600 hover:to-emerald-700 text-white rounded-xl transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-emerald-500/50 hover:shadow-2xl transform hover:scale-105 hover:-translate-y-0.5 border border-emerald-400/30">
-              <i class="fas fa-check mr-2 text-emerald-100"></i>On the Way
-            </button>
+               <button *ngIf="userRole === 'waiter' && ord.status === 'ON_THE_WAY'"
+                       (click)="markServed(ord)"
+                       class="flex-1 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
+                <i class="fas fa-check-circle mr-2"></i>Served
+              </button>
 
-            <!-- Waiter: Served for ON_THE_WAY -->
-            <button *ngIf="userRole === 'waiter' && order.status === 'ON_THE_WAY'"
-                    (click)="markServed(order)"
-                    class="w-full py-3 px-4 bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-600 hover:via-green-600 hover:to-emerald-700 text-white rounded-xl transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-emerald-500/50 hover:shadow-2xl transform hover:scale-105 hover:-translate-y-0.5 border border-emerald-400/30">
-              <i class="fas fa-check mr-2 text-emerald-100"></i>Served
-            </button>
+               <button *ngIf="userRole === 'restaurant_owner' && ord.status === 'BILLING_REQUESTED'"
+                       (click)="markCompleted(ord)"
+                       class="flex-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
+                <i class="fas fa-check-double mr-2"></i>Completed
+              </button>
 
-            <!-- Mark Completed for restaurant_owner only -->
-            <button *ngIf="userRole === 'restaurant_owner' && order.status === 'BILLING_REQUESTED'"
-                    (click)="markCompleted(order)"
-                    class="w-full py-3 px-4 bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-600 hover:via-green-600 hover:to-emerald-700 text-white rounded-xl transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-emerald-500/50 hover:shadow-2xl transform hover:scale-105 hover:-translate-y-0.5 border border-emerald-400/30">
-              <i class="fas fa-check mr-2 text-emerald-100"></i>Mark Completed
-            </button>
+               <button (click)="viewOrder(ord)"
+                       class="flex-1 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
+                <i class="fas fa-eye mr-2"></i>Details
+              </button>
 
-            <!-- All: View Order -->
-            <button (click)="viewOrder(order)"
-                    class="w-full px-4 py-3 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 text-white rounded-xl transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-blue-500/50 hover:shadow-2xl transform hover:scale-105 hover:-translate-y-0.5 border border-blue-400/30">
-              <i class="fas fa-eye mr-2 text-blue-100"></i>View Order
-            </button>
-
-            <!-- Cancel for restaurant_owner and kitchen only -->
-            <button *ngIf="['restaurant_owner', 'kitchen'].includes(userRole) && order.status !== 'COMPLETED' && order.status !== 'CANCELLED' && order.status !== 'SERVED' && order.status !== 'BILLING_REQUESTED'"
-                    (click)="cancelOrder(order)"
-                    class="w-full py-3 px-4 bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white rounded-xl transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-red-500/50 hover:shadow-2xl transform hover:scale-105 hover:-translate-y-0.5 border border-red-400/30">
-              <i class="fas fa-times mr-2 text-red-100"></i>Cancel Order
-            </button>
+                <button *ngIf="['restaurant_owner', 'kitchen', 'kitchen_manager'].includes(userRole) && ord.status !== 'COMPLETED' && ord.status !== 'CANCELLED' && ord.status !== 'SERVED' && ord.status !== 'BILLING_REQUESTED'"
+                        (click)="cancelOrder(ord)"
+                        class="flex-1 px-3 py-2 bg-red-700 hover:bg-red-800 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
+                 <i class="fas fa-times mr-2"></i>Cancel
+               </button>
           </div>
         </div>
-      </div>
 
       <!-- Empty State -->
       <div *ngIf="orders.length === 0 && realTimeLoader === false"
@@ -163,11 +155,10 @@
           </div>
           <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No orders in {{ activeStatusLabel }}</h3>
           <p class="text-gray-500 dark:text-gray-400">Orders will appear here when customers place them.</p>
+          </div>
         </div>
       </div>
-    </div>
-
-    <!-- Pagination - Only for owner -->
+     <!-- Pagination - Only for owner -->
     <div *ngIf="userRole === 'owner' && totalPages > 1" class="mt-6 flex justify-center items-center space-x-2">
       <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1"
               class="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded disabled:opacity-50">
@@ -184,10 +175,12 @@
               class="ml-4 px-2 py-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded">
         <option *ngFor="let option of itemsPerPageOptions" [value]="option">{{ option }}</option>
       </select>
-    </div>
+      </div>
 
-   </div>
- </main>
+
+    </div>
+  </div>
+  </main>
 
 <!-- Order Details Modal -->
 <div *ngIf="selectedOrder"
@@ -339,45 +332,45 @@
 
       <!-- Action Buttons -->
       <div class="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
-        <button (click)="printOrder(selectedOrder)"
-                class="px-4 sm:px-6 py-2.5 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white rounded-lg transition-all duration-300 font-medium flex items-center text-sm sm:text-base shadow-lg hover:shadow-xl transform hover:scale-105">
-          <i class="fas fa-print mr-2"></i>Print Order
-        </button>
+          <button (click)="printOrder(selectedOrder)"
+                  class="px-4 sm:px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-all duration-200 font-medium flex items-center text-sm sm:text-base">
+           <i class="fas fa-print mr-2"></i>Print Order
+         </button>
 
-        <!-- Kitchen: Next Status -->
-        <button *ngIf="userRole === 'kitchen' && canMoveToNextStatus(selectedOrder)"
-                (click)="updateOrderStatus(selectedOrder, getNextStatus(selectedOrder.status)); closeOrderDetails()"
-                class="px-4 sm:px-6 py-2.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-all duration-300 font-medium flex items-center text-sm sm:text-base shadow-lg hover:shadow-xl transform hover:scale-105">
-          <i class="fas fa-check mr-2"></i>{{ getNextStatusLabel(selectedOrder.status) }}
-        </button>
+          <!-- Kitchen: Next Status -->
+           <button *ngIf="['kitchen', 'kitchen_manager'].includes(userRole) && canMoveToNextStatus(selectedOrder)"
+                   (click)="updateOrderStatus(selectedOrder, getNextStatus(selectedOrder.status)); closeOrderDetails()"
+                   class="px-4 sm:px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-all duration-200 font-medium flex items-center text-sm sm:text-base">
+            <i class="fas fa-check mr-2"></i>{{ getNextStatusLabel(selectedOrder.status) }}
+          </button>
 
-        <!-- Waiter: On the Way for READY -->
-        <button *ngIf="userRole === 'waiter' && selectedOrder.status === 'READY'"
-                (click)="markOnTheWay(selectedOrder); closeOrderDetails()"
-                class="px-4 sm:px-6 py-2.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-all duration-300 font-medium flex items-center text-sm sm:text-base shadow-lg hover:shadow-xl transform hover:scale-105">
-          <i class="fas fa-check mr-2"></i>On the Way
-        </button>
+         <!-- Waiter: On the Way for READY -->
+         <button *ngIf="userRole === 'waiter' && selectedOrder.status === 'READY'"
+                 (click)="markOnTheWay(selectedOrder); closeOrderDetails()"
+                 class="px-4 sm:px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all duration-200 font-medium flex items-center text-sm sm:text-base">
+           <i class="fas fa-route mr-2"></i>On the Way
+         </button>
 
-        <!-- Waiter: Served for ON_THE_WAY -->
-        <button *ngIf="userRole === 'waiter' && selectedOrder.status === 'ON_THE_WAY'"
-                (click)="markServed(selectedOrder); closeOrderDetails()"
-                class="px-4 sm:px-6 py-2.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-all duration-300 font-medium flex items-center text-sm sm:text-base shadow-lg hover:shadow-xl transform hover:scale-105">
-          <i class="fas fa-check mr-2"></i>Served
-        </button>
+         <!-- Waiter: Served for ON_THE_WAY -->
+          <button *ngIf="userRole === 'waiter' && selectedOrder.status === 'ON_THE_WAY'"
+                  (click)="markServed(selectedOrder); closeOrderDetails()"
+                  class="px-4 sm:px-6 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-all duration-200 font-medium flex items-center text-sm sm:text-base">
+           <i class="fas fa-check-circle mr-2"></i>Served
+         </button>
 
-        <!-- Mark Completed for restaurant_owner only -->
-        <button *ngIf="userRole === 'restaurant_owner' && selectedOrder.status === 'BILLING_REQUESTED'"
-                (click)="markCompleted(selectedOrder); closeOrderDetails()"
-                class="px-4 sm:px-6 py-2.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-all duration-300 font-medium flex items-center text-sm sm:text-base shadow-lg hover:shadow-xl transform hover:scale-105">
-          <i class="fas fa-check mr-2"></i>Mark Completed
-        </button>
+         <!-- Mark Completed for restaurant_owner only -->
+          <button *ngIf="userRole === 'restaurant_owner' && selectedOrder.status === 'BILLING_REQUESTED'"
+                  (click)="markCompleted(selectedOrder); closeOrderDetails()"
+                  class="px-4 sm:px-6 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg transition-all duration-200 font-medium flex items-center text-sm sm:text-base">
+           <i class="fas fa-check-double mr-2"></i>Mark Completed
+         </button>
 
-        <!-- Cancel for restaurant_owner and kitchen only -->
-        <button *ngIf="['restaurant_owner', 'kitchen'].includes(userRole) && selectedOrder.status !== 'COMPLETED' && selectedOrder.status !== 'CANCELLED'"
-                (click)="cancelOrder(selectedOrder); closeOrderDetails()"
-                class="px-4 sm:px-6 py-2.5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-300 font-medium flex items-center text-sm sm:text-base shadow-lg hover:shadow-xl transform hover:scale-105">
-          <i class="fas fa-times mr-2"></i>Cancel Order
-        </button>
+          <!-- Cancel for restaurant_owner and kitchen only -->
+           <button *ngIf="['restaurant_owner', 'kitchen', 'kitchen_manager'].includes(userRole) && selectedOrder.status !== 'COMPLETED' && selectedOrder.status !== 'CANCELLED'"
+                   (click)="cancelOrder(selectedOrder); closeOrderDetails()"
+                   class="px-4 sm:px-6 py-2 bg-red-700 hover:bg-red-800 text-white rounded-lg transition-all duration-200 font-medium flex items-center text-sm sm:text-base">
+            <i class="fas fa-times mr-2"></i>Cancel Order
+          </button>
       </div>
     </div>
   </div>

@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { interval, Subscription } from 'rxjs';
+import { interval, Subscription, Observable } from 'rxjs';
 import { Order, OrderStatus } from '../../../services/mock-data.service';
 import { RealtimeService } from '../../../services/realtime.service';
 import { MockDataService } from '../../../services/mock-data.service';
@@ -46,6 +46,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   errorMessage = '';
   searchTerm = '';
   userRole: string = 'owner'; // Default, will be set from sessionStorage
+  currentUser: any;
 
   // Swipe handling
   private touchStartX: number = 0;
@@ -71,14 +72,15 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    const currentUser = this.authService.getCurrentUser();
-    console.log('Current user:', currentUser);
-    this.userRole = currentUser ? currentUser.role : 'owner';
+    this.currentUser = this.authService.getCurrentUser();
+    console.log('Current user:', this.currentUser);
+    this.userRole = this.currentUser ? this.currentUser.role : 'owner';
     console.log('User role:', this.userRole);
     this.initializeRoleConfig();
     this.initializeTime();
     this.loadOrders();
     this.setupRealtimeSubscriptions();
+    this.loadTheme();
   }
 
   ngOnDestroy(): void {
@@ -89,13 +91,11 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     const allStatuses = [
       { key: 'all', label: 'All', icon: 'fas fa-list', color: 'bg-gray-500' },
       { key: 'PENDING', label: 'Pending', icon: 'fas fa-clock', color: 'bg-yellow-500' },
-      { key: 'CONFIRMED', label: 'Confirmed', icon: 'fas fa-check-circle', color: 'bg-teal-500' },
       { key: 'PREPARING', label: 'Preparing', icon: 'fas fa-utensils', color: 'bg-orange-500' },
       { key: 'READY', label: 'Ready', icon: 'fas fa-check-double', color: 'bg-green-500' },
       { key: 'ON_THE_WAY', label: 'On the Way', icon: 'fas fa-user-tie', color: 'bg-blue-500' },
       { key: 'SERVED', label: 'Served', icon: 'fas fa-utensils', color: 'bg-purple-500' },
       { key: 'BILLING_REQUESTED', label: 'Billing Requested', icon: 'fas fa-file-invoice-dollar', color: 'bg-indigo-500' },
-      { key: 'COMPLETED', label: 'Completed', icon: 'fas fa-check', color: 'bg-gray-500' },
       { key: 'CANCELLED', label: 'Cancelled', icon: 'fas fa-times', color: 'bg-red-500' }
     ];
     const allStatusOptions = [
@@ -104,8 +104,6 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
       { value: 'READY', label: 'Ready', icon: 'fas fa-check-circle' },
       { value: 'ON_THE_WAY', label: 'On the Way', icon: 'fas fa-user-tie' },
       { value: 'SERVED', label: 'Served', icon: 'fas fa-utensils' },
-      { value: 'COMPLETED', label: 'Completed', icon: 'fas fa-check' },
-      { value: 'CONFIRMED', label: 'Confirmed', icon: 'fas fa-check-circle' },
       { value: 'BILLING_REQUESTED', label: 'Billing Requested', icon: 'fas fa-file-invoice-dollar' },
       { value: 'CANCELLED', label: 'Cancelled', icon: 'fas fa-times' }
     ];
@@ -120,17 +118,8 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         this.statusOptions = allStatusOptions;
         break;
       case 'kitchen':
-        this.orderStatuses = [
-          { key: 'all', label: 'All', icon: 'fas fa-list', color: 'bg-gray-500' },
-          { key: 'PENDING', label: 'Pending', icon: 'fas fa-clock', color: 'bg-yellow-500' },
-          { key: 'PREPARING', label: 'Preparing', icon: 'fas fa-utensils', color: 'bg-orange-500' },
-          { key: 'READY', label: 'Ready', icon: 'fas fa-check-double', color: 'bg-green-500' }
-        ];
-        this.statusOptions = [
-          { value: 'PENDING', label: 'Pending', icon: 'fas fa-clock' },
-          { value: 'PREPARING', label: 'Preparing', icon: 'fas fa-utensils' },
-          { value: 'READY', label: 'Ready', icon: 'fas fa-check-circle' }
-        ];
+        this.orderStatuses = allStatuses;
+        this.statusOptions = allStatusOptions;
         break;
       case 'kitchen_manager':
         this.orderStatuses = allStatuses;
@@ -282,17 +271,14 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
 
   // UI Helper Methods
   getStatusButtonClass(status: string): string {
-    const baseClass = 'px-4 py-2 rounded-lg font-medium transition-colors flex items-center text-sm border';
+    const baseClass = 'px-4 py-2 rounded-full font-medium transition-colors flex items-center text-sm border whitespace-nowrap';
     const isActive = this.activeStatus === status;
 
     if (isActive) {
-      const statusConfig = this.orderStatuses.find(s => s.key === status);
-      const colorBase = statusConfig?.color.replace('bg-', '');
-      return `${baseClass} bg-transparent border-${colorBase} text-${colorBase}`;
+      return `${baseClass} border-primary-500 text-primary-500 bg-white dark:bg-gray-800`;
     }
 
-    const statusConfig = this.orderStatuses.find(s => s.key === status);
-    return `${baseClass} ${statusConfig?.color} bg-opacity-80 hover:bg-opacity-100 text-white border-transparent`;
+    return `${baseClass} border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-primary-500 hover:text-primary-500 bg-white dark:bg-gray-800`;
   }
 
   getStatusCountClass(status: string): string {
@@ -392,7 +378,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     if (!['kitchen', 'kitchen_manager'].includes(this.userRole)) return 'Update';
     const labels = {
       'PENDING': 'Start Prep',
-      'PREPARING': 'Mark Ready'
+      'PREPARING': 'Ready'
     };
 
     return labels[currentStatus as keyof typeof labels] || 'Update';
@@ -402,35 +388,41 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     const action = newStatus === 'CANCELLED' ? 'cancel' : 'update';
     const confirmed = await this.confirmationService.confirm(
       `Are you sure you want to ${action} this order to ${newStatus}?`,
-      'Confirm Action'
+      `Confirm Action (#${order.order_id.split('-').pop()})`
     );
     if (!confirmed) return;
 
-    // Update local state
-    const orderIndex = this.orders.findIndex(o => o.id === order.id);
-    if (orderIndex !== -1) {
-      this.orders[orderIndex].status = newStatus as any;
-      this.orders[orderIndex].updated_at = new Date();
+    this.loadingService.show();
 
-      if (['kitchen', 'kitchen_manager'].includes(this.userRole)) {
-        // Update all order items status
-        this.orders[orderIndex].items.forEach(item => {
-          item.status = newStatus as any;
-        });
-      }
+    // Update order status for API call
+    const updatedOrder = { ...order };
+    updatedOrder.status = newStatus as any;
+    updatedOrder.updated_at = new Date();
 
-      this.filterOrders();
-
-      // Update order via API
-      this.updateOrder(this.orders[orderIndex]);
-
-      if (['kitchen', 'kitchen_manager'].includes(this.userRole) && newStatus === 'READY') {
-        this.deductInventoryForOrder(order);
-      }
-
-      // Show notification
-      this.notificationService.success('Order Updated', `Order #ORD-${order.order_id.split('-').pop()} status updated to ${newStatus}`);
+    if (['kitchen', 'kitchen_manager'].includes(this.userRole)) {
+      // Update all order items status
+      updatedOrder.items.forEach(item => {
+        item.status = newStatus as any;
+      });
     }
+
+    this.updateOrder(updatedOrder).subscribe({
+      next: (response) => {
+        console.log('Order status updated successfully:', response);
+        this.loadingService.hide();
+        this.notificationService.success('Order Updated', `Order #ORD-${order.order_id.split('-').pop()} status updated to ${newStatus}`);
+        this.loadOrders();
+
+        if (['kitchen', 'kitchen_manager'].includes(this.userRole) && newStatus === 'READY') {
+          this.deductInventoryForOrder(order);
+        }
+      },
+      error: (error) => {
+        console.error('Error updating order status:', error);
+        this.loadingService.hide();
+        this.notificationService.error('Error', 'Failed to update order status. Please try again.');
+      }
+    });
   }
 
   private deductInventoryForOrder(order: Order): void {
@@ -445,9 +437,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     });
   }
 
-  private updateOrder(order: Order): void {
-    this.loadingService.show();
-
+  private updateOrder(order: Order): Observable<any> {
     const orderRequest = {
       order_id: order.order_id,
       customer_name: order.customer_name,
@@ -474,72 +464,211 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
       }))
     };
 
-    this.crudService.updateOrder(order.id, orderRequest).subscribe({
-      next: (response) => {
-        console.log('Order updated successfully:', response);
-        this.loadingService.hide();
-      },
-      error: (error) => {
-        console.error('Error updating order:', error);
-        this.loadingService.hide();
-      }
-    });
+    return this.crudService.updateOrder(order.id, orderRequest);
   }
 
   async markOnTheWay(order: Order): Promise<void> {
     if (this.userRole !== 'waiter') return;
     const confirmed = await this.confirmationService.confirm(
       'Are you sure you want to mark this order as On the Way?',
-      'Confirm Action'
+      `Mark On the Way (#${order.order_id.split('-').pop()})`
     );
     if (!confirmed) return;
 
-    order.status = 'ON_THE_WAY';
-    order.updated_at = new Date();
-    this.updateOrder(order);
-    this.notificationService.success('Order Updated', `Order #ORD-${order.order_id.split('-').pop()} marked as On the Way`);
+    this.loadingService.show();
+
+    const orderRequest = {
+      order_id: order.order_id,
+      customer_name: order.customer_name,
+      table_number: order.table_number,
+      status: 'ON_THE_WAY',
+      total_amount: order.total_amount,
+      special_instructions: order.special_instructions,
+      payment_status: order.payment_status,
+      payment_method: order.payment_method,
+      order_type: order.order_type,
+      priority: order.priority,
+      tax_amount: order.tax_amount,
+      order_items: order.items.map(item => ({
+        order_id: order.id,
+        menu_item_id: item.menu_item_id,
+        menu_item_name: item.menu_item_name,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total_price: item.total_price,
+        category: item.category,
+        special_instructions: item.special_instructions,
+        status: item.status,
+        id: item.id
+      }))
+    };
+
+    this.crudService.updateOrder(order.id, orderRequest).subscribe({
+      next: (response) => {
+        console.log('Order marked as On the Way successfully:', response);
+        this.loadingService.hide();
+        this.notificationService.success('Order Updated', `Order #ORD-${order.order_id.split('-').pop()} marked as On the Way`);
+        this.loadOrders();
+      },
+      error: (error) => {
+        console.error('Error marking order as On the Way:', error);
+        this.loadingService.hide();
+        this.notificationService.error('Error', 'Failed to mark order as On the Way. Please try again.');
+      }
+    });
   }
 
   async markServed(order: Order): Promise<void> {
     if (this.userRole !== 'waiter') return;
     const confirmed = await this.confirmationService.confirm(
       'Are you sure you want to mark this order as Served?',
-      'Confirm Action'
+      `Mark Served (#${order.order_id.split('-').pop()})`
     );
     if (!confirmed) return;
 
-    order.status = 'SERVED';
-    order.updated_at = new Date();
-    this.updateOrder(order);
-    this.notificationService.success('Order Updated', `Order #ORD-${order.order_id.split('-').pop()} marked as Served`);
+    this.loadingService.show();
+
+    const orderRequest = {
+      order_id: order.order_id,
+      customer_name: order.customer_name,
+      table_number: order.table_number,
+      status: 'SERVED',
+      total_amount: order.total_amount,
+      special_instructions: order.special_instructions,
+      payment_status: order.payment_status,
+      payment_method: order.payment_method,
+      order_type: order.order_type,
+      priority: order.priority,
+      tax_amount: order.tax_amount,
+      order_items: order.items.map(item => ({
+        order_id: order.id,
+        menu_item_id: item.menu_item_id,
+        menu_item_name: item.menu_item_name,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total_price: item.total_price,
+        category: item.category,
+        special_instructions: item.special_instructions,
+        status: item.status,
+        id: item.id
+      }))
+    };
+
+    this.crudService.updateOrder(order.id, orderRequest).subscribe({
+      next: (response) => {
+        console.log('Order marked as Served successfully:', response);
+        this.loadingService.hide();
+        this.notificationService.success('Order Updated', `Order #ORD-${order.order_id.split('-').pop()} marked as Served`);
+        this.loadOrders();
+      },
+      error: (error) => {
+        console.error('Error marking order as Served:', error);
+        this.loadingService.hide();
+        this.notificationService.error('Error', 'Failed to mark order as Served. Please try again.');
+      }
+    });
   }
 
   async markCompleted(order: Order): Promise<void> {
     if (this.userRole !== 'restaurant_owner') return;
     const confirmed = await this.confirmationService.confirm(
       'Are you sure you want to mark this order as Completed?',
-      'Confirm Action'
+      `Mark Completed (#${order.order_id.split('-').pop()})`
     );
     if (!confirmed) return;
 
-    order.status = 'COMPLETED';
-    order.updated_at = new Date();
-    this.updateOrder(order);
-    this.notificationService.success('Order Updated', `Order #ORD-${order.order_id.split('-').pop()} marked as Completed`);
+    this.loadingService.show();
+
+    const orderRequest = {
+      order_id: order.order_id,
+      customer_name: order.customer_name,
+      table_number: order.table_number,
+      status: 'COMPLETED',
+      total_amount: order.total_amount,
+      special_instructions: order.special_instructions,
+      payment_status: order.payment_status,
+      payment_method: order.payment_method,
+      order_type: order.order_type,
+      priority: order.priority,
+      tax_amount: order.tax_amount,
+      order_items: order.items.map(item => ({
+        order_id: order.id,
+        menu_item_id: item.menu_item_id,
+        menu_item_name: item.menu_item_name,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total_price: item.total_price,
+        category: item.category,
+        special_instructions: item.special_instructions,
+        status: item.status,
+        id: item.id
+      }))
+    };
+
+    this.crudService.updateOrder(order.id, orderRequest).subscribe({
+      next: (response) => {
+        console.log('Order marked as Completed successfully:', response);
+        this.loadingService.hide();
+        this.notificationService.success('Order Updated', `Order #ORD-${order.order_id.split('-').pop()} marked as Completed`);
+        this.loadOrders();
+      },
+      error: (error) => {
+        console.error('Error marking order as Completed:', error);
+        this.loadingService.hide();
+        this.notificationService.error('Error', 'Failed to mark order as Completed. Please try again.');
+      }
+    });
   }
 
   async cancelOrder(order: Order): Promise<void> {
     if (!['restaurant_owner', 'kitchen', 'kitchen_manager'].includes(this.userRole)) return;
     const confirmed = await this.confirmationService.confirm(
       'Are you sure you want to cancel this order? This action cannot be undone.',
-      'Cancel Order'
+      `Cancel Order (#${order.order_id.split('-').pop()})`
     );
     if (!confirmed) return;
 
-    order.status = 'CANCELLED';
-    order.updated_at = new Date();
-    this.updateOrder(order);
-    this.notificationService.success('Order Cancelled', `Order #ORD-${order.order_id.split('-').pop()} has been cancelled`);
+    this.loadingService.show();
+
+    const orderRequest = {
+      order_id: order.order_id,
+      customer_name: order.customer_name,
+      table_number: order.table_number,
+      status: 'CANCELLED',
+      total_amount: order.total_amount,
+      special_instructions: order.special_instructions,
+      payment_status: order.payment_status,
+      payment_method: order.payment_method,
+      order_type: order.order_type,
+      priority: order.priority,
+      tax_amount: order.tax_amount,
+      order_items: order.items.map(item => ({
+        order_id: order.id,
+        menu_item_id: item.menu_item_id,
+        menu_item_name: item.menu_item_name,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total_price: item.total_price,
+        category: item.category,
+        special_instructions: item.special_instructions,
+        status: item.status,
+        id: item.id
+      }))
+    };
+
+    this.crudService.updateOrder(order.id, orderRequest).subscribe({
+      next: (response) => {
+        console.log('Order cancelled successfully:', response);
+        this.loadingService.hide();
+        this.notificationService.success('Order Cancelled', `Order #ORD-${order.order_id.split('-').pop()} has been cancelled`);
+        this.loadOrders();
+      },
+      error: (error) => {
+        console.error('Error cancelling order:', error);
+        this.loadingService.hide();
+        this.notificationService.error('Error', 'Failed to cancel order. Please try again.');
+      }
+    });
   }
 
   viewOrder(order: Order): void {
@@ -734,5 +863,18 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.activeStatusLabel = 'All Orders';
     this.currentPage = 1;
     this.filterOrders();
+  }
+
+  toggleTheme(): void {
+    document.body.classList.toggle('dark');
+    const isDark = document.body.classList.contains('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  }
+
+  private loadTheme(): void {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.body.classList.add('dark');
+    }
   }
 }
