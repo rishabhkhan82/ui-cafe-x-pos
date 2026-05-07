@@ -1,5 +1,24 @@
+<!-- Guest Loading/Error Section -->
+<div *ngIf="isLoadingGuest" class="flex items-center justify-center min-h-screen">
+  <div class="text-center">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+    <p class="text-gray-600 dark:text-gray-400">Setting up your session...</p>
+  </div>
+</div>
+
+<div *ngIf="guestError && !isLoadingGuest" class="flex items-center justify-center min-h-screen">
+  <div class="text-center max-w-md mx-auto p-6 bg-red-50 dark:bg-red-900/20 rounded-lg">
+    <i class="fas fa-exclamation-triangle text-red-500 text-3xl mb-4"></i>
+    <h3 class="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">Session Error</h3>
+    <p class="text-red-600 dark:text-red-300 mb-4">{{ guestError }}</p>
+    <button (click)="retryGuestInitialization()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+      Retry
+    </button>
+  </div>
+</div>
+
 <!-- Main Content -->
-<main class="px-4 py-4 pb-20">
+<main *ngIf="!isLoadingGuest && !guestError" class="px-4 py-4 pb-20">
   <!-- Welcome Section -->
   <div class="mb-6 animate__animated animate__fadeInUp">
     <div class="gradient-bg rounded-2xl p-6 text-white relative overflow-hidden">
@@ -131,7 +150,7 @@
 </main>
 
 <!-- Floating Cart Button -->
-<div class="fixed bottom-24 right-4 z-40">
+<div *ngIf="!isLoadingGuest && !guestError" class="fixed bottom-24 right-4 z-40">
   <button (click)="viewCart()"
           class="w-14 h-14 bg-primary-500 text-white rounded-full shadow-lg hover:bg-primary-600 transition-all duration-300 floating-animation relative">
     <i class="fas fa-shopping-cart text-xl"></i>

@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
+import { CustomerGuestGuard } from './guards/customer-guest.guard';
 
 export const routes: Routes = [
   // Default redirect to admin login (main entry point)
@@ -231,13 +232,17 @@ export const routes: Routes = [
     loadComponent: () => import('./components/auth/customer-login/customer-login.component').then(m => m.CustomerLoginComponent)
   },
 
-  // Customer section with nested routing (authenticated pages only)
+  // Customer section with nested routing
   {
     path: 'customer',
-    canActivate: [authGuard],
     children: [
       {
         path: 'dashboard',
+        redirectTo: 'dashboard/1/0',
+        pathMatch: 'full'
+      },
+      {
+        path: 'dashboard/:restaurantId/:tableNumber',
         loadComponent: () => import('./components/customer/customer-dashboard/customer-dashboard.component').then(m => m.CustomerDashboardComponent)
       },
       {

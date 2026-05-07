@@ -1,16 +1,14 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  avatar: string;
-  phone: string;
-}
+import { timeout, catchError } from 'rxjs/operators';
+import { GuestAuthService, GuestCustomer } from '../../../services/guest-auth.service';
+import { AuthService } from '../../../services/auth.service';
+import { CrudService } from '../../../services/crud.service';
+import { User } from '../../../services/mock-data.service';
+import { GuestUser } from '../../../interfaces';
 
 interface MenuItem {
   id: string;
@@ -50,10 +48,19 @@ interface MenuCategory {
 })
 export class CustomerDashboardComponent implements OnInit, OnDestroy {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private guestAuthService = inject(GuestAuthService);
+  private authService = inject(AuthService);
+  private crudService = inject(CrudService);
   private subscriptions: Subscription[] = [];
 
   // Component state
   currentUser: User | null = null;
+  currentGuest: GuestCustomer | null = null;
+  isLoadingGuest: boolean = false;
+  guestError: string | null = null;
+  restaurantId: number = 1;
+  tableNumber: number = 0;
   currentTable: string = '12';
   restaurantRating: string = '4.5';
   estimatedDeliveryTime: string = '25-30';
@@ -173,23 +180,173 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   ];
 
   ngOnInit(): void {
+    // Extract route parameters first
+    const params = this.route.snapshot.params;
+    const restaurantIdParam = params['restaurantId'];
+    const tableNumberParam = params['tableNumber'];
+    this.restaurantId = restaurantIdParam ? +restaurantIdParam : 1;
+    this.tableNumber = tableNumberParam ? +tableNumberParam : 0;
+
+    // Store table number for guest session
+    localStorage.setItem('guest_table_no', this.tableNumber.toString());
+
+    console.log('Route params:', params);
+    console.log('Parsed restaurantId:', this.restaurantId, 'tableNumber:', this.tableNumber);
+
     this.initializeUser();
+    this.initializeGuest();
     this.loadCartCount();
   }
+
+
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   private initializeUser(): void {
-    // Simulate current user (would come from auth service)
+    // Check if guest user is already stored
+    const storedGuestUser = this.guestAuthService.getCurrentGuestUser();
+    if (storedGuestUser) {
+      this.currentUser = {
+        id: storedGuestUser.customer.customerId,
+        name: storedGuestUser.customer.name || 'Guest',
+        email: storedGuestUser.customer.email || '',
+        avatar: storedGuestUser.customer.avatar || '',
+        phone: storedGuestUser.customer.phone || '',
+        role: 'customer',
+        username: storedGuestUser.customer.customerId,
+        password: '',
+        user_type: 'customer',
+        is_active: 'true',
+        restaurant_id: storedGuestUser.customer.restaurant?.id?.toString(),
+        member_since: storedGuestUser.customer.createdAt ? new Date(storedGuestUser.customer.createdAt) : new Date(),
+        created_at: storedGuestUser.customer.createdAt ? new Date(storedGuestUser.customer.createdAt) : new Date(),
+        updated_at: storedGuestUser.customer.updatedAt ? new Date(storedGuestUser.customer.updatedAt) : new Date()
+      };
+      this.authService.setCurrentUser(this.currentUser);
+    }
+  }
+
+  private initializeGuest(): void {
+    // Check if guest is already available
+    if (this.guestAuthService.isGuestAvailable()) {
+      // Guest exists, try to load data
+      this.loadExistingGuest();
+    } else {
+      // No guest, create new one
+      this.createNewGuest();
+    }
+  }
+
+  private loadExistingGuest(): void {
+    this.isLoadingGuest = true;
+    this.guestError = null;
+
+    // Get restaurant ID from route params
+    const restaurantIdParam = this.route.snapshot.paramMap.get('restaurantId');
+    const restaurantId = restaurantIdParam ? +restaurantIdParam : 1;
+
+    // Try to fetch existing guest data
+    const guestId = this.guestAuthService.getStoredGuestId();
+    if (guestId && guestId !== 'undefined' && guestId.trim() !== '') {
+      this.crudService.getCustomerByCustomerId(guestId).subscribe({
+        next: (response) => {
+          if (response && response.customerId) {
+            const guest = response;
+            this.currentGuest = guest;
+            this.setCurrentUserFromGuest(guest);
+            this.isLoadingGuest = false;
+          } else {
+            // Guest ID exists but not in DB, create new
+            this.createNewGuest();
+          }
+        },
+        error: (error) => {
+          console.error('Error loading existing guest:', error);
+          this.guestError = 'Unable to load guest session. Please try refreshing the page.';
+          this.isLoadingGuest = false;
+        }
+      });
+    } else {
+      // No guest ID stored, create new guest
+      this.createNewGuest();
+    }
+  }
+
+  private createNewGuest(): void {
+    this.isLoadingGuest = true;
+    this.guestError = null;
+
+    console.log('Creating new guest for restaurantId:', this.restaurantId);
+
+    this.guestAuthService.ensureGuestExists(this.restaurantId).pipe(
+      timeout(15000),
+      catchError(error => {
+        console.error('Guest creation timeout or error:', error);
+        throw new Error('Unable to create guest session. Please check your connection and try again.');
+      })
+    ).subscribe({
+      next: (guest) => {
+        this.currentGuest = guest;
+        this.isLoadingGuest = false;
+        if (guest) {
+          this.setCurrentUserFromGuest(guest);
+        } else {
+          this.guestError = 'Failed to create guest session. Please refresh the page.';
+        }
+      },
+      error: (error) => {
+        console.error('Guest creation error:', error);
+        this.guestError = 'Unable to create guest session. Please check your connection and try again.';
+        this.isLoadingGuest = false;
+      }
+    });
+  }
+
+  private setCurrentUserFromGuest(guest: GuestCustomer): void {
+    const customerId = guest.customerId || 'guest-' + Date.now();
+
     this.currentUser = {
-      id: 'user-1',
-      name: 'Amit Patil',
-      email: 'amit.patil@example.com',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
-      phone: '+91 98765 43210'
+      id: customerId,
+      name: guest.name || 'Guest',
+      email: guest.email || '',
+      avatar: guest.avatar || '',
+      phone: guest.phone || '',
+      role: 'customer',
+      username: customerId,
+      password: '',
+      user_type: 'customer',
+      is_active: 'true',
+      restaurant_id: guest.restaurant?.id?.toString() || this.restaurantId.toString(),
+      member_since: guest.createdAt ? new Date(guest.createdAt) : new Date(),
+      created_at: guest.createdAt ? new Date(guest.createdAt) : new Date(),
+      updated_at: guest.updatedAt ? new Date(guest.updatedAt) : new Date()
     };
+
+    const guestUser: GuestUser = {
+      id: customerId,
+      customer_id: customerId,
+      name: guest.name || 'Guest',
+      email: guest.email || '',
+      phone: guest.phone || '',
+      avatar: guest.avatar || '',
+      restaurant_id: guest.restaurant?.id?.toString() || this.restaurantId.toString(),
+      member_since: guest.createdAt ? new Date(guest.createdAt) : new Date(),
+      total_orders: 0,
+      total_spent: 0,
+      loyalty_points: 0,
+      created_at: guest.createdAt ? new Date(guest.createdAt) : new Date(),
+      updated_at: guest.updatedAt ? new Date(guest.updatedAt) : new Date(),
+      role: 'customer',
+      username: customerId,
+      password: '',
+      user_type: 'customer',
+      is_active: 'true'
+    };
+
+    this.guestAuthService.storeGuestUser(guestUser);
+    this.authService.setCurrentUser(this.currentUser);
   }
 
   private loadCartCount(): void {
@@ -238,5 +395,9 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   viewCart(): void {
     // Navigate to cart or show cart modal
     console.log('Viewing cart');
+  }
+
+  retryGuestInitialization(): void {
+    this.initializeGuest();
   }
 }

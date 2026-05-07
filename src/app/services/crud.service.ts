@@ -165,9 +165,12 @@ export class CrudService {
     }
 
     // Add Authorization header if token exists
-    const token = sessionStorage.getItem('accessToken');
-    if (token) {
-      httpHeaders = httpHeaders.set('Authorization', `Bearer ${token}`);
+    let token = sessionStorage.getItem('accessToken');
+
+    // If no session token, check for guest token
+    if (!token) {
+      const guestUser = JSON.parse(localStorage.getItem('currentGuestUser') || '{}');
+      token = guestUser.accessToken;
     }
 
     // Custom headers
@@ -489,5 +492,41 @@ export class CrudService {
 
   deleteSubscriptionHistory(id: string | number): Observable<any> {
     return this.deleteData('subscription-histories', {}, id);
+  }
+
+  // Customer operations
+
+  getCustomers(params?: CrudParams): Observable<any> {
+    return this.getData('customers', params);
+  }
+
+  getCustomerById(id: string | number): Observable<any> {
+    return this.getData(`customers/${id}`);
+  }
+
+  getCustomerByCustomerId(customerId: string): Observable<any> {
+    return this.getData(`customers/by-customer-id/${customerId}`);
+  }
+
+  createCustomer(payload: any): Observable<any> {
+    return this.postData('customers', payload);
+  }
+
+  // Customer Auth operations (no token required)
+  createCustomerAuth(payload: any): Observable<any> {
+    const url = this.buildUrl('auth/customer/create');
+    const httpHeaders = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    return this.http.post(url, payload, { headers: httpHeaders });
+  }
+
+  updateCustomer(id: string | number, payload: any): Observable<any> {
+    return this.putData('customers', payload, {}, id);
+  }
+
+  deleteCustomer(id: string | number): Observable<any> {
+    return this.deleteData('customers', {}, id);
   }
 }

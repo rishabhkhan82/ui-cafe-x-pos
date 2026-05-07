@@ -1,3 +1,25 @@
+// Guest User interface for customer guest sessions
+export interface GuestUser {
+  id: string;
+  customer_id: string;
+  name: string;
+  email: string;
+  phone: string;
+  avatar: string;
+  restaurant_id: string;
+  member_since: Date;
+  total_orders: number;
+  total_spent: number;
+  loyalty_points: number;
+  created_at: Date;
+  updated_at: Date;
+  role: 'customer';
+  username: string;
+  password: string;
+  user_type: 'customer';
+  is_active: string;
+}
+
 // Export all interfaces from this barrel file
 // export * from './user.interface';
 // export * from './menu.interface';
