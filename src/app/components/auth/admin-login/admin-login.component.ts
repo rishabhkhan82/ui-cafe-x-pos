@@ -97,7 +97,7 @@ export class AdminLoginComponent implements OnInit, OnDestroy {
             this.router.navigate(['/waiter-navigation-mobile']);
             break;
           case 'customer':
-            this.router.navigate(['/customer-dashboard']);
+            this.router.navigate(['customer/dashboard']);
             break;
           default:
             this.errorMessage = 'Invalid user role for admin access';

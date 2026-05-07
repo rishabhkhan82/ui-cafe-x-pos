@@ -237,6 +237,10 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       {
+        path: 'dashboard',
+        loadComponent: () => import('./components/customer/customer-dashboard/customer-dashboard.component').then(m => m.CustomerDashboardComponent)
+      },
+      {
         path: 'menu',
         loadComponent: () => import('./components/customer/customer-menu/customer-menu.component').then(m => m.CustomerMenuComponent)
       },
@@ -253,13 +257,13 @@ export const routes: Routes = [
         loadComponent: () => import('./components/customer/customer-profile/customer-profile.component').then(m => m.CustomerProfileComponent)
       },
       {
-        path: 'dashboard',
-        loadComponent: () => import('./components/customer/customer-dashboard/customer-dashboard.component').then(m => m.CustomerDashboardComponent)
+        path: 'customer-cart',
+        loadComponent: () => import('./components/customer/customer-cart/customer-cart.component').then(m => m.CustomerCartComponent)
       },
       // Default redirect for customer
       {
         path: '',
-        redirectTo: 'menu',
+        redirectTo: 'dashboard',
         pathMatch: 'full'
       }
     ]
