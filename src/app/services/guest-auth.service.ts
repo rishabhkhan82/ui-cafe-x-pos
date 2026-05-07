@@ -25,7 +25,6 @@ export class GuestAuthService {
   public guest$ = this.guestSubject.asObservable();
 
   private readonly GUEST_ID_KEY = 'guest_id';
-  private readonly GUEST_USER_KEY = 'guest_user';
   private readonly CURRENT_GUEST_USER_KEY = 'currentGuestUser';
 
   constructor(private crudService: CrudService, private authService: AuthService) {}
@@ -134,20 +133,7 @@ export class GuestAuthService {
     return !!this.getStoredGuestId();
   }
 
-  /**
-   * Stores complete guest user data in localStorage.
-   */
-  storeGuestUser(guestUser: GuestUser): void {
-    localStorage.setItem(this.GUEST_USER_KEY, JSON.stringify(guestUser));
-  }
 
-  /**
-   * Retrieves complete guest user data from localStorage.
-   */
-  getStoredGuestUser(): GuestUser | null {
-    const stored = localStorage.getItem(this.GUEST_USER_KEY);
-    return stored ? JSON.parse(stored) : null;
-  }
 
   /**
    * Stores complete guest response (customer + token) in localStorage.
@@ -169,7 +155,6 @@ export class GuestAuthService {
    */
   clearGuest(): void {
     localStorage.removeItem(this.GUEST_ID_KEY);
-    localStorage.removeItem(this.GUEST_USER_KEY);
     localStorage.removeItem(this.CURRENT_GUEST_USER_KEY);
     this.guestSubject.next(null);
   }

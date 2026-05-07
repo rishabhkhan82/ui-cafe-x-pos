@@ -4,7 +4,6 @@ import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
 import { GuestAuthService } from '../services/guest-auth.service';
-import { GuestUser } from '../interfaces';
 
 @Injectable({
   providedIn: 'root'
@@ -27,30 +26,31 @@ export class CustomerGuestGuard implements CanActivate {
     }
 
     // For other customer routes, check if guest user exists in localStorage
-    const storedGuestUser = this.guestAuthService.getStoredGuestUser();
-    if (!storedGuestUser || storedGuestUser.role !== 'customer') {
+    const currentGuestUser = this.guestAuthService.getCurrentGuestUser();
+    if (!currentGuestUser || !currentGuestUser.customer) {
       // Redirect to dashboard to create guest
       this.router.navigate(['/customer/dashboard/1/0']);
       return false;
     }
 
-    // Set the current user from stored guest user if not already set
+    // Set the current user from current guest user if not already set
     if (!currentUser) {
+      const customer = currentGuestUser.customer;
       const userFromGuest = {
-        id: storedGuestUser.id,
-        username: storedGuestUser.username,
-        password: storedGuestUser.password,
-        name: storedGuestUser.name,
-        email: storedGuestUser.email,
-        phone: storedGuestUser.phone,
+        id: customer.customerId,
+        username: customer.customerId,
+        password: '',
+        name: customer.name || 'Guest',
+        email: customer.email || '',
+        phone: customer.phone || '',
         role: 'customer' as const,
         user_type: 'customer' as const,
-        avatar: storedGuestUser.avatar,
-        restaurant_id: storedGuestUser.restaurant_id,
-        member_since: storedGuestUser.member_since,
-        created_at: storedGuestUser.created_at,
-        updated_at: storedGuestUser.updated_at,
-        is_active: storedGuestUser.is_active
+        avatar: customer.avatar || '',
+        restaurant_id: customer.restaurant?.id?.toString() || '',
+        member_since: customer.createdAt ? new Date(customer.createdAt) : new Date(),
+        created_at: customer.createdAt ? new Date(customer.createdAt) : new Date(),
+        updated_at: customer.updatedAt ? new Date(customer.updatedAt) : new Date(),
+        is_active: 'true'
       };
       this.authService.setCurrentUser(userFromGuest);
     }

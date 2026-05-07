@@ -8,7 +8,6 @@ import { GuestAuthService, GuestCustomer } from '../../../services/guest-auth.se
 import { AuthService } from '../../../services/auth.service';
 import { CrudService } from '../../../services/crud.service';
 import { User } from '../../../services/mock-data.service';
-import { GuestUser } from '../../../interfaces';
 
 interface MenuItem {
   id: string;
@@ -324,28 +323,6 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
       updated_at: guest.updatedAt ? new Date(guest.updatedAt) : new Date()
     };
 
-    const guestUser: GuestUser = {
-      id: customerId,
-      customer_id: customerId,
-      name: guest.name || 'Guest',
-      email: guest.email || '',
-      phone: guest.phone || '',
-      avatar: guest.avatar || '',
-      restaurant_id: guest.restaurant?.id?.toString() || this.restaurantId.toString(),
-      member_since: guest.createdAt ? new Date(guest.createdAt) : new Date(),
-      total_orders: 0,
-      total_spent: 0,
-      loyalty_points: 0,
-      created_at: guest.createdAt ? new Date(guest.createdAt) : new Date(),
-      updated_at: guest.updatedAt ? new Date(guest.updatedAt) : new Date(),
-      role: 'customer',
-      username: customerId,
-      password: '',
-      user_type: 'customer',
-      is_active: 'true'
-    };
-
-    this.guestAuthService.storeGuestUser(guestUser);
     this.authService.setCurrentUser(this.currentUser);
   }
 
