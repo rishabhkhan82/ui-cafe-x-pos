@@ -35,41 +35,18 @@ export class GuestAuthService {
    * If not, generates new guest ID and creates customer in DB.
    */
   ensureGuestExists(restaurantId: number): Observable<GuestCustomer | null> {
-    const guestId = this.getStoredGuestId();
-
-    if (guestId && guestId !== 'undefined' && guestId.trim() !== '') {
-      // Existing guest - fetch from DB
-      return this.crudService.getCustomerByCustomerId(guestId).pipe(
-        map(response => {
-          if (response && response.data) {
-            const guest = response.data;
-            this.guestSubject.next(guest);
-            return guest;
-          } else {
-            // Guest ID exists but not in DB - create new
-            return null;
-          }
-        }),
-        catchError(() => {
-          // Error fetching - create new
-          return of(null);
-        }),
-        switchMap(guest => {
-          if (!guest) {
-            return this.createNewGuest(restaurantId);
-          }
-          return of(guest);
-        })
-      );
+    // Check if we have stored guest data
+    const currentGuestUser = this.getCurrentGuestUser();
+    if (currentGuestUser && currentGuestUser.customer) {
+      // Return existing guest data
+      this.guestSubject.next(currentGuestUser.customer);
+      return of(currentGuestUser.customer);
     } else {
-      // No guest ID - create new
+      // No stored guest data - create new
       return this.createNewGuest(restaurantId);
     }
   }
 
-  /**
-   * Creates a new guest customer in the DB.
-   */
   /**
    * Creates a new guest customer in the DB.
    */

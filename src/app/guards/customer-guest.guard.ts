@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
 import { GuestAuthService } from '../services/guest-auth.service';
+import { GuestUser } from '../interfaces';
 
 @Injectable({
   providedIn: 'root'

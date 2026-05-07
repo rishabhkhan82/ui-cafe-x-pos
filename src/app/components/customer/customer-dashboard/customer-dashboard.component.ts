@@ -242,33 +242,16 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
     this.isLoadingGuest = true;
     this.guestError = null;
 
-    // Get restaurant ID from route params
-    const restaurantIdParam = this.route.snapshot.paramMap.get('restaurantId');
-    const restaurantId = restaurantIdParam ? +restaurantIdParam : 1;
-
-    // Try to fetch existing guest data
-    const guestId = this.guestAuthService.getStoredGuestId();
-    if (guestId && guestId !== 'undefined' && guestId.trim() !== '') {
-      this.crudService.getCustomerByCustomerId(guestId).subscribe({
-        next: (response) => {
-          if (response && response.customerId) {
-            const guest = response;
-            this.currentGuest = guest;
-            this.setCurrentUserFromGuest(guest);
-            this.isLoadingGuest = false;
-          } else {
-            // Guest ID exists but not in DB, create new
-            this.createNewGuest();
-          }
-        },
-        error: (error) => {
-          console.error('Error loading existing guest:', error);
-          this.guestError = 'Unable to load guest session. Please try refreshing the page.';
-          this.isLoadingGuest = false;
-        }
-      });
+    // Try to get existing guest data from localStorage
+    const currentGuestUser = this.guestAuthService.getCurrentGuestUser();
+    if (currentGuestUser && currentGuestUser.customer) {
+      // Use stored guest data
+      const guest = currentGuestUser.customer;
+      this.currentGuest = guest;
+      this.setCurrentUserFromGuest(guest);
+      this.isLoadingGuest = false;
     } else {
-      // No guest ID stored, create new guest
+      // No stored guest data, create new guest
       this.createNewGuest();
     }
   }
