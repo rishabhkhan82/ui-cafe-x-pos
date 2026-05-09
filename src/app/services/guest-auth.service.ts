@@ -55,7 +55,7 @@ export class GuestAuthService {
       name: 'Guest',
       email: '',
       phone: '',
-      avatar: '/uploads/images/avatar.avif',
+      avatar: '/uploads/images/guest/guest-default-avatar.jpg',
       restaurantId: restaurantId
     };
 

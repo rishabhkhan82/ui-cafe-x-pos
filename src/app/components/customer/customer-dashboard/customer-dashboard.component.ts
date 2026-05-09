@@ -54,7 +54,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
 
   // Component state
-  currentUser: User | null = null;
+  currentUser: User | any = null;
   currentGuest: GuestCustomer | null = null;
   isLoadingGuest: boolean = false;
   guestError: string | null = null;
@@ -192,7 +192,6 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
     console.log('Route params:', params);
     console.log('Parsed restaurantId:', this.restaurantId, 'tableNumber:', this.tableNumber);
 
-    this.initializeUser();
     this.initializeGuest();
     this.loadCartCount();
   }
@@ -208,8 +207,9 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
     const storedGuestUser = this.guestAuthService.getCurrentGuestUser();
     if (storedGuestUser) {
       this.currentUser = {
-        id: storedGuestUser.customer.customerId,
-        name: storedGuestUser.customer.name || 'Guest',
+        id: storedGuestUser.customer.id,
+        customer_id: storedGuestUser.customer.customerId,
+        name: storedGuestUser.customer.name + '-' + storedGuestUser.customer.id,
         email: storedGuestUser.customer.email || '',
         avatar: storedGuestUser.customer.avatar || '',
         phone: storedGuestUser.customer.phone || '',
@@ -250,6 +250,9 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
       this.currentGuest = guest;
       this.setCurrentUserFromGuest(guest);
       this.isLoadingGuest = false;
+      setTimeout(() => {
+        this.initializeUser();
+      }, 100);
     } else {
       // No stored guest data, create new guest
       this.createNewGuest();
@@ -274,6 +277,9 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
         this.isLoadingGuest = false;
         if (guest) {
           this.setCurrentUserFromGuest(guest);
+          setTimeout(() => {
+            this.initializeUser();
+          }, 100);
         } else {
           this.guestError = 'Failed to create guest session. Please refresh the page.';
         }
