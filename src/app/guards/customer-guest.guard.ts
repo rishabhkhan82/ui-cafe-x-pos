@@ -20,17 +20,19 @@ export class CustomerGuestGuard implements CanActivate {
   canActivate(route: ActivatedRouteSnapshot): Observable<boolean> | Promise<boolean> | boolean {
     const currentUser = this.authService.getCurrentUser();
     const isDashboardRoute = route.routeConfig?.path?.startsWith('dashboard');
+    const restaurantId = route.params['restaurantId'] ? +route.params['restaurantId'] : 1; // Default to 1 if not present
 
     // Allow dashboard access always for guest creation (no login required)
     if (isDashboardRoute) {
       return true;
     }
 
-    // For other customer routes, check if guest user exists in localStorage
-    const currentGuestUser = this.guestAuthService.getCurrentGuestUser();
+    // For other customer routes, check if guest user exists in localStorage for the restaurant
+    const currentGuestUser = this.guestAuthService.getCurrentGuestUser(restaurantId);
     if (!currentGuestUser || !currentGuestUser.customer) {
-      // Redirect to dashboard to create guest
-      this.router.navigate(['/customer/dashboard/1/0']);
+      // Redirect to dashboard to create guest for the restaurant
+      const tableNumber = route.params['tableNumber'] ? +route.params['tableNumber'] : 0;
+      this.router.navigate([`/customer/dashboard/${restaurantId}/${tableNumber}`]);
       return false;
     }
 

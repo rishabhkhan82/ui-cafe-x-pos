@@ -186,8 +186,8 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
     this.restaurantId = restaurantIdParam ? +restaurantIdParam : 1;
     this.tableNumber = tableNumberParam ? +tableNumberParam : 0;
 
-    // Store table number for guest session
-    localStorage.setItem('guest_table_no', this.tableNumber.toString());
+    // Store table number for guest session scoped to restaurant
+    localStorage.setItem(`guest_table_no_${this.restaurantId}`, this.tableNumber.toString());
 
     console.log('Route params:', params);
     console.log('Parsed restaurantId:', this.restaurantId, 'tableNumber:', this.tableNumber);
@@ -203,8 +203,8 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   }
 
   private initializeUser(): void {
-    // Check if guest user is already stored
-    const storedGuestUser = this.guestAuthService.getCurrentGuestUser();
+    // Check if guest user is already stored for this restaurant
+    const storedGuestUser = this.guestAuthService.getCurrentGuestUser(this.restaurantId);
     if (storedGuestUser) {
       this.currentUser = {
         id: storedGuestUser.customer.id,
@@ -228,8 +228,8 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   }
 
   private initializeGuest(): void {
-    // Check if guest is already available
-    if (this.guestAuthService.isGuestAvailable()) {
+    // Check if guest is already available for this restaurant
+    if (this.guestAuthService.isGuestAvailable(this.restaurantId)) {
       // Guest exists, try to load data
       this.loadExistingGuest();
     } else {
@@ -242,8 +242,8 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
     this.isLoadingGuest = true;
     this.guestError = null;
 
-    // Try to get existing guest data from localStorage
-    const currentGuestUser = this.guestAuthService.getCurrentGuestUser();
+    // Try to get existing guest data from localStorage for this restaurant
+    const currentGuestUser = this.guestAuthService.getCurrentGuestUser(this.restaurantId);
     if (currentGuestUser && currentGuestUser.customer) {
       // Use stored guest data
       const guest = currentGuestUser.customer;
