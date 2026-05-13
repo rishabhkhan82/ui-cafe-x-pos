@@ -235,6 +235,7 @@ export const routes: Routes = [
   // Customer section with nested routing
   {
     path: 'customer',
+    canActivate: [CustomerGuestGuard],
     children: [
       {
         path: 'dashboard',

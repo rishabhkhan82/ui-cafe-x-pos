@@ -69,6 +69,10 @@ export class AuthService {
     this.currentUserSubject.next(user);
   }
 
+  setGuestAccessToken(accessToken: string): void {
+    sessionStorage.setItem('accessToken', accessToken);
+  }
+
   isLoggedIn(): boolean {
     return this.getCurrentUser() !== null;
   }

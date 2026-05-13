@@ -34,13 +34,13 @@ export class GuestAuthService {
    * If guest ID exists in localStorage, fetches customer data.
    * If not, generates new guest ID and creates customer in DB.
    */
-  ensureGuestExists(restaurantId: number): Observable<GuestCustomer | null> {
+  ensureGuestExists(restaurantId: number): Observable<any> {
     // Check if we have stored guest data for this restaurant
     const currentGuestUser = this.getCurrentGuestUser(restaurantId);
     if (currentGuestUser && currentGuestUser.customer) {
       // Return existing guest data
       this.guestSubject.next(currentGuestUser.customer);
-      return of(currentGuestUser.customer);
+      return of(currentGuestUser);
     } else {
       // No stored guest data for this restaurant - create new
       return this.createNewGuest(restaurantId);
@@ -50,7 +50,7 @@ export class GuestAuthService {
   /**
    * Creates a new guest customer in the DB.
    */
-  private createNewGuest(restaurantId: number): Observable<GuestCustomer> {
+  private createNewGuest(restaurantId: number): Observable<any> {
     const guestData: any = {
       name: 'Guest',
       email: '',
@@ -70,7 +70,7 @@ export class GuestAuthService {
           // Store the customerId from the API response scoped to restaurant
           this.storeGuestId(guest.customerId, restaurantId);
           this.guestSubject.next(guest as GuestCustomer);
-          return guest as GuestCustomer;
+          return response; // Return full response including accessToken
         } else {
           throw new Error('Failed to create guest customer');
         }
@@ -124,7 +124,14 @@ export class GuestAuthService {
    */
   getCurrentGuestUser(restaurantId: number): any {
     const stored = localStorage.getItem(`${this.CURRENT_GUEST_USER_KEY_PREFIX}${restaurantId}`);
-    return stored ? JSON.parse(stored) : null;
+    const guestData = stored ? JSON.parse(stored) : null;
+
+    // Update the subject with the retrieved guest data if it exists
+    if (guestData && guestData.customer) {
+      this.guestSubject.next(guestData.customer);
+    }
+
+    return guestData;
   }
 
   /**
@@ -138,6 +145,11 @@ export class GuestAuthService {
         localStorage.removeItem(key);
       }
     });
+
+    // Clear current restaurant context
+    sessionStorage.removeItem('current_customer_restaurant_id');
+    sessionStorage.removeItem('accessToken');
+
     this.guestSubject.next(null);
   }
 
@@ -151,5 +163,29 @@ export class GuestAuthService {
    */
   hasGuest(): boolean {
     return this.getCurrentGuest() !== null;
+  }
+
+  /**
+   * Gets the current restaurant ID from session storage.
+   */
+  getCurrentRestaurantId(): number | null {
+    const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
+    return restaurantId ? parseInt(restaurantId) : null;
+  }
+
+  /**
+   * Sets the current restaurant context and updates the access token.
+   */
+  setCurrentRestaurantContext(restaurantId: number): void {
+    sessionStorage.setItem('current_customer_restaurant_id', restaurantId.toString());
+
+    // Get the guest user for this restaurant and set the token
+    const guestUser = this.getCurrentGuestUser(restaurantId);
+    if (guestUser && guestUser.accessToken) {
+      sessionStorage.setItem('accessToken', guestUser.accessToken);
+      console.log('Set access token for restaurant', restaurantId);
+    } else {
+      console.warn('No guest user or token found for restaurant', restaurantId);
+    }
   }
 }

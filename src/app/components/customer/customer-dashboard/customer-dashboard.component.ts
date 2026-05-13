@@ -58,7 +58,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   currentGuest: GuestCustomer | null = null;
   isLoadingGuest: boolean = false;
   guestError: string | null = null;
-  restaurantId: number = 1;
+  restaurantId: number = 0;
   tableNumber: number = 0;
   currentTable: string = '12';
   restaurantRating: string = '4.5';
@@ -183,11 +183,14 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
     const params = this.route.snapshot.params;
     const restaurantIdParam = params['restaurantId'];
     const tableNumberParam = params['tableNumber'];
-    this.restaurantId = restaurantIdParam ? +restaurantIdParam : 1;
-    this.tableNumber = tableNumberParam ? +tableNumberParam : 0;
+    this.restaurantId = restaurantIdParam;
+    this.tableNumber = tableNumberParam;
 
     // Store table number for guest session scoped to restaurant
     localStorage.setItem(`guest_table_no_${this.restaurantId}`, this.tableNumber.toString());
+
+    // Set current restaurant context and token
+    this.guestAuthService.setCurrentRestaurantContext(this.restaurantId);
 
     console.log('Route params:', params);
     console.log('Parsed restaurantId:', this.restaurantId, 'tableNumber:', this.tableNumber);
@@ -248,7 +251,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
       // Use stored guest data
       const guest = currentGuestUser.customer;
       this.currentGuest = guest;
-      this.setCurrentUserFromGuest(guest);
+      this.setCurrentUserFromGuest(currentGuestUser);
       this.isLoadingGuest = false;
       setTimeout(() => {
         this.initializeUser();
@@ -272,11 +275,11 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
         throw new Error('Unable to create guest session. Please check your connection and try again.');
       })
     ).subscribe({
-      next: (guest) => {
-        this.currentGuest = guest;
+      next: (guestResponse) => {
+        this.currentGuest = guestResponse.customer;
         this.isLoadingGuest = false;
-        if (guest) {
-          this.setCurrentUserFromGuest(guest);
+        if (guestResponse) {
+          this.setCurrentUserFromGuest(guestResponse);
           setTimeout(() => {
             this.initializeUser();
           }, 100);
@@ -292,7 +295,10 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  private setCurrentUserFromGuest(guest: GuestCustomer): void {
+  private setCurrentUserFromGuest(guestResponse: any): void {
+    const guest = guestResponse.customer;
+    const accessToken = guestResponse.accessToken;
+
     const customerId = guest.customerId || 'guest-' + Date.now();
 
     this.currentUser = {
@@ -313,6 +319,9 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
     };
 
     this.authService.setCurrentUser(this.currentUser);
+    if (accessToken) {
+      this.authService.setGuestAccessToken(accessToken);
+    }
   }
 
   private loadCartCount(): void {

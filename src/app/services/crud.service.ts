@@ -165,12 +165,9 @@ export class CrudService {
     }
 
     // Add Authorization header if token exists
-    let token = sessionStorage.getItem('accessToken');
-
-    // If no session token, check for guest token
-    if (!token) {
-      const guestUser = JSON.parse(localStorage.getItem('currentGuestUser') || '{}');
-      token = guestUser.accessToken;
+    const token = sessionStorage.getItem('accessToken');
+    if (token) {
+      httpHeaders = httpHeaders.set('Authorization', `Bearer ${token}`);
     }
 
     // Custom headers
