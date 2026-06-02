@@ -519,6 +519,16 @@ export class CrudService {
     return this.http.post(url, payload, { headers: httpHeaders });
   }
 
+  validateCustomer(customerId: string | number, restaurantId: string | number): Observable<any> {
+    const url = this.buildUrl(`auth/customer/validate/${restaurantId}/${customerId}`);
+    console.log('*** validateCustomer called with URL:', url);
+    const httpHeaders = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    return this.http.get(url, { headers: httpHeaders });
+  }
+
   updateCustomer(id: string | number, payload: any): Observable<any> {
     return this.putData('customers', payload, {}, id);
   }

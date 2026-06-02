@@ -116,7 +116,27 @@ export class GuestAuthService {
    * Stores complete guest response (customer + token) in localStorage scoped to restaurant.
    */
   storeCurrentGuestUser(guestResponse: any, restaurantId: number): void {
-    localStorage.setItem(`${this.CURRENT_GUEST_USER_KEY_PREFIX}${restaurantId}`, JSON.stringify(guestResponse));
+    const key = `${this.CURRENT_GUEST_USER_KEY_PREFIX}${restaurantId}`;
+    console.log('Storing guest response in localStorage:', key, guestResponse);
+
+    // Remove old data first
+    localStorage.removeItem(key);
+
+    try {
+      const jsonString = JSON.stringify(guestResponse);
+      console.log('JSON string length:', jsonString.length);
+      localStorage.setItem(key, jsonString);
+
+      const stored = localStorage.getItem(key);
+      console.log('Verification - stored item exists:', !!stored);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        console.log('Parsed stored data customer email:', parsed.customer?.email);
+        console.log('Parsed stored data accessToken starts with:', parsed.accessToken?.substring(0, 20));
+      }
+    } catch (error) {
+      console.error('Error storing guest data:', error);
+    }
   }
 
   /**

@@ -183,8 +183,8 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
     const params = this.route.snapshot.params;
     const restaurantIdParam = params['restaurantId'];
     const tableNumberParam = params['tableNumber'];
-    this.restaurantId = restaurantIdParam;
-    this.tableNumber = tableNumberParam;
+    this.restaurantId = parseInt(restaurantIdParam, 10);
+    this.tableNumber = parseInt(tableNumberParam, 10);
 
     // Store table number for guest session scoped to restaurant
     localStorage.setItem(`guest_table_no_${this.restaurantId}`, this.tableNumber.toString());
@@ -221,7 +221,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
         password: '',
         user_type: 'customer',
         is_active: 'true',
-        restaurant_id: storedGuestUser.customer.restaurant?.id?.toString(),
+        restaurant_id: storedGuestUser.customer.restaurantId?.toString(),
         member_since: storedGuestUser.customer.createdAt ? new Date(storedGuestUser.customer.createdAt) : new Date(),
         created_at: storedGuestUser.customer.createdAt ? new Date(storedGuestUser.customer.createdAt) : new Date(),
         updated_at: storedGuestUser.customer.updatedAt ? new Date(storedGuestUser.customer.updatedAt) : new Date()
@@ -231,31 +231,97 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   }
 
   private initializeGuest(): void {
+    console.log('initializeGuest called for restaurant:', this.restaurantId);
     // Check if guest is already available for this restaurant
-    if (this.guestAuthService.isGuestAvailable(this.restaurantId)) {
+    const isAvailable = this.guestAuthService.isGuestAvailable(this.restaurantId);
+    console.log('isGuestAvailable result:', isAvailable);
+    if (isAvailable) {
       // Guest exists, try to load data
+      console.log('Calling loadExistingGuest');
       this.loadExistingGuest();
     } else {
       // No guest, create new one
+      console.log('Calling createNewGuest');
       this.createNewGuest();
     }
   }
 
   private loadExistingGuest(): void {
+    console.log('*** loadExistingGuest called ***');
     this.isLoadingGuest = true;
     this.guestError = null;
 
     // Try to get existing guest data from localStorage for this restaurant
     const currentGuestUser = this.guestAuthService.getCurrentGuestUser(this.restaurantId);
-    if (currentGuestUser && currentGuestUser.customer) {
-      // Use stored guest data
-      const guest = currentGuestUser.customer;
-      this.currentGuest = guest;
-      this.setCurrentUserFromGuest(currentGuestUser);
-      this.isLoadingGuest = false;
-      setTimeout(() => {
-        this.initializeUser();
-      }, 100);
+    console.log('getCurrentGuestUser returned:', currentGuestUser);
+
+    // Always try to validate if we have a guest ID stored
+    const guestId = this.guestAuthService.getStoredGuestId(this.restaurantId);
+    console.log('Stored guest ID:', guestId);
+
+    if (guestId) {
+      console.log('*** Guest ID found, calling validate API with ID:', guestId, 'restaurant:', this.restaurantId);
+      // Fetch fresh data from API to get new token
+      this.crudService.validateCustomer(guestId, this.restaurantId).subscribe({
+        next: (response: any) => {
+          console.log('*** VALIDATE NEXT CALLBACK EXECUTED ***');
+          try {
+            console.log('Validate customer response received:', response);
+            console.log('Response customer email:', response.customer?.email);
+            console.log('Response accessToken starts with:', response.accessToken?.substring(0, 20));
+
+            // Immediately update localStorage with fresh data
+            console.log('Updating localStorage with fresh guest data for restaurant:', this.restaurantId);
+            const key = `currentGuestUser_${this.restaurantId}`;
+            console.log('localStorage key:', key);
+            console.log('Response to store:', response);
+            try {
+              localStorage.setItem(key, JSON.stringify(response));
+              console.log('localStorage updated successfully');
+              const stored = localStorage.getItem(key);
+              console.log('Verification - stored data:', stored ? JSON.parse(stored).customer?.email : 'no data');
+            } catch (e) {
+              console.error('Error updating localStorage:', e);
+            }
+
+            // Update component state
+            this.currentGuest = response.customer;
+            console.log('Setting currentGuest to:', this.currentGuest);
+            this.setCurrentUserFromGuest(response);
+
+            console.log('Guest data updated successfully');
+            this.isLoadingGuest = false;
+            setTimeout(() => {
+              console.log('Calling initializeUser after timeout');
+              this.initializeUser();
+            }, 100);
+          } catch (error) {
+            console.error('Error in validate response handler:', error);
+            // Fallback to stored data if processing fails
+            const guest = currentGuestUser.customer;
+            this.currentGuest = guest;
+            this.setCurrentUserFromGuest(currentGuestUser);
+            this.isLoadingGuest = false;
+          }
+        },
+        error: (error: any) => {
+          console.error('Failed to refresh guest data:', error);
+          // Fallback to stored data if API fails
+          if (currentGuestUser && currentGuestUser.customer) {
+            const guest = currentGuestUser.customer;
+            this.currentGuest = guest;
+            this.setCurrentUserFromGuest(currentGuestUser);
+          } else {
+            // No stored data, create new guest
+            this.createNewGuest();
+            return;
+          }
+          this.isLoadingGuest = false;
+          setTimeout(() => {
+            this.initializeUser();
+          }, 100);
+        }
+      });
     } else {
       // No stored guest data, create new guest
       this.createNewGuest();
@@ -312,7 +378,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
       password: '',
       user_type: 'customer',
       is_active: 'true',
-      restaurant_id: guest.restaurant?.id?.toString() || this.restaurantId.toString(),
+      restaurant_id: guest.restaurantId?.toString() || this.restaurantId.toString(),
       member_since: guest.createdAt ? new Date(guest.createdAt) : new Date(),
       created_at: guest.createdAt ? new Date(guest.createdAt) : new Date(),
       updated_at: guest.updatedAt ? new Date(guest.updatedAt) : new Date()

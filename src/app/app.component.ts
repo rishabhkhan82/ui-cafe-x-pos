@@ -69,7 +69,7 @@ export class AppComponent implements OnInit {
           name: user.name,
           email: '', // AuthService doesn't have email, so we'll leave it empty
           role: user.role as any,
-          avatar: user.avatar ? `${environment.api.baseUrl}/${user.avatar.replace(/^\//, '')}` : user.avatar
+          avatar: user.avatar ? (user.avatar.startsWith('data:') || user.avatar.startsWith('http://') || user.avatar.startsWith('https://') ? user.avatar : environment.api.baseUrl + '/' + user.avatar.replace(/^\//, '')) : user.avatar
         };
         this.isLoggedIn = true;
       } else {

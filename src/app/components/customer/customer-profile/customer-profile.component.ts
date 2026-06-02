@@ -339,37 +339,40 @@ export class CustomerProfileComponent implements OnInit {
       customer_id: this.currentUser.username // Include customerId from current user
     };
 
-      // Call API to update customer
-      this.crudService.updateCustomer(customerId, updatePayload).subscribe({
+    // Call API to update customer
+    this.crudService.updateCustomer(customerId, updatePayload).subscribe({
         next: (response) => {
-          // Update local currentUser
-          this.currentUser!.name = this.editForm.name;
-          this.currentUser!.email = this.editForm.email;
-          this.currentUser!.phone = this.editForm.phone;
-          this.currentUser!.avatar = response.avatar || this.editForm.avatar; // Use updated avatar from response if available
+      // Compute updated avatar (prefer API path, fallback to edited avatar)
+      const updatedAvatar = response.avatar || this.editForm.avatar || this.currentUser!.avatar;
 
-          // Update in auth service
-          this.authService.setCurrentUser(this.currentUser!);
+      // Update local currentUser
+      this.currentUser!.name = this.editForm.name;
+      this.currentUser!.email = this.editForm.email;
+      this.currentUser!.phone = this.editForm.phone;
+      this.currentUser!.avatar = updatedAvatar; // Use updated avatar from response if available, else edited avatar
 
-          // If this is a guest user, update the stored guest data
-          if (this.currentUser!.role === 'customer' && this.currentUser!.user_type === 'customer') {
-            const restaurantId = this.currentUser!.restaurant_id ? parseInt(this.currentUser!.restaurant_id) : 1;
-            const guestData = this.guestAuthService.getCurrentGuestUser(restaurantId);
-            if (guestData && guestData.customer) {
-              guestData.customer.name = this.editForm.name;
-              guestData.customer.email = this.editForm.email;
-              guestData.customer.phone = this.editForm.phone;
-              guestData.customer.avatar = this.currentUser!.avatar;
-              // Update the stored guest data
-              this.guestAuthService.storeCurrentGuestUser(guestData, restaurantId);
-            }
-          }
+      // Update in auth service (sessionStorage)
+      this.authService.setCurrentUser(this.currentUser!);
 
-          this.showEditProfile = false;
-          this.isLoading = false;
-          this.notificationService.success('Profile Updated', 'Your profile has been updated successfully!');
-        },
-        error: (error) => {
+      // If this is a guest user, update the stored guest data and ensure localStorage reflects avatar
+      if (this.currentUser!.role === 'customer' && this.currentUser!.user_type === 'customer') {
+        const restaurantId = this.currentUser!.restaurant_id ? parseInt(this.currentUser!.restaurant_id) : 1;
+        const guestData = this.guestAuthService.getCurrentGuestUser(restaurantId);
+        if (guestData && guestData.customer) {
+          guestData.customer.name = this.editForm.name;
+          guestData.customer.email = this.editForm.email;
+          guestData.customer.phone = this.editForm.phone;
+          guestData.customer.avatar = updatedAvatar;
+          // Update the stored guest data in localStorage
+          this.guestAuthService.storeCurrentGuestUser(guestData, restaurantId);
+        }
+      }
+
+      this.showEditProfile = false;
+      this.isLoading = false;
+      this.notificationService.success('Profile Updated', 'Your profile has been updated successfully!');
+    },
+      error: (error) => {
           console.error('Error updating profile:', error);
           this.error = 'Failed to update profile. Please try again.';
           this.isLoading = false;
@@ -446,4 +449,5 @@ export class CustomerProfileComponent implements OnInit {
     this.notificationService.info('Navigation', 'Navigating to cart page...');
     // TODO: Implement navigation to cart page
   }
+
 }
