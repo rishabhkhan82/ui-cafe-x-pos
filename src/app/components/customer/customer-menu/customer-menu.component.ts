@@ -45,8 +45,10 @@ export class CustomerMenuComponent implements OnInit {
     { key: 'all', label: 'All', icon: 'fas fa-th' },
     { key: 'starters', label: 'Starters', icon: 'fas fa-leaf' },
     { key: 'mains', label: 'Main Course', icon: 'fas fa-utensils' },
+    { key: 'salads', label: 'Salads', icon: 'fas fa-leaf' },
     { key: 'desserts', label: 'Desserts', icon: 'fas fa-birthday-cake' },
-    { key: 'beverages', label: 'Beverages', icon: 'fas fa-coffee' }
+    { key: 'beverages', label: 'Beverages', icon: 'fas fa-coffee' },
+    { key: 'snacks', label: 'Snacks', icon: 'fas fa-cookie' }
   ];
 
   ngOnInit(): void {
