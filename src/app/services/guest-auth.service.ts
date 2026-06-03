@@ -169,6 +169,7 @@ export class GuestAuthService {
     // Clear current restaurant context
     sessionStorage.removeItem('current_customer_restaurant_id');
     sessionStorage.removeItem('accessToken');
+    sessionStorage.removeItem('current_customer_table_no');
 
     this.guestSubject.next(null);
   }
@@ -207,5 +208,19 @@ export class GuestAuthService {
     } else {
       console.warn('No guest user or token found for restaurant', restaurantId);
     }
+
+    // Also store the table number in sessionStorage for navigation
+    const tableNo = localStorage.getItem(`guest_table_no_${restaurantId}`);
+    if (tableNo) {
+      sessionStorage.setItem('current_customer_table_no', tableNo);
+      console.log('Set table number in session for restaurant', restaurantId, ':', tableNo);
+    }
+  }
+
+  /**
+   * Gets the current table number from session storage.
+   */
+  getCurrentTableNo(): string | null {
+    return sessionStorage.getItem('current_customer_table_no');
   }
 }

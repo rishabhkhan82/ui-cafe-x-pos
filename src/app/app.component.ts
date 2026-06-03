@@ -4,6 +4,7 @@ import { RouterModule, RouterOutlet, Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { RealtimeService } from './services/realtime.service';
 import { AuthService } from './services/auth.service';
+import { GuestAuthService } from './services/guest-auth.service';
 import { NavigationMenuComponent } from './components/shared/navigation-menu/navigation-menu.component';
 import { LoadingService } from './services/loading.service';
 import { ToastNotifierComponent } from './components/common/toast-notifier/app-toast-notifier';
@@ -43,6 +44,7 @@ export class AppComponent implements OnInit {
 
   private realtimeService = inject(RealtimeService);
   private authService = inject(AuthService);
+  private guestAuthService = inject(GuestAuthService);
   private router = inject(Router);
   private loadingService = inject(LoadingService);
 
@@ -268,5 +270,15 @@ export class AppComponent implements OnInit {
 
     collectActions(this.navMenu.hierarchicalMenus);
     return actions;
+  }
+
+  /**
+   * Gets the customer home route with the current restaurant and table number.
+   * Used for the home button navigation in the customer footer.
+   */
+  get customerHomeRoute(): any[] {
+    const restaurantId = sessionStorage.getItem('current_customer_restaurant_id') || '1';
+    const tableNo = sessionStorage.getItem('current_customer_table_no') || '0';
+    return ['/customer/dashboard', restaurantId, tableNo];
   }
 }

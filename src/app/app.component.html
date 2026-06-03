@@ -206,7 +206,7 @@
   </div>
   <!-- Navigation For Customer -->
   <div *ngIf="currentUser?.role === 'customer'" class="flex items-center justify-around py-2">
-    <a routerLink="/customer/dashboard" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
+    <a [routerLink]="customerHomeRoute" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
       <i class="fas fa-home text-xl"></i>
       <span class="text-xs font-medium">Home</span>
     </a>

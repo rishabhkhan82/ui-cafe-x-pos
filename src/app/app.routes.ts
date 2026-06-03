@@ -238,12 +238,16 @@ export const routes: Routes = [
     canActivate: [CustomerGuestGuard],
     children: [
       {
-        path: 'dashboard',
-        redirectTo: 'dashboard/1/0',
+        path: '',
+        redirectTo: 'dashboard',
         pathMatch: 'full'
       },
       {
         path: 'dashboard/:restaurantId/:tableNumber',
+        loadComponent: () => import('./components/customer/customer-dashboard/customer-dashboard.component').then(m => m.CustomerDashboardComponent)
+      },
+      {
+        path: 'dashboard',
         loadComponent: () => import('./components/customer/customer-dashboard/customer-dashboard.component').then(m => m.CustomerDashboardComponent)
       },
       {
@@ -265,12 +269,6 @@ export const routes: Routes = [
       {
         path: 'customer-cart',
         loadComponent: () => import('./components/customer/customer-cart/customer-cart.component').then(m => m.CustomerCartComponent)
-      },
-      // Default redirect for customer
-      {
-        path: '',
-        redirectTo: 'dashboard',
-        pathMatch: 'full'
       }
     ]
   },

@@ -183,8 +183,18 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
     const params = this.route.snapshot.params;
     const restaurantIdParam = params['restaurantId'];
     const tableNumberParam = params['tableNumber'];
-    this.restaurantId = parseInt(restaurantIdParam, 10);
-    this.tableNumber = parseInt(tableNumberParam, 10);
+
+    // Check if parameters exist, otherwise use stored context
+    if (restaurantIdParam && tableNumberParam) {
+      this.restaurantId = parseInt(restaurantIdParam, 10);
+      this.tableNumber = parseInt(tableNumberParam, 10);
+    } else {
+      // Use stored context from previous session/navigation
+      const storedRestaurantId = this.guestAuthService.getCurrentRestaurantId();
+      const storedTableNo = this.guestAuthService.getCurrentTableNo();
+      this.restaurantId = storedRestaurantId || 1;
+      this.tableNumber = storedTableNo ? parseInt(storedTableNo, 10) : 0;
+    }
 
     // Store table number for guest session scoped to restaurant
     localStorage.setItem(`guest_table_no_${this.restaurantId}`, this.tableNumber.toString());

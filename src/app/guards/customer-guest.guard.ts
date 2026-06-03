@@ -56,7 +56,10 @@ export class CustomerGuestGuard implements CanActivate {
     if (!currentGuestUser || !currentGuestUser.customer) {
       console.log('No guest user found, redirecting to dashboard');
       // Redirect to dashboard to create guest for the restaurant
-      this.router.navigate(['/customer/dashboard']);
+      // Use stored context if available, otherwise defaults
+      const restaurantId = this.guestAuthService.getCurrentRestaurantId() || 1;
+      const tableNo = this.guestAuthService.getCurrentTableNo() || '0';
+      this.router.navigate(['/customer/dashboard', restaurantId.toString(), tableNo]);
       return false;
     }
 
