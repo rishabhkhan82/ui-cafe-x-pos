@@ -1,153 +1,180 @@
-<main class="px-4 py-4 pb-20  pt-5">
-  <!-- Welcome Banner -->
-  <div class="mb-6 animate__animated animate__fadeInUp">
-    <div class="gradient-bg rounded-2xl p-6 text-white relative overflow-hidden">
-      <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-      <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
-      <div class="relative z-10">
-        <h2 class="text-2xl font-bold mb-2">Explore Our Menu 🍽️</h2>
-        <p class="text-white/90">Hand-crafted dishes made fresh to order.</p>
+  <main class="px-4 py-4 pb-20  pt-5">
+    <!-- Welcome Banner -->
+    <div class="mb-6 animate__animated animate__fadeInUp">
+      <div class="gradient-bg rounded-2xl p-6 text-white relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+        <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
+        <div class="relative z-10">
+          <h2 class="text-2xl font-bold mb-2">Explore Our Menu 🍽️</h2>
+          <p class="text-white/90">Hand-crafted dishes made fresh to order.</p>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Search and Filters -->
-  <div class="mb-6 animate__animated animate__fadeInUp animate__delay-1s">
-    <div class="relative mb-4">
-      <input [(ngModel)]="searchQuery"
-             (input)="filterMenuItems()"
-             type="text"
-             placeholder="Search dishes, cuisines or ingredients"
-             class="w-full pl-12 pr-12 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300">
-      <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-        <i class="fas fa-search text-gray-400"></i>
+    <!-- Search and Filters -->
+    <div class="mb-6 animate__animated animate__fadeInUp animate__delay-1s">
+      <div class="relative mb-4">
+        <input [(ngModel)]="searchQuery"
+               (input)="onSearchInput(searchQuery)"
+               type="text"
+               placeholder="Search dishes, cuisines by name"
+               class="w-full pl-12 pr-12 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300">
+        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <i class="fas fa-search text-gray-400"></i>
+        </div>
+        <button *ngIf="!searchQuery" class="absolute inset-y-0 right-1 pr-4 flex items-center text-gray-400 hover:text-primary-500">
+          <i class="fas fa-sliders-h"></i>
+        </button>
+        <button *ngIf="searchQuery" (click)="clearSearch()" class="absolute inset-y-0 right-1 pr-4 flex items-center text-gray-400 hover:text-primary-500">
+          <i class="fas fa-times-circle"></i>
+        </button>
       </div>
-      <button class="absolute inset-y-0 right-1 pr-4 flex items-center text-gray-400 hover:text-primary-500">
-        <i class="fas fa-sliders-h"></i>
-      </button>
+
+      <!-- Category Filters -->
+      <div class="flex space-x-3 overflow-x-auto pb-2">
+        <button *ngFor="let category of categories"
+                (click)="setActiveCategory(category.key)"
+                [class]="getCategoryButtonClass(category.key)">
+          <i [class]="category.icon" class="mr-2"></i>{{ category.label }}
+        </button>
+      </div>
     </div>
 
-    <!-- Category Filters -->
-    <div class="flex space-x-3 overflow-x-auto pb-2">
-      <button *ngFor="let category of categories"
-              (click)="setActiveCategory(category.key)"
-              [class]="getCategoryButtonClass(category.key)">
-        <i [class]="category.icon" class="mr-2"></i>{{ category.label }}
-      </button>
-    </div>
-  </div>
-
-  <!-- Recommended Section -->
-  <section class="mb-8 animate__animated animate__fadeInUp animate__delay-2s">
-    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Recommended For You</h3>
-    <div class="space-y-4">
-      <div *ngFor="let item of recommendedItems"
-           class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm menu-item-hover">
-        <div class="flex items-center space-x-4">
-          <div class="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
-            <img [src]="item.image" [alt]="item.name" class="w-full h-full object-cover">
-          </div>
-          <div class="flex-1">
-            <div class="flex items-start justify-between">
-              <div>
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-1">{{ item.name }}</h4>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ item.description }}</p>
-                <div class="flex items-center space-x-2">
-                  <span class="text-lg font-bold text-primary-500">₹{{ item.price }}</span>
-                  <span *ngIf="item.discount" class="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2 py-1 rounded-full">{{ item.discount }}</span>
-                </div>
+    <!-- Recommended Section -->
+    <ng-template #recommendedSection>
+      <section class="mb-8 animate__animated animate__fadeInUp animate__delay-2s">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Recommended For You</h3>
+        <div class="space-y-4">
+          <div *ngFor="let item of recommendedItems"
+               class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm menu-item-hover">
+            <div class="flex items-center space-x-4">
+              <div class="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
+                <img [src]="item.image" [alt]="item.name" class="w-full h-full object-cover">
               </div>
-              <div class="flex items-center space-x-2">
-                <button (click)="decreaseQuantity(item)"
-                        class="w-8 h-8 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full border border-gray-200 dark:border-gray-600 flex items-center justify-center hover:text-primary-500">
-                  <i class="fas fa-minus text-xs"></i>
-                </button>
-                <span class="w-8 text-center text-sm font-medium text-gray-700 dark:text-gray-200">{{ getItemQuantity(item) }}</span>
-                <button (click)="increaseQuantity(item)"
-                        class="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center hover:bg-primary-600">
-                  <i class="fas fa-plus text-sm"></i>
-                </button>
+              <div class="flex-1">
+                <div class="flex items-start justify-between">
+                  <div>
+                    <h4 class="font-semibold text-gray-900 dark:text-white mb-1">{{ item.name }}</h4>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ item.description }}</p>
+                    <div class="flex items-center space-x-2">
+                      <span class="text-lg font-bold text-primary-500">₹{{ item.price }}</span>
+                      <span *ngIf="item.discount" class="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2 py-1 rounded-full">{{ item.discount }}</span>
+                    </div>
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    <button (click)="decreaseQuantity(item)"
+                            class="w-8 h-8 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full border border-gray-200 dark:border-gray-600 flex items-center justify-center hover:text-primary-500">
+                      <i class="fas fa-minus text-xs"></i>
+                    </button>
+                    <span class="w-8 text-center text-sm font-medium text-gray-700 dark:text-gray-200">{{ getItemQuantity(item) }}</span>
+                    <button (click)="increaseQuantity(item)"
+                            class="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center hover:bg-primary-600">
+                      <i class="fas fa-plus text-sm"></i>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </section>
+      </section>
+    </ng-template>
 
-  <!-- Starters Section -->
-  <section id="starters" class="mb-8 animate__animated animate__fadeInUp animate__delay-3s">
-    <div class="flex items-center justify-between mb-3">
-      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Starters</h3>
-      <span class="text-xs text-gray-500 dark:text-gray-400">{{ getCategoryItemCount('starters') }} items</span>
-    </div>
-    <div class="space-y-4">
-      <div *ngFor="let item of getItemsByCategory('starters')"
-           class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm menu-item-hover">
-        <div class="flex items-center gap-4">
-          <div class="w-20 h-20 rounded-xl overflow-hidden">
-            <img [src]="item.image" [alt]="item.name" class="w-full h-full object-cover">
+    <!-- Category Sections -->
+    <ng-container *ngIf="activeCategory === 'all'; else filteredView">
+      <ng-container *ngTemplateOutlet="recommendedSection"></ng-container>
+
+      <ng-container *ngFor="let category of categories; let i = index; let isFirst = first">
+        <section *ngIf="category.key !== 'all'"
+                 [id]="category.key"
+                 class="mb-8 animate__animated animate__fadeInUp"
+                 [class.animate__delay-3s]="isFirst"
+                 [class.animate__delay-4s]="i === 1">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ category.label }}</h3>
+            <span class="text-xs text-gray-500 dark:text-gray-400">{{ getCategoryItemCount(category.key) }} items</span>
           </div>
-          <div class="flex-1">
-            <div class="flex items-start justify-between">
-              <div>
-                <h4 class="font-semibold text-gray-900 dark:text-white">{{ item.name }}</h4>
-                <p class="text-sm text-gray-500 dark:text-gray-400">{{ item.description }}</p>
-                <div class="mt-2 flex items-center gap-2">
-                  <span class="text-primary-500 font-bold">₹{{ item.price }}</span>
-                  <span *ngIf="item.isVeg" class="text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-1 rounded-full">Veg</span>
-                  <span *ngIf="!item.isVeg" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">Non-Veg</span>
-                  <span *ngIf="item.isSpicy" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">Spicy</span>
+          <div class="space-y-4">
+            <div *ngFor="let item of getItemsByCategory(category.key)"
+                 class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm menu-item-hover">
+              <div class="flex items-center gap-4">
+                <div class="w-20 h-20 rounded-xl overflow-hidden">
+                  <img [src]="item.image" [alt]="item.name" class="w-full h-full object-cover">
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-start justify-between">
+                    <div>
+                      <h4 class="font-semibold text-gray-900 dark:text-white">{{ item.name }}</h4>
+                      <p class="text-sm text-gray-500 dark:text-gray-400">{{ item.description }}</p>
+                      <div class="mt-2 flex items-center gap-2">
+                        <span class="text-primary-500 font-bold">₹{{ item.price }}</span>
+                         <span *ngIf="item.original_price" class="text-sm text-gray-500 dark:text-gray-400 line-through">₹{{ item.original_price }}</span>
+                         <span *ngIf="item.discount" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">{{ item.discount }}</span>
+                         <span *ngIf="item.is_veg" class="text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-1 rounded-full">Veg</span>
+                         <span *ngIf="!item.is_veg" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">Non-Veg</span>
+                         <span *ngIf="item.is_spicy" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">Spicy</span>
+                         <span *ngIf="item.is_popular" class="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2 py-1 rounded-full">Popular</span>
+                      </div>
+                    </div>
+                    <button (click)="addToCart(item)"
+                            class="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center hover:bg-primary-600">
+                      <i class="fas fa-plus text-sm"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
-              <button (click)="addToCart(item)"
-                      class="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center hover:bg-primary-600">
-                <i class="fas fa-plus text-sm"></i>
-              </button>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-  </section>
+        </section>
+      </ng-container>
+    </ng-container>
 
-  <!-- Main Course Section -->
-  <section id="mains" class="mb-8 animate__animated animate__fadeInUp animate__delay-4s">
-    <div class="flex items-center justify-between mb-3">
-      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Main Course</h3>
-      <span class="text-xs text-gray-500 dark:text-gray-400">{{ getCategoryItemCount('mains') }} items</span>
-    </div>
-    <div class="space-y-4">
-      <div *ngFor="let item of getItemsByCategory('mains')"
-           class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm menu-item-hover">
-        <div class="flex items-center gap-4">
-          <div class="w-20 h-20 rounded-xl overflow-hidden">
-            <img [src]="item.image" [alt]="item.name" class="w-full h-full object-cover">
+    <ng-template #filteredView>
+      <ng-container *ngFor="let category of categories">
+        <section *ngIf="category.key === activeCategory"
+                 [id]="category.key"
+                 class="mb-8 animate__animated animate__fadeInUp animate__delay-2s">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ category.label }}</h3>
+            <span class="text-xs text-gray-500 dark:text-gray-400">{{ getCategoryItemCount(category.key) }} items</span>
           </div>
-          <div class="flex-1">
-            <div class="flex items-start justify-between">
-              <div>
-                <h4 class="font-semibold text-gray-900 dark:text-white">{{ item.name }}</h4>
-                <p class="text-sm text-gray-500 dark:text-gray-400">{{ item.description }}</p>
-                <div class="mt-2 flex items-center gap-2">
-                  <span class="text-primary-500 font-bold">₹{{ item.price }}</span>
-                  <span *ngIf="item.originalPrice" class="text-sm text-gray-500 dark:text-gray-400 line-through">₹{{ item.originalPrice }}</span>
-                  <span *ngIf="item.discount" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">{{ item.discount }}</span>
-                  <span *ngIf="item.isVeg" class="text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-1 rounded-full">Veg</span>
-                  <span *ngIf="!item.isVeg" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">Non-Veg</span>
+          <div class="space-y-4">
+            <div *ngFor="let item of getItemsByCategory(category.key)"
+                 class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm menu-item-hover">
+              <div class="flex items-center gap-4">
+                <div class="w-20 h-20 rounded-xl overflow-hidden">
+                  <img [src]="item.image" [alt]="item.name" class="w-full h-full object-cover">
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-start justify-between">
+                    <div>
+                      <h4 class="font-semibold text-gray-900 dark:text-white">{{ item.name }}</h4>
+                      <p class="text-sm text-gray-500 dark:text-gray-400">{{ item.description }}</p>
+                      <div class="mt-2 flex items-center gap-2">
+                        <span class="text-primary-500 font-bold">₹{{ item.price }}</span>
+                         <span *ngIf="item.original_price" class="text-sm text-gray-500 dark:text-gray-400 line-through">₹{{ item.original_price }}</span>
+                         <span *ngIf="item.discount" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">{{ item.discount }}</span>
+                         <span *ngIf="item.is_veg" class="text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-1 rounded-full">Veg</span>
+                         <span *ngIf="!item.is_veg" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">Non-Veg</span>
+                         <span *ngIf="item.is_spicy" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">Spicy</span>
+                         <span *ngIf="item.is_popular" class="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2 py-1 rounded-full">Popular</span>
+                      </div>
+                    </div>
+                    <button (click)="addToCart(item)"
+                            class="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center hover:bg-primary-600">
+                      <i class="fas fa-plus text-sm"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
-              <button (click)="addToCart(item)"
-                      class="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center hover:bg-primary-600">
-                <i class="fas fa-plus text-sm"></i>
-              </button>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-  </section>
-</main>
+        </section>
+      </ng-container>
+
+      <ng-container *ngTemplateOutlet="recommendedSection"></ng-container>
+    </ng-template>
+  </main>
 
 <!-- Floating Cart Button -->
 <div class="fixed bottom-24 right-4 z-40">

@@ -197,3 +197,11 @@ tomorrow's task
 4] navigation menu component - actual filtering
 
 ========================================================
+
+tomorrow task. 
+
+customer-menu component
+1] make the menu image comes with concat link
+2] add the description for items in db
+3] edit and upload the acutal image for menu items using rowner menu crud
+4] make cart service. increase and decresea and add and order. 

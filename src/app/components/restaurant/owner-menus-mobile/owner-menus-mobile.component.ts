@@ -46,12 +46,13 @@ export class OwnerMenusMobileComponent implements OnInit {
 
   // Menu Categories
   categories = [
-    'Starters',
-    'Main Course',
-    'Salads',
-    'Desserts',
-    'Beverages',
-    'Snacks'
+    {code : 'all', label: 'All'},
+    {code : 'starters', label: 'Starters'},
+    {code : 'main-course', label: 'Main Course'},
+    {code : 'salads', label: 'Salads'},
+    {code : 'desserts', label: 'Desserts'},
+    {code : 'beverages', label: 'Beverages'},
+    {code : 'snacks', label: 'Snacks'}
   ];
 
   // Category color mapping to avoid function calls in templates
@@ -138,8 +139,9 @@ export class OwnerMenusMobileComponent implements OnInit {
       params.name = this.searchTerm.trim();
     }
 
-    if (this.categoryFilter !== 'all') {
-      params.category = this.categoryFilter;
+    if (this.categoryFilter && this.categoryFilter !== 'all') {
+      const selectedCategory = this.categories.find(c => c.code === this.categoryFilter);
+      params.category = selectedCategory ? selectedCategory.label : this.categoryFilter;
     }
 
     if (this.statusFilter !== 'all') {

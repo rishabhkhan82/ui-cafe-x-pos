@@ -2,7 +2,12 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MockDataService, User, MenuItem } from '../../../services/mock-data.service';
+import { Subject, Observable } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, filter } from 'rxjs/operators';
+import { CrudService } from '../../../services/crud.service';
+import { AuthService } from '../../../services/auth.service';
+import { User } from '../../../services/mock-data.service';
+import { MenuItem } from '../../../interfaces';
 
 interface MenuCategory {
   key: string;
@@ -23,28 +28,27 @@ interface CartItem {
   styleUrl: './customer-menu.component.css'
 })
 export class CustomerMenuComponent implements OnInit {
-  private mockDataService = inject(MockDataService);
+  private crudService = inject(CrudService);
   private router = inject(Router);
+  private authService = inject(AuthService);
 
-  // Component state
   currentUser: User | null = null;
   allMenuItems: MenuItem[] = [];
   filteredMenuItems: MenuItem[] = [];
   recommendedItems: MenuItem[] = [];
   cart: CartItem[] = [];
 
-  // Filters and search
   searchQuery: string = '';
   activeCategory: string = 'all';
+  private searchSubject = new Subject<string>();
 
-  // Mock data
   pendingOrdersCount = 2;
   cartItemCount = 3;
 
   categories: MenuCategory[] = [
     { key: 'all', label: 'All', icon: 'fas fa-th' },
     { key: 'starters', label: 'Starters', icon: 'fas fa-leaf' },
-    { key: 'mains', label: 'Main Course', icon: 'fas fa-utensils' },
+    { key: 'main-course', label: 'Main Course', icon: 'fas fa-utensils' },
     { key: 'salads', label: 'Salads', icon: 'fas fa-leaf' },
     { key: 'desserts', label: 'Desserts', icon: 'fas fa-birthday-cake' },
     { key: 'beverages', label: 'Beverages', icon: 'fas fa-coffee' },
@@ -52,54 +56,135 @@ export class CustomerMenuComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    this.initializeData();
-    this.loadMenuItems();
+    this.currentUser = this.authService.getCurrentUser();
+    this.setupSearch();
   }
 
-  private initializeData(): void {
-    this.currentUser = this.mockDataService.getUserByRole('customer') || null;
+  private mapApiMenuItemsToMenuItems(apiMenuItems: any[]): MenuItem[] {
+    return apiMenuItems.map(item => ({
+      id: item.id,
+      name: item.name || '',
+      description: item.description || '',
+      price: item.price || 0,
+      category: item.category || '',
+      image: item.image || '',
+      item_id: item.item_id || '',
+      discount: item.discount || '',
+      original_price: item.original_price || item.price || 0,
+      preparation_time: item.preparation_time || 0,
+      is_active: item.is_active ?? true,
+      is_available: item.is_available ?? true,
+      is_popular: item.is_popular ?? false,
+      is_spicy: item.is_spicy ?? false,
+      is_veg: item.is_veg ?? true,
+      is_vegetarian: item.is_vegetarian ?? true,
+      restaurant_id: item.restaurant_id || 1,
+      created_at: item.created_at ? new Date(item.created_at) : undefined,
+      updated_at: item.updated_at ? new Date(item.updated_at) : undefined,
+      created_by: item.created_by,
+      updated_by: item.updated_by
+    }));
   }
 
-  private loadMenuItems(): void {
-    this.mockDataService.getMenuItems().subscribe(items => {
-      this.allMenuItems = items;
-      this.recommendedItems = items.slice(0, 3); // First 3 items as recommended
-      this.filterMenuItems();
+  private loadMenuItems(category?: string, name?: string): void {
+    const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
+    const params: any = {
+      page: 1,
+      size: 999,
+      restaurant_id: restaurantId
+    };
+
+    if (category && category !== 'all') {
+      params.category = category;
+    }
+
+    if (this.searchQuery && this.searchQuery.trim()) {
+      params.name = this.searchQuery.trim();
+    }
+
+    this.crudService.getMenuItems(params).subscribe({
+      next: (response: any) => {
+        this.allMenuItems = this.mapApiMenuItemsToMenuItems(response.data);
+        this.recommendedItems = this.allMenuItems.slice(0, 3);
+        this.filterMenuItems();
+      },
+      error: (error) => {
+        console.error('Error loading menu items:', error);
+        this.allMenuItems = [];
+        this.recommendedItems = [];
+        this.filterMenuItems();
+      }
     });
   }
 
-  filterMenuItems(): void {
-    let filtered = [...this.allMenuItems];
+  private setupSearch(): void {
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(term => {
+        this.searchQuery = term;
+        const category = term ? 'all' : this.activeCategory;
+        return this.getMenuItemsObservable(category, term);
+      })
+    ).subscribe({
+      next: (response: any) => {
+        this.allMenuItems = this.mapApiMenuItemsToMenuItems(response.data);
+        this.recommendedItems = this.allMenuItems.slice(0, 3);
+        this.filterMenuItems();
+      },
+      error: (error) => {
+        console.error('Error searching menu items:', error);
+        this.allMenuItems = [];
+        this.recommendedItems = [];
+        this.filterMenuItems();
+      }
+    });
 
-    // Apply search filter
-    if (this.searchQuery.trim()) {
-      const query = this.searchQuery.toLowerCase();
-      filtered = filtered.filter(item =>
-        item.name.toLowerCase().includes(query) ||
-        item.description.toLowerCase().includes(query) ||
-        item.category.toLowerCase().includes(query)
-      );
+    this.loadMenuItems();
+  }
+
+  private getMenuItemsObservable(category?: string, name?: string): Observable<any> {
+    const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
+    const params: any = {
+      page: 1,
+      size: 999,
+      restaurant_id: restaurantId
+    };
+
+    if (category && category !== 'all') {
+      params.category = category;
     }
 
-    // Apply category filter
-    if (this.activeCategory !== 'all') {
-      filtered = filtered.filter(item => {
-        switch (this.activeCategory) {
-          case 'starters': return item.category === 'Starters';
-          case 'mains': return item.category === 'Main Course';
-          case 'desserts': return item.category === 'Desserts';
-          case 'beverages': return item.category === 'Beverages';
-          default: return true;
-        }
-      });
+    if (name && name.trim()) {
+      params.name = name.trim();
     }
 
-    this.filteredMenuItems = filtered;
+    return this.crudService.getMenuItems(params);
+  }
+
+  onSearchInput(value: string): void {
+    this.searchSubject.next(value);
+  }
+
+  clearSearch(): void {
+    this.searchQuery = '';
+    this.searchSubject.next('');
+  }
+
+  public filterMenuItems(): void {
+    this.filteredMenuItems = this.activeCategory === 'all'
+      ? [...this.allMenuItems]
+      : this.allMenuItems.filter(item => item.category === this.getCategoryCode(this.activeCategory));
+  }
+
+  getCategoryCode(label: string): string {
+    const category = this.categories.find(c => c.label === label);
+    return category ? category.key : label;
   }
 
   setActiveCategory(category: string): void {
     this.activeCategory = category;
-    this.filterMenuItems();
+    this.loadMenuItems(category);
   }
 
   getCategoryButtonClass(category: string): string {
@@ -111,18 +196,7 @@ export class CustomerMenuComponent implements OnInit {
   }
 
   getItemsByCategory(category: string): MenuItem[] {
-    switch (category) {
-      case 'starters':
-        return this.filteredMenuItems.filter(item => item.category === 'Starters');
-      case 'mains':
-        return this.filteredMenuItems.filter(item => item.category === 'Main Course');
-      case 'desserts':
-        return this.filteredMenuItems.filter(item => item.category === 'Desserts');
-      case 'beverages':
-        return this.filteredMenuItems.filter(item => item.category === 'Beverages');
-      default:
-        return [];
-    }
+    return this.allMenuItems.filter(item => item.category === category);
   }
 
   getCategoryItemCount(category: string): number {
