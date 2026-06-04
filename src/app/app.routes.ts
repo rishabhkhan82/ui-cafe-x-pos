@@ -267,7 +267,7 @@ export const routes: Routes = [
         loadComponent: () => import('./components/customer/customer-profile/customer-profile.component').then(m => m.CustomerProfileComponent)
       },
       {
-        path: 'customer-cart',
+        path: 'cart',
         loadComponent: () => import('./components/customer/customer-cart/customer-cart.component').then(m => m.CustomerCartComponent)
       }
     ]

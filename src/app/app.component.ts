@@ -11,6 +11,7 @@ import { ToastNotifierComponent } from './components/common/toast-notifier/app-t
 import { ConfirmationDialogComponent } from './components/common/confirmation-dialog/confirmation-dialog.component';
 import { NavigationMenu } from './services/mock-data.service';
 import { environment } from './environments/environment';
+import { CartService } from './services/cart.service';
 interface User {
   id: string;
   name: string;
@@ -47,6 +48,8 @@ export class AppComponent implements OnInit {
   private guestAuthService = inject(GuestAuthService);
   private router = inject(Router);
   private loadingService = inject(LoadingService);
+  private cartService = inject(CartService);
+  cartItemCount = 0;
 
   @ViewChild(NavigationMenuComponent) navMenu!: NavigationMenuComponent;
 
@@ -91,6 +94,10 @@ export class AppComponent implements OnInit {
     this.loadingService.loading$.subscribe(
       loading => this.isLoading = loading
     );
+
+    this.cartService.cart$.subscribe(() => {
+      this.cartItemCount = this.cartService.cartItemCount;
+    });
   }
 
   private initializeAuthState(): void {
@@ -250,6 +257,11 @@ export class AppComponent implements OnInit {
 
   logout(): void {
     this.authService.logout();
+    this.cartService.clearCart();
+  }
+
+  viewCart(): void {
+    this.router.navigate(['/customer/cart']);
   }
 
   get actionMenus(): NavigationMenu[] {

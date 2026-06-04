@@ -8,17 +8,13 @@ import { CrudService } from '../../../services/crud.service';
 import { AuthService } from '../../../services/auth.service';
 import { User } from '../../../services/mock-data.service';
 import { MenuItem } from '../../../interfaces';
+import { CartService, CartItem } from '../../../services/cart.service';
 import { environment } from '../../../environments/environment';
 
 interface MenuCategory {
   key: string;
   label: string;
   icon: string;
-}
-
-interface CartItem {
-  menuItem: MenuItem;
-  quantity: number;
 }
 
 @Component({
@@ -32,19 +28,19 @@ export class CustomerMenuComponent implements OnInit {
   private crudService = inject(CrudService);
   private router = inject(Router);
   private authService = inject(AuthService);
+  private cartService = inject(CartService);
 
   currentUser: User | null = null;
   allMenuItems: MenuItem[] = [];
   filteredMenuItems: MenuItem[] = [];
   recommendedItems: MenuItem[] = [];
-  cart: CartItem[] = [];
+  cartItemCount = 0;
 
   searchQuery: string = '';
   activeCategory: string = 'all';
   private searchSubject = new Subject<string>();
 
   pendingOrdersCount = 2;
-  cartItemCount = 3;
 
   categories: MenuCategory[] = [
     { key: 'all', label: 'All', icon: 'fas fa-th' },
@@ -58,6 +54,7 @@ export class CustomerMenuComponent implements OnInit {
 
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
+    this.cartService.cart$.subscribe(() => this.cartItemCount = this.cartService.cartItemCount);
     this.setupSearch();
   }
 
@@ -205,42 +202,23 @@ export class CustomerMenuComponent implements OnInit {
   }
 
   addToCart(item: MenuItem): void {
-    const existingItem = this.cart.find(cartItem => cartItem.menuItem.id === item.id);
-    if (existingItem) {
-      existingItem.quantity++;
-    } else {
-      this.cart.push({ menuItem: item, quantity: 1 });
-    }
-    this.updateCartCount();
-    alert(`${item.name} added to cart!`);
+    this.cartService.addToCart(item);
   }
 
   increaseQuantity(item: MenuItem): void {
-    const cartItem = this.cart.find(cartItem => cartItem.menuItem.id === item.id);
-    if (cartItem) {
-      cartItem.quantity++;
-      this.updateCartCount();
-    }
+    this.cartService.increaseQuantity(item);
   }
 
   decreaseQuantity(item: MenuItem): void {
-    const cartItem = this.cart.find(cartItem => cartItem.menuItem.id === item.id);
-    if (cartItem && cartItem.quantity > 0) {
-      cartItem.quantity--;
-      if (cartItem.quantity === 0) {
-        this.cart = this.cart.filter(cartItem => cartItem.menuItem.id !== item.id);
-      }
-      this.updateCartCount();
-    }
+    this.cartService.decreaseQuantity(item);
   }
 
   getItemQuantity(item: MenuItem): number {
-    const cartItem = this.cart.find(cartItem => cartItem.menuItem.id === item.id);
-    return cartItem ? cartItem.quantity : 0;
+    return this.cartService.getItemQuantity(item);
   }
 
-  private updateCartCount(): void {
-    this.cartItemCount = this.cart.reduce((total, item) => total + item.quantity, 0);
+  viewCart(): void {
+    this.router.navigate(['/customer/cart']);
   }
 
   toggleTheme(): void {
@@ -256,9 +234,5 @@ export class CustomerMenuComponent implements OnInit {
       return imagePath;
     }
     return environment.api.baseUrl + imagePath;
-  }
-
-  viewCart(): void {
-    alert('Navigate to cart page');
   }
 }

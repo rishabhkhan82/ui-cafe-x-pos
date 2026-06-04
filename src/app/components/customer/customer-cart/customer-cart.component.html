@@ -3,29 +3,37 @@
   <section class="mb-6 animate__animated animate__fadeInUp">
     <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Your Order</h3>
 
-    <!-- Cart Item 1 -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm mb-3">
+    <div *ngIf="cartItems.length === 0" class="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm text-center">
+      <p class="text-gray-500 dark:text-gray-400">Your cart is empty.</p>
+      <button (click)="addMoreItems()" class="mt-4 px-6 py-2 bg-primary-500 text-white rounded-xl">Browse Menu</button>
+    </div>
+
+    <div *ngFor="let cartItem of cartItems" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm mb-3">
       <div class="flex items-center space-x-4">
         <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
-          <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=200&h=200&fit=crop" alt="Margherita Pizza" class="w-full h-full object-cover">
+          <img [src]="getFullImageUrl(cartItem.menuItem.image)" [alt]="cartItem.menuItem.name" class="w-full h-full object-cover">
         </div>
         <div class="flex-1">
-          <div class="flex items-start justify-between">
+          <div class="flex items-center justify-between">
             <div>
-              <h4 class="font-semibold text-gray-900 dark:text-white mb-1">Margherita Pizza</h4>
-              <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Fresh mozzarella, tomato sauce, basil</p>
+              <h4 class="font-semibold text-gray-900 dark:text-white mb-1">{{ cartItem.menuItem.name }}</h4>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ cartItem.menuItem.description }}</p>
               <div class="flex items-center space-x-2">
-                <span class="text-lg font-bold text-primary-500">₹299</span>
-                <span class="text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-1 rounded-full">Veg</span>
+                <span class="text-lg font-bold text-primary-500">₹{{ cartItem.menuItem.price }}</span>
+                <span *ngIf="cartItem.menuItem.discount" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">{{ cartItem.menuItem.discount }}</span>
+                <span *ngIf="cartItem.menuItem.is_veg" class="text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-1 rounded-full">Veg</span>
+                <span *ngIf="!cartItem.menuItem.is_veg" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">Non-Veg</span>
               </div>
             </div>
-            <div class="flex items-center space-x-2">
-              <button class="w-8 h-8 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full border border-gray-200 dark:border-gray-600 flex items-center justify-center hover:text-primary-500">
-                <i class="fas fa-minus text-xs"></i>
+            <div class="flex flex-col items-center space-y-3 pl-1">
+              <button (click)="increaseQuantity(cartItem)"
+                      class="w-7 h-7 bg-primary-500 text-white rounded-full flex items-center justify-center hover:bg-primary-600 shadow-sm">
+                <i class="fas fa-plus text-[10px]"></i>
               </button>
-              <span class="w-8 text-center text-sm font-medium text-gray-700 dark:text-gray-200">2</span>
-              <button class="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center hover:bg-primary-600">
-                <i class="fas fa-plus text-sm"></i>
+              <span class="text-sm font-bold text-gray-700 dark:text-gray-200 leading-none">{{ cartItem.quantity }}</span>
+              <button (click)="decreaseQuantity(cartItem)"
+                      class="w-7 h-7 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full border border-gray-200 dark:border-gray-600 flex items-center justify-center hover:text-primary-500 shadow-sm">
+                <i class="fas fa-minus text-[10px]"></i>
               </button>
             </div>
           </div>
@@ -33,68 +41,7 @@
       </div>
     </div>
 
-    <!-- Cart Item 2 -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm mb-3">
-      <div class="flex items-center space-x-4">
-        <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
-          <img src="https://images.unsplash.com/photo-1572441713132-fb0c78337cb5?w=200&h=200&fit=crop" alt="Chicken Burger" class="w-full h-full object-cover">
-        </div>
-        <div class="flex-1">
-          <div class="flex items-start justify-between">
-            <div>
-              <h4 class="font-semibold text-gray-900 dark:text-white mb-1">Chicken Burger</h4>
-              <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Grilled chicken, lettuce, mayo, sesame bun</p>
-              <div class="flex items-center space-x-2">
-                <span class="text-lg font-bold text-primary-500">₹199</span>
-                <span class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">Non-Veg</span>
-              </div>
-            </div>
-            <div class="flex items-center space-x-2">
-              <button class="w-8 h-8 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full border border-gray-200 dark:border-gray-600 flex items-center justify-center hover:text-primary-500">
-                <i class="fas fa-minus text-xs"></i>
-              </button>
-              <span class="w-8 text-center text-sm font-medium text-gray-700 dark:text-gray-200">1</span>
-              <button class="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center hover:bg-primary-600">
-                <i class="fas fa-plus text-sm"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Cart Item 3 -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm mb-3">
-      <div class="flex items-center space-x-4">
-        <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
-          <img src="https://images.unsplash.com/photo-1541599468348-e96984315621?w=200&h=200&fit=crop" alt="Chocolate Brownie" class="w-full h-full object-cover">
-        </div>
-        <div class="flex-1">
-          <div class="flex items-start justify-between">
-            <div>
-              <h4 class="font-semibold text-gray-900 dark:text-white mb-1">Chocolate Brownie</h4>
-              <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Rich chocolate, walnuts, vanilla ice cream</p>
-              <div class="flex items-center space-x-2">
-                <span class="text-lg font-bold text-primary-500">₹149</span>
-                <span class="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2 py-1 rounded-full">Dessert</span>
-              </div>
-            </div>
-            <div class="flex items-center space-x-2">
-              <button class="w-8 h-8 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full border border-gray-200 dark:border-gray-600 flex items-center justify-center hover:text-primary-500">
-                <i class="fas fa-minus text-xs"></i>
-              </button>
-              <span class="w-8 text-center text-sm font-medium text-gray-700 dark:text-gray-200">1</span>
-              <button class="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center hover:bg-primary-600">
-                <i class="fas fa-plus text-sm"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Add More Items Button -->
-    <button class="w-full py-3 bg-gray-50 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+    <button *ngIf="cartItems.length > 0" (click)="addMoreItems()" class="w-full py-3 bg-gray-50 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
       <i class="fas fa-plus mr-2"></i>Add More Items
     </button>
   </section>
@@ -127,44 +74,37 @@
   </section>
 
   <!-- Order Summary -->
-  <section class="mb-6 animate__animated animate__fadeInUp animate__delay-4s">
+  <section class="mb-6 animate__animated animate__fadeInUp animate__delay-4s" *ngIf="cartItems.length">
     <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Order Summary</h3>
     <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm space-y-3">
       <div class="flex items-center justify-between">
-        <span class="text-gray-600 dark:text-gray-300">Subtotal (3 items)</span>
-        <span class="font-semibold text-gray-900 dark:text-white">₹647</span>
+        <span class="text-gray-600 dark:text-gray-300">Subtotal ({{ orderCount }} item{{ orderCount === 1 ? '' : 's' }})</span>
+        <span class="font-semibold text-gray-900 dark:text-white">₹{{ subtotal }}</span>
       </div>
       <div class="flex items-center justify-between">
         <span class="text-gray-600 dark:text-gray-300">Delivery Fee</span>
-        <span class="font-semibold text-gray-900 dark:text-white">₹0</span>
+        <span class="font-semibold text-gray-900 dark:text-white">₹{{ deliveryFee }}</span>
       </div>
       <div class="flex items-center justify-between">
         <span class="text-gray-600 dark:text-gray-300">GST (18%)</span>
-        <span class="font-semibold text-gray-900 dark:text-white">₹116</span>
+        <span class="font-semibold text-gray-900 dark:text-white">₹{{ gst }}</span>
       </div>
       <div class="border-t border-gray-200 dark:border-gray-700 pt-3">
         <div class="flex items-center justify-between">
           <span class="text-lg font-bold text-gray-900 dark:text-white">Total</span>
-          <span class="text-lg font-bold text-primary-500">₹763</span>
+          <span class="text-lg font-bold text-primary-500">₹{{ total }}</span>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Checkout Button -->
-  <section class="animate__animated animate__fadeInUp animate__delay-5s">
+  <section class="animate__animated animate__fadeInUp animate__delay-5s" *ngIf="cartItems.length">
     <button class="w-full py-4 bg-primary-500 hover:bg-primary-600 text-white rounded-2xl font-bold text-lg shadow-lg transition-all duration-300">
-      <i class="fas fa-utensils mr-2"></i>Proceed to Order • ₹763
+      <i class="fas fa-utensils mr-2"></i>Proceed to Order • ₹{{ total }}
     </button>
     <p class="text-xs text-center text-gray-500 dark:text-gray-400 mt-3">
       🎉 Order now and get ready for an amazing food experience!
     </p>
   </section>
 </main>
-
-<!-- Continue Shopping Button -->
-<div class="fixed bottom-24 right-4 z-40">
-  <button (click)="goBack()" class="w-14 h-14 bg-gray-600 hover:bg-gray-700 text-white rounded-full shadow-lg transition-all duration-300">
-    <i class="fas fa-arrow-left text-xl"></i>
-  </button>
-</div>
