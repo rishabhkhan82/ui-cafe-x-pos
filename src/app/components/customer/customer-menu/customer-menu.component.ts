@@ -8,6 +8,7 @@ import { CrudService } from '../../../services/crud.service';
 import { AuthService } from '../../../services/auth.service';
 import { User } from '../../../services/mock-data.service';
 import { MenuItem } from '../../../interfaces';
+import { environment } from '../../../environments/environment';
 
 interface MenuCategory {
   key: string;
@@ -247,6 +248,14 @@ export class CustomerMenuComponent implements OnInit {
     html.classList.toggle('dark');
     const newTheme = html.classList.contains('dark') ? 'dark' : 'light';
     sessionStorage.setItem('theme', newTheme);
+  }
+
+  getFullImageUrl(imagePath: string): string {
+    if (!imagePath) return '';
+    if (imagePath.startsWith('data:')) {
+      return imagePath;
+    }
+    return environment.api.baseUrl + imagePath;
   }
 
   viewCart(): void {
