@@ -10,6 +10,7 @@ import { User } from '../../../services/mock-data.service';
 import { MenuItem } from '../../../interfaces';
 import { CartService, CartItem } from '../../../services/cart.service';
 import { environment } from '../../../environments/environment';
+import { AnimateOnScrollDirective } from '../../../directives/animate-on-scroll.directive';
 
 interface MenuCategory {
   key: string;
@@ -20,7 +21,7 @@ interface MenuCategory {
 @Component({
   selector: 'app-customer-menu',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AnimateOnScrollDirective],
   templateUrl: './customer-menu.component.html',
   styleUrl: './customer-menu.component.css'
 })
@@ -36,6 +37,7 @@ export class CustomerMenuComponent implements OnInit {
   filteredMenuItems: MenuItem[] = [];
   recommendedItems: MenuItem[] = [];
   cartItemCount = 0;
+  isLoading = false;
 
   searchQuery: string = '';
   activeCategory: string = 'all';
@@ -142,18 +144,26 @@ export class CustomerMenuComponent implements OnInit {
     if (this.searchQuery && this.searchQuery.trim()) {
       params.name = this.searchQuery.trim();
     }
+
+    this.isLoading = true;
+    this.filteredMenuItems = [];
+    this.recommendedItems = [];
     
     this.crudService.getMenuItems(params).subscribe({
       next: (response: any) => {
-        this.allMenuItems = this.mapApiMenuItemsToMenuItems(response.data);
-        this.recommendedItems = this.allMenuItems.filter(item => item.is_recommended).slice(0, 3);
-        this.filterMenuItems();
+        this.isLoading = false;
+        if (response?.data?.length) {
+          this.allMenuItems = this.mapApiMenuItemsToMenuItems(response.data);
+          this.recommendedItems = this.allMenuItems.filter(item => item.is_recommended).slice(0, 3);
+          this.filterMenuItems();
+        }
       },
       error: (error) => {
+        this.isLoading = false;
         console.error('Error loading menu items:', error);
         this.allMenuItems = [];
         this.recommendedItems = [];
-        this.filterMenuItems();
+        this.filteredMenuItems = [];
       }
     });
   }
