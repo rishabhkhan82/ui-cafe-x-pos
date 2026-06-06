@@ -62,7 +62,7 @@ export class CustomerMenuComponent implements OnInit {
       this.cartItemCount = this.cartService.cartItemCount;
     });
     this.readQueryParams();
-    // this.setupSearch();
+    this.setupSearch();
   }
 
   private readQueryParams(): void {
@@ -191,8 +191,6 @@ export class CustomerMenuComponent implements OnInit {
         this.filterMenuItems();
       }
     });
-
-    this.loadMenuItems();
   }
 
   private getMenuItemsObservable(category?: string, name?: string, featureFilter?: string): Observable<any> {
