@@ -241,3 +241,15 @@ input[type="radio"]:checked + span {
   box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
   transform: translateY(-1px);
 }
+
+.animate-duration-750 {
+  animation-duration: 750ms !important;
+}
+
+.animate-duration-1000 {
+  animation-duration: 1000ms !important;
+}
+
+.animate-duration-1500 {
+  animation-duration: 1500ms !important;
+}

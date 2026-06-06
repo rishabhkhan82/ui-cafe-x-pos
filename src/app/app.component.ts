@@ -289,8 +289,8 @@ export class AppComponent implements OnInit {
    * Used for the home button navigation in the customer footer.
    */
   get customerHomeRoute(): any[] {
-    const restaurantId = sessionStorage.getItem('current_customer_restaurant_id') || '1';
-    const tableNo = sessionStorage.getItem('current_customer_table_no') || '0';
+    const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
+    const tableNo = sessionStorage.getItem('current_customer_table_no');
     return ['/customer/dashboard', restaurantId, tableNo];
   }
 }

@@ -11,11 +11,12 @@ import { User } from '../../../services/mock-data.service';
 import { MenuItem } from '../../../interfaces';
 import { CartService } from '../../../services/cart.service';
 import { environment } from '../../../environments/environment';
+import { AnimateOnScrollDirective } from '../../../directives/animate-on-scroll.directive';
 
 @Component({
   selector: 'app-customer-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AnimateOnScrollDirective],
   templateUrl: './customer-dashboard.component.html',
   styleUrls: ['./customer-dashboard.component.css']
 })
