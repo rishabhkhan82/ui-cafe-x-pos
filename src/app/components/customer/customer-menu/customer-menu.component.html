@@ -12,7 +12,7 @@
     </div>
 
     <!-- Search and Filters -->
-    <div class="mb-2" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="1000">
+    <div class="mb-2" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="100">
       <div class="relative mb-4">
         <input [(ngModel)]="searchQuery"
                (input)="onSearchInput(searchQuery)"
@@ -34,27 +34,35 @@
       <div class="flex space-x-3 overflow-x-auto pb-2">
         <button *ngFor="let category of categories"
                 (click)="setActiveCategory(category.key)"
-                [class]="getCategoryButtonClass(category.key)">
+                [class]="getCategoryButtonClass(category.key)"
+                class="flex items-center">
           <i [class]="category.icon" class="mr-2"></i>{{ category.label }}
+          <span *ngIf="activeCategory === category.key && isLoading" class="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent ml-2"></span>
         </button>
         <button (click)="setFeatureFilter('featured')"
-                [class]="getFeatureFilterClass('featured')">
+                [class]="getFeatureFilterClass('featured')"
+                class="flex items-center">
           <i class="fas fa-star mr-2"></i>Featured
+          <span *ngIf="activeFeatureFilter === 'featured' && isLoading" class="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent ml-2"></span>
         </button>
         <button (click)="setFeatureFilter('popular')"
-                [class]="getFeatureFilterClass('popular')">
+                [class]="getFeatureFilterClass('popular')"
+                class="flex items-center">
           <i class="fas fa-fire mr-2"></i>Popular
+          <span *ngIf="activeFeatureFilter === 'popular' && isLoading" class="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent ml-2"></span>
         </button>
         <button (click)="setFeatureFilter('recommended')"
-                [class]="getFeatureFilterClass('recommended')">
+                [class]="getFeatureFilterClass('recommended')"
+                class="flex items-center">
           <i class="fas fa-thumbs-up mr-2"></i>Recommended
+          <span *ngIf="activeFeatureFilter === 'recommended' && isLoading" class="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent ml-2"></span>
         </button>
       </div>
     </div>
 
     <!-- Recommended Section -->
     <ng-template #recommendedSection>
-      <section class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="1000">
+          <section class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="300">
         <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Recommended For You</h3>
         <div class="space-y-4">
           <div *ngFor="let item of recommendedItems"
@@ -101,7 +109,7 @@
     <!-- Dynamic Results -->
     <ng-container *ngIf="!isLoading">
       <ng-container *ngIf="activeFeatureFilter !== 'all'; else categoryView">
-        <section class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="1000">
+         <section class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="100">
           <div class="flex items-center justify-between mb-3">
             <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ activeFeatureFilter === 'featured' ? 'Featured Items' : activeFeatureFilter === 'popular' ? 'Popular Items' : 'Recommended Items' }}</h3>
             <span class="text-xs text-gray-500 dark:text-gray-400">{{ filteredMenuItems.length }} items</span>
@@ -158,7 +166,7 @@
                     class="mb-6"
                      appAnimateOnScroll
                      animationClass="animate-fade-in-up"
-                     [delay]="1000">
+                      [delay]="100">
               <div class="flex items-center justify-between mb-3">
                 <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ category.label }}</h3>
                 <span class="text-xs text-gray-500 dark:text-gray-400">{{ getCategoryItemCount(category.key) }} items</span>
@@ -207,7 +215,7 @@
         </ng-container>
 
         <ng-template #filteredView>
-          <section class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="1000">
+      <section class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="100">
             <div class="flex items-center justify-between mb-3">
               <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ activeCategory | titlecase }}</h3>
               <span class="text-xs text-gray-500 dark:text-gray-400">{{ filteredMenuItems.length }} items</span>
