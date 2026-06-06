@@ -71,7 +71,7 @@ export class OwnerMenusMobileComponent implements OnInit {
     description: '',
     price: 0,
     category: 'Starters',
-    image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=300&h=200&fit=crop',
+    image: environment.api.baseUrl + '/uploads/images/default/menu-default.png',
     item_id: '',
     discount: '',
     original_price: 0,
@@ -79,6 +79,8 @@ export class OwnerMenusMobileComponent implements OnInit {
     is_active: true,
     is_available: true,
     is_popular: false,
+    is_featured: false,
+    is_recommended: false,
     is_spicy: false,
     is_veg: true,
     is_vegetarian: true,
@@ -141,7 +143,7 @@ export class OwnerMenusMobileComponent implements OnInit {
 
     if (this.categoryFilter && this.categoryFilter !== 'all') {
       const selectedCategory = this.categories.find(c => c.code === this.categoryFilter);
-      params.category = selectedCategory ? selectedCategory.label : this.categoryFilter;
+      params.category = selectedCategory ? selectedCategory.code : this.categoryFilter;
     }
 
     if (this.statusFilter !== 'all') {
@@ -190,6 +192,8 @@ export class OwnerMenusMobileComponent implements OnInit {
       is_active: apiMenuItem.is_active ?? true,
       is_available: apiMenuItem.is_available ?? true,
       is_popular: apiMenuItem.is_popular ?? false,
+      is_featured: apiMenuItem.is_featured ?? false,
+      is_recommended: apiMenuItem.is_recommended ?? false,
       is_spicy: apiMenuItem.is_spicy ?? false,
       is_veg: apiMenuItem.is_veg ?? true,
       is_vegetarian: apiMenuItem.is_vegetarian ?? true,
@@ -251,6 +255,11 @@ export class OwnerMenusMobileComponent implements OnInit {
     this.selectedMenu = menu;
   }
 
+  editFromDetails(menu: MenuItem): void {
+    this.selectedMenu = null;
+    this.showMenuForm(menu);
+  }
+
   showMenuForm(menu?: MenuItem): void {
     this.showAddForm = true;
     this.editingMenu = menu || null;
@@ -262,8 +271,8 @@ export class OwnerMenusMobileComponent implements OnInit {
         name: '',
         description: '',
         price: 0,
-        category: 'Starters',
-        image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=300&h=200&fit=crop',
+        category: 'starters',
+        image: '/uploads/images/default/menu-default.png',
         item_id: '',
         discount: '',
         original_price: 0,
@@ -271,6 +280,8 @@ export class OwnerMenusMobileComponent implements OnInit {
         is_active: true,
         is_available: true,
         is_popular: false,
+        is_featured: false,
+        is_recommended: false,
         is_spicy: false,
         is_veg: true,
         is_vegetarian: true,
@@ -291,7 +302,7 @@ export class OwnerMenusMobileComponent implements OnInit {
       description: '',
       price: 0,
       category: 'Starters',
-      image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=300&h=200&fit=crop',
+      image: environment.api.baseUrl + '/uploads/images/default/menu-default.png',
       item_id: '',
       discount: '',
       original_price: 0,
@@ -299,6 +310,8 @@ export class OwnerMenusMobileComponent implements OnInit {
       is_active: true,
       is_available: true,
       is_popular: false,
+      is_featured: false,
+      is_recommended: false,
       is_spicy: false,
       is_veg: true,
       is_vegetarian: true,
@@ -392,6 +405,39 @@ export class OwnerMenusMobileComponent implements OnInit {
     }
   }
 
+  recalculateDiscount(): void {
+    const original = Number(this.menuForm.original_price);
+    const current = Number(this.menuForm.price);
+    if (original > 0 && current > 0 && current < original) {
+      const discountPercent = Math.round(((original - current) / original) * 100);
+      this.menuForm.discount = discountPercent + '% off';
+    }
+  }
+
+  recalculatePriceFromDiscount(): void {
+    const original = Number(this.menuForm.original_price);
+    if (original <= 0) return;
+    const match = String(this.menuForm.discount).match(/(\d+)/);
+    if (match) {
+      const percent = parseInt(match[1], 10);
+      this.menuForm.price = Math.round((original * (1 - percent / 100)) * 100) / 100;
+    } else {
+      this.menuForm.price = original;
+    }
+  }
+
+  generateItemId(): void {
+    if (this.menuForm.name && this.menuForm.name.trim()) {
+      this.menuForm.item_id = this.menuForm.name
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '_');
+    } else {
+      this.menuForm.item_id = '';
+    }
+  }
+
   validateCategory(): void {
     const validation = this.validationService.menuCategory(this.menuForm.category);
     if (!validation.isValid) {
@@ -420,7 +466,7 @@ export class OwnerMenusMobileComponent implements OnInit {
   }
 
   validateImage(): void {
-    const defaultImage = 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=300&h=200&fit=crop';
+    const defaultImage = environment.api.baseUrl + '/uploads/images/default/menu-default.png';
     if (!this.menuForm.image || this.menuForm.image === defaultImage) {
       this.fieldErrors['image'] = 'Image is required';
     } else {
@@ -455,6 +501,8 @@ export class OwnerMenusMobileComponent implements OnInit {
         is_active: this.menuForm.is_active,
         is_available: this.menuForm.is_available,
         is_popular: this.menuForm.is_popular,
+        is_featured: this.menuForm.is_featured,
+        is_recommended: this.menuForm.is_recommended,
         is_spicy: this.menuForm.is_spicy,
         is_veg: this.menuForm.is_veg,
         is_vegetarian: this.menuForm.is_vegetarian,
@@ -515,6 +563,8 @@ export class OwnerMenusMobileComponent implements OnInit {
         is_active: this.menuForm.is_active,
         is_available: this.menuForm.is_available,
         is_popular: this.menuForm.is_popular,
+        is_featured: this.menuForm.is_featured,
+        is_recommended: this.menuForm.is_recommended,
         is_spicy: this.menuForm.is_spicy,
         is_veg: this.menuForm.is_veg,
         is_vegetarian: this.menuForm.is_vegetarian,

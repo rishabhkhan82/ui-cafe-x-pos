@@ -61,7 +61,7 @@ export class CustomerCartComponent implements OnInit {
   private computeTotals(): void {
     this.subtotal = this.cartItems.reduce((sum, cartItem) => {
       const menuItem = cartItem.menuItem;
-      const effectivePrice = Number(menuItem.discount) > 0 ? menuItem.original_price : menuItem.price;
+      const effectivePrice = menuItem.price;
       return sum + effectivePrice * cartItem.quantity;
     }, 0);
 

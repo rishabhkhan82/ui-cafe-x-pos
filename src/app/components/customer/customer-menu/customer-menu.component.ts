@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Subject, Observable } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, filter } from 'rxjs/operators';
 import { CrudService } from '../../../services/crud.service';
@@ -27,6 +27,7 @@ interface MenuCategory {
 export class CustomerMenuComponent implements OnInit {
   private crudService = inject(CrudService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private authService = inject(AuthService);
   private cartService = inject(CartService);
 
@@ -38,6 +39,7 @@ export class CustomerMenuComponent implements OnInit {
 
   searchQuery: string = '';
   activeCategory: string = 'all';
+  activeFeatureFilter: 'all' | 'featured' | 'popular' | 'recommended' = 'all';
   private searchSubject = new Subject<string>();
 
   pendingOrdersCount = 2;
@@ -54,8 +56,39 @@ export class CustomerMenuComponent implements OnInit {
 
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
-    this.cartService.cart$.subscribe(() => this.cartItemCount = this.cartService.cartItemCount);
-    this.setupSearch();
+    this.cartService.cart$.subscribe(() => {
+      this.cartItemCount = this.cartService.cartItemCount;
+    });
+    this.readQueryParams();
+    // this.setupSearch();
+  }
+
+  private readQueryParams(): void {
+    this.route.queryParams.subscribe(params => {
+      const category = params['category'];
+      const isFeatured = params['is_featured'];
+      const isPopular = params['is_popular'];
+      const isRecommended = params['is_recommended'];
+
+      if (category && typeof category === 'string') {
+        this.activeCategory = category;
+      }
+
+      if (isFeatured === 'true' || isFeatured === '1') {
+        this.activeFeatureFilter = 'featured';
+      } else if (isPopular === 'true' || isPopular === '1') {
+        this.activeFeatureFilter = 'popular';
+      } else if (isRecommended === 'true' || isRecommended === '1') {
+        this.activeFeatureFilter = 'recommended';
+      } else {
+        this.activeFeatureFilter = 'all';
+      }
+
+      this.loadMenuItems(
+        this.activeCategory !== 'all' ? this.activeCategory : undefined,
+        this.activeFeatureFilter !== 'all' ? this.activeFeatureFilter : undefined
+      );
+    });
   }
 
   private mapApiMenuItemsToMenuItems(apiMenuItems: any[]): MenuItem[] {
@@ -68,13 +101,15 @@ export class CustomerMenuComponent implements OnInit {
       image: item.image || '',
       item_id: item.item_id || '',
       discount: item.discount || '',
-      original_price: item.original_price || item.price || 0,
+      original_price: item.original_price || item.originalPrice || item.price || 0,
       preparation_time: item.preparation_time || 0,
       is_active: item.is_active ?? true,
       is_available: item.is_available ?? true,
       is_popular: item.is_popular ?? false,
+      is_featured: item.is_featured ?? false,
+      is_recommended: item.is_recommended ?? false,
       is_spicy: item.is_spicy ?? false,
-      is_veg: item.is_veg ?? true,
+      is_veg: item.is_veg ?? item.is_vegetarian ?? true,
       is_vegetarian: item.is_vegetarian ?? true,
       restaurant_id: item.restaurant_id || 1,
       created_at: item.created_at ? new Date(item.created_at) : undefined,
@@ -84,7 +119,7 @@ export class CustomerMenuComponent implements OnInit {
     }));
   }
 
-  private loadMenuItems(category?: string, name?: string): void {
+  private loadMenuItems(category?: string, featureFilter?: string): void {
     const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
     const params: any = {
       page: 1,
@@ -96,14 +131,22 @@ export class CustomerMenuComponent implements OnInit {
       params.category = category;
     }
 
+    if (featureFilter === 'featured') {
+      params.is_featured = '1';
+    } else if (featureFilter === 'popular') {
+      params.is_popular = '1';
+    } else if (featureFilter === 'recommended') {
+      params.is_recommended = '1';
+    }
+
     if (this.searchQuery && this.searchQuery.trim()) {
       params.name = this.searchQuery.trim();
     }
-
+    
     this.crudService.getMenuItems(params).subscribe({
       next: (response: any) => {
         this.allMenuItems = this.mapApiMenuItemsToMenuItems(response.data);
-        this.recommendedItems = this.allMenuItems.slice(0, 3);
+        this.recommendedItems = this.allMenuItems.filter(item => item.is_recommended).slice(0, 3);
         this.filterMenuItems();
       },
       error: (error) => {
@@ -122,12 +165,13 @@ export class CustomerMenuComponent implements OnInit {
       switchMap(term => {
         this.searchQuery = term;
         const category = term ? 'all' : this.activeCategory;
-        return this.getMenuItemsObservable(category, term);
+        const filter = term ? 'all' : this.activeFeatureFilter;
+        return this.getMenuItemsObservable(category, term, filter);
       })
     ).subscribe({
       next: (response: any) => {
         this.allMenuItems = this.mapApiMenuItemsToMenuItems(response.data);
-        this.recommendedItems = this.allMenuItems.slice(0, 3);
+        this.recommendedItems = this.allMenuItems.filter(item => item.is_recommended).slice(0, 3);
         this.filterMenuItems();
       },
       error: (error) => {
@@ -141,7 +185,7 @@ export class CustomerMenuComponent implements OnInit {
     this.loadMenuItems();
   }
 
-  private getMenuItemsObservable(category?: string, name?: string): Observable<any> {
+  private getMenuItemsObservable(category?: string, name?: string, featureFilter?: string): Observable<any> {
     const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
     const params: any = {
       page: 1,
@@ -151,6 +195,14 @@ export class CustomerMenuComponent implements OnInit {
 
     if (category && category !== 'all') {
       params.category = category;
+    }
+
+    if (featureFilter === 'featured') {
+      params.is_featured = '1'
+    } else if (featureFilter === 'popular') {
+      params.is_popular = '1';
+    } else if (featureFilter === 'recommended') {
+      params.is_recommended = '1';
     }
 
     if (name && name.trim()) {
@@ -170,31 +222,71 @@ export class CustomerMenuComponent implements OnInit {
   }
 
   public filterMenuItems(): void {
-    this.filteredMenuItems = this.activeCategory === 'all'
-      ? [...this.allMenuItems]
-      : this.allMenuItems.filter(item => item.category === this.getCategoryCode(this.activeCategory));
-  }
-
-  getCategoryCode(label: string): string {
-    const category = this.categories.find(c => c.label === label);
-    return category ? category.key : label;
+    this.filteredMenuItems = this.allMenuItems.filter(item => {
+      const categoryMatch = this.activeCategory === 'all' || item.category === this.activeCategory;
+      const featureMatch =
+        this.activeFeatureFilter === 'all' ||
+        (this.activeFeatureFilter === 'featured' && item.is_featured) ||
+        (this.activeFeatureFilter === 'popular' && item.is_popular) ||
+        (this.activeFeatureFilter === 'recommended' && item.is_recommended);
+      return categoryMatch && featureMatch;
+    });
   }
 
   setActiveCategory(category: string): void {
     this.activeCategory = category;
-    this.loadMenuItems(category);
+    this.activeFeatureFilter = 'all';
+    this.updateUrlAndReload(category, undefined);
+  }
+
+  setFeatureFilter(filter: 'all' | 'featured' | 'popular' | 'recommended'): void {
+    this.activeFeatureFilter = filter;
+    this.activeCategory = 'all';
+    this.updateUrlAndReload(undefined, filter);
+  }
+
+  private updateUrlAndReload(category?: string, featureFilter?: string): void {
+    const queryParams: Record<string, any> = {};
+
+    if (category && category !== 'all') {
+      queryParams['category'] = category;
+    }
+
+    if (featureFilter === 'featured') {
+      queryParams['is_featured'] = '1';
+    } else if (featureFilter === 'popular') {
+      queryParams['is_popular'] = '1';
+    } else if (featureFilter === 'recommended') {
+      queryParams['is_recommended'] = '1';
+    }
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams,
+      queryParamsHandling: 'replace'
+    });
   }
 
   getCategoryButtonClass(category: string): string {
     const baseClass = 'px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors';
-    if (this.activeCategory === category) {
+    const isActive = this.activeCategory === category && this.activeFeatureFilter === 'all';
+    if (isActive) {
+      return `${baseClass} bg-primary-500 text-white`;
+    }
+    return `${baseClass} bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600`;
+  }
+
+  getFeatureFilterClass(filter: string): string {
+    const baseClass = 'px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors';
+    const isActive = this.activeFeatureFilter === filter && this.activeCategory === 'all';
+    if (isActive) {
       return `${baseClass} bg-primary-500 text-white`;
     }
     return `${baseClass} bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600`;
   }
 
   getItemsByCategory(category: string): MenuItem[] {
-    return this.allMenuItems.filter(item => item.category === category);
+    return this.filteredMenuItems.filter(item => item.category === category);
   }
 
   getCategoryItemCount(category: string): number {

@@ -1,25 +1,5 @@
-<!-- Guest Loading/Error Section -->
-<div *ngIf="isLoadingGuest" class="flex items-center justify-center min-h-screen">
-  <div class="text-center">
-    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-    <p class="text-gray-600 dark:text-gray-400">Setting up your session...</p>
-  </div>
-</div>
 
-<div *ngIf="guestError && !isLoadingGuest" class="flex items-center justify-center min-h-screen">
-  <div class="text-center max-w-md mx-auto p-6 bg-red-50 dark:bg-red-900/20 rounded-lg">
-    <i class="fas fa-exclamation-triangle text-red-500 text-3xl mb-4"></i>
-    <h3 class="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">Session Error</h3>
-    <p class="text-red-600 dark:text-red-300 mb-4">{{ guestError }}</p>
-    <button (click)="retryGuestInitialization()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
-      Retry
-    </button>
-  </div>
-</div>
-
-<!-- Main Content -->
-<main *ngIf="!isLoadingGuest && !guestError" class="px-4 py-4 pb-20 pt-5">
-  <!-- Welcome Section -->
+<main *ngIf="!isLoadingGuest && !guestError" class="px-4 py-4 pb-24 pt-5">
   <div class="mb-6 animate__animated animate__fadeInUp">
     <div class="gradient-bg rounded-2xl p-6 text-white relative overflow-hidden">
       <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
@@ -33,45 +13,16 @@
             <span class="text-sm">{{ estimatedDeliveryTime }} mins</span>
           </div>
           <div class="flex items-center space-x-2">
-            <i class="fas fa-truck text-sm"></i>
-            <span class="text-sm">Free delivery</span>
+            <i class="fas fa-mug-hot text-sm"></i>
+            <span class="text-sm">Scan, order, relax & enjoy</span>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Search Bar -->
   <div class="mb-6 animate__animated animate__fadeInUp animate__delay-1s">
-    <div class="relative">
-      <input [(ngModel)]="searchQuery"
-             (input)="filterMenuItems()"
-             type="text"
-             placeholder="Search for dishes, cuisines..."
-             class="w-full pl-12 pr-4 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300">
-      <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-        <i class="fas fa-search text-gray-400"></i>
-      </div>
-      <button class="absolute inset-y-0 right-0 pr-4 flex items-center">
-        <i class="fas fa-filter text-gray-400 hover:text-primary-500 transition-colors"></i>
-      </button>
-    </div>
-  </div>
-
-  <!-- Quick Categories -->
-  <div class="mb-6 animate__animated animate__fadeInUp animate__delay-2s">
-    <div class="flex space-x-3 overflow-x-auto pb-2">
-      <button *ngFor="let category of categories"
-              (click)="setActiveCategory(category.key)"
-              [class]="getCategoryButtonClass(category.key)">
-        <i [class]="category.icon" class="mr-2"></i>{{ category.label }}
-      </button>
-    </div>
-  </div>
-
-  <!-- Menu Categories -->
-  <div class="mb-6 animate__animated animate__fadeInUp animate__delay-3s">
-    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Menu Categories</h3>
+    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Browse By Category</h3>
     <div class="grid grid-cols-2 gap-4">
       <div *ngFor="let category of menuCategories"
            (click)="setActiveCategory(category.key)"
@@ -85,36 +36,48 @@
     </div>
   </div>
 
-  <!-- Featured Items -->
-  <div class="mb-6 animate__animated animate__fadeInUp animate__delay-4s">
+  <div class="mb-6 animate__animated animate__fadeInUp animate__delay-2s">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-bold text-gray-900 dark:text-white">Featured Items</h3>
-      <button class="text-primary-500 text-sm font-medium">View All</button>
+      <button (click)="viewFeaturedAll()" class="text-primary-500 text-sm font-medium">View All</button>
+    </div>
+
+    <div *ngIf="featuredItems.length === 0" class="bg-white dark:bg-gray-800 rounded-2xl p-6 text-start text-gray-500 dark:text-gray-400">
+      No featured items available right now.
     </div>
 
     <div class="space-y-4">
-      <!-- Featured Menu Item -->
       <div *ngFor="let item of featuredItems"
            class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 menu-item-hover">
         <div class="flex items-center space-x-4">
           <div class="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
-            <img [src]="item.image" [alt]="item.name" class="w-full h-full object-cover">
+            <img [src]="getFullImageUrl(item.image)" [alt]="item.name" class="w-full h-full object-cover" (error)="item.image=''">
           </div>
           <div class="flex-1">
             <div class="flex items-start justify-between">
               <div>
                 <h4 class="font-semibold text-gray-900 dark:text-white mb-1">{{ item.name }}</h4>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ item.description }}</p>
-                <div class="flex items-center space-x-2">
+                <div class="flex items-center space-x-2 flex-wrap">
                   <span class="text-lg font-bold text-primary-500">₹{{ item.price }}</span>
-                  <span *ngIf="item.originalPrice" class="text-sm text-gray-500 dark:text-gray-400 line-through">₹{{ item.originalPrice }}</span>
-                  <span *ngIf="item.discount" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">{{ item.discount }}</span>
+                  <span *ngIf="item.original_price" class="text-sm text-gray-500 dark:text-gray-400 line-through">₹{{ item.original_price }}</span>
+                  <span *ngIf="item.discount" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">{{ item.discount }}%</span>
+                  <span *ngIf="item.is_veg" class="text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-1 rounded-full">Veg</span>
+                  <span *ngIf="!item.is_veg" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">Non-Veg</span>
+                  <span *ngIf="item.is_spicy" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">Spicy</span>
+                  <span *ngIf="item.is_popular" class="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2 py-1 rounded-full">Popular</span>
+                  <span *ngIf="item.is_featured" class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-full">Featured</span>
                 </div>
               </div>
-              <button (click)="addToCart(item)"
-                      class="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors">
-                <i class="fas fa-plus text-sm"></i>
-              </button>
+              <div class="flex flex-col items-center space-y-2 pl-2">
+                <button (click)="increaseQuantity(item)" class="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors">
+                  <i class="fas fa-plus text-sm"></i>
+                </button>
+                <span *ngIf="getItemQuantity(item) > 0" class="text-sm font-bold text-gray-700 dark:text-gray-200 leading-none">{{ getItemQuantity(item) }}</span>
+                <button *ngIf="getItemQuantity(item) > 0" (click)="decreaseQuantity(item)" class="w-8 h-8 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full border border-gray-200 dark:border-gray-600 flex items-center justify-center hover:text-primary-500 transition-colors">
+                  <i class="fas fa-minus text-sm"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -122,34 +85,54 @@
     </div>
   </div>
 
-  <!-- Popular This Week -->
-  <div class="mb-6 animate__animated animate__fadeInUp animate__delay-5s">
+  <div class="mb-6 animate__animated animate__fadeInUp animate__delay-3s">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-bold text-gray-900 dark:text-white">Popular This Week</h3>
-      <button class="text-primary-500 text-sm font-medium">View All</button>
+      <button (click)="viewPopularAll()" class="text-primary-500 text-sm font-medium">View All</button>
+    </div>
+
+    <div *ngIf="popularItems.length === 0" class="bg-white dark:bg-gray-800 rounded-2xl p-6 text-start text-gray-500 dark:text-gray-400">
+      No popular items available right now.
     </div>
 
     <div class="grid grid-cols-2 gap-4">
       <div *ngFor="let item of popularItems"
            class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 menu-item-hover">
         <div class="w-full h-32 rounded-xl overflow-hidden mb-3">
-          <img [src]="item.image" [alt]="item.name" class="w-full h-full object-cover">
+          <img [src]="getFullImageUrl(item.image)" [alt]="item.name" class="w-full h-full object-cover" (error)="item.image=''">
         </div>
         <h4 class="font-semibold text-gray-900 dark:text-white mb-1">{{ item.name }}</h4>
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ item.description }}</p>
-        <div class="flex items-center justify-between">
-          <span class="text-lg font-bold text-primary-500">₹{{ item.price }}</span>
-          <button (click)="addToCart(item)"
-                  class="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors">
-            <i class="fas fa-plus text-sm"></i>
-          </button>
+        <div class="flex flex-col flex-start justify-between gap-3">
+          <div class="flex flex-col">
+            <div class="flex items-center space-x-2">
+              <span class="text-lg font-bold text-primary-500">₹{{ item.price }}</span>
+              <span *ngIf="item.original_price" class="text-sm text-gray-500 dark:text-gray-400 line-through">₹{{ item.original_price }}</span>
+              <span *ngIf="item.discount" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">{{ item.discount }}%</span>
+            </div>
+            <div class="flex items-center gap-1 mt-1">
+              <span *ngIf="item.is_veg" class="text-[10px] bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-1.5 py-0.5 rounded-full">Veg</span>
+              <span *ngIf="!item.is_veg" class="text-[10px] bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded-full">Non-Veg</span>
+              <span *ngIf="item.is_spicy" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">Spicy</span>
+              <span *ngIf="item.is_popular" class="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2 py-1 rounded-full">Popular</span>
+              <span *ngIf="item.is_featured" class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-full">Featured</span>
+            </div>
+          </div>
+          <div class="flex items-center justify-end space-x-2">
+            <button *ngIf="getItemQuantity(item) > 0" (click)="decreaseQuantity(item)" class="w-7 h-7 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full border border-gray-200 dark:border-gray-600 flex items-center justify-center hover:text-primary-500 transition-colors">
+              <i class="fas fa-minus text-[10px]"></i>
+            </button>
+            <span *ngIf="getItemQuantity(item) > 0" class="text-xs font-bold text-gray-700 dark:text-gray-200">{{ getItemQuantity(item) }}</span>
+            <button (click)="increaseQuantity(item)" class="w-7 h-7 bg-primary-500 text-white rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors">
+              <i class="fas fa-plus text-[10px]"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </main>
 
-<!-- Floating Cart Button -->
 <div *ngIf="!isLoadingGuest && !guestError" class="fixed bottom-24 right-4 z-40">
   <button (click)="viewCart()"
           class="w-14 h-14 bg-primary-500 text-white rounded-full shadow-lg hover:bg-primary-600 transition-all duration-300 floating-animation relative">

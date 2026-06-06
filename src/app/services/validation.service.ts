@@ -311,7 +311,7 @@ export class ValidationService {
     const requiredCheck = this.required(category, 'Category');
     if (!requiredCheck.isValid) return requiredCheck;
 
-    const validCategories = ['Appetizers', 'Main Course', 'Desserts', 'Beverages', 'Snacks', 'Salads'];
+    const validCategories = ['starters', 'main-course', 'desserts', 'beverages', 'snacks', 'salads'];
     if (!validCategories.includes(category)) {
       return { isValid: false, message: 'Please select a valid category', code: 'INVALID_CATEGORY' };
     }

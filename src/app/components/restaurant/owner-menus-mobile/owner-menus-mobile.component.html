@@ -114,6 +114,12 @@
                 <span *ngIf="menu.is_popular" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
                   <i class="fas fa-star mr-1"></i>Popular
                 </span>
+                <span *ngIf="menu.is_featured" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                  <i class="fas fa-certificate mr-1"></i>Featured
+                </span>
+                <span *ngIf="menu.is_recommended" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                  <i class="fas fa-thumbs-up mr-1"></i>Recommended
+                </span>
                 <span *ngIf="menu.is_spicy" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
                   <i class="fas fa-fire mr-1"></i>Spicy
                 </span>
@@ -121,7 +127,7 @@
             </div>
             <div class="text-right">
               <p class="text-xl font-bold text-red-600 dark:text-red-400">${{ menu.price.toFixed(2) }}</p>
-              <p *ngIf="menu.discount" class="text-sm text-gray-500 line-through">${{ menu.original_price.toFixed(2) }}</p>
+               <p *ngIf="menu.discount" class="text-sm text-gray-500 line-through">${{ menu.original_price?.toFixed(2) }}</p>
             </div>
           </div>
           <div class="flex items-center justify-between mb-3">
@@ -264,7 +270,7 @@
               <div *ngIf="menuForm.image" class="relative flex space-x-4">
                 <!-- Square Preview -->
                 <div class="relative">
-                  <img [src]="menuForm.image" alt="Menu item preview - square" class="w-32 h-32 object-cover rounded-xl border-2 border-gray-200 dark:border-gray-600">
+                  <img [src]="getFullImageUrl(menuForm.image)" alt="Menu item preview - square" class="w-32 h-32 object-cover rounded-xl border-2 border-gray-200 dark:border-gray-600">
                   <div class="absolute -bottom-2 -right-2 bg-white dark:bg-gray-800 rounded-md px-2 py-1 shadow-md border border-gray-200 dark:border-gray-600">
                     <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Square</span>
                   </div>
@@ -272,7 +278,7 @@
 
                 <!-- Rectangular Preview -->
                 <div class="relative flex-1">
-                  <img [src]="menuForm.image" alt="Menu item preview - rectangular" class="w-full h-32 object-cover rounded-xl border-2 border-gray-200 dark:border-gray-600">
+                  <img [src]="getFullImageUrl(menuForm.image)" alt="Menu item preview - rectangular" class="w-full h-32 object-cover rounded-xl border-2 border-gray-200 dark:border-gray-600">
                   <div class="absolute -bottom-2 -right-2 bg-white dark:bg-gray-800 rounded-md px-2 py-1 shadow-md border border-gray-200 dark:border-gray-600">
                     <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Rectangle</span>
                   </div>
@@ -310,14 +316,14 @@
 
           <div>
             <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-signature mr-2 text-red-500"></i>Name <span class="text-red-500">*</span></label>
-            <input
-              type="text"
-              [(ngModel)]="menuForm.name"
-              name="name"
-              (blur)="validateName()"
-              (input)="validateName()"
-              class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
-              placeholder="Enter menu item name">
+              <input
+                type="text"
+                [(ngModel)]="menuForm.name"
+                name="name"
+                (blur)="validateName()"
+                (input)="validateName(); generateItemId()"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
+                placeholder="Enter menu item name">
             <div *ngIf="fieldErrors['name']" class="mt-1 text-xs text-red-500">{{ fieldErrors['name'] }}</div>
           </div>
 
@@ -355,6 +361,7 @@
                 step="0.01"
                 [(ngModel)]="menuForm.original_price"
                 name="original_price"
+                (input)="recalculateDiscount()"
                 class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
                 placeholder="0.00">
             </div>
@@ -369,7 +376,7 @@
                 (change)="validateCategory()"
                 class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white">
                 <option value="">Select Category</option>
-                <option *ngFor="let category of categories" [value]="category.label" [disabled]="category.code === 'all'">{{ category.label }}</option>
+                <option *ngFor="let category of categories" [value]="category.code" [disabled]="category.code === 'all'">{{ category.label }}</option>
               </select>
               <div *ngIf="fieldErrors['category']" class="mt-1 text-xs text-red-500">{{ fieldErrors['category'] }}</div>
             </div>
@@ -396,10 +403,9 @@
                 type="text"
                 [(ngModel)]="menuForm.item_id"
                 name="item_id"
-                (blur)="validateItemId()"
-                (input)="validateItemId()"
-                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
-                placeholder="PIZZA-001">
+                disabled
+                class="w-full px-4 py-3 bg-gray-100 dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-xl text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                placeholder="Auto-generated">
               <div *ngIf="fieldErrors['item_id']" class="mt-1 text-xs text-red-500">{{ fieldErrors['item_id'] }}</div>
             </div>
             <div>
@@ -408,6 +414,7 @@
                 type="text"
                 [(ngModel)]="menuForm.discount"
                 name="discount"
+                (input)="recalculatePriceFromDiscount()"
                 class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
                 placeholder="10%">
             </div>
@@ -465,13 +472,30 @@
               </label>
             </div>
           </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex items-center">
+              <label class="flex items-center cursor-pointer">
+                <input type="checkbox" [(ngModel)]="menuForm.is_featured" name="is_featured" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-500 relative"></div>
+                <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">Featured</span>
+              </label>
+            </div>
+            <div class="flex items-center">
+              <label class="flex items-center cursor-pointer">
+                <input type="checkbox" [(ngModel)]="menuForm.is_recommended" name="is_recommended" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-500 relative"></div>
+                <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">Recommended</span>
+              </label>
+            </div>
+          </div>
         </form>
       </div>
     </div>
   </div>
 
   <!-- Menu Details Modal -->
-  <div *ngIf="selectedMenu" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div *ngIf="selectedMenu" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden">
       <div class="px-6 py-4 bg-gradient-to-r from-red-50 to-red-50 dark:from-red-900/20 dark:to-red-900/10 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
         <h3 class="text-xl font-bold text-gray-900 dark:text-white">Menu Item Details</h3>
@@ -509,7 +533,7 @@
               <div>
                 <p class="text-xs text-gray-500 dark:text-gray-400">Price</p>
                 <p class="text-lg font-bold text-red-600 dark:text-red-400">${{ selectedMenu!.price.toFixed(2) }}</p>
-                <p *ngIf="selectedMenu!.discount" class="text-sm text-gray-500 line-through">${{ selectedMenu!.original_price.toFixed(2) }}</p>
+                <p *ngIf="selectedMenu!.discount" class="text-sm text-gray-500 line-through">${{ selectedMenu!.original_price?.toFixed(2) }}</p>
               </div>
             </div>
             <div class="flex items-center space-x-3">
@@ -576,7 +600,7 @@
 
       <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex space-x-3">
         <button
-          (click)="showMenuForm(selectedMenu!)"
+          (click)="editFromDetails(selectedMenu!)"
           class="flex-1 px-4 py-3 rounded-xl font-medium bg-red-500 text-white hover:bg-red-600 transition-colors">
           <i class="fas fa-edit mr-2"></i>Edit
         </button>

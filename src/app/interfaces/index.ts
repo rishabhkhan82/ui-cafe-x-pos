@@ -43,7 +43,7 @@ export interface MenuItem {
   image: string;
   item_id: string;
   discount: string;
-  original_price: number;
+  original_price?: number;
   preparation_time: number;
   is_active: boolean;
   is_available: boolean;
@@ -51,6 +51,8 @@ export interface MenuItem {
   is_spicy: boolean;
   is_veg: boolean;
   is_vegetarian: boolean;
+  is_featured?: boolean;
+  is_recommended?: boolean;
   restaurant_id: number;
   created_at?: Date;
   updated_at?: Date;
