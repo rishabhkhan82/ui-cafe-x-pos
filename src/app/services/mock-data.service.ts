@@ -174,7 +174,7 @@ export interface Recipe {
   ingredients: RecipeIngredient[];
   instructions: string[];
   costPerServing: number;
-  isActive: boolean;
+  isActive?: boolean;
   menuItemId?: number; // Link to menu item
   createdAt: Date;
   updatedAt: Date;
@@ -201,16 +201,102 @@ export interface Offer {
   applicableCategories?: string[];
   startDate: Date;
   endDate: Date;
-  isActive: boolean;
+  isActive?: boolean;
   usageCount: number;
   usageLimit?: number;
   maxUsage?: number;
   redemptions?: number;
   revenueGenerated?: number;
+  offer_id?: string;
+  code?: string;
+  terms?: string;
+  restaurant_id?: string;
+}
+
+export interface CustomerOffer {
+  id: string;
+  title: string;
+  description: string;
+  type: 'percentage' | 'fixed' | 'buy_one_get_one' | 'free_item';
+  typeLabel: string;
+  icon: string;
+  code: string;
+  validUntil: string;
+  expiresSoon: boolean;
+  offerId: string;
+  minOrderValue?: number;
+  discountValue?: number;
+}
+
+export interface RedeemableReward {
+  id: string;
+  title: string;
+  description: string;
+  pointsRequired: number;
+  icon: string;
+  iconBg: string;
+  iconColor: string;
+}
+
+export interface PointsTransaction {
+  id: string;
+  description: string;
+  points: number;
+  type: 'earned' | 'redeemed';
+  date: Date;
+  icon: string;
+  transactionType?: string;
+  balanceBefore?: number;
+  balanceAfter?: number;
+  orderId?: string;
+  offerId?: string;
+  reference?: string;
+  earnedFrom?: string;
+  redeemedFor?: string;
+}
+
+export interface LoyaltyProgram {
+  id: string;
+  programId: string;
+  customerId: string;
+  customerName?: string;
+  programName?: string;
+  name?: string;
+  pointsBalance: number;
+  totalPointsEarned: number;
+  totalPointsRedeemed: number;
+  pointsPerRupee?: number;
+  pointsToRupee?: number;
+  expiryDays?: number;
+  welcomeBonus?: number;
+  tier?: string;
+  tierExpiryDate?: Date;
+  lastActivityDate?: Date;
+  isActive: boolean;
+  description?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface OfferRedemptionRecord {
+  id: string;
+  redemptionId: string;
+  offerId: number;
+  orderId: number;
+  customerId: number;
+  restaurantId: number;
+  redemptionCode?: string;
+  discountAmount: number;
+  originalAmount: number;
+  finalAmount: number;
+  redemptionMethod: string;
+  appliedBy?: string;
+  appliedAt: Date;
+  createdAt?: Date;
 }
 
 export interface Customer {
-  id?: string;
+  id: string;
   name?: string;
   email?: string;
   phone?: string;
@@ -454,7 +540,7 @@ export interface FoodMenuCategory {
   key: string;
   name: string;
   icon: string;
-  isActive: boolean;
+  isActive?: boolean;
   items: MenuItem[];
 }
 
@@ -1145,16 +1231,6 @@ export interface OfferForm {
   isActive: boolean;
 }
 
-export interface LoyaltyProgram {
-  name: string;
-  pointsPerRupee: number;
-  pointsToRupee: number;
-  expiryDays: number;
-  welcomeBonus: number;
-  isActive: boolean;
-  description: string;
-}
-
 export interface LoyaltyCustomer {
   id: string;
   name: string;
@@ -1165,7 +1241,7 @@ export interface LoyaltyCustomer {
 
 export interface Redemption {
   id: string;
-  customerId: string;
+  customerId?: string;
   customerName: string;
   pointsUsed: number;
   reward: string;
@@ -1181,7 +1257,7 @@ export interface LoyaltyForm {
   pointsToRupee: number;
   expiryDays: number;
   welcomeBonus: number;
-  isActive: boolean;
+  isActive?: boolean;
   description: string;
 }
 
@@ -4536,9 +4612,15 @@ export class MockDataService {
 
     // Initialize loyalty program
     const loyaltyProgram: LoyaltyProgram = {
+      id: '1',
+      programId: 'LOYAL001',
+      customerId: '1',
       name: 'Cafe-X Loyalty Club',
       pointsPerRupee: 1,
       pointsToRupee: 100,
+      pointsBalance: 240,
+      totalPointsEarned: 500,
+      totalPointsRedeemed: 260,
       expiryDays: 365,
       welcomeBonus: 50,
       isActive: true,
@@ -8798,3 +8880,10 @@ export class MockDataService {
     return `ORD-${timestamp}-${random}`;
   }
 }
+
+
+
+
+
+
+

@@ -536,4 +536,73 @@ export class CrudService {
   deleteCustomer(id: string | number): Observable<any> {
     return this.deleteData('customers', {}, id);
   }
+
+  // Customer-specific: active offers for a restaurant (is_active=true, date valid)
+  getCustomerOffers(params?: CrudParams): Observable<any> {
+    return this.getData('offers', params);
+  }
+
+  // ===============================
+  // OFFER REDEMPTION OPERATIONS
+  // ===============================
+
+  getOfferRedemptions(params?: CrudParams): Observable<any> {
+    return this.getData('offer-redemptions', params);
+  }
+
+  getOfferRedemptionsByCustomer(customerId: string | number): Observable<any> {
+    return this.getData(`offer-redemptions/customer/${customerId}`);
+  }
+
+  createOfferRedemption(payload: any): Observable<any> {
+    return this.postData('offer-redemptions', payload);
+  }
+
+  deleteOfferRedemption(id: string | number): Observable<any> {
+    return this.deleteData('offer-redemptions', {}, id);
+  }
+
+  // ===============================
+  // LOYALTY PROGRAM OPERATIONS
+  // ===============================
+
+  getLoyaltyPrograms(params?: CrudParams): Observable<any> {
+    return this.getData('loyalty-programs', params);
+  }
+
+  getLoyaltyProgramByCustomer(customerId: string | number): Observable<any> {
+    return this.getData(`loyalty-programs/customer/${customerId}`);
+  }
+
+  createLoyaltyProgram(payload: any): Observable<any> {
+    return this.postData('loyalty-programs', payload);
+  }
+
+  updateLoyaltyProgram(id: string | number, payload: any): Observable<any> {
+    return this.putData('loyalty-programs', payload, {}, id);
+  }
+
+  // ===============================
+  // LOYALTY TRANSACTION OPERATIONS
+  // ===============================
+
+  getLoyaltyTransactions(params?: CrudParams): Observable<any> {
+    return this.getData('loyalty-transactions', params);
+  }
+
+  getLoyaltyTransactionsByCustomer(customerId: string | number): Observable<any> {
+    return this.getData(`loyalty-transactions/customer/${customerId}`);
+  }
+
+  createLoyaltyTransaction(payload: any): Observable<any> {
+    return this.postData('loyalty-transactions', payload);
+  }
+
+  updateLoyaltyTransaction(id: string | number, payload: any): Observable<any> {
+    return this.putData('loyalty-transactions', payload, {}, id);
+  }
+
+  deleteLoyaltyTransaction(id: string | number): Observable<any> {
+    return this.deleteData('loyalty-transactions', {}, id);
+  }
 }
