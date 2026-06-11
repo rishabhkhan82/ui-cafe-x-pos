@@ -255,6 +255,27 @@ export class CrudService {
     return this.patchData('orders', { status }, {}, id);
   }
 
+  // Order Item operations
+  getOrderItems(params?: CrudParams): Observable<any> {
+    return this.getData('order-items', params);
+  }
+
+  getOrderItemById(id: string | number): Observable<any> {
+    return this.getData(`order-items/${id}`);
+  }
+
+  createOrderItem(payload: any): Observable<any> {
+    return this.postData('order-items', payload);
+  }
+
+  updateOrderItem(id: string | number, payload: any): Observable<any> {
+    return this.putData('order-items', payload, {}, id);
+  }
+
+  deleteOrderItem(id: string | number): Observable<any> {
+    return this.deleteData('order-items', {}, id);
+  }
+
   // Inventory operations
   getInventory(params?: CrudParams): Observable<any> {
     return this.getData('inventory', params);
