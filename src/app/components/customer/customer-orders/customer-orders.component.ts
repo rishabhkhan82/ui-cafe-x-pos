@@ -48,7 +48,6 @@ export class CustomerOrdersComponent implements OnInit {
   cartItemCount = 0;
   isLoading = false;
   isOrderHistoryLoading = false;
-  isBillingRequested = false;
   isRequestingBilling = false;
   private lastWaiterCallTime: number | null = null;
   private readonly waiterCooldownMs = 10 * 60 * 1000;
@@ -84,11 +83,15 @@ export class CustomerOrdersComponent implements OnInit {
             return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
           });
         this.isLoading = false;
+        if (!this.isBillingRequested) {
+          sessionStorage.removeItem('customer_billing_pending');
+        }
         this.calculateInvoice();
       },
       error: () => {
         this.activeOrders = [];
         this.isLoading = false;
+        sessionStorage.removeItem('customer_billing_pending');
         this.calculateInvoice();
       }
     });
@@ -207,8 +210,12 @@ export class CustomerOrdersComponent implements OnInit {
   }
 
   canRequestBilling(): boolean {
-    if (this.activeOrders.length === 0 || this.isBillingRequested || this.isRequestingBilling) return false;
+    if (this.activeOrders.length === 0 || this.isRequestingBilling) return false;
     return this.activeOrders.every(o => o.status === 'SERVED');
+  }
+
+  get isBillingRequested(): boolean {
+    return this.activeOrders.length > 0 && this.activeOrders.every(o => o.status === 'BILLING_REQUESTED');
   }
 
   requestBilling(): void {
@@ -255,12 +262,12 @@ export class CustomerOrdersComponent implements OnInit {
           next: () => {
             completed++;
             if (completed === total) {
-              this.isBillingRequested = true;
               this.isRequestingBilling = false;
               this.notificationService.success(
-                'Billing Requested',
+                'Billing Generated',
                 `Your bill of ₹${this.invoiceTotal} has been generated, please show this at counter and pay`
               );
+              sessionStorage.setItem('customer_billing_pending', 'true');
             }
           },
           error: () => {

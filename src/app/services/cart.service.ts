@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable,inject } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { MenuItem } from '../interfaces';
+import { NotificationService } from './notification.service';
 
 export interface CartItem {
   menuItem: MenuItem;
@@ -14,6 +15,7 @@ export class CartService {
   private readonly STORAGE_KEY = 'cafe_x_cart';
   private cartSubject = new BehaviorSubject<CartItem[]>([]);
   cart$ = this.cartSubject.asObservable();
+  private notificationService = inject(NotificationService);
 
   constructor() {
     this.loadFromStorage();
@@ -28,6 +30,13 @@ export class CartService {
   }
 
   addToCart(menuItem: MenuItem): void {
+    if (sessionStorage.getItem('customer_billing_pending') === 'true') {
+      this.notificationService.error(
+        'Bill Pending',
+        `You have a pending bill. Please pay at the counter before placing a new order.`
+      );
+      return;
+    }
     const current = this.cartSubject.value;
     const existing = current.find(cartItem => cartItem.menuItem.id === menuItem.id);
     if (existing) {
@@ -39,20 +48,14 @@ export class CartService {
     this.saveToStorage();
   }
 
-  updateQuantity(menuItem: MenuItem, quantity: number): void {
-    const current = this.cartSubject.value;
-    const existing = current.find(cartItem => cartItem.menuItem.id === menuItem.id);
-    if (!existing) return;
-    if (quantity <= 0) {
-      this.removeFromCart(menuItem.id);
+  increaseQuantity(menuItem: MenuItem): void {
+    if (sessionStorage.getItem('customer_billing_pending') === 'true') {
+      this.notificationService.error(
+        'Bill Pending',
+        `You have a pending bill. Please pay at the counter before placing a new order.`
+      );
       return;
     }
-    existing.quantity = quantity;
-    this.cartSubject.next([...current]);
-    this.saveToStorage();
-  }
-
-  increaseQuantity(menuItem: MenuItem): void {
     const current = this.cartSubject.value;
     const existing = current.find(cartItem => cartItem.menuItem.id === menuItem.id);
     if (existing) {

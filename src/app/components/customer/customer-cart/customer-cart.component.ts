@@ -46,6 +46,14 @@ export class CustomerCartComponent implements OnInit {
   proceedToOrder(): void {
     if (this.cartItems.length === 0 || this.isPlacingOrder) return;
 
+    if (sessionStorage.getItem('customer_billing_pending') === 'true') {
+      this.notificationService.error(
+        'Bill Pending',
+        `You have a pending bill. Please pay at the counter before placing a new order.`
+      );
+      return;
+    }
+
     this.isPlacingOrder = true;
 
     const currentUser = this.authService.getCurrentUser();
