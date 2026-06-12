@@ -30,7 +30,7 @@ export class CustomerCartComponent implements OnInit {
   constructor(
     private location: Location,
     private router: Router,
-    private cartService: CartService,
+    public cartService: CartService,
     private crudService: CrudService,
     private authService: AuthService,
     private notificationService: NotificationService

@@ -1,6 +1,7 @@
 import { Injectable,inject } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { MenuItem } from '../interfaces';
+import { OrderItem } from '../services/mock-data.service';
 import { NotificationService } from './notification.service';
 
 export interface CartItem {
@@ -29,7 +30,7 @@ export class CartService {
     return this.cartSubject.value.length;
   }
 
-  addToCart(menuItem: MenuItem): void {
+  addToCart(menuItem: MenuItem, quantity: number = 1): void {
     if (sessionStorage.getItem('customer_billing_pending') === 'true') {
       this.notificationService.error(
         'Bill Pending',
@@ -40,9 +41,51 @@ export class CartService {
     const current = this.cartSubject.value;
     const existing = current.find(cartItem => cartItem.menuItem.id === menuItem.id);
     if (existing) {
-      existing.quantity++;
+      existing.quantity += quantity;
     } else {
-      current.push({ menuItem, quantity: 1 });
+      current.push({ menuItem, quantity });
+    }
+    this.cartSubject.next([...current]);
+    this.saveToStorage();
+  }
+
+
+  addOrderItemsToCart(orderItems: OrderItem[]): void {
+    if (sessionStorage.getItem('customer_billing_pending') === 'true') {
+      this.notificationService.error(
+        'Bill Pending',
+        `You have a pending bill. Please pay at the counter before placing a new order.`
+      );
+      return;
+    }
+
+    const current = this.cartSubject.value;
+    for (const item of orderItems) {
+      const menuItem: MenuItem = {
+        id: item.menu_item_id,
+        name: item.menu_item_name,
+        description: '',
+        price: item.unit_price,
+        category: item.category,
+        image: '',
+        item_id: String(item.menu_item_id),
+        discount: '0',
+        preparation_time: 15,
+        is_active: true,
+        is_available: true,
+        is_popular: false,
+        is_spicy: false,
+        is_veg: false,
+        is_vegetarian: false,
+        restaurant_id: 0
+      };
+
+      const existing = current.find(cartItem => cartItem.menuItem.id === menuItem.id);
+      if (existing) {
+        existing.quantity += item.quantity;
+      } else {
+        current.push({ menuItem, quantity: item.quantity });
+      }
     }
     this.cartSubject.next([...current]);
     this.saveToStorage();

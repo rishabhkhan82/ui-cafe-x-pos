@@ -9,6 +9,7 @@ import { NotificationService } from '../../../services/notification.service';
 import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
 import { AnimateOnScrollDirective } from '../../../directives/animate-on-scroll.directive';
 import { Order, OrderItem } from '../../../services/mock-data.service';
+import { MenuItem } from '../../../interfaces';
 import { environment } from '../../../environments/environment';
 
 interface EligibleOffer {
@@ -43,6 +44,7 @@ export class CustomerOrdersComponent implements OnInit {
   activeOrders: Order[] = [];
   orderHistory: Order[] = [];
   allOrderHistory: Order[] = [];
+  private menuItems: MenuItem[] = [];
   selectedOrder: Order | null = null;
   showOrderDetails = false;
   showAllOrderHistory = false;
@@ -67,9 +69,36 @@ export class CustomerOrdersComponent implements OnInit {
     this.loadActiveOrders();
     this.loadEligibleOffers();
     this.loadOrderHistory();
+    this.loadAllMenuItems();
     this.cartService.cart$.subscribe(() => {
       this.cartItemCount = this.cartService.cartItemCount;
     });
+  }
+
+  private loadAllMenuItems(): void {
+    const restaurantId = sessionStorage.getItem('current_customer_restaurant_id') || '1';
+    this.crudService.getMenuItems({
+      page: 1,
+      size: 999,
+      restaurant_id: restaurantId
+    }).subscribe({
+      next: (response: any) => {
+        if (response?.data && Array.isArray(response.data)) {
+          this.menuItems = response.data;
+        } else if (Array.isArray(response)) {
+          this.menuItems = response;
+        } else {
+          this.menuItems = [];
+        }
+      },
+      error: () => {
+        this.menuItems = [];
+      }
+    });
+  }
+
+  private getMenuItemById(id: number): MenuItem | undefined {
+    return this.menuItems.find(item => item.id === id);
   }
 
   private loadActiveOrders(): void {
@@ -368,7 +397,30 @@ export class CustomerOrdersComponent implements OnInit {
   }
 
   reorder(order: Order): void {
-    this.notificationService.info('Reorder', 'Adding items to cart...');
+    if (!order.items || order.items.length === 0) {
+      this.notificationService.info('Reorder', 'No items to reorder.');
+      return;
+    }
+
+    if (this.menuItems.length === 0) {
+      this.notificationService.info('Reorder', 'Menu is still loading. Please try again in a moment.');
+      return;
+    }
+
+    this.cartService.clearCart();
+
+    let addedCount = 0;
+    order.items.forEach((item) => {
+      const menuItem = this.getMenuItemById(item.menu_item_id);
+      if (menuItem) {
+        this.cartService.addToCart(menuItem, item.quantity);
+        addedCount++;
+      }
+    });
+
+    if (addedCount > 0) {
+      this.notificationService.success('Reorder', `${addedCount} item(s) added to cart. Tap the cart to checkout.`);
+    }
   }
 
   getOrderStatusText(status: string): string {
