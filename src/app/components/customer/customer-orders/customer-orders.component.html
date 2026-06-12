@@ -1,6 +1,6 @@
 <main class="px-4 py-4 pb-20 pt-5">
   <!-- Welcome Banner -->
-  <div class="mb-6 animate__animated animate__fadeInUp">
+  <div class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="0">
     <div class="gradient-bg rounded-2xl p-6 text-white relative overflow-hidden">
       <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
       <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
@@ -11,74 +11,255 @@
     </div>
   </div>
 
-  <!-- Live Order -->
-  <section class="mb-8 animate__animated animate__fadeInUp animate__delay-1s" *ngIf="liveOrder">
+  <!-- Live Orders -->
+  <section class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="100" *ngIf="activeOrders.length > 0">
     <div class="flex items-center justify-between mb-3">
-      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Live Order</h3>
-      <span class="text-xs text-white bg-primary-500 px-2 py-1 rounded-full">#{{ liveOrder.order_id.split('-').pop() }}</span>
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Live Orders</h3>
+      <span class="text-xs text-white bg-primary-500 px-2 py-1 rounded-full">{{ activeOrders.length }} active</span>
     </div>
-    <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm text-gray-500 dark:text-gray-400">Estimated ready in</p>
-          <p class="text-xl font-semibold text-gray-900 dark:text-white">{{ liveOrder.estimatedTime }} mins</p>
+    <div class="space-y-3">
+      <div *ngFor="let order of activeOrders"
+           class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-200 dark:border-gray-700"
+           >
+          <!-- [class.border-red-500]="order.status !== 'SERVED'"
+          [class.border-purple-400]="order.status === 'SERVED'" -->
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs px-2 py-1 rounded-full font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+              Table - {{ order.table_number }}
+            </span>
+            <span class="text-xs px-2 py-1 rounded-full font-medium"
+                  [ngClass]="getOrderStatusBadgeClass(order.status)">
+              {{ getOrderStatusText(order.status) }}
+            </span>
+            <span class="text-xs text-gray-500 dark:text-gray-400">{{ formatOrderDate(order.created_at) }}</span>
+          </div>
+          <span class="text-base font-bold text-gray-900 dark:text-white">
+            #{{ order.order_id.split('-').pop() }}
+            <span class="relative inline-flex h-3 w-3 ml-1">
+              <span *ngIf="order.status !== 'SERVED'" class="relative inline-flex rounded-full h-3 w-3 bg-green-500 animate-pulse" style="animation-duration: 1.2s;"></span>
+              <span *ngIf="order.status === 'SERVED'" class="relative inline-flex rounded-full h-3 w-3 bg-purple-500"></span>
+            </span>
+          </span>
         </div>
-        <button (click)="viewOrderDetails(liveOrder)" class="px-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm">
-          View Details
-        </button>
-      </div>
 
-      <!-- Order Progress -->
-      <div class="mt-4">
-        <div class="flex items-center">
-          <div class="step-dot rounded-full bg-primary-500 text-white flex items-center justify-center">
-            <i class="fas fa-fire rounded-full text-xs"></i>
+        <!-- Estimated Ready -->
+        <div class="flex items-center justify-between mb-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl px-4 py-2.5">
+          <div>
+            <p class="text-xs text-blue-600 dark:text-blue-400 font-medium">Estimated ready in</p>
+            <p class="text-lg font-bold text-blue-900 dark:text-blue-200">{{ getEstimatedMins(order) }} mins</p>
           </div>
-          <div class="flex-1 h-1 bg-primary-500 mx-2"></div>
-          <div class="step-dot rounded-full bg-primary-500 text-white flex items-center justify-center">
-            <i class="fas fa-clipboard-check text-xs"></i>
-          </div>
-          <div class="flex-1 h-1 bg-primary-300 dark:bg-primary-900/40 mx-2"></div>
-          <div class="step-dot rounded-full bg-gray-200 dark:bg-gray-700 text-gray-400 flex items-center justify-center">
-            <i class="fas fa-concierge-bell text-xs"></i>
-          </div>
-          <div class="flex-1 h-1 bg-gray-200 dark:bg-gray-700 mx-2"></div>
-          <div class="step-dot rounded-full bg-gray-200 dark:bg-gray-700 text-gray-400 flex items-center justify-center">
-            <i class="fas fa-truck text-xs"></i>
-          </div>
+          <button (click)="viewOrderDetails(order)" class="px-3 py-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-medium hover:bg-blue-200 dark:hover:bg-blue-900/60 transition-colors">
+            View Order
+          </button>
         </div>
-        <div class="mt-3 flex justify-between text-xs text-gray-500 dark:text-gray-400">
-          <span>Preparing</span><span>Ready</span><span>On the way</span><span>Delivered</span>
-        </div>
-      </div>
 
-      <div class="mt-4 flex items-center justify-between">
-        <div class="text-sm text-gray-600 dark:text-gray-300">
-          Items: {{ liveOrder.items.length }} • Amount: <span class="font-semibold text-gray-900 dark:text-white">₹{{ liveOrder.total_amount }}</span>
+        <!-- Order Progress -->
+        <div class="mt-3 mb-3">
+          <div class="flex items-center">
+            <!-- Step 1: Pending -->
+            <div class="step-dot rounded-full flex items-center justify-center"
+                 [ngClass]="getPendingDotClass(order.status)">
+              <i class="fas fa-clock text-xs"></i>
+            </div>
+            <div class="flex-1 h-1 mx-2" [ngClass]="getPendingLineClass(order.status)"></div>
+            <!-- Step 2: Preparing -->
+            <div class="step-dot rounded-full flex items-center justify-center"
+                 [ngClass]="getPrepDotClass(order.status)">
+              <i class="fas fa-fire rounded-full text-xs"></i>
+            </div>
+            <div class="flex-1 h-1 mx-2" [ngClass]="getPrepLineClass(order.status)"></div>
+            <!-- Step 3: Ready -->
+            <div class="step-dot rounded-full flex items-center justify-center"
+                 [ngClass]="getReadyDotClass(order.status)">
+              <i class="fas fa-clipboard-check text-xs"></i>
+            </div>
+            <div class="flex-1 h-1 mx-2" [ngClass]="getReadyLineClass(order.status)"></div>
+            <!-- Step 4: On the Way -->
+            <div class="step-dot rounded-full flex items-center justify-center"
+                 [ngClass]="getOnTheWayDotClass(order.status)">
+              <i class="fas fa-user-tie text-xs"></i>
+            </div>
+            <div class="flex-1 h-1 mx-2" [ngClass]="getOnTheWayLineClass(order.status)"></div>
+            <!-- Step 5: Served -->
+            <div class="step-dot rounded-full flex items-center justify-center"
+                 [ngClass]="getServedDotClass(order.status)">
+              <i class="fas fa-concierge-bell text-xs"></i>
+            </div>
+          </div>
+          <div class="mt-2 flex justify-between text-xs text-gray-500 dark:text-gray-400">
+            <span>Pending</span><span>Preparing</span><span>Ready</span><span>On the way</span><span>Served</span>
+          </div>
         </div>
-        <div class="space-x-2">
-          <button (click)="helpWithOrder()" class="px-3 py-2 rounded-xl bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-sm text-gray-700 dark:text-gray-200">Help</button>
-          <button (click)="cancelOrder(liveOrder)" class="px-3 py-2 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">Cancel</button>
+
+        <div class="flex items-center justify-between mt-4">
+          <div class="text-sm text-gray-600 dark:text-gray-300">
+            Items: {{ order.items.length }} • Amount: <span class="text-gray-900 dark:text-white">₹{{ order.total_amount }}</span>
+          </div>
+          <div class="space-x-2">
+            <button (click)="callWaiter(order)" [disabled]="!canCallWaiterForOrder(order)" class="text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              <span *ngIf="canCallWaiterForOrder(order)">Call Waiter</span>
+              <span *ngIf="!canCallWaiterForOrder(order)">Unavailable</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Recent Orders -->
-  <section class="mb-8 animate__animated animate__fadeInUp animate__delay-2s">
+  <!-- No Active Orders -->
+  <section class="mb-6" *ngIf="activeOrders.length === 0 && !isLoading" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="100">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm text-center">
+      <div class="w-14 h-14 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
+        <i class="fas fa-check-circle text-xl text-green-500"></i>
+      </div>
+      <h4 class="text-base font-semibold text-gray-900 dark:text-white mb-1">All caught up!</h4>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">No active orders right now. Ready to order again?</p>
+      <button (click)="browseMenu()" class="px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white rounded-xl font-semibold transition-colors">Browse Menu</button>
+    </div>
+  </section>
+
+  <!-- Invoice Section (visible when there are active orders) -->
+  <section class="mb-6" *ngIf="activeOrders.length > 0" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="150">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-200 dark:border-gray-700">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Invoice</h3>
+
+      <!-- Order Items Summary -->
+      <div class="space-y-3">
+        <div *ngFor="let order of activeOrders">
+          <div class="flex items-center justify-between mb-1.5">
+            <div class="flex items-center space-x-2">
+              <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">#{{ order.order_id.split('-').pop() }}</span>
+              <span class="text-xs px-1.5 py-0.5 rounded-full font-medium"
+                    [ngClass]="getOrderStatusBadgeClass(order.status)">
+                {{ getOrderStatusText(order.status) }}
+              </span>
+            </div>
+            <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">₹{{ order.total_amount }}</span>
+          </div>
+          <div class="space-y-1">
+            <div *ngFor="let item of order.items" class="flex items-center justify-between text-xs">
+              <span class="text-gray-600 dark:text-gray-300">{{ item.quantity }} x {{ item.menu_item_name }} (₹{{ item.unit_price }})</span>
+              <span class="text-gray-500 dark:text-gray-400 font-medium">₹{{ item.total_price }}</span>
+            </div>
+          </div>
+          <div class="border-b border-gray-200 dark:border-gray-600 my-3"></div>
+        </div>
+      </div>
+
+      <!-- Offers inside invoice -->
+      <div *ngIf="eligibleOffers.length > 0">
+        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Apply Offer</p>
+        <div class="flex flex-wrap gap-2">
+          <button *ngFor="let offer of eligibleOffers"
+                  (click)="applyOffer(offer)"
+                  [disabled]="appliedOffer?.offerId === offer.offerId"
+                  [class.opacity-50]="appliedOffer?.offerId === offer.offerId"
+                  class="px-3 py-2 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 text-xs font-medium text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors">
+            {{ offer.code }} · {{ offer.type === 'percentage' ? offer.discountValue + '% off' : '₹' + offer.discountValue + ' off' }}
+          </button>
+        </div>
+        <div *ngIf="appliedOffer" class="mt-2 inline-flex items-center gap-2 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-full px-3 py-1.5">
+          <span class="text-xs font-semibold text-green-700 dark:text-green-300">✓ {{ appliedOffer.title }} applied</span>
+          <button (click)="removeAppliedOffer()" class="text-xs text-red-500 hover:text-red-700 font-bold ml-1">✕</button>
+        </div>
+      </div>
+
+      <div class="border-b border-gray-200 dark:border-gray-600 my-3"></div>
+
+      <!-- Totals -->
+      <div class="space-y-1.5 mb-4">
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-gray-600 dark:text-gray-300">Subtotal</span>
+          <span class="font-medium text-gray-900 dark:text-white">₹{{ invoiceSubtotal }}</span>
+        </div>
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-gray-600 dark:text-gray-300">GST (18%)</span>
+          <span class="font-medium text-gray-900 dark:text-white">₹{{ invoiceGst }}</span>
+        </div>
+        <div class="flex items-center justify-between text-sm" *ngIf="invoiceDiscount > 0">
+          <span class="text-green-600 dark:text-green-400">Discount</span>
+          <span class="font-medium text-green-600 dark:text-green-400">-₹{{ invoiceDiscount }}</span>
+        </div>
+        <div>
+          <div class="border-b border-gray-200 dark:border-gray-600 my-3"></div>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-base font-bold text-gray-900 dark:text-white">Total</span>
+          <span class="text-xl font-bold text-primary-500">₹{{ invoiceTotal }}</span>
+        </div>
+      </div>
+
+      <!-- Billing Requested Banner -->
+      <div *ngIf="isBillingRequested" class="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 text-center">
+        <p class="text-sm font-semibold text-green-800 dark:text-green-300">✅ Billing Requested</p>
+        <p class="text-xs text-green-600 dark:text-green-400 mt-1">please show this at counter and pay.</p>
+      </div>
+
+      <!-- Request Billing Button -->
+      <button *ngIf="!isBillingRequested"
+              (click)="requestBilling()"
+              [disabled]="!canRequestBilling() || isRequestingBilling"
+              [class.opacity-50]="!canRequestBilling() || isRequestingBilling"
+              class="w-full py-4 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white rounded-2xl font-bold text-lg shadow-lg transition-all duration-300 disabled:cursor-not-allowed">
+        <span *ngIf="!isRequestingBilling"><i class="fas fa-file-invoice-dollar mr-2"></i>Request Billing • ₹{{ invoiceTotal }}</span>
+        <span *ngIf="isRequestingBilling" class="flex items-center justify-center">
+          <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Processing...
+        </span>
+      </button>
+      <p class="text-xs text-center text-gray-500 dark:text-gray-400 mt-2">All your orders have been served. Tap to request the bill.</p>
+    </div>
+  </section>
+
+  <!-- Eligible Offers (shown when no active orders) -->
+  <section class="mb-6" *ngIf="activeOrders.length === 0 && eligibleOffers.length > 0" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="150">
+    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Available Offers</h3>
+    <div class="space-y-2">
+      <div *ngFor="let offer of eligibleOffers" class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-3 flex items-center justify-between">
+        <div>
+          <p class="text-sm font-semibold text-amber-800 dark:text-amber-300">{{ offer.title }}</p>
+          <p class="mt-1 text-xs text-amber-600 dark:text-amber-400">Code: {{ offer.code }} · {{ offer.validUntil }}</p>
+        </div>
+        <span class="text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/40 px-2 py-1 rounded-full">
+          {{ offer.type === 'percentage' ? offer.discountValue + '% off' : '₹' + offer.discountValue + ' off' }}
+        </span>
+      </div>
+    </div>
+    <div class="mt-3 bg-white dark:bg-gray-800 rounded-xl p-3 text-center border-2 border-dashed border-amber-300 dark:border-amber-700">
+      <p class="text-sm font-semibold text-amber-800 dark:text-amber-300">🎉 {{ eligibleOffers.length }} offer{{ eligibleOffers.length === 1 ? '' : 's' }} will apply on your bill</p>
+    </div>
+  </section>
+
+  <!-- Order History -->
+  <section *ngIf="!isOrderHistoryLoading" class="mb-8" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="300">
     <div class="flex items-center justify-between mb-3">
-      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Recent Orders</h3>
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Order History</h3>
       <button class="text-primary-500 text-sm font-medium">View All</button>
     </div>
-    <div class="space-y-3">
-      <div *ngFor="let order of recentOrders"
-           (click)="viewOrderDetails(order)"
-           class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm menu-item-hover">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="font-semibold text-gray-900 dark:text-white">#{{ order.order_id.split('-').pop() }} • {{ getOrderStatusText(order.status) }}</p>
-            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ formatOrderDate(order.created_at) }}</p>
-            <p class="font-semibold text-gray-900 dark:text-white">₹{{ order.total_amount }}</p>
+    <div class="space-y-3" *ngIf="orderHistory.length > 0; else noHistory">
+      <div *ngFor="let order of orderHistory" (click)="viewOrderDetails(order)" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm menu-item-hover">
+        <div class="flex items-start justify-between">
+          <div class="flex-1">
+            <div class="flex items-center space-x-2 mb-1">
+              <span class="text-base font-bold text-gray-900 dark:text-white">#{{ order.order_id }}</span>
+              <span class="text-xs px-2 py-1 rounded-full font-medium"
+                    [ngClass]="getOrderStatusBadgeClass(order.status)">
+                {{ getOrderStatusText(order.status) }}
+              </span>
+              <span class="text-xs text-gray-400 dark:text-gray-500">{{ formatOrderDate(order.created_at) }}</span>
+            </div>
+            <div class="flex flex-wrap gap-1.5 mt-3">
+              <span *ngFor="let item of order.items" class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2 py-0.5 rounded-full">
+                {{ item.quantity }} x {{ item.menu_item_name }}
+              </span>
+            </div>
+          </div>
+          <div class="text-right ml-4">
+            <p class="text-lg font-bold text-gray-900 dark:text-white">₹{{ order.total_amount }}</p>
             <div class="mt-2 space-x-2">
               <button (click)="viewOrderDetails(order)" class="px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs">View</button>
               <button (click)="reorder(order)" class="px-3 py-1.5 rounded-full bg-primary-500 text-white text-xs">Reorder</button>
@@ -87,10 +268,15 @@
         </div>
       </div>
     </div>
+    <ng-template #noHistory>
+      <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm text-center">
+        <p class="text-sm text-gray-500 dark:text-gray-400">No completed orders yet.</p>
+      </div>
+    </ng-template>
   </section>
 
   <!-- Helpful Cards -->
-  <section class="mb-8 animate__animated animate__fadeInUp animate__delay-3s">
+  <section style="display: none;" class="mb-8" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="400">
     <div class="grid grid-cols-2 gap-4">
       <div class="gradient-bg rounded-2xl p-4 text-white">
         <p class="text-sm opacity-90">Need support?</p>
@@ -108,78 +294,116 @@
 
 <!-- Floating Cart Button -->
 <div class="fixed bottom-24 right-4 z-40">
-  <button (click)="viewCart()"
-          class="w-14 h-14 bg-primary-500 text-white rounded-full shadow-lg hover:bg-primary-600 transition-all duration-300 floating-animation relative">
+  <button (click)="viewCart()" class="w-14 h-14 bg-primary-500 text-white rounded-full shadow-lg hover:bg-primary-600 transition-all duration-300 floating-animation relative">
     <i class="fas fa-shopping-cart text-xl"></i>
-    <span *ngIf="cartItemCount > 0"
-          class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-      {{ cartItemCount }}
-    </span>
+    <span *ngIf="cartItemCount > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">{{ cartItemCount }}</span>
   </button>
 </div>
 
 <!-- Order Details Modal -->
-<div *ngIf="showOrderDetails && selectedOrder"
-     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-    <div class="p-6">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Order Details</h3>
-        <button (click)="closeOrderDetails()" class="text-gray-400 hover:text-gray-600">
-          <i class="fas fa-times"></i>
+<div *ngIf="showOrderDetails && selectedOrder" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="bg-gradient-to-r from-slate-600 via-slate-700 to-slate-800 rounded-t-2xl p-6 text-white relative overflow-hidden shadow-inner">
+      <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-12 translate-x-12"></div>
+      <div class="relative z-10 flex items-center justify-between">
+        <div>
+          <h3 class="text-xl font-bold">Order Details</h3>
+          <p class="text-blue-100">#{{ selectedOrder.order_id.split('-').pop() }}</p>
+        </div>
+        <button (click)="closeOrderDetails()" class="text-white/80 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors">
+          <i class="fas fa-times text-lg"></i>
         </button>
       </div>
+    </div>
 
-      <div class="space-y-4">
-        <div class="flex items-center justify-between">
-          <span class="text-sm text-gray-500 dark:text-gray-400">Order ID:</span>
-          <span class="font-semibold">#{{ selectedOrder.order_id.split('-').pop() }}</span>
-        </div>
-        <div class="flex items-center justify-between">
-          <span class="text-sm text-gray-500 dark:text-gray-400">Status:</span>
-          <span class="px-2 py-1 rounded-full text-xs font-medium"
-                [class]="getOrderStatusBadgeClass(selectedOrder.status)">
-            {{ getOrderStatusText(selectedOrder.status) }}
-          </span>
-        </div>
-        <div class="flex items-center justify-between">
-          <span class="text-sm text-gray-500 dark:text-gray-400">Date:</span>
-          <span class="text-sm">{{ formatOrderDate(selectedOrder.created_at) }}</span>
-        </div>
-
-        <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-          <h4 class="font-semibold mb-3">Items Ordered</h4>
-          <div class="space-y-2">
-            <div *ngFor="let item of selectedOrder.items"
-                 class="flex items-center justify-between py-2">
-              <div class="flex-1">
-                <div class="font-medium text-sm">{{ item.quantity }}x {{ item.menu_item_name }}</div>
-                <div *ngIf="item.special_instructions" class="text-xs text-orange-600 dark:text-orange-400">
-                  {{ item.special_instructions }}
-                </div>
-                <div class="font-semibold">₹{{ item.total_price }}</div>
-              </div>
+    <div class="p-6">
+      <!-- Info Cards -->
+      <div class="grid grid-cols-2 gap-4 mb-6">
+        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+              <i class="fas fa-user text-blue-600 dark:text-blue-400"></i>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Customer</p>
+              <p class="font-semibold text-gray-900 dark:text-white">{{ selectedOrder.customer_name }}</p>
             </div>
           </div>
         </div>
-
-        <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-          <div class="flex items-center justify-between font-bold">
-            <span>Total Amount:</span>
-            <span>₹{{ selectedOrder.total_amount }}</span>
+        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+              <i class="fas fa-chair text-green-600 dark:text-green-400"></i>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Table</p>
+              <p class="font-semibold text-gray-900 dark:text-white">{{ selectedOrder.table_number || 'Takeaway' }}</p>
+            </div>
           </div>
         </div>
-
-        <div class="flex space-x-2 pt-4">
-          <button (click)="reorder(selectedOrder)"
-                  class="flex-1 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-semibold transition-colors">
-            Reorder
-          </button>
-          <button (click)="closeOrderDetails()"
-                  class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg font-semibold transition-colors">
-            Close
-          </button>
+        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center" [class]="getOrderStatusBadgeClass(selectedOrder.status)">
+              <i class="fas fa-circle text-xs"></i>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Status</p>
+              <p class="font-semibold text-gray-900 dark:text-white">{{ getOrderStatusText(selectedOrder.status) }}</p>
+            </div>
+          </div>
         </div>
+        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+              <i class="fas fa-clock text-purple-600 dark:text-purple-400"></i>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Created</p>
+              <p class="font-semibold text-gray-900 dark:text-white text-sm">{{ formatOrderDate(selectedOrder.created_at) }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Items Table -->
+      <div class="mb-6">
+        <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Order Items</h4>
+        <div class="overflow-x-auto">
+          <table class="w-full table-auto border-collapse border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+            <thead>
+              <tr class="bg-gray-100 dark:bg-gray-700">
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Item</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300">Qty</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300">Unit Price</th>
+                <th class="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of selectedOrder.items" class="border-b border-gray-200 dark:border-gray-600">
+                <td class="px-4 py-3 border-r border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-lg flex items-center justify-center">
+                      <i class="fas fa-utensils text-blue-600 dark:text-blue-400 text-xs"></i>
+                    </div>
+                    <div>
+                      <p class="font-medium text-gray-900 dark:text-white text-sm">{{ item.menu_item_name }}</p>
+                      <div *ngIf="item.special_instructions" class="text-xs text-orange-600 dark:text-orange-400 mt-1">{{ item.special_instructions }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600 text-sm">{{ item.quantity }}</td>
+                <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600 text-sm">₹{{ item.unit_price }}</td>
+                <td class="px-4 py-3 text-right text-sm font-semibold">₹{{ item.total_price }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Total -->
+      <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 flex items-center justify-between">
+        <span class="text-sm text-gray-600 dark:text-gray-400">Total Amount</span>
+        <span class="text-xl font-bold text-gray-900 dark:text-white">₹{{ selectedOrder.total_amount }}</span>
       </div>
     </div>
   </div>

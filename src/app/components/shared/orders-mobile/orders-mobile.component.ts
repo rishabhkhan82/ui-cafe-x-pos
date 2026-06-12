@@ -405,7 +405,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         item.status = newStatus as any;
       });
     }
-
+    console.log('Updated order object to be sent to API:', updatedOrder);
     this.updateOrder(updatedOrder).subscribe({
       next: (response) => {
         console.log('Order status updated successfully:', response);

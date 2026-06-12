@@ -1,69 +1,278 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MockDataService, Order, User } from '../../../services/mock-data.service';
+import { CartService } from '../../../services/cart.service';
+import { CrudService } from '../../../services/crud.service';
+import { AuthService } from '../../../services/auth.service';
+import { NotificationService } from '../../../services/notification.service';
+import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
+import { AnimateOnScrollDirective } from '../../../directives/animate-on-scroll.directive';
+import { Order, OrderItem } from '../../../services/mock-data.service';
+import { environment } from '../../../environments/environment';
 
-interface LiveOrder extends Order {
-  estimatedTime: number;
+interface EligibleOffer {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  typeLabel: string;
+  code: string;
+  validUntil: string;
+  expiresSoon: boolean;
+  offerId: string;
+  minOrderValue?: number;
+  discountValue?: number;
 }
 
 @Component({
   selector: 'app-customer-orders',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule, AnimateOnScrollDirective],
   templateUrl: './customer-orders.component.html',
   styleUrl: './customer-orders.component.css'
 })
 export class CustomerOrdersComponent implements OnInit {
-  private mockDataService = inject(MockDataService);
+  private crudService = inject(CrudService);
   private router = inject(Router);
+  private cartService = inject(CartService);
+  private authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
+  private confirmationService = inject(ConfirmationDialogService);
 
-  // Component state
-  currentUser: User | null = null;
-  liveOrder: LiveOrder | null = null;
-  recentOrders: Order[] = [];
+  activeOrders: Order[] = [];
+  orderHistory: Order[] = [];
   selectedOrder: Order | null = null;
-  showOrderDetails: boolean = false;
+  showOrderDetails = false;
+  eligibleOffers: EligibleOffer[] = [];
+  cartItemCount = 0;
+  isLoading = false;
+  isOrderHistoryLoading = false;
+  isBillingRequested = false;
+  isRequestingBilling = false;
+  private lastWaiterCallTime: number | null = null;
+  private readonly waiterCooldownMs = 10 * 60 * 1000;
+  blinkState = true;
+  private blinkTimerId: any = null;
 
-  // Mock data
-  pendingOrdersCount = 2;
-  cartItemCount = 3;
+  invoiceSubtotal = 0;
+  invoiceGst = 0;
+  invoiceDiscount = 0;
+  invoiceTotal = 0;
+  appliedOffer: EligibleOffer | null = null;
 
   ngOnInit(): void {
-    this.initializeData();
-    this.loadOrders();
-  }
-
-  private initializeData(): void {
-    this.currentUser = this.mockDataService.getUserByRole('customer') || null;
-  }
-
-  private loadOrders(): void {
-    this.mockDataService.getOrders().subscribe(orders => {
-      // Mock live order (first order in preparing/ready status)
-      const activeOrder = orders.find(order =>
-        ['preparing', 'ready', 'on_the_way'].includes(order.status)
-      );
-
-      if (activeOrder) {
-        this.liveOrder = {
-          ...activeOrder,
-          estimatedTime: 15
-        };
-      }
-
-      // Recent orders (completed orders)
-      this.recentOrders = orders.filter(order =>
-        ['completed', 'served'].includes(order.status)
-      ).slice(0, 5);
+    this.loadActiveOrders();
+    this.loadEligibleOffers();
+    this.loadOrderHistory();
+    this.cartService.cart$.subscribe(() => {
+      this.cartItemCount = this.cartService.cartItemCount;
     });
   }
 
-  toggleTheme(): void {
-    const html = document.documentElement;
-    html.classList.toggle('dark');
-    const newTheme = html.classList.contains('dark') ? 'dark' : 'light';
-    sessionStorage.setItem('theme', newTheme);
+  private loadActiveOrders(): void {
+    this.isLoading = true;
+    this.crudService.getActiveOrders().subscribe({
+      next: (response: any) => {
+        const allOrders = response || [];
+        this.activeOrders = allOrders
+          .filter((o: Order) => o.status !== 'COMPLETED' && o.status !== 'CANCELLED')
+          .sort((a: Order, b: Order) => {
+            const aServed = a.status === 'SERVED' ? 1 : -1;
+            const bServed = b.status === 'SERVED' ? 1 : -1;
+            if (aServed !== bServed) return aServed - bServed;
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          });
+        this.isLoading = false;
+        this.calculateInvoice();
+      },
+      error: () => {
+        this.activeOrders = [];
+        this.isLoading = false;
+        this.calculateInvoice();
+      }
+    });
+  }
+
+  private loadEligibleOffers(): void {
+    const currentUser = this.authService.getCurrentUser();
+    const customerId = currentUser?.id;
+    const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
+
+    const params: any = { is_active: 'true', page: 1, size: 50 };
+    if (restaurantId) params.restaurant_id = restaurantId;
+
+    this.crudService.getCustomerOffers(params).subscribe({
+      next: (response: any) => {
+        const offers = response?.data || [];
+        const clientNow = new Date();
+        const activeOffers = offers
+          .filter((o: any) => {
+            const start = o.start_date ? new Date(o.start_date) : null;
+            const end = o.end_date ? new Date(o.end_date) : null;
+            return (!start || start <= clientNow) && (!end || end >= clientNow);
+          })
+          .map((o: any) => this.mapApiOfferToEligibleOffer(o));
+
+        if (!customerId) {
+          this.eligibleOffers = activeOffers;
+          return;
+        }
+
+        this.crudService.getOfferRedemptionsByCustomer(customerId).subscribe({
+          next: (redemptions) => {
+            const redemptionList = Array.isArray(redemptions) ? redemptions : (redemptions?.data || []);
+            const redeemedOfferIds = new Set(
+              redemptionList.map((r: any) => String(r.offer_id ?? r.offer?.id ?? 0))
+            );
+            this.eligibleOffers = activeOffers.filter(
+              (o: EligibleOffer) => !redeemedOfferIds.has(String(o.offerId))
+            );
+          },
+          error: () => {
+            this.eligibleOffers = activeOffers;
+          }
+        });
+      },
+      error: () => {
+        this.eligibleOffers = [];
+      }
+    });
+  }
+
+  private mapApiOfferToEligibleOffer(o: any): EligibleOffer {
+    const typeMap: Record<string, string> = {
+      percentage: 'Discount',
+      fixed: 'Flat Off',
+      buy_one_get_one: 'BOGO',
+      free_item: 'Free Item',
+    };
+    const end = o.end_date ? new Date(o.end_date) : null;
+    const now = new Date();
+    const expiresSoon = end ? (end.getTime() - now.getTime()) < (3 * 24 * 60 * 60 * 1000) : false;
+
+    return {
+      id: String(o.id),
+      title: o.title,
+      description: o.description,
+      type: o.type,
+      typeLabel: typeMap[o.type] || o.type,
+      code: o.code || o.offer_id,
+      validUntil: end ? end.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Ongoing',
+      expiresSoon,
+      offerId: String(o.id),
+      minOrderValue: o.min_order_value,
+      discountValue: o.discount_value,
+    };
+  }
+
+  private loadOrderHistory(): void {
+    this.isOrderHistoryLoading = true;
+    this.crudService.getOrders({ status: 'COMPLETED', page: 1, size: 10 }).subscribe({
+      next: (response: any) => {
+        this.orderHistory = response?.data || [];
+        this.isOrderHistoryLoading = false;
+      },
+      error: () => {
+        this.orderHistory = [];
+        this.isOrderHistoryLoading = false;
+      }
+    });
+  }
+
+  private calculateInvoice(): void {
+    this.invoiceSubtotal = this.activeOrders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
+    this.invoiceGst = Math.round(this.invoiceSubtotal * 0.18);
+    this.invoiceDiscount = 0;
+    if (this.appliedOffer) {
+      if (this.appliedOffer.type === 'percentage') {
+        this.invoiceDiscount = Math.round(this.invoiceSubtotal * (this.appliedOffer.discountValue || 0) / 100);
+      } else if (this.appliedOffer.type === 'fixed') {
+        this.invoiceDiscount = Math.min(this.appliedOffer.discountValue || 0, this.invoiceSubtotal);
+      }
+    }
+    this.invoiceTotal = this.invoiceSubtotal + this.invoiceGst - this.invoiceDiscount;
+  }
+
+  applyOffer(offer: EligibleOffer): void {
+    this.appliedOffer = offer;
+    this.calculateInvoice();
+    this.notificationService.success('Offer Applied', `${offer.title} has been applied to your bill`);
+  }
+
+  removeAppliedOffer(): void {
+    this.appliedOffer = null;
+    this.calculateInvoice();
+    this.notificationService.info('Offer Removed', 'Offer has been removed from your bill');
+  }
+
+  canRequestBilling(): boolean {
+    if (this.activeOrders.length === 0 || this.isBillingRequested || this.isRequestingBilling) return false;
+    return this.activeOrders.every(o => o.status === 'SERVED');
+  }
+
+  requestBilling(): void {
+    if (!this.canRequestBilling()) return;
+
+    this.confirmationService.confirm(
+      `Request billing for ₹${this.invoiceTotal}?`,
+      'Confirm Billing'
+    ).then(confirmed => {
+      if (!confirmed) return;
+      this.isRequestingBilling = true;
+
+      let completed = 0;
+      const total = this.activeOrders.length;
+
+      this.activeOrders.forEach(order => {
+        const orderRequest: any = {
+          order_id: order.order_id,
+          customer_name: order.customer_name,
+          table_number: order.table_number,
+          status: 'BILLING_REQUESTED',
+          total_amount: order.total_amount,
+          special_instructions: order.special_instructions,
+          payment_status: order.payment_status,
+          payment_method: order.payment_method,
+          order_type: order.order_type,
+          priority: order.priority,
+          tax_amount: order.tax_amount,
+          order_items: order.items.map(item => ({
+            id: item.id,
+            order_id: item.order_id,
+            menu_item_id: item.menu_item_id,
+            menu_item_name: item.menu_item_name,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            total_price: item.total_price,
+            category: item.category,
+            special_instructions: item.special_instructions,
+            status: item.status
+          }))
+        };
+
+        this.crudService.updateOrder(order.id, orderRequest).subscribe({
+          next: () => {
+            completed++;
+            if (completed === total) {
+              this.isBillingRequested = true;
+              this.isRequestingBilling = false;
+              this.notificationService.success(
+                'Billing Requested',
+                `Your bill of ₹${this.invoiceTotal} has been generated, please show this at counter and pay`
+              );
+            }
+          },
+          error: () => {
+            completed++;
+            this.isRequestingBilling = false;
+            if (completed === total) {
+              this.notificationService.error('Error', 'Some orders could not be updated. Please try again.');
+            }
+          }
+        });
+      });
+    });
   }
 
   viewOrderDetails(order: Order): void {
@@ -80,14 +289,33 @@ export class CustomerOrdersComponent implements OnInit {
     alert('Help with order - would open support chat');
   }
 
+  callWaiter(order: Order): void {
+    if (!this.canCallWaiterForOrder(order)) return;
+    this.lastWaiterCallTime = Date.now();
+    localStorage.setItem('lastWaiterCallTime', String(this.lastWaiterCallTime));
+    alert('Waiter has been called. Please wait.');
+  }
+
+  canCallWaiterForOrder(order: Order): boolean {
+    if (order.status === 'SERVED') return false;
+    const stored = localStorage.getItem('lastWaiterCallTime');
+    const lastCall = stored ? Number(stored) : null;
+    if (!lastCall) return true;
+    return (Date.now() - lastCall) >= this.waiterCooldownMs;
+  }
+
+  getWaiterCooldownRemaining(): string {
+    const stored = localStorage.getItem('lastWaiterCallTime');
+    const lastCall = stored ? Number(stored) : null;
+    if (!lastCall) return '0 min';
+    const remaining = Math.max(0, Math.ceil((this.waiterCooldownMs - (Date.now() - lastCall)) / 60000));
+    return `${remaining} min`;
+  }
+
   cancelOrder(order: Order): void {
     if (confirm('Are you sure you want to cancel this order?')) {
       alert('Order cancellation request sent');
     }
-  }
-
-  reorder(order: Order): void {
-    alert('Reorder functionality - would add items to cart');
   }
 
   contactSupport(): void {
@@ -98,41 +326,100 @@ export class CustomerOrdersComponent implements OnInit {
     alert('View favorites - would navigate to favorites page');
   }
 
-  viewCart(): void {
-    alert('View cart - would navigate to cart page');
+  getEstimatedMins(order: Order): number {
+    if (order.estimated_ready_time) {
+      const ready = new Date(order.estimated_ready_time).getTime();
+      const now = Date.now();
+      const diff = Math.max(0, Math.ceil((ready - now) / 60000));
+      return diff;
+    }
+    return 15;
   }
 
-  // Helper methods
+  reorder(order: Order): void {
+    this.notificationService.info('Reorder', 'Adding items to cart...');
+  }
+
   getOrderStatusText(status: string): string {
-    switch (status) {
-      case 'pending': return 'Pending';
-      case 'confirmed': return 'Confirmed';
-      case 'preparing': return 'Preparing';
-      case 'ready': return 'Ready';
-      case 'on_the_way': return 'On the Way';
-      case 'served': return 'Served';
-      case 'completed': return 'Completed';
-      default: return status;
-    }
+    const map: Record<string, string> = {
+      PENDING: 'Pending',
+      CONFIRMED: 'Confirmed',
+      PREPARING: 'Preparing',
+      READY: 'Ready',
+      ON_THE_WAY: 'On the Way',
+      SERVED: 'Served',
+      COMPLETED: 'Completed',
+      BILLING_REQUESTED: 'Billing Requested',
+      CANCELLED: 'Cancelled'
+    };
+    return map[status] || status;
   }
 
   getOrderStatusBadgeClass(status: string): string {
     switch (status) {
-      case 'pending': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600';
-      case 'confirmed': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-600';
-      case 'preparing': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-600';
-      case 'ready': return 'bg-green-100 dark:bg-green-900/30 text-green-600';
-      case 'on_the_way': return 'bg-purple-100 dark:bg-purple-900/30 text-purple-600';
-      case 'served': return 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600';
-      case 'completed': return 'bg-gray-100 dark:bg-gray-700 text-gray-600';
+      case 'PENDING': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600';
+      case 'CONFIRMED': return 'bg-teal-100 dark:bg-teal-900/30 text-teal-600';
+      case 'PREPARING': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-600';
+      case 'READY': return 'bg-green-100 dark:bg-green-900/30 text-green-600';
+      case 'ON_THE_WAY': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-600';
+      case 'SERVED': return 'bg-purple-100 dark:bg-purple-900/30 text-purple-600';
+      case 'BILLING_REQUESTED': return 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600';
+      case 'COMPLETED': return 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300';
+      case 'CANCELLED': return 'bg-red-100 dark:bg-red-900/30 text-red-600';
       default: return 'bg-gray-100 dark:bg-gray-700 text-gray-600';
     }
   }
 
-  getOrderItemsText(items: any[]): string {
-    if (items.length === 0) return 'No items';
-    if (items.length === 1) return `${items[0].quantity}x ${items[0].menuItemName}`;
-    return `${items.length} items`;
+  getPendingDotClass(status: string): string {
+    const base = 'step-dot w-8 h-8 rounded-full flex items-center justify-center text-xs';
+    if (status === 'PENDING') return base + ' bg-primary-500 text-white';
+    if (['CONFIRMED','PREPARING','READY','ON_THE_WAY','SERVED'].includes(status)) return base + ' bg-primary-500 text-white';
+    return base + ' bg-gray-200 dark:bg-gray-700 text-gray-400';
+  }
+  getPendingLineClass(status: string): string {
+    if (status === 'PENDING') return 'flex-1 h-1 mx-2 bg-primary-200 dark:bg-primary-900/20';
+    if (['CONFIRMED','PREPARING','READY','ON_THE_WAY','SERVED'].includes(status)) return 'flex-1 h-1 mx-2 bg-primary-500 dark:bg-primary-900/40';
+    return 'flex-1 h-1 mx-2 bg-gray-200 dark:bg-gray-700';
+  }
+  getPrepDotClass(status: string): string {
+    const base = 'step-dot w-8 h-8 rounded-full flex items-center justify-center text-xs';
+    if (status === 'PREPARING') return base + ' bg-primary-500 text-white';
+    if (['READY','ON_THE_WAY','SERVED'].includes(status)) return base + ' bg-primary-500 text-white';
+    return base + ' bg-gray-200 dark:bg-gray-700 text-gray-400';
+  }
+  getPrepLineClass(status: string): string {
+    if (['CONFIRMED','PREPARING'].includes(status)) return 'flex-1 h-1 mx-2 bg-primary-500 dark:bg-primary-900/40';
+    if (['READY','ON_THE_WAY','SERVED'].includes(status)) return 'flex-1 h-1 mx-2 bg-primary-500 dark:bg-primary-900/40';
+    return 'flex-1 h-1 mx-2 bg-gray-200 dark:bg-gray-700';
+  }
+  getReadyDotClass(status: string): string {
+    const base = 'step-dot w-8 h-8 rounded-full flex items-center justify-center text-xs';
+    if (['READY','ON_THE_WAY','SERVED'].includes(status)) return base + ' bg-primary-500 text-white';
+    return base + ' bg-gray-200 dark:bg-gray-700 text-gray-400';
+  }
+  getReadyLineClass(status: string): string {
+    if (['ON_THE_WAY','SERVED'].includes(status)) return 'flex-1 h-1 mx-2 bg-primary-500 dark:bg-primary-900/40';
+    return 'flex-1 h-1 mx-2 bg-gray-200 dark:bg-gray-700';
+  }
+  getOnTheWayDotClass(status: string): string {
+    const base = 'step-dot w-8 h-8 rounded-full flex items-center justify-center text-xs';
+    if (['ON_THE_WAY','SERVED'].includes(status)) return base + ' bg-primary-500 text-white';
+    return base + ' bg-gray-200 dark:bg-gray-700 text-gray-400';
+  }
+  getOnTheWayLineClass(status: string): string {
+    if (status === 'SERVED') return 'flex-1 h-1 mx-2 bg-purple-500 dark:bg-purple-900/40';
+    return 'flex-1 h-1 mx-2 bg-gray-200 dark:bg-gray-700';
+  }
+  getServedDotClass(status: string): string {
+    const base = 'step-dot w-8 h-8 rounded-full flex items-center justify-center text-xs';
+    if (status === 'SERVED') return base + ' bg-purple-500 text-white';
+    return base + ' bg-gray-200 dark:bg-gray-700 text-gray-400';
+  }
+
+  getFullImageUrl(imagePath: string): string {
+    if (!imagePath) return '';
+    if (imagePath.startsWith('data:')) return imagePath;
+    return environment.api.baseUrl + imagePath;
   }
 
   formatOrderDate(date: Date | string): string {
@@ -150,5 +437,13 @@ export class CustomerOrdersComponent implements OnInit {
       month: 'short',
       year: orderDate.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
     });
+  }
+
+  viewCart(): void {
+    this.router.navigate(['/customer/cart']);
+  }
+
+  browseMenu(): void {
+    this.router.navigate(['/customer/menu']);
   }
 }
