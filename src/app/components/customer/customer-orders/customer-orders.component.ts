@@ -10,6 +10,7 @@ import { ConfirmationDialogService } from '../../../services/confirmation-dialog
 import { AnimateOnScrollDirective } from '../../../directives/animate-on-scroll.directive';
 import { Order, OrderItem } from '../../../services/mock-data.service';
 import { MenuItem } from '../../../interfaces';
+import { PendingordersService } from '../../../services/pendingorders.service';
 import { environment } from '../../../environments/environment';
 
 interface EligibleOffer {
@@ -40,6 +41,7 @@ export class CustomerOrdersComponent implements OnInit {
   private authService = inject(AuthService);
   private notificationService = inject(NotificationService);
   private confirmationService = inject(ConfirmationDialogService);
+  private pendingOrdersService = inject(PendingordersService);
 
   activeOrders: Order[] = [];
   orderHistory: Order[] = [];
@@ -118,12 +120,14 @@ export class CustomerOrdersComponent implements OnInit {
         if (!this.isBillingRequested) {
           sessionStorage.removeItem('customer_billing_pending');
         }
+        this.pendingOrdersService.updateCount(this.activeOrders.length);
         this.calculateInvoice();
       },
       error: () => {
         this.activeOrders = [];
         this.isLoading = false;
         sessionStorage.removeItem('customer_billing_pending');
+        this.pendingOrdersService.updateCount(0);
         this.calculateInvoice();
       }
     });

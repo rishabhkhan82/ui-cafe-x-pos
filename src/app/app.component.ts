@@ -12,6 +12,7 @@ import { ConfirmationDialogComponent } from './components/common/confirmation-di
 import { NavigationMenu } from './services/mock-data.service';
 import { environment } from './environments/environment';
 import { CartService } from './services/cart.service';
+import { PendingordersService } from './services/pendingorders.service';
 interface User {
   id: string;
   name: string;
@@ -39,7 +40,6 @@ export class AppComponent implements OnInit {
   isProfileMenuOpen: boolean = false;
   pendingOrdersCount: number = 2;
 
-  // Header properties
   currentDateTime: string = '';
   lastBackupTime: string = '2 hours ago';
 
@@ -49,6 +49,7 @@ export class AppComponent implements OnInit {
   private router = inject(Router);
   private loadingService = inject(LoadingService);
   private cartService = inject(CartService);
+  private pendingOrdersService = inject(PendingordersService);
   cartItemCount = 0;
 
   @ViewChild(NavigationMenuComponent) navMenu!: NavigationMenuComponent;
@@ -97,6 +98,10 @@ export class AppComponent implements OnInit {
 
     this.cartService.cart$.subscribe(() => {
       this.cartItemCount = this.cartService.cartItemCount;
+    });
+
+    this.pendingOrdersService.pendingCount$.subscribe(count => {
+      this.pendingOrdersCount = count;
     });
   }
 
