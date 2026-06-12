@@ -42,12 +42,15 @@ export class CustomerOrdersComponent implements OnInit {
 
   activeOrders: Order[] = [];
   orderHistory: Order[] = [];
+  allOrderHistory: Order[] = [];
   selectedOrder: Order | null = null;
   showOrderDetails = false;
+  showAllOrderHistory = false;
   eligibleOffers: EligibleOffer[] = [];
   cartItemCount = 0;
   isLoading = false;
   isOrderHistoryLoading = false;
+  isAllOrderHistoryLoading = false;
   isRequestingBilling = false;
   private lastWaiterCallTime: number | null = null;
   private readonly waiterCooldownMs = 10 * 60 * 1000;
@@ -290,6 +293,27 @@ export class CustomerOrdersComponent implements OnInit {
   closeOrderDetails(): void {
     this.showOrderDetails = false;
     this.selectedOrder = null;
+  }
+
+  openAllOrderHistory(): void {
+    this.showAllOrderHistory = true;
+    this.isAllOrderHistoryLoading = true;
+    this.allOrderHistory = [];
+    this.crudService.getOrders({ status: 'COMPLETED', page: 1, size: 9999 }).subscribe({
+      next: (response: any) => {
+        this.allOrderHistory = response?.data || [];
+        this.isAllOrderHistoryLoading = false;
+      },
+      error: () => {
+        this.allOrderHistory = [];
+        this.isAllOrderHistoryLoading = false;
+      }
+    });
+  }
+
+  closeAllOrderHistory(): void {
+    this.showAllOrderHistory = false;
+    this.allOrderHistory = [];
   }
 
   helpWithOrder(): void {
