@@ -60,6 +60,7 @@ export class CustomerOrdersComponent implements OnInit {
   private readonly waiterCooldownMs = 10 * 60 * 1000;
   blinkState = true;
   private blinkTimerId: any = null;
+  generatedInvoiceId: string | null = null;
 
   invoiceSubtotal = 0;
   invoiceGst = 0;
@@ -220,17 +221,23 @@ export class CustomerOrdersComponent implements OnInit {
   }
 
   private calculateInvoice(): void {
-    this.invoiceSubtotal = this.activeOrders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
-    this.invoiceGst = Math.round(this.invoiceSubtotal * 0.18);
+    const preTaxSubtotal = this.activeOrders.reduce((sum, o) => {
+      return sum + (o.total_amount || 0) - (o.tax_amount || 0);
+    }, 0);
+
+    const totalTax = this.activeOrders.reduce((sum, o) => sum + (o.tax_amount || 0), 0);
+
+    this.invoiceSubtotal = preTaxSubtotal;
+    this.invoiceGst = Math.round(totalTax);
     this.invoiceDiscount = 0;
     if (this.appliedOffer) {
       if (this.appliedOffer.type === 'percentage') {
-        this.invoiceDiscount = Math.round(this.invoiceSubtotal * (this.appliedOffer.discountValue || 0) / 100);
+        this.invoiceDiscount = Math.round(preTaxSubtotal * (this.appliedOffer.discountValue || 0) / 100);
       } else if (this.appliedOffer.type === 'fixed') {
-        this.invoiceDiscount = Math.min(this.appliedOffer.discountValue || 0, this.invoiceSubtotal);
+        this.invoiceDiscount = Math.min(this.appliedOffer.discountValue || 0, preTaxSubtotal);
       }
     }
-    this.invoiceTotal = this.invoiceSubtotal + this.invoiceGst - this.invoiceDiscount;
+    this.invoiceTotal = preTaxSubtotal + totalTax - this.invoiceDiscount;
   }
 
   applyOffer(offer: EligibleOffer): void {
@@ -257,11 +264,13 @@ export class CustomerOrdersComponent implements OnInit {
   requestBilling(): void {
     if (!this.canRequestBilling()) return;
 
+    this.generatedInvoiceId = this.generateInvoiceId();
+
     this.confirmationService.confirm(
-      `Request billing for ₹${this.invoiceTotal}?`,
+      `Request billing for ₹${this.invoiceTotal}?\nInvoice ID: ${this.generatedInvoiceId}`,
       'Confirm Billing'
     ).then(confirmed => {
-      if (!confirmed) return;
+      if (!confirmed) { this.generatedInvoiceId = null; return; }
       this.isRequestingBilling = true;
 
       let completed = 0;
@@ -280,6 +289,7 @@ export class CustomerOrdersComponent implements OnInit {
           order_type: order.order_type,
           priority: order.priority,
           tax_amount: order.tax_amount,
+          invoice_id: this.generatedInvoiceId,
           order_items: order.items.map(item => ({
             id: item.id,
             order_id: item.order_id,
@@ -298,7 +308,6 @@ export class CustomerOrdersComponent implements OnInit {
           next: () => {
             completed++;
             if (completed === total) {
-              this.isRequestingBilling = false;
               this.notificationService.success(
                 'Billing Generated',
                 `Your bill of ₹${this.invoiceTotal} has been generated, please show this at counter and pay`
@@ -347,6 +356,14 @@ export class CustomerOrdersComponent implements OnInit {
   closeAllOrderHistory(): void {
     this.showAllOrderHistory = false;
     this.allOrderHistory = [];
+  }
+
+  generateInvoiceId(): string {
+    const currentUser = this.authService.getCurrentUser();
+    const customerId = currentUser?.id ?? '0';
+    const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const randomSuffix = Math.random().toString(36).substring(2, 7).toUpperCase();
+    return `INV-${datePart}-CUST${customerId}-${randomSuffix}`;
   }
 
   helpWithOrder(): void {

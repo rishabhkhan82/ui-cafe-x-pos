@@ -205,3 +205,8 @@ customer-menu component
 2] add the description for items in db
 3] edit and upload the acutal image for menu items using rowner menu crud
 4] make cart service. increase and decresea and add and order. 
+
+tomorrow's plan
+1] double gst issue in cart and order.
+2] owner side billing_requested to completed grouped by invoice and funtionality.
+3] owner side loyalty program on marked as the completed.

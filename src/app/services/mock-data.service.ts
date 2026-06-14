@@ -109,6 +109,7 @@ export interface Order {
   order_type: 'DELIVERY' | 'DINE_IN' | 'TAKEAWAY';
   priority: 'HIGH' | 'LOW' | 'MEDIUM';
   payment_method?: string;
+  invoice_id?: string;
 }
 
 export interface OrderItem {

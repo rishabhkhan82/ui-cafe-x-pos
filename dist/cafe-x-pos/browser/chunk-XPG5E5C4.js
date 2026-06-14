@@ -1,0 +1,1 @@
+import{U as o,j as e}from"./chunk-SUNRSQQK.js";var r=class n{_pendingCount$=new e(0);pendingCount$=this._pendingCount$.asObservable();constructor(){}updateCount(t){this._pendingCount$.next(t)}get currentCount(){return this._pendingCount$.value}static \u0275fac=function(i){return new(i||n)};static \u0275prov=o({token:n,factory:n.\u0275fac,providedIn:"root"})};export{r as a};
