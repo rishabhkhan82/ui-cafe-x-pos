@@ -313,6 +313,7 @@ export class CustomerOrdersComponent implements OnInit {
                 `Your bill of ₹${this.invoiceTotal} has been generated, please show this at counter and pay`
               );
               sessionStorage.setItem('customer_billing_pending', 'true');
+              this.loadActiveOrders();
             }
           },
           error: () => {
