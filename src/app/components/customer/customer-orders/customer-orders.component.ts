@@ -300,7 +300,7 @@ export class CustomerOrdersComponent implements OnInit {
             total_price: item.total_price,
             category: item.category,
             special_instructions: item.special_instructions,
-            status: item.status
+            status: 'BILLING_REQUESTED'
           }))
         };
 

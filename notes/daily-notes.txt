@@ -207,6 +207,6 @@ customer-menu component
 4] make cart service. increase and decresea and add and order. 
 
 tomorrow's plan
-1] double gst issue in cart and order.
-2] owner side billing_requested to completed grouped by invoice and funtionality.
+1] double gst issue in cart and order. - done 
+2] owner side billing_requested to completed grouped by invoice and funtionality. - done
 3] owner side loyalty program on marked as the completed.

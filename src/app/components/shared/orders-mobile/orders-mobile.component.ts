@@ -56,6 +56,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   orderStatuses: OrderStatus[] = [];
 
   isLoading: boolean = false;
+  isCompletingInvoice: boolean = false;
 
   // Pagination
   currentPage = 1;
@@ -794,6 +795,10 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   getStatusCount(status: string): number {
+    if (status === 'all') return this.allOrders.length;
+    if (status === 'BILLING_REQUESTED') {
+      return this.billingRequestedInvoices.length;
+    }
     return this.allOrders.filter(order => order.status === status).length;
   }
 
@@ -847,6 +852,126 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   Math = Math;
+
+  // Invoice grouping state
+  pendingInvoiceConfirmationId: string | null = null;
+
+  // Billing requested invoices grouped by invoice_id
+  get billingRequestedInvoices(): { invoiceId: string; orders: Order[] }[] {
+    const invoiceMap = new Map<string, Order[]>();
+    this.allOrders
+      .filter(o => o.status === 'BILLING_REQUESTED' && o.invoice_id)
+      .forEach(order => {
+        const existing = invoiceMap.get(order.invoice_id!) || [];
+        existing.push(order);
+        invoiceMap.set(order.invoice_id!, existing);
+      });
+    return Array.from(invoiceMap.entries()).map(([invoiceId, orders]) => ({ invoiceId, orders }));
+  }
+
+  getInvoicePreTaxSubtotal(invoiceId: string): number {
+    return this.billingRequestedInvoices
+      .find(inv => inv.invoiceId === invoiceId)?.orders.reduce((sum, o) => sum + (o.total_amount || 0) - (o.tax_amount || 0), 0) || 0;
+  }
+
+  getInvoiceTax(invoiceId: string): number {
+    return this.billingRequestedInvoices
+      .find(inv => inv.invoiceId === invoiceId)?.orders.reduce((sum, o) => sum + (o.tax_amount || 0), 0) || 0;
+  }
+
+  getInvoiceTotal(invoiceId: string): number {
+    const inv = this.billingRequestedInvoices.find(i => i.invoiceId === invoiceId);
+    if (!inv) return 0;
+    return inv.orders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
+  }
+
+  getTablesSummary(invoiceId: string): string {
+    const tables = this.billingRequestedInvoices
+      .find(inv => inv.invoiceId === invoiceId)?.orders.map(o => o.table_number || 'Takeaway') || [];
+    return [...new Set(tables)].join(', ');
+  }
+
+  confirmCompleteInvoice(invoiceId: string): void {
+    this.pendingInvoiceConfirmationId = invoiceId;
+  }
+
+  cancelCompleteInvoice(): void {
+    this.pendingInvoiceConfirmationId = null;
+  }
+
+  async markInvoiceCompleted(invoiceId: string): Promise<void> {
+    if (!['restaurant_owner'].includes(this.userRole)) return;
+    if (this.isCompletingInvoice) return;
+
+    const confirmed = await this.confirmationService.confirm(
+      'Are you sure you want to mark this invoice as Completed?',
+      'Confirm Invoice Completion'
+    );
+    if (!confirmed) { this.pendingInvoiceConfirmationId = null; return; }
+
+    this.isCompletingInvoice = true;
+    this.loadingService.show();
+
+    const orders = this.billingRequestedInvoices.find(inv => inv.invoiceId === invoiceId)?.orders || [];
+    let completed = 0;
+    const total = orders.length;
+
+    const sub = orders.map(order => {
+      const orderRequest: any = {
+        order_id: order.order_id,
+        customer_name: order.customer_name,
+        table_number: order.table_number,
+        status: 'COMPLETED',
+        total_amount: order.total_amount,
+        special_instructions: order.special_instructions,
+        payment_status: 'PAID',
+        payment_method: order.payment_method,
+        order_type: order.order_type,
+        priority: order.priority,
+        tax_amount: order.tax_amount,
+        invoice_id: order.invoice_id,
+        order_items: order.items.map(item => ({
+          order_id: order.id,
+          menu_item_id: item.menu_item_id,
+          menu_item_name: item.menu_item_name,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total_price: item.total_price,
+          category: item.category,
+          special_instructions: item.special_instructions,
+          status: 'PAID',
+          id: item.id
+        }))
+      };
+      return this.crudService.updateOrder(order.id, orderRequest).subscribe({
+        next: () => {
+          completed++;
+          if (completed === total) {
+            this.loadingService.hide();
+            this.isCompletingInvoice = false;
+            this.pendingInvoiceConfirmationId = null;
+            this.notificationService.success('Invoice Completed', `Invoice ${invoiceId} marked as Completed`);
+            this.loadOrders();
+          }
+        },
+        error: () => {
+          completed++;
+          if (completed === total) {
+            this.loadingService.hide();
+            this.isCompletingInvoice = false;
+            this.pendingInvoiceConfirmationId = null;
+            this.notificationService.error('Error', 'Some orders could not be updated. Please try again.');
+          }
+        }
+      });
+    });
+
+    if (sub.length === 0) {
+      this.loadingService.hide();
+      this.isCompletingInvoice = false;
+      this.pendingInvoiceConfirmationId = null;
+    }
+  }
 
   get hasActiveFilters(): boolean {
     return !!(this.searchTerm?.trim() || this.activeStatus !== 'all');

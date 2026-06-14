@@ -43,7 +43,7 @@
         <i [class]="status.icon" class="mr-2"></i>{{ status.label }}
         <span class="ml-2 px-2 py-0.5 rounded-full text-xs"
               [class]="getStatusCountClass(status.key)">
-          {{ getOrdersByStatus(status.key).length }}
+          {{ getStatusCount(status.key) }}
         </span>
       </button>
     </div>
@@ -56,8 +56,75 @@
           Loading Real Time Data...
         </div>
 
-       <!-- Order Cards -->
-       <div *ngFor="let ord of orders" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden mb-3">
+        <!-- Invoice Cards for BILLING_REQUESTED tab -->
+        <div *ngIf="activeStatus === 'BILLING_REQUESTED'">
+          <div *ngFor="let invoice of billingRequestedInvoices" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden mb-3 border-2 border-indigo-200 dark:border-indigo-700">
+            <div class="border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="text-lg font-bold text-gray-900 dark:text-white">Invoice</h4>
+                  <p class="text-xs font-mono font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full inline-block mt-1">{{ invoice.invoiceId }}</p>
+                  <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Tables: {{ getTablesSummary(invoice.invoiceId) }}</p>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">Orders: {{ invoice.orders.length }}</p>
+                </div>
+                <div class="text-right">
+                  <div class="text-xl font-bold text-primary-600 dark:text-primary-400">₹{{ getInvoiceTotal(invoice.invoiceId) | number:'1.2-2' }}</div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400">Total Amount</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-4 space-y-2">
+              <div *ngFor="let invOrd of invoice.orders" class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
+                <div class="flex items-center justify-between mb-1">
+                  <div class="flex items-center space-x-2">
+                    <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">#{{ invOrd.order_id.split('-').pop() }}</span>
+                    <span class="px-2 py-0.5 rounded-full text-xs font-medium" [class]="getStatusBadgeClass(invOrd.status)">{{ invOrd.status }}</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400">Table: {{ invOrd.table_number || 'Takeaway' }}</span>
+                  </div>
+                  <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">₹{{ (invOrd.total_amount || 0) - (invOrd.tax_amount || 0) | number:'1.2-2' }}</span>
+                </div>
+                <div class="flex flex-wrap gap-1">
+                  <span *ngFor="let item of invOrd.items" class="text-xs bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200 px-2 py-0.5 rounded-full">
+                    {{ item.quantity }} x {{ item.menu_item_name }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-3 mb-4 space-y-1">
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-600 dark:text-gray-300">Subtotal</span>
+                <span class="font-medium text-gray-900 dark:text-white">₹{{ getInvoicePreTaxSubtotal(invoice.invoiceId) | number:'1.2-2' }}</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-600 dark:text-gray-300">GST (18%)</span>
+                <span class="font-medium text-gray-900 dark:text-white">₹{{ getInvoiceTax(invoice.invoiceId) | number:'1.2-2' }}</span>
+              </div>
+              <div class="border-b border-gray-200 dark:border-gray-600 my-2"></div>
+              <div class="flex items-center justify-between">
+                <span class="text-base font-bold text-gray-900 dark:text-white">Grand Total</span>
+                <span class="text-xl font-bold text-primary-500">₹{{ getInvoiceTotal(invoice.invoiceId) | number:'1.2-2' }}</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button *ngIf="userRole === 'restaurant_owner'"
+                      (click)="markInvoiceCompleted(invoice.invoiceId)"
+                      class="flex-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
+                <i class="fas fa-check-double mr-2"></i>Complete Invoice
+              </button>
+              <button (click)="viewOrder(invoice.orders[0])"
+                      class="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
+                <i class="fas fa-eye mr-2"></i>Details
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Regular Order Cards for all other tabs -->
+        <div *ngIf="activeStatus !== 'BILLING_REQUESTED'">
+          <div *ngFor="let ord of orders" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden mb-3">
 
           <!-- Card Header -->
           <div class="border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">
@@ -127,11 +194,11 @@
                 <i class="fas fa-check-circle mr-2"></i>Served
               </button>
 
-               <button *ngIf="userRole === 'restaurant_owner' && ord.status === 'BILLING_REQUESTED'"
-                       (click)="markCompleted(ord)"
-                       class="flex-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
-                <i class="fas fa-check-double mr-2"></i>Completed
-              </button>
+                <button *ngIf="userRole === 'restaurant_owner' && ord.status === 'BILLING_REQUESTED' && activeStatus === 'BILLING_REQUESTED'"
+                        (click)="markCompleted(ord)"
+                        class="flex-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
+                 <i class="fas fa-check-double mr-2"></i>Completed
+               </button>
 
                <button (click)="viewOrder(ord)"
                        class="flex-1 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
@@ -142,23 +209,24 @@
                         (click)="cancelOrder(ord)"
                         class="flex-1 px-3 py-2 bg-red-700 hover:bg-red-800 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
                  <i class="fas fa-times mr-2"></i>Cancel
-               </button>
+                </button>
+           </div>
           </div>
-        </div>
+         </div>
 
-      <!-- Empty State -->
-      <div *ngIf="orders.length === 0 && realTimeLoader === false"
-           class="col-span-full flex items-center justify-center py-16">
-        <div class="text-center">
-          <div class="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-receipt text-2xl text-gray-400"></i>
-          </div>
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No orders in {{ activeStatusLabel }}</h3>
-          <p class="text-gray-500 dark:text-gray-400">Orders will appear here when customers place them.</p>
-          </div>
-        </div>
+        <!-- Empty State (shared) -->
+       <div *ngIf="(activeStatus === 'BILLING_REQUESTED' ? (billingRequestedInvoices.length === 0) : (orders.length === 0)) && realTimeLoader === false"
+            class="col-span-full flex items-center justify-center py-16">
+         <div class="text-center">
+           <div class="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+             <i class="fas fa-receipt text-2xl text-gray-400"></i>
+           </div>
+           <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No orders in {{ activeStatusLabel }}</h3>
+           <p class="text-gray-500 dark:text-gray-400">Orders will appear here when customers place them.</p>
+           </div>
+         </div>
       </div>
-     <!-- Pagination - Only for owner -->
+      <!-- Pagination - Only for owner -->
     <div *ngIf="userRole === 'owner' && totalPages > 1" class="mt-6 flex justify-center items-center space-x-2">
       <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1"
               class="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded disabled:opacity-50">
