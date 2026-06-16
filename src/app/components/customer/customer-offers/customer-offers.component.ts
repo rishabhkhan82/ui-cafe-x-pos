@@ -5,6 +5,7 @@ import { CrudService } from '../../../services/crud.service';
 import { AuthService } from '../../../services/auth.service';
 import { User } from '../../../services/mock-data.service';
 import { CartService, CartItem } from '../../../services/cart.service';
+import { NotificationService } from '../../../services/notification.service';
 import { environment } from '../../../environments/environment';
 import { AnimateOnScrollDirective } from '../../../directives/animate-on-scroll.directive';
 
@@ -86,6 +87,7 @@ export class CustomerOffersComponent implements OnInit {
   private router = inject(Router);
   private authService = inject(AuthService);
   private cartService = inject(CartService);
+  private notificationService = inject(NotificationService);
 
   currentUser: User | null = null;
   loyaltyProgram: LoyaltyProgramData | null = null;
@@ -344,7 +346,7 @@ export class CustomerOffersComponent implements OnInit {
   }
 
   applyOffer(offer: CustomerOffer): void {
-    alert(`Offer "${offer.title}" applied! Code: ${offer.code}`);
+    this.notificationService.info('Offer Info', `You can apply this offer (Code: ${offer.code}) at the time of billing requested.`);
   }
 
   viewCart(): void {
@@ -411,5 +413,14 @@ export class CustomerOffersComponent implements OnInit {
       month: 'short',
       year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
     });
+  }
+
+  formatRedemptionMethod(method?: string): string {
+    if (!method) return '';
+    return method.replace(/_/g, ' ');
+  }
+
+  getLoyaltyProgress(): number {
+    return (this.loyaltyPoints % 10000) / 10000 * 100;
   }
 }

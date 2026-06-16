@@ -232,3 +232,17 @@ payload - {
 status Code
 403 Forbidden
 response = nothing.
+
+---------------------
+
+pending points
+1] customer offers - offer history below active offers, loylaty points bar.
+2] cusotmer orders - loyalty point discount below and also in owner invoice.
+3] notifications - real time notification services for all.
+4] powner dashboard - dynamic
+5] powner customized menu - keeping only menu that is needed
+6] testing
+7] buying server - 1 month
+8] connect with the domain
+9] deploy and test.
+10] empty the tables and final redeploy.
