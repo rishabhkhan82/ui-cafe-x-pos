@@ -8,9 +8,10 @@ import { AuthService } from '../../../services/auth.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
 import { AnimateOnScrollDirective } from '../../../directives/animate-on-scroll.directive';
-import { Order, OrderItem } from '../../../services/mock-data.service';
+import { Order, OrderItem, OfferRedemptionRecord } from '../../../services/mock-data.service';
 import { MenuItem } from '../../../interfaces';
 import { PendingordersService } from '../../../services/pendingorders.service';
+import { PendingBillsService } from '../../../services/pending-bills.service';
 import { environment } from '../../../environments/environment';
 
 interface EligibleOffer {
@@ -42,6 +43,10 @@ export class CustomerOrdersComponent implements OnInit {
   private notificationService = inject(NotificationService);
   private confirmationService = inject(ConfirmationDialogService);
   private pendingOrdersService = inject(PendingordersService);
+  private pendingBillsService = inject(PendingBillsService);
+
+  currentUser: any = null;
+  userRole: string = 'customer';
 
   activeOrders: Order[] = [];
   orderHistory: Order[] = [];
@@ -69,13 +74,17 @@ export class CustomerOrdersComponent implements OnInit {
   appliedOffer: EligibleOffer | null = null;
 
   ngOnInit(): void {
+    this.currentUser = this.authService.getCurrentUser();
+    console.log('Current user:', this.currentUser);
+    this.userRole = this.currentUser ? this.currentUser.role : 'owner';
+    console.log('User role:', this.userRole);
     this.loadActiveOrders();
-    this.loadEligibleOffers();
     this.loadOrderHistory();
     this.loadAllMenuItems();
     this.cartService.cart$.subscribe(() => {
       this.cartItemCount = this.cartService.cartItemCount;
     });
+    this.loadEligibleOffers();
   }
 
   private loadAllMenuItems(): void {
@@ -119,7 +128,11 @@ export class CustomerOrdersComponent implements OnInit {
           });
         this.isLoading = false;
         if (!this.isBillingRequested) {
-          sessionStorage.removeItem('customer_billing_pending');
+          this.pendingBillsService.setPendingBilling(false);
+        }
+        if (this.isBillingRequested && !this.generatedInvoiceId && this.activeOrders.length > 0) {
+          this.generatedInvoiceId = this.activeOrders[0].invoice_id || null;
+          this.pendingBillsService.setPendingBilling(true);
         }
         this.pendingOrdersService.updateCount(this.activeOrders.length);
         this.calculateInvoice();
@@ -127,7 +140,7 @@ export class CustomerOrdersComponent implements OnInit {
       error: () => {
         this.activeOrders = [];
         this.isLoading = false;
-        sessionStorage.removeItem('customer_billing_pending');
+        this.pendingBillsService.setPendingBilling(false);
         this.pendingOrdersService.updateCount(0);
         this.calculateInvoice();
       }
@@ -222,14 +235,18 @@ export class CustomerOrdersComponent implements OnInit {
 
   private calculateInvoice(): void {
     const preTaxSubtotal = this.activeOrders.reduce((sum, o) => {
-      return sum + (o.total_amount || 0) - (o.tax_amount || 0);
+      return sum + (o.total_amount || 0) - (o.tax_amount || 0) + (o.discount_amount || 0);
     }, 0);
 
     const totalTax = this.activeOrders.reduce((sum, o) => sum + (o.tax_amount || 0), 0);
 
     this.invoiceSubtotal = preTaxSubtotal;
     this.invoiceGst = Math.round(totalTax);
-    this.invoiceDiscount = 0;
+    if (!this.isBillingRequested) {
+      this.invoiceDiscount = 0;
+    } else if (!this.appliedOffer) {
+      this.invoiceDiscount = Math.round(this.activeOrders.reduce((sum, o) => sum + (o.discount_amount || 0), 0) * 100) / 100;
+    }
     if (this.appliedOffer) {
       if (this.appliedOffer.type === 'percentage') {
         this.invoiceDiscount = Math.round(preTaxSubtotal * (this.appliedOffer.discountValue || 0) / 100);
@@ -266,6 +283,37 @@ export class CustomerOrdersComponent implements OnInit {
 
     this.generatedInvoiceId = this.generateInvoiceId();
 
+    const totalPreTax = this.invoiceSubtotal;
+    const totalDiscount = this.invoiceDiscount || 0;
+    const discountAllocations = new Map<number, number>();
+    if (totalPreTax > 0 && totalDiscount > 0 && this.activeOrders.length > 0) {
+      const ordersCount = this.activeOrders.length;
+      const isFixed = this.appliedOffer?.type === 'fixed';
+
+      if (isFixed) {
+        let allocated = 0;
+        this.activeOrders.forEach((order, index) => {
+          const isLast = index === ordersCount - 1;
+          const raw = totalDiscount / ordersCount;
+          const rounded = Math.round(raw * 100) / 100;
+          const adjust = isLast ? Math.round((totalDiscount - allocated) * 100) / 100 : rounded;
+          discountAllocations.set(order.id, Math.max(0, adjust));
+          allocated += Math.max(0, adjust);
+        });
+      } else {
+        let allocated = 0;
+        this.activeOrders.forEach((order, index) => {
+          const orderPreTax = (order.total_amount || 0) - (order.tax_amount || 0);
+          const isLast = index === ordersCount - 1;
+          const raw = totalDiscount * (orderPreTax / totalPreTax);
+          const rounded = Math.round(raw * 100) / 100;
+          const adjust = isLast ? Math.round((totalDiscount - allocated) * 100) / 100 : rounded;
+          discountAllocations.set(order.id, Math.max(0, adjust));
+          allocated += Math.max(0, adjust);
+        });
+      }
+    }
+
     this.confirmationService.confirm(
       `Request billing for ₹${this.invoiceTotal}?\nInvoice ID: ${this.generatedInvoiceId}`,
       'Confirm Billing'
@@ -277,18 +325,23 @@ export class CustomerOrdersComponent implements OnInit {
       const total = this.activeOrders.length;
 
       this.activeOrders.forEach(order => {
+        const orderDiscount = discountAllocations.get(order.id) || 0;
+        const orderPreTax = (order.total_amount || 0) - (order.tax_amount || 0);
+        const orderNewTotal = Math.round((orderPreTax - orderDiscount + (order.tax_amount || 0)) * 100) / 100;
+
         const orderRequest: any = {
           order_id: order.order_id,
           customer_name: order.customer_name,
           table_number: order.table_number,
           status: 'BILLING_REQUESTED',
-          total_amount: order.total_amount,
+          total_amount: orderNewTotal,
           special_instructions: order.special_instructions,
           payment_status: order.payment_status,
           payment_method: order.payment_method,
           order_type: order.order_type,
           priority: order.priority,
           tax_amount: order.tax_amount,
+          discount_amount: orderDiscount,
           invoice_id: this.generatedInvoiceId,
           order_items: order.items.map(item => ({
             id: item.id,
@@ -312,8 +365,42 @@ export class CustomerOrdersComponent implements OnInit {
                 'Billing Generated',
                 `Your bill of ₹${this.invoiceTotal} has been generated, please show this at counter and pay`
               );
-              sessionStorage.setItem('customer_billing_pending', 'true');
+              this.pendingBillsService.setPendingBilling(true);
               this.loadActiveOrders();
+
+              if (this.appliedOffer && this.activeOrders.length > 0) {
+                const firstOrder = this.activeOrders[0];
+                const redemptionPayload: OfferRedemptionRecord = {
+                  id: '',
+                  redemption_id: '',
+                  offer_id: +this.appliedOffer.id,
+                  invoice_id: this.generatedInvoiceId,
+                  order_id: firstOrder.id,
+                  customer_id: firstOrder.customer_id,
+                  restaurant_id: firstOrder.restaurant_id,
+                  redemption_code: this.appliedOffer.code,
+                  discount_amount: this.invoiceDiscount || 0,
+                  original_amount: this.invoiceSubtotal + (this.invoiceGst || 0),
+                  final_amount: this.invoiceTotal,
+                  redemption_method: 'BILLING_REQUESTED',
+                  applied_by: firstOrder.customer_id,
+                  applied_at: new Date(),
+                  created_at: new Date(),
+                  device_type: 'MOBILE',
+                  platform: 'WEB',
+                  is_first_time: true,
+                  usage_count: 1,
+                  customer_lifetime_value: this.invoiceTotal
+                };
+                this.crudService.createOfferRedemption(redemptionPayload).subscribe({
+                  next: () => {
+                    this.loadActiveOrders();
+                  },
+                  error: (err) => {
+                    console.error('Offer redemption failed:', err);
+                  }
+                });
+              }
             }
           },
           error: () => {

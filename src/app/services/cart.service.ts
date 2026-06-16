@@ -3,6 +3,7 @@ import { BehaviorSubject } from 'rxjs';
 import { MenuItem } from '../interfaces';
 import { OrderItem } from '../services/mock-data.service';
 import { NotificationService } from './notification.service';
+import { PendingBillsService } from './pending-bills.service';
 
 export interface CartItem {
   menuItem: MenuItem;
@@ -17,6 +18,7 @@ export class CartService {
   private cartSubject = new BehaviorSubject<CartItem[]>([]);
   cart$ = this.cartSubject.asObservable();
   private notificationService = inject(NotificationService);
+  private pendingBillsService = inject(PendingBillsService);
 
   constructor() {
     this.loadFromStorage();
@@ -31,7 +33,7 @@ export class CartService {
   }
 
   addToCart(menuItem: MenuItem, quantity: number = 1): void {
-    if (sessionStorage.getItem('customer_billing_pending') === 'true') {
+    if (this.pendingBillsService.hasPendingBilling) {
       this.notificationService.error(
         'Bill Pending',
         `You have a pending bill. Please pay at the counter before placing a new order.`
@@ -51,7 +53,7 @@ export class CartService {
 
 
   addOrderItemsToCart(orderItems: OrderItem[]): void {
-    if (sessionStorage.getItem('customer_billing_pending') === 'true') {
+    if (this.pendingBillsService.hasPendingBilling) {
       this.notificationService.error(
         'Bill Pending',
         `You have a pending bill. Please pay at the counter before placing a new order.`
@@ -92,7 +94,7 @@ export class CartService {
   }
 
   increaseQuantity(menuItem: MenuItem): void {
-    if (sessionStorage.getItem('customer_billing_pending') === 'true') {
+    if (this.pendingBillsService.hasPendingBilling) {
       this.notificationService.error(
         'Bill Pending',
         `You have a pending bill. Please pay at the counter before placing a new order.`

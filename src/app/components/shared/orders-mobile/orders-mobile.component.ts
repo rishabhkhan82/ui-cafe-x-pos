@@ -871,12 +871,17 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
 
   getInvoicePreTaxSubtotal(invoiceId: string): number {
     return this.billingRequestedInvoices
-      .find(inv => inv.invoiceId === invoiceId)?.orders.reduce((sum, o) => sum + (o.total_amount || 0) - (o.tax_amount || 0), 0) || 0;
+      .find(inv => inv.invoiceId === invoiceId)?.orders.reduce((sum, o) => sum + (o.total_amount || 0) - (o.tax_amount || 0) + (o.discount_amount || 0), 0) || 0;
   }
 
   getInvoiceTax(invoiceId: string): number {
     return this.billingRequestedInvoices
       .find(inv => inv.invoiceId === invoiceId)?.orders.reduce((sum, o) => sum + (o.tax_amount || 0), 0) || 0;
+  }
+
+  getInvoiceDiscount(invoiceId: string): number {
+    return this.billingRequestedInvoices
+      .find(inv => inv.invoiceId === invoiceId)?.orders.reduce((sum, o) => sum + (o.discount_amount || 0), 0) || 0;
   }
 
   getInvoiceTotal(invoiceId: string): number {
@@ -951,7 +956,68 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
             this.isCompletingInvoice = false;
             this.pendingInvoiceConfirmationId = null;
             this.notificationService.success('Invoice Completed', `Invoice ${invoiceId} marked as Completed`);
-            this.loadOrders();
+
+            if (orders.length > 0) {
+              const firstOrder = orders[0];
+              const customerId = firstOrder.customer_id;
+              const restaurantId = firstOrder.restaurant_id;
+              const invoiceTotal = this.getInvoiceTotal(invoiceId);
+              const earnedPoints = Math.round(invoiceTotal);
+
+              this.crudService.getLoyaltyProgramByCustomer(customerId).subscribe({
+                next: (program: any) => {
+                  const balanceBefore = program?.pointsBalance || 0;
+                  const balanceAfter = balanceBefore + earnedPoints;
+
+                  const loyaltyPayload: any = {
+                    customerId: customerId,
+                    restaurantId: restaurantId,
+                    transactionType: 'EARNED',
+                    points: earnedPoints,
+                    balanceBefore: balanceBefore,
+                    balanceAfter: balanceAfter,
+                    orderId: firstOrder.id,
+                    invoiceId: invoiceId,
+                    description: `Points earned from invoice ${invoiceId}`,
+                    processedBy: this.currentUser?.username || 'owner',
+                    processedAt: new Date().toISOString(),
+                    createdAt: new Date().toISOString(),
+                    createdBy: this.currentUser?.id || null
+                  };
+                  this.crudService.createLoyaltyTransaction(loyaltyPayload).subscribe({
+                    next: () => this.loadOrders(),
+                    error: (err) => {
+                      console.error('Loyalty transaction failed:', err);
+                      this.loadOrders();
+                    }
+                  });
+                },
+                error: (err) => {
+                  console.error('Failed to fetch loyalty program:', err);
+                  const loyaltyPayload: any = {
+                    customerId: customerId,
+                    restaurantId: restaurantId,
+                    transactionType: 'EARNED',
+                    points: earnedPoints,
+                    balanceBefore: 0,
+                    balanceAfter: earnedPoints,
+                    orderId: firstOrder.id,
+                    invoiceId: invoiceId,
+                    description: `Points earned from invoice ${invoiceId}`,
+                    processedBy: this.currentUser?.username || 'owner',
+                    processedAt: new Date().toISOString(),
+                    createdAt: new Date().toISOString(),
+                    createdBy: this.currentUser?.id || null
+                  };
+                  this.crudService.createLoyaltyTransaction(loyaltyPayload).subscribe({
+                    next: () => this.loadOrders(),
+                    error: () => this.loadOrders()
+                  });
+                }
+              });
+            } else {
+              this.loadOrders();
+            }
           }
         },
         error: () => {

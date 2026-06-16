@@ -102,6 +102,7 @@ export interface Order {
   payment_status: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
   special_instructions?: string;
   tax_amount: number;
+  discount_amount?: number;
   delivered_at?: Date;
   estimated_ready_time?: Date;
   customer_id: number;
@@ -281,19 +282,29 @@ export interface LoyaltyProgram {
 
 export interface OfferRedemptionRecord {
   id: string;
-  redemptionId: string;
-  offerId: number;
-  orderId: number;
-  customerId: number;
-  restaurantId: number;
-  redemptionCode?: string;
-  discountAmount: number;
-  originalAmount: number;
-  finalAmount: number;
-  redemptionMethod: string;
-  appliedBy?: string;
-  appliedAt: Date;
-  createdAt?: Date;
+  redemption_id: string;
+  offer_id: number;
+  order_id: number;
+  customer_id: number;
+  restaurant_id: number;
+  redemption_code?: string;
+  discount_amount: number;
+  original_amount: number;
+  final_amount: number;
+  redemption_method: string;
+  applied_by?: any;
+  applied_at: Date;
+  created_at?: Date;
+  customer_lifetime_value?: number;
+  is_first_time?: boolean;
+  usage_count?: number;
+  conditions_met?: any;
+  location?: any;
+  notes?: string;
+  order_items?: any;
+  platform?: string;
+  device_type?: string;
+  invoice_id?: string | null;
 }
 
 export interface Customer {

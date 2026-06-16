@@ -13,6 +13,7 @@ import { NavigationMenu } from './services/mock-data.service';
 import { environment } from './environments/environment';
 import { CartService } from './services/cart.service';
 import { PendingordersService } from './services/pendingorders.service';
+import { PendingBillsService } from './services/pending-bills.service';
 interface User {
   id: string;
   name: string;
@@ -50,6 +51,7 @@ export class AppComponent implements OnInit {
   private loadingService = inject(LoadingService);
   private cartService = inject(CartService);
   private pendingOrdersService = inject(PendingordersService);
+  private pendingBillsService = inject(PendingBillsService);
   cartItemCount = 0;
 
   @ViewChild(NavigationMenuComponent) navMenu!: NavigationMenuComponent;
@@ -103,6 +105,10 @@ export class AppComponent implements OnInit {
     this.pendingOrdersService.pendingCount$.subscribe(count => {
       this.pendingOrdersCount = count;
     });
+
+    this.pendingOrdersService.refreshCount().subscribe();
+
+    this.pendingBillsService.refreshPendingBills().subscribe();
   }
 
   private initializeAuthState(): void {

@@ -8,6 +8,7 @@ import { CartService, CartItem } from '../../../services/cart.service';
 import { CrudService } from '../../../services/crud.service';
 import { AuthService } from '../../../services/auth.service';
 import { NotificationService } from '../../../services/notification.service';
+import { PendingBillsService } from '../../../services/pending-bills.service';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -33,7 +34,8 @@ export class CustomerCartComponent implements OnInit {
     public cartService: CartService,
     private crudService: CrudService,
     private authService: AuthService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private pendingBillsService: PendingBillsService
   ) {}
 
   ngOnInit(): void {
@@ -46,7 +48,7 @@ export class CustomerCartComponent implements OnInit {
   proceedToOrder(): void {
     if (this.cartItems.length === 0 || this.isPlacingOrder) return;
 
-    if (sessionStorage.getItem('customer_billing_pending') === 'true') {
+    if (this.pendingBillsService.hasPendingBilling) {
       this.notificationService.error(
         'Bill Pending',
         `You have a pending bill. Please pay at the counter before placing a new order.`

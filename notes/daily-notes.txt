@@ -210,3 +210,25 @@ tomorrow's plan
 1] double gst issue in cart and order. - done 
 2] owner side billing_requested to completed grouped by invoice and funtionality. - done
 3] owner side loyalty program on marked as the completed.
+4] pending orders not showing in home - session storage
+
+customer orders offer-redemptions api. 
+api - http://localhost:8080/api/offer-redemptions
+payload - {
+    "offerId": "2",
+    "customerId": 69,
+    "orderId": 22,
+    "restaurantId": 1,
+    "redemptionCode": "WELCOME10",
+    "discountAmount": 12,
+    "originalAmount": 142,
+    "finalAmount": 130,
+    "redemptionMethod": "BILLING_REQUESTED",
+    "appliedBy": "CUSTOMER",
+    "deviceType": "MOBILE",
+    "platform": "WEB",
+    "appliedAt": "2026-06-14T19:13:35.225Z"
+}
+status Code
+403 Forbidden
+response = nothing.
