@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { interval, Subscription, Observable } from 'rxjs';
-import { Order, OrderStatus } from '../../../services/mock-data.service';
+import { NewLoyaltyProgram, NewLoyaltyTransaction, Order, OrderStatus } from '../../../services/mock-data.service';
 import { RealtimeService } from '../../../services/realtime.service';
 import { MockDataService } from '../../../services/mock-data.service';
 import { CrudService } from '../../../services/crud.service';
@@ -956,6 +956,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
             this.isCompletingInvoice = false;
             this.pendingInvoiceConfirmationId = null;
             this.notificationService.success('Invoice Completed', `Invoice ${invoiceId} marked as Completed`);
+            this.loadOrders();
 
             if (orders.length > 0) {
               const firstOrder = orders[0];
@@ -965,55 +966,75 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
               const earnedPoints = Math.round(invoiceTotal);
 
               this.crudService.getLoyaltyProgramByCustomer(customerId).subscribe({
-                next: (program: any) => {
-                  const balanceBefore = program?.pointsBalance || 0;
-                  const balanceAfter = balanceBefore + earnedPoints;
-
-                  const loyaltyPayload: any = {
-                    customerId: customerId,
-                    restaurantId: restaurantId,
-                    transactionType: 'EARNED',
-                    points: earnedPoints,
-                    balanceBefore: balanceBefore,
-                    balanceAfter: balanceAfter,
-                    orderId: firstOrder.id,
-                    invoiceId: invoiceId,
-                    description: `Points earned from invoice ${invoiceId}`,
-                    processedBy: this.currentUser?.username || 'owner',
-                    processedAt: new Date().toISOString(),
-                    createdAt: new Date().toISOString(),
-                    createdBy: this.currentUser?.id || null
-                  };
-                  this.crudService.createLoyaltyTransaction(loyaltyPayload).subscribe({
-                    next: () => this.loadOrders(),
-                    error: (err) => {
-                      console.error('Loyalty transaction failed:', err);
-                      this.loadOrders();
-                    }
-                  });
+                next: (program: NewLoyaltyProgram | null) => {
+                  if (program && program.points_balance != null) {
+                    const balanceBefore = program.points_balance;
+                    const balanceAfter = balanceBefore + earnedPoints;
+                    const loyaltyPayload: NewLoyaltyTransaction = {
+                      transaction_id: '',
+                      customer_id: customerId,
+                      restaurant_id: restaurantId,
+                      transaction_type: 'EARNED',
+                      points: earnedPoints,
+                      balance_before: balanceBefore,
+                      balance_after: balanceAfter,
+                      order_id: String(firstOrder.id),
+                      invoice_id: invoiceId,
+                      description: `Points earned from invoice ${invoiceId}`,
+                      processed_by: this.currentUser?.username || 'owner',
+                      processed_at: new Date(),
+                      created_at: new Date(),
+                      created_by: this.currentUser?.id || null,
+                      approval_required: false,
+                      is_reversal: false
+                    };
+                    this.crudService.createLoyaltyTransaction(loyaltyPayload).subscribe({
+                      next: () => this.loadOrders(),
+                      error: () => this.loadOrders()
+                    });
+                  } else {
+                    const createProgramPayload: NewLoyaltyProgram = {
+                      program_id: `PROG-${customerId}`,
+                      program_name: 'Default Program',
+                      customer_id: customerId,
+                      points_balance: 0,
+                      total_points_earned: 0,
+                      total_points_redeemed: 0,
+                      tier: 'BRONZE',
+                      is_active: true
+                    };
+                    this.crudService.createLoyaltyProgram(createProgramPayload).subscribe({
+                      next: () => {
+                        const balanceBefore = 0;
+                        const balanceAfter = earnedPoints;
+                        const loyaltyPayload: NewLoyaltyTransaction = {
+                          transaction_id: '',
+                          customer_id: customerId,
+                          restaurant_id: restaurantId,
+                          transaction_type: 'EARNED',
+                          points: earnedPoints,
+                          balance_before: balanceBefore,
+                          balance_after: balanceAfter,
+                          order_id: String(firstOrder.id),
+                          invoice_id: invoiceId,
+                          description: `Points earned from invoice ${invoiceId}`,
+                          processed_by: this.currentUser?.username || 'owner',
+                          processed_at: new Date(),
+                          created_at: new Date(),
+                          created_by: this.currentUser?.id || null,
+                          approval_required: false,
+                          is_reversal: false
+                        };
+                        this.crudService.createLoyaltyTransaction(loyaltyPayload).subscribe({
+                          next: () => this.loadOrders(),
+                          error: () => this.loadOrders()
+                        });
+                      },
+                      error: () => this.loadOrders()
+                    });
+                  }
                 },
-                error: (err) => {
-                  console.error('Failed to fetch loyalty program:', err);
-                  const loyaltyPayload: any = {
-                    customerId: customerId,
-                    restaurantId: restaurantId,
-                    transactionType: 'EARNED',
-                    points: earnedPoints,
-                    balanceBefore: 0,
-                    balanceAfter: earnedPoints,
-                    orderId: firstOrder.id,
-                    invoiceId: invoiceId,
-                    description: `Points earned from invoice ${invoiceId}`,
-                    processedBy: this.currentUser?.username || 'owner',
-                    processedAt: new Date().toISOString(),
-                    createdAt: new Date().toISOString(),
-                    createdBy: this.currentUser?.id || null
-                  };
-                  this.crudService.createLoyaltyTransaction(loyaltyPayload).subscribe({
-                    next: () => this.loadOrders(),
-                    error: () => this.loadOrders()
-                  });
-                }
+                error: () => this.loadOrders()
               });
             } else {
               this.loadOrders();

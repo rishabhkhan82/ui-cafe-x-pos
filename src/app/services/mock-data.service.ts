@@ -280,6 +280,52 @@ export interface LoyaltyProgram {
   updatedAt?: Date;
 }
 
+export interface NewLoyaltyProgram {
+  id?: number;
+  program_id: string;
+  program_name: string;
+  customer_id: number;
+  points_balance: number;
+  total_points_earned: number;
+  total_points_redeemed: number;
+  tier: string;
+  tier_expiry_date?: Date;
+  last_activity_date?: Date;
+  is_active: boolean;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+export interface NewLoyaltyTransaction {
+  id?: number;
+  transaction_id: string;
+  customer_id: number;
+  restaurant_id: number;
+  transaction_type: string;
+  points: number;
+  balance_before: number;
+  balance_after: number;
+  approval_required: boolean;
+  is_reversal: boolean;
+  order_id?: string;
+  offer_id?: string;
+  description?: string;
+  earned_from?: string;
+  redeemed_for?: string;
+  reference?: string;
+  reversal_transaction_id?: string;
+  processed_by?: string;
+  processed_at?: Date;
+  approved_by?: string;
+  approved_at?: Date;
+  expiry_date?: Date;
+  notes?: string;
+  created_at?: Date;
+  created_by?: number;
+  updated_by?: number;
+  invoice_id?: string | null;
+}
+
 export interface OfferRedemptionRecord {
   id: string;
   redemption_id: string;

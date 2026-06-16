@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { CrudParams, CrudHeaders } from './mock-data.service';
+import { CrudParams, CrudHeaders, NewLoyaltyProgram } from './mock-data.service';
 import { environment } from '../environments/environment';
 
 @Injectable({
@@ -595,7 +595,7 @@ export class CrudService {
     return this.getData('loyalty-programs', params);
   }
 
-  getLoyaltyProgramByCustomer(customerId: string | number): Observable<any> {
+  getLoyaltyProgramByCustomer(customerId: string | number): Observable<NewLoyaltyProgram> {
     return this.getData(`loyalty-programs/customer/${customerId}`);
   }
 
