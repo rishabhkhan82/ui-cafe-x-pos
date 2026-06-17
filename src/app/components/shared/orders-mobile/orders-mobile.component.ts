@@ -884,6 +884,11 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
       .find(inv => inv.invoiceId === invoiceId)?.orders.reduce((sum, o) => sum + (o.discount_amount || 0), 0) || 0;
   }
 
+  getInvoiceLoyaltyDiscount(invoiceId: string): number {
+    return this.billingRequestedInvoices
+      .find(inv => inv.invoiceId === invoiceId)?.orders.reduce((sum, o) => sum + (o.loyalty_discount_amount || 0), 0) || 0;
+  }
+
   getInvoiceTotal(invoiceId: string): number {
     const inv = this.billingRequestedInvoices.find(i => i.invoiceId === invoiceId);
     if (!inv) return 0;

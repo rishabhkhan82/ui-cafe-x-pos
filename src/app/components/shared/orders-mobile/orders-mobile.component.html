@@ -105,6 +105,10 @@
                 <span class="text-green-600 dark:text-green-400">Discount</span>
                 <span class="font-medium text-green-600 dark:text-green-400">-₹{{ getInvoiceDiscount(invoice.invoiceId) | number:'1.2-2' }}</span>
               </div>
+              <div *ngIf="getInvoiceLoyaltyDiscount(invoice.invoiceId) > 0" class="flex items-center justify-between text-sm">
+                <span class="text-purple-600 dark:text-purple-400">Loyalty Discount</span>
+                <span class="font-medium text-purple-600 dark:text-purple-400">-₹{{ getInvoiceLoyaltyDiscount(invoice.invoiceId) | number:'1.2-2' }}</span>
+              </div>
               <div class="border-b border-gray-200 dark:border-gray-600 my-2"></div>
               <div class="flex items-center justify-between">
                 <span class="text-base font-bold text-gray-900 dark:text-white">Grand Total</span>

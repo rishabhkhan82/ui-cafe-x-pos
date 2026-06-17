@@ -163,7 +163,7 @@
           </button>
         </div>
         <div *ngIf="appliedOffer" class="mt-2 inline-flex items-center gap-2 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-full px-3 py-1.5">
-          <span class="text-xs font-semibold text-green-700 dark:text-green-300">✓ {{ appliedOffer.title }} applied</span>
+          <span class="text-xs font-semibold text-green-700 dark:text-green-300">✓ {{ appliedOffer.code }} Applied</span>
           <button (click)="removeAppliedOffer()" class="text-xs text-red-500 hover:text-red-700 font-bold ml-1">✕</button>
         </div>
       </div>
@@ -184,6 +184,10 @@
           <span class="text-green-600 dark:text-green-400">Discount</span>
           <span class="font-medium text-green-600 dark:text-green-400">-₹{{ invoiceDiscount }}</span>
         </div>
+        <div class="flex items-center justify-between text-sm" *ngIf="invoiceLoyaltyDiscount > 0">
+          <span class="text-purple-600 dark:text-purple-400">Loyalty Discount</span>
+          <span class="font-medium text-purple-600 dark:text-purple-400">-₹{{ invoiceLoyaltyDiscount }}</span>
+        </div>
         <div>
           <div class="border-b border-gray-200 dark:border-gray-600 my-3"></div>
         </div>
@@ -198,6 +202,32 @@
         <p class="text-sm font-semibold text-green-800 dark:text-green-300">✅ Billing Requested</p>
         <p class="text-xs text-green-600 dark:text-green-400 mt-1">please show this at counter and pay.</p>
         <p *ngIf="generatedInvoiceId" class="text-xs text-gray-500 dark:text-gray-400 mt-1.5 font-mono">{{ generatedInvoiceId }}</p>
+      </div>
+
+      <!-- Apply Loyalty Points -->
+      <div *ngIf="activeOrders.length > 0 && loyaltyPointsBalance >= 100 && !isBillingRequested" class="mb-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-4">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-semibold text-purple-800 dark:text-purple-300">💎 Loyalty Points</span>
+          <span class="text-xs text-purple-600 dark:text-purple-400">{{ loyaltyPointsBalance }} pts = ₹{{ loyaltyPointsBalance / 100 }}</span>
+        </div>
+        <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">Redeem points for discount. 100 points = ₹1</p>
+        <div class="space-y-3">
+          <div class="flex items-center gap-3">
+            <input type="range" min="0" max="{{maxLoyaltyPoints}}" step="100" [(ngModel)]="loyaltyPointsToRedeem"
+                   (change)="applyLoyalty()" [disabled]="isBillingRequested"
+                   class="flex-1 accent-purple-500 h-2" [class.opacity-50]="isBillingRequested">
+            <!-- <button (click)="applyLoyalty()" [disabled]="isBillingRequested"
+                    class="px-5 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-xl text-sm font-medium whitespace-nowrap"
+                    [class.opacity-50]="isBillingRequested" [class.disabled:cursor-not-allowed]="isBillingRequested">
+              Apply
+            </button> -->
+          </div>
+          <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 px-1">
+            <span>0 pts</span>
+            <span class="font-semibold text-purple-600 dark:text-purple-400">{{ loyaltyPointsToRedeem }} pts = ₹{{ loyaltyPointsToRedeem / 100 }}</span>
+            <span>{{ maxLoyaltyPoints }} pts</span>
+          </div>
+        </div>
       </div>
 
       <!-- Request Billing Button -->

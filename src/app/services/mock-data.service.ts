@@ -103,6 +103,7 @@ export interface Order {
   special_instructions?: string;
   tax_amount: number;
   discount_amount?: number;
+  loyalty_discount_amount?: number;
   delivered_at?: Date;
   estimated_ready_time?: Date;
   customer_id: number;

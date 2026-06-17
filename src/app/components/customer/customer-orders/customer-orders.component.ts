@@ -70,8 +70,12 @@ export class CustomerOrdersComponent implements OnInit {
   invoiceSubtotal = 0;
   invoiceGst = 0;
   invoiceDiscount = 0;
+  invoiceLoyaltyDiscount = 0;
   invoiceTotal = 0;
   appliedOffer: EligibleOffer | null = null;
+  loyaltyPointsBalance = 0;
+  maxLoyaltyPoints = 0;
+  loyaltyPointsToRedeem = 0;
 
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
@@ -81,6 +85,7 @@ export class CustomerOrdersComponent implements OnInit {
     this.loadActiveOrders();
     this.loadOrderHistory();
     this.loadAllMenuItems();
+    this.loadLoyaltyProgram();
     this.cartService.cart$.subscribe(() => {
       this.cartItemCount = this.cartService.cartItemCount;
     });
@@ -233,9 +238,35 @@ export class CustomerOrdersComponent implements OnInit {
     });
   }
 
+  private loadLoyaltyProgram(): void {
+    const currentUser = this.authService.getCurrentUser();
+    const customerId = currentUser?.id;
+    if (!customerId) {
+      this.loyaltyPointsBalance = 0;
+      this.maxLoyaltyPoints = 0;
+      this.loyaltyPointsToRedeem = 0;
+      return;
+    }
+    this.crudService.getLoyaltyProgramByCustomer(customerId).subscribe({
+      next: (response: any) => {
+        if (response && !Array.isArray(response)) {
+          this.loyaltyPointsBalance = response.points_balance || 0;
+          this.maxLoyaltyPoints = this.loyaltyPointsBalance;
+        } else {
+          this.loyaltyPointsBalance = 0;
+          this.maxLoyaltyPoints = 0;
+        }
+      },
+      error: () => {
+        this.loyaltyPointsBalance = 0;
+        this.maxLoyaltyPoints = 0;
+      }
+    });
+  }
+
   private calculateInvoice(): void {
     const preTaxSubtotal = this.activeOrders.reduce((sum, o) => {
-      return sum + (o.total_amount || 0) - (o.tax_amount || 0) + (o.discount_amount || 0);
+      return sum + (o.total_amount || 0) - (o.tax_amount || 0) + (o.discount_amount || 0) + (o.loyalty_discount_amount || 0);
     }, 0);
 
     const totalTax = this.activeOrders.reduce((sum, o) => sum + (o.tax_amount || 0), 0);
@@ -254,13 +285,29 @@ export class CustomerOrdersComponent implements OnInit {
         this.invoiceDiscount = Math.min(this.appliedOffer.discountValue || 0, preTaxSubtotal);
       }
     }
-    this.invoiceTotal = preTaxSubtotal + totalTax - this.invoiceDiscount;
+    const fromOrders = Math.round(this.activeOrders.reduce((sum, o) => sum + (o.loyalty_discount_amount || 0), 0) * 100) / 100;
+    if (fromOrders > 0) {
+      this.invoiceLoyaltyDiscount = fromOrders;
+    }
+    this.invoiceTotal = Math.round((preTaxSubtotal + totalTax - this.invoiceDiscount - this.invoiceLoyaltyDiscount) * 100) / 100;
   }
 
   applyOffer(offer: EligibleOffer): void {
     this.appliedOffer = offer;
     this.calculateInvoice();
     this.notificationService.success('Offer Applied', `${offer.title} has been applied to your bill`);
+  }
+
+  applyLoyalty(): void {
+    if (this.activeOrders.length === 0) return;
+    const redeemableValue = Math.floor(this.loyaltyPointsToRedeem / 100);
+    if (redeemableValue <= 0) {
+      this.invoiceLoyaltyDiscount = 0;
+      this.invoiceTotal = Math.round((this.invoiceSubtotal + this.invoiceGst - this.invoiceDiscount) * 100) / 100;
+      return;
+    }
+    this.invoiceLoyaltyDiscount = Math.round(redeemableValue * 100) / 100;
+    this.invoiceTotal = Math.round((this.invoiceSubtotal + this.invoiceGst - this.invoiceDiscount - this.invoiceLoyaltyDiscount) * 100) / 100;
   }
 
   removeAppliedOffer(): void {
@@ -314,6 +361,21 @@ export class CustomerOrdersComponent implements OnInit {
       }
     }
 
+    const totalLoyaltyDiscount = this.invoiceLoyaltyDiscount || 0;
+    const loyaltyAllocations = new Map<number, number>();
+    if (totalLoyaltyDiscount > 0 && this.activeOrders.length > 0) {
+      let allocated = 0;
+      const ordersCount = this.activeOrders.length;
+      this.activeOrders.forEach((order, index) => {
+        const isLast = index === ordersCount - 1;
+        const raw = totalLoyaltyDiscount / ordersCount;
+        const rounded = Math.round(raw * 100) / 100;
+        const adjust = isLast ? Math.round((totalLoyaltyDiscount - allocated) * 100) / 100 : rounded;
+        loyaltyAllocations.set(order.id, Math.max(0, adjust));
+        allocated += Math.max(0, adjust);
+      });
+    }
+
     this.confirmationService.confirm(
       `Request billing for ₹${this.invoiceTotal}?\nInvoice ID: ${this.generatedInvoiceId}`,
       'Confirm Billing'
@@ -326,8 +388,9 @@ export class CustomerOrdersComponent implements OnInit {
 
       this.activeOrders.forEach(order => {
         const orderDiscount = discountAllocations.get(order.id) || 0;
-        const orderPreTax = (order.total_amount || 0) - (order.tax_amount || 0);
-        const orderNewTotal = Math.round((orderPreTax - orderDiscount + (order.tax_amount || 0)) * 100) / 100;
+        const orderLoyaltyDiscount = loyaltyAllocations.get(order.id) || 0;
+        const orderPreTax = (order.total_amount || 0) - (order.tax_amount || 0) + (order.discount_amount || 0);
+        const orderNewTotal = Math.round((orderPreTax - orderDiscount - orderLoyaltyDiscount + (order.tax_amount || 0)) * 100) / 100;
 
         const orderRequest: any = {
           order_id: order.order_id,
@@ -342,6 +405,7 @@ export class CustomerOrdersComponent implements OnInit {
           priority: order.priority,
           tax_amount: order.tax_amount,
           discount_amount: orderDiscount,
+          loyalty_discount_amount: orderLoyaltyDiscount,
           invoice_id: this.generatedInvoiceId,
           order_items: order.items.map(item => ({
             id: item.id,
@@ -358,51 +422,94 @@ export class CustomerOrdersComponent implements OnInit {
         };
 
         this.crudService.updateOrder(order.id, orderRequest).subscribe({
-          next: () => {
-            completed++;
-            if (completed === total) {
-              this.notificationService.success(
-                'Billing Generated',
-                `Your bill of ₹${this.invoiceTotal} has been generated, please show this at counter and pay`
-              );
-              this.pendingBillsService.setPendingBilling(true);
-              this.loadActiveOrders();
-
-              if (this.appliedOffer && this.activeOrders.length > 0) {
-                const firstOrder = this.activeOrders[0];
-                const redemptionPayload: OfferRedemptionRecord = {
-                  id: '',
-                  redemption_id: '',
-                  offer_id: +this.appliedOffer.id,
-                  invoice_id: this.generatedInvoiceId,
-                  order_id: firstOrder.id,
-                  customer_id: firstOrder.customer_id,
-                  restaurant_id: firstOrder.restaurant_id,
-                  redemption_code: this.appliedOffer.code,
-                  discount_amount: this.invoiceDiscount || 0,
-                  original_amount: this.invoiceSubtotal + (this.invoiceGst || 0),
-                  final_amount: this.invoiceTotal,
-                  redemption_method: 'BILLING_REQUESTED',
-                  applied_by: firstOrder.customer_id,
-                  applied_at: new Date(),
-                  created_at: new Date(),
-                  device_type: 'MOBILE',
-                  platform: 'WEB',
-                  is_first_time: true,
-                  usage_count: 1,
-                  customer_lifetime_value: this.invoiceTotal
-                };
-                this.crudService.createOfferRedemption(redemptionPayload).subscribe({
                   next: () => {
-                    this.loadActiveOrders();
+                    completed++;
+                    if (completed === total) {
+                      this.notificationService.success(
+                        'Billing Generated',
+                        `Your bill of ₹${this.invoiceTotal} has been generated, please show this at counter and pay`
+                      );
+                      this.pendingBillsService.setPendingBilling(true);
+                      this.loadActiveOrders();
+
+                      if (this.invoiceLoyaltyDiscount > 0 && this.activeOrders.length > 0) {
+                        const firstOrder = this.activeOrders[0];
+                        const pointsToRedeem = Math.round(this.invoiceLoyaltyDiscount * 100);
+
+                        this.crudService.getLoyaltyProgramByCustomer(firstOrder.customer_id).subscribe({
+                          next: (program: any) => {
+                            const balanceBefore = program?.points_balance || 0;
+                            const balanceAfter = Math.max(0, balanceBefore - pointsToRedeem);
+
+                            const redeemPayload: any = {
+                              transaction_id: '',
+                              customer_id: firstOrder.customer_id,
+                              restaurant_id: firstOrder.restaurant_id,
+                              transaction_type: 'REDEEMED',
+                              points: pointsToRedeem,
+                              balance_before: balanceBefore,
+                              balance_after: balanceAfter,
+                              order_id: String(firstOrder.id),
+                              invoice_id: this.generatedInvoiceId,
+                              description: `Redeemed ${pointsToRedeem} points for ₹${this.invoiceLoyaltyDiscount} discount`,
+                              processed_by: firstOrder.customer_id,
+                              processed_at: new Date().toISOString(),
+                              created_at: new Date().toISOString(),
+                              created_by: firstOrder.customer_id,
+                              approval_required: false,
+                              is_reversal: false
+                            };
+                            this.crudService.createLoyaltyTransaction(redeemPayload).subscribe({
+                              next: () => this.loadActiveOrders(),
+                              error: (err) => {
+                                console.error('Loyalty redeem transaction failed:', err);
+                                this.loadActiveOrders();
+                              }
+                            });
+                          },
+                          error: (err) => {
+                            console.error('Failed to fetch loyalty program for redeem:', err);
+                            this.loadActiveOrders();
+                          }
+                        });
+                       } else {
+                         this.loadActiveOrders();
+                       }
+
+                       if (this.appliedOffer && this.activeOrders.length > 0) {
+                         const firstOrder = this.activeOrders[0];
+                         const redemptionPayload: OfferRedemptionRecord = {
+                           id: '',
+                           redemption_id: '',
+                           offer_id: +this.appliedOffer.id,
+                           invoice_id: this.generatedInvoiceId,
+                           order_id: firstOrder.id,
+                           customer_id: firstOrder.customer_id,
+                           restaurant_id: firstOrder.restaurant_id,
+                           redemption_code: this.appliedOffer.code,
+                           discount_amount: this.invoiceDiscount || 0,
+                           original_amount: this.invoiceSubtotal + (this.invoiceGst || 0),
+                           final_amount: this.invoiceTotal,
+                           redemption_method: 'BILLING_REQUESTED',
+                           applied_by: firstOrder.customer_id,
+                           applied_at: new Date(),
+                           created_at: new Date(),
+                           device_type: 'MOBILE',
+                           platform: 'WEB',
+                           is_first_time: true,
+                           usage_count: 1,
+                           customer_lifetime_value: this.invoiceTotal
+                         };
+                         this.crudService.createOfferRedemption(redemptionPayload).subscribe({
+                           next: () => this.loadActiveOrders(),
+                           error: (err) => {
+                             console.error('Offer redemption failed:', err);
+                             this.loadActiveOrders();
+                           }
+                         });
+                       }
+                     }
                   },
-                  error: (err) => {
-                    console.error('Offer redemption failed:', err);
-                  }
-                });
-              }
-            }
-          },
           error: () => {
             completed++;
             this.isRequestingBilling = false;
