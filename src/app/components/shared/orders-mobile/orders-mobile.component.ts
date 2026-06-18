@@ -13,7 +13,7 @@ import { ConfirmationDialogService } from '../../../services/confirmation-dialog
 import { AuthService } from '../../../services/auth.service';
 import { ConfirmationDialogComponent } from '../../common/confirmation-dialog/confirmation-dialog.component';
 import { ElapsedTimePipe } from './elapsed-time.pipe';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-orders-mobile',
@@ -31,10 +31,11 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   private validationService = inject(ValidationService);
   private confirmationService = inject(ConfirmationDialogService);
   private authService = inject(AuthService);
+  private route = inject(ActivatedRoute);
+  public router: Router;
   private subscriptions: Subscription[] = [];
-  public realTimeLoader : boolean = true;
+  public realTimeLoader: boolean = true;
 
-  // Component state
   currentTime: string = '';
   activeStatus: string = 'all';
   activeStatusLabel: string = 'All Orders';
@@ -68,8 +69,8 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   // Status options for filtering - role-based
   statusOptions: any[] = [];
 
-  constructor(public router: Router) {
-    
+  constructor(router: Router) {
+    this.router = router;
   }
 
   ngOnInit(): void {
@@ -79,6 +80,9 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     console.log('User role:', this.userRole);
     this.initializeRoleConfig();
     this.initializeTime();
+    this.syncActiveStatusFromRoute();
+    const queryParamSub = this.route.queryParams.subscribe(params => this.syncActiveStatusFromRoute());
+    this.subscriptions.push(queryParamSub);
     this.loadOrders();
     this.setupRealtimeSubscriptions();
     this.loadTheme();
@@ -86,6 +90,17 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  private syncActiveStatusFromRoute(): void {
+    const status = this.route.snapshot.queryParamMap.get('status');
+    if (status && this.orderStatuses.some(s => s.key === status)) {
+      this.activeStatus = status;
+      this.activeStatusLabel = this.orderStatuses.find(s => s.key === status)?.label || 'All Orders';
+    } else {
+      this.activeStatus = 'all';
+      this.activeStatusLabel = 'All Orders';
+    }
   }
 
   private initializeRoleConfig(): void {
@@ -193,6 +208,11 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   setActiveStatus(status: string): void {
     this.activeStatus = status;
     this.activeStatusLabel = this.orderStatuses.find(s => s.key === status)?.label || 'All Orders';
+    if (status === 'all') {
+      this.router.navigate([], { queryParams: { status: null } });
+    } else {
+      this.router.navigate([], { queryParams: { status } });
+    }
     this.filterOrders();
   }
 
@@ -848,6 +868,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.itemsPerPage = 10;
     this.totalPages = 1;
     this.totalElements = 0;
+    this.router.navigate([], { queryParams: { status: null } });
     this.loadOrders();
   }
 
@@ -1079,6 +1100,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.activeStatus = 'all';
     this.activeStatusLabel = 'All Orders';
     this.currentPage = 1;
+    this.router.navigate([], { queryParams: { status: null } });
     this.filterOrders();
   }
 
