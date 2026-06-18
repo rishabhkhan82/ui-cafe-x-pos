@@ -6,6 +6,7 @@ import { Order, OrderItem } from '../../../services/mock-data.service';
 import { CrudService } from '../../../services/crud.service';
 import { LoadingService } from '../../../services/loading.service';
 import { NotificationService } from '../../../services/notification.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-owner-reports-mobile',
@@ -24,7 +25,8 @@ export class OwnerReportsMobileComponent implements OnInit {
     public router: Router,
     private crudService: CrudService,
     private loadingService: LoadingService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -45,8 +47,10 @@ export class OwnerReportsMobileComponent implements OnInit {
     // Prepare date range filter
     const startDate = new Date(this.fromDate).toISOString().split('T')[0];
     const endDate = new Date(this.toDate).toISOString().split('T')[0];
+    const currentUser = this.authService.getCurrentUser();
+    const restaurantId = currentUser?.restaurantId || undefined;
 
-    this.crudService.getOrdersForReports(startDate, endDate, 'COMPLETED').subscribe({
+    this.crudService.getOrdersForReports(startDate, endDate, 'COMPLETED', restaurantId).subscribe({
       next: (response: any) => {
         const orders: Order[] = response.data || response || [];
         this.reportData = this.calculateReport(orders);
