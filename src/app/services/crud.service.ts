@@ -231,8 +231,12 @@ export class CrudService {
     return this.getData('orders', params);
   }
 
-  getCurrentOrders(): Observable<any> {
-    return this.getData('current-orders');
+  getCurrentOrders(restaurantId?: string | number): Observable<any> {
+    const params: any = {};
+    if (restaurantId !== undefined && restaurantId !== null && restaurantId !== '') {
+      params['restaurant_id'] = restaurantId;
+    }
+    return this.getData('current-orders', params);
   }
 
   getOrderById(id: string | number): Observable<any> {

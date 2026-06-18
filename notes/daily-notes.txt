@@ -237,7 +237,9 @@ response = nothing.
 
 pending points
 1] customer offers - offer history below active offers, loylaty points bar. - Done
-2] cusotmer orders - loyalty point discount below and also in owner invoice.
+2] cusotmer orders - loyalty point discount below and also in owner invoice - Done
+3] admin side - restaurant id specific
+3] customer side - restaurant id specific
 3] notifications - real time notification services for all.
 4] powner dashboard - dynamic
 5] powner customized menu - keeping only menu that is needed

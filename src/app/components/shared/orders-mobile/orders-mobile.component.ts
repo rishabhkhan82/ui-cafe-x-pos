@@ -149,8 +149,8 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
 
   private loadOrders(): void {
     this.realTimeLoader = true;
-    // Load current orders from API
-    this.crudService.getCurrentOrders().subscribe({
+    const restaurantId = this.currentUser?.restaurantId || '';
+    this.crudService.getCurrentOrders(restaurantId || undefined).subscribe({
       next: (response: any) => {
         this.allOrders = response || [];
         this.filterOrders();
