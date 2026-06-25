@@ -150,7 +150,8 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
 
   private loadActiveOrders(): void {
     this.isLoading = true;
-    this.crudService.getActiveOrders().subscribe({
+    const customerId = this.authService.getCurrentUser()?.id;
+    this.crudService.getActiveOrders(customerId).subscribe({
       next: (response: any) => {
         const allOrders = response || [];
         this.activeOrders = allOrders
@@ -256,7 +257,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
 
   private loadOrderHistory(): void {
     this.isOrderHistoryLoading = true;
-    this.crudService.getOrders({ status: 'COMPLETED', page: 1, size: 10 }).subscribe({
+    this.crudService.getOrders({ customerId: this.authService.getCurrentUser()!.id, status: 'COMPLETED', page: 1, size: 10 }).subscribe({
       next: (response: any) => {
         this.orderHistory = response?.data || [];
         this.isOrderHistoryLoading = false;
@@ -561,7 +562,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
     this.showAllOrderHistory = true;
     this.isAllOrderHistoryLoading = true;
     this.allOrderHistory = [];
-    this.crudService.getOrders({ status: 'COMPLETED', page: 1, size: 9999 }).subscribe({
+    this.crudService.getOrders({ customerId: this.authService.getCurrentUser()!.id, status: 'COMPLETED', page: 1, size: 9999 }).subscribe({
       next: (response: any) => {
         this.allOrderHistory = response?.data || [];
         this.isAllOrderHistoryLoading = false;

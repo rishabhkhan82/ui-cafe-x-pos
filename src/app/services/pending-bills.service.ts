@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { CrudService } from './crud.service';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +15,7 @@ export class PendingBillsService {
   private lastUpdated = 0;
   private readonly REFRESH_COOLDOWN_MS = 5000;
 
-  constructor(private crudService: CrudService) {}
+  constructor(private crudService: CrudService, private authService: AuthService) {}
 
   get hasPendingBilling(): boolean {
     return this._hasPendingBilling$.value;
@@ -29,7 +30,8 @@ export class PendingBillsService {
     this.isRefreshing = true;
     this.lastUpdated = now;
 
-    return this.crudService.getActiveOrders().pipe(
+    const customerId = this.authService.getCurrentUser()?.id;
+    return this.crudService.getActiveOrders(customerId).pipe(
       map((orders: any[]) => {
         const hasPending = Array.isArray(orders) && orders.some((o: any) => o.status === 'BILLING_REQUESTED');
         this._hasPendingBilling$.next(hasPending);

@@ -422,9 +422,9 @@ initializeGuest()
 
 task to complete today.  (make both userid wise)
 check where sessionstorage is getting clear.
-ws url from environment
-http://localhost:8080/api/orders/customer/active
-http://localhost:8080/api/orders?status=COMPLETED&page=1&size=10
+ws url from environment - Done
+http://localhost:8080/api/orders/customer/active - done
+http://localhost:8080/api/orders?status=COMPLETED&page=1&size=10 - done
 
 ========================================================================
 

@@ -263,8 +263,8 @@ export class CrudService {
     return this.patchData('orders', { status }, {}, id);
   }
 
-  getActiveOrders(): Observable<any> {
-    return this.getData('orders/customer/active');
+  getActiveOrders(customerId?: number | string): Observable<any> {
+    return this.getData('orders/customer/active', customerId ? { customerId } : undefined);
   }
 
   // Order Item operations

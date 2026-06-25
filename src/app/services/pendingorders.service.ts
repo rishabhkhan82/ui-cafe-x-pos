@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { CrudService } from './crud.service';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +16,8 @@ export class PendingordersService {
   private readonly REFRESH_COOLDOWN_MS = 5000;
 
   constructor(
-    private crudService: CrudService
+    private crudService: CrudService,
+    private authService: AuthService
   ) { }
 
   updateCount(count: number): void {
@@ -35,7 +37,8 @@ export class PendingordersService {
     this.isRefreshing = true;
     this.lastUpdated = now;
 
-    return this.crudService.getActiveOrders().pipe(
+    const customerId = this.authService.getCurrentUser()?.id;
+    return this.crudService.getActiveOrders(customerId).pipe(
       map((orders: any[]) => {
         const count = Array.isArray(orders) ? orders.length : 0;
         this._pendingCount$.next(count);
