@@ -6,6 +6,12 @@ export const routes: Routes = [
   // Default redirect to admin login (main entry point)
   { path: '', redirectTo: '/admin/login', pathMatch: 'full' },
 
+  // Customer QR Scan (outside layout - no header/footer)
+  {
+    path: 'customer/scan-qr',
+    loadComponent: () => import('./components/auth/customer-scar-qr/customer-scar-qr.component').then(m => m.CustomerScarQrComponent)
+  },
+
   // Admin login (outside layout - no header/footer)
   {
     path: 'admin/login',
