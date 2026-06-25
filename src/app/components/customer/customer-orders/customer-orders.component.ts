@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -12,6 +13,7 @@ import { Order, OrderItem, OfferRedemptionRecord } from '../../../services/mock-
 import { MenuItem } from '../../../interfaces';
 import { PendingordersService } from '../../../services/pendingorders.service';
 import { PendingBillsService } from '../../../services/pending-bills.service';
+import { RealtimeService } from '../../../services/realtime.service';
 import { environment } from '../../../environments/environment';
 
 interface EligibleOffer {
@@ -35,7 +37,7 @@ interface EligibleOffer {
   templateUrl: './customer-orders.component.html',
   styleUrl: './customer-orders.component.css'
 })
-export class CustomerOrdersComponent implements OnInit {
+export class CustomerOrdersComponent implements OnInit, OnDestroy {
   private crudService = inject(CrudService);
   private router = inject(Router);
   private cartService = inject(CartService);
@@ -44,9 +46,11 @@ export class CustomerOrdersComponent implements OnInit {
   private confirmationService = inject(ConfirmationDialogService);
   private pendingOrdersService = inject(PendingordersService);
   private pendingBillsService = inject(PendingBillsService);
+  private realtimeService = inject(RealtimeService);
 
   currentUser: any = null;
   userRole: string = 'customer';
+  private subscriptions: Subscription[] = [];
 
   activeOrders: Order[] = [];
   orderHistory: Order[] = [];
@@ -90,6 +94,32 @@ export class CustomerOrdersComponent implements OnInit {
       this.cartItemCount = this.cartService.cartItemCount;
     });
     this.loadEligibleOffers();
+
+    const realtimeSub = this.realtimeService.customerOrderUpdate$.subscribe(order => {
+      console.log('[customer-orders] customerOrderUpdate$ received:', order);
+      if (order) {
+        order.items = order.items || [];
+        if (order.status === 'COMPLETED' || order.status === 'CANCELLED') {
+          this.loadActiveOrders();
+          this.loadLoyaltyProgram();
+          this.loadEligibleOffers();
+          this.loadOrderHistory();
+        } else {
+          const index = this.activeOrders.findIndex(o => o.id === order.id);
+          if (index !== -1) {
+            this.activeOrders[index] = order;
+          } else {
+            this.activeOrders.unshift(order);
+          }
+          this.calculateInvoice();
+        }
+      }
+    });
+    this.subscriptions.push(realtimeSub);
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   private loadAllMenuItems(): void {
@@ -430,7 +460,6 @@ export class CustomerOrdersComponent implements OnInit {
                         `Your bill of ₹${this.invoiceTotal} has been generated, please show this at counter and pay`
                       );
                       this.pendingBillsService.setPendingBilling(true);
-                      this.loadActiveOrders();
 
                       if (this.invoiceLoyaltyDiscount > 0 && this.activeOrders.length > 0) {
                         const firstOrder = this.activeOrders[0];
@@ -460,20 +489,17 @@ export class CustomerOrdersComponent implements OnInit {
                               is_reversal: false
                             };
                             this.crudService.createLoyaltyTransaction(redeemPayload).subscribe({
-                              next: () => this.loadActiveOrders(),
+                              next: () => { },
                               error: (err) => {
                                 console.error('Loyalty redeem transaction failed:', err);
-                                this.loadActiveOrders();
                               }
                             });
                           },
                           error: (err) => {
                             console.error('Failed to fetch loyalty program for redeem:', err);
-                            this.loadActiveOrders();
                           }
                         });
                        } else {
-                         this.loadActiveOrders();
                        }
 
                        if (this.appliedOffer && this.activeOrders.length > 0) {
@@ -500,13 +526,12 @@ export class CustomerOrdersComponent implements OnInit {
                            usage_count: 1,
                            customer_lifetime_value: this.invoiceTotal
                          };
-                         this.crudService.createOfferRedemption(redemptionPayload).subscribe({
-                           next: () => this.loadActiveOrders(),
-                           error: (err) => {
-                             console.error('Offer redemption failed:', err);
-                             this.loadActiveOrders();
-                           }
-                         });
+                          this.crudService.createOfferRedemption(redemptionPayload).subscribe({
+                            next: () => { },
+                            error: (err) => {
+                              console.error('Offer redemption failed:', err);
+                            }
+                          });
                        }
                      }
                   },

@@ -248,3 +248,202 @@ pending points
 8] connect with the domain
 9] deploy and test.
 10] empty the tables and final redeploy.
+
+Relatime Data (websocket)
+1] subscibe to the services at the login success.
+
+java websocket setup
+
+Yes — exactly 2–3 global backend changes first, then work locally at controller/service level.
+
+Global changes (do once)
+Add WebSocket dependency in pom.xml (global)
+Create WebSocketConfig.java in config/ package (global)
+Permit WebSocket endpoint in SecurityConfig.java — add /ws/** to requestMatchers (global)
+
+Real time data flow
+- apply websocket at global
+- then apply websocket at local controller/services individually
+- Proper way to manage realtime subscriptions
+Core principle
+Subscribe in one place only — AppComponent — and tie it to auth state, not routes.
+
+Step 1: AuthService exposes login state
+// auth.service.ts (already exists, just ensure this exists)
+private loggedIn = new BehaviorSubject<boolean>(false);
+isLoggedIn$ = this.loggedIn.asObservable();
+
+// Called after successful JWT storage
+setLoggedIn(user: User): void {
+  localStorage.setItem('user', JSON.stringify(user));
+  this.loggedIn.next(true);
+}
+
+logout(): void {
+  localStorage.removeItem('user');
+  this.loggedIn.next(false);
+}
+
+getCurrentUser(): User | null {
+  return localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null;
+}
+Step 2: AppComponent auto-connects on auth state change
+// app.component.ts
+export class AppComponent {
+  constructor(
+    private auth: AuthService,
+    private realtime: RealtimeService
+  ) {
+    // Handle fresh login OR page refresh with existing session
+    this.auth.isLoggedIn$.pipe(
+      filter(isLoggedIn => isLoggedIn),
+      take(1)  // only trigger once per login session
+    ).subscribe(() => {
+      const user = this.auth.getCurrentUser();
+      if (user) {
+        this.realtime.connect(user.id, user.restaurantId);
+      }
+    });
+
+    // Optional: auto-disconnect on logout
+    this.auth.isLoggedIn$.pipe(
+      filter(isLoggedIn => !isLoggedIn),
+      take(1)
+    ).subscribe(() => {
+      this.realtime.disconnect();
+    });
+  }
+}
+Step 3: AppComponent also handles page refresh recovery
+On page refresh, AppComponent runs first. Check if session exists and auto-connect:
+
+// In AppComponent constructor, BEFORE the isLoggedIn$ subscription
+ngOnInit(): void {
+  const existingUser = this.auth.getCurrentUser();
+  if (existingUser) {
+    // User refreshed page, session valid — reconnect immediately
+    this.realtime.connect(existingUser.id, existingUser.restaurantId);
+  }
+  
+  // Then listen for future logins
+  this.auth.isLoggedIn$...
+}
+Step 4: RealtimeService connection guard
+// realtime.service.ts
+private isConnected = false;
+
+connect(userId: string, restaurantId: string): void {
+  if (this.isConnected) {
+    this.disconnect();  // clean old connection first
+  }
+  
+  this.socket = io(environment.apiUrl);
+  this.socket.emit('authenticate', { userId, restaurantId });
+  
+  this.isConnected = true;
+}
+
+disconnect(): void {
+  this.socket?.disconnect();
+  this.isConnected = false;
+}
+Result
+Scenario	What happens
+First login	setLoggedIn() → isLoggedIn$ emits → AppComponent calls connect()
+Page refresh	AppComponent ngOnInit sees localStorage user → auto connect()
+Navigate to any page	Connection already live in singleton service — all pages work
+Logout	isLoggedIn$ emits false → disconnect()
+Close tab	Browser kills socket automatically
+Where NOT to subscribe
+Never in feature components (orders-mobile, customer-orders)
+Never in navbar or notification bell
+Those just read from the BehaviorSubject streams that AppComponent already populated
+The complete ownership map
+AppComponent
+   ├── OnInit: checks localStorage → connect() if user exists
+   ├── auth.isLoggedIn$ → connect() on login
+   └── auth.isLoggedIn$ (false) → disconnect() on logout
+
+RealtimeService (singleton)
+   ├── socket.on('newOrder')      → newOrderSubject.next()
+   ├── socket.on('newNotification') → newNotificationSubject.next()
+   └── expose observables for whole app
+
+Feature components (orders-mobile, customer-orders, bell)
+   └── just subscribe to realtimeService.newOrder$
+      or realtimeService.newNotification$
+      (no connect/disconnect logic)
+One subscription, all pages, auto-heals on refresh.
+
+==================================================================
+
+customer-cart
+   │  POST /orders  (createOrder API)
+   ▼
+Backend OrderService.saveOrder()
+   │  saves to DB
+   │  emitOrderUpdate() → emits to:
+   │     /topic/orders/1       (Restaurant 1 staff)
+   │     /topic/users/cust-1/orders  (that customer only)
+   ▼
+orders-mobile (Rest 1)  → new order appears in list
+customer-orders (customer 1)  → order appears in activeOrders
+
+==================================================================
+
+What's NOT done (optional next steps)
+Item	Priority
+AppComponent shows in-app toast on newNotification$	Low
+Navbar bell component using newNotification$	Low
+Connection status indicator (connected/disconnected)	Low
+Notification page showing historical list	Medium
+The real-time engine itself is fully functional. Those are just UI consumers that can be added later.
+
+==================================================================
+
+=======================================================================
+
+GUEST FLOW
+
+initializeGuest()
+  ├─ isGuestAvailable = true  →  loadExistingGuest()
+  │     └─ validateCustomer() succeeds
+  │           → setCurrentUserFromGuest()  ← establishes auth state via setCurrentUser()
+  │           → setTimeout(() => initializeUser(), 100ms)
+  │                 └─ loadMenuData()  ← menu loads fine
+  │
+  └─ isGuestAvailable = false  →  createNewGuest()
+        └─ ensureGuestExists() succeeds
+              → setCurrentUserFromGuest()  ← establishes auth state via setCurrentUser()
+              → setTimeout(() => initializeUser(), 100ms)
+                    └─ loadMenuData()  ← menu loads fine
+
+=======================================================================
+
+task to complete today.  (make both userid wise)
+check where sessionstorage is getting clear.
+ws url from environment
+http://localhost:8080/api/orders/customer/active
+http://localhost:8080/api/orders?status=COMPLETED&page=1&size=10
+
+========================================================================
+
+powner - pages required.
+
+1] Real Time Dashboard
+2] system configuration
+3] restaurant Manangement
+4] plan management
+5] role management
+6] navigation management
+7] feature access control
+8] feature management
+9] user management
+10 role access management
+11] subscriptions Analytics
+12] Integrations
+13] user notifications
+
+real time operations needed on actions
+1] 
+ 

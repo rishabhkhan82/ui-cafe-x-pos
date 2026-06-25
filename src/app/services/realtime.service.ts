@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, interval } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { MockDataService, Order } from './mock-data.service';
 import type { Notification } from './mock-data.service';
+import { environment } from '../environments/environment';
+import { Client } from '@stomp/stompjs';
 
 @Injectable({
   providedIn: 'root'
@@ -9,8 +11,14 @@ import type { Notification } from './mock-data.service';
 export class RealtimeService {
   private eventSource: EventSource | null = null;
   private notificationPermission: NotificationPermission = 'default';
+  private stompClient: Client | null = null;
+  private isConnected = false;
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
 
-  // Real-time event streams
+  private connectParams: { userId: string; restaurantId: string; role: string } | null = null;
+  private connectSequence = 0;
+
   private newOrderSubject = new BehaviorSubject<Order | null>(null);
   public newOrder$ = this.newOrderSubject.asObservable();
 
@@ -20,106 +28,16 @@ export class RealtimeService {
   private newNotificationSubject = new BehaviorSubject<Notification | null>(null);
   public newNotification$ = this.newNotificationSubject.asObservable();
 
+  private customerOrderUpdateSubject = new BehaviorSubject<Order | null>(null);
+  public customerOrderUpdate$ = this.customerOrderUpdateSubject.asObservable();
+
   constructor(private mockDataService: MockDataService) {
-    this.initializeRealtimeConnection();
     this.requestNotificationPermission();
-  }
-
-  private initializeRealtimeConnection(): void {
-    // For demo purposes, we'll simulate real-time updates using intervals
-    // In production, this would connect to a WebSocket or SSE endpoint
-
-    // Simulate new orders every 45-90 seconds
-    interval(Math.random() * 45000 + 45000).subscribe(() => {
-      this.simulateNewOrder();
-    });
-
-    // Simulate order status updates every 30-60 seconds
-    interval(Math.random() * 30000 + 30000).subscribe(() => {
-      this.simulateOrderUpdate();
-    });
-
-    // Simulate notifications every 60-120 seconds
-    interval(Math.random() * 60000 + 60000).subscribe(() => {
-      this.simulateNewNotification();
-    });
-  }
-
-  private simulateNewOrder(): void {
-    // This would normally come from the server
-    // For demo, we'll trigger the mock data service to create a new order
-    const mockService = this.mockDataService as any;
-    if (mockService.addRandomOrder) {
-      mockService.addRandomOrder();
-      // Get the latest order and emit it
-      this.mockDataService.getOrders().subscribe(orders => {
-        const latestOrder = orders[orders.length - 1];
-        if (latestOrder && new Date(latestOrder.created_at).getTime() > Date.now() - 5000) {
-          this.newOrderSubject.next(latestOrder);
-          this.showBrowserNotification(
-            'New Order Received',
-            `Order ${latestOrder.id} for ${latestOrder.customer_name}`,
-            'order'
-          );
-        }
-      });
-    }
-  }
-
-  private simulateOrderUpdate(): void {
-    // Simulate order status changes
-    this.mockDataService.getOrders().subscribe(orders => {
-      const activeOrders = orders.filter(order =>
-        ['pending', 'confirmed', 'preparing'].includes(order.status)
-      );
-
-      if (activeOrders.length > 0) {
-        const randomOrder = activeOrders[Math.floor(Math.random() * activeOrders.length)];
-        const statusProgression = {
-          'pending': 'confirmed',
-          'confirmed': 'preparing',
-          'preparing': 'ready'
-        };
-
-        const newStatus = statusProgression[randomOrder.status as keyof typeof statusProgression];
-        if (newStatus) {
-          this.mockDataService.updateOrderStatus(randomOrder.id, newStatus as any);
-          this.orderUpdateSubject.next(randomOrder);
-
-          this.showBrowserNotification(
-            'Order Status Updated',
-            `Order ${randomOrder.id} is now ${newStatus}`,
-            'order'
-          );
-        }
-      }
-    });
-  }
-
-  private simulateNewNotification(): void {
-    // This would normally come from the server
-    const mockService = this.mockDataService as any;
-    if (mockService.addRandomNotification) {
-      mockService.addRandomNotification();
-      // Get the latest notification and emit it
-      this.mockDataService.getNotifications().subscribe(notifications => {
-        const latestNotification = notifications[notifications.length - 1];
-        if (latestNotification && new Date(latestNotification.timestamp).getTime() > Date.now() - 5000) {
-          this.newNotificationSubject.next(latestNotification);
-          this.showBrowserNotification(
-            latestNotification.title,
-            latestNotification.message,
-            latestNotification.type
-          );
-        }
-      });
-    }
   }
 
   private async requestNotificationPermission(): Promise<void> {
     if ('Notification' in window) {
       this.notificationPermission = Notification.permission;
-
       if (Notification.permission === 'default') {
         try {
           this.notificationPermission = await Notification.requestPermission();
@@ -140,13 +58,7 @@ export class RealtimeService {
         requireInteraction: false,
         silent: false
       });
-
-      // Auto-close after 5 seconds
-      setTimeout(() => {
-        notification.close();
-      }, 5000);
-
-      // Handle click
+      setTimeout(() => notification.close(), 5000);
       notification.onclick = () => {
         window.focus();
         notification.close();
@@ -154,7 +66,6 @@ export class RealtimeService {
     }
   }
 
-  // Public methods
   public updateOrder(order: Order): void {
     this.mockDataService.updateOrderStatus(order.id, order.status);
     this.orderUpdateSubject.next(order);
@@ -169,18 +80,138 @@ export class RealtimeService {
   }
 
   public disconnect(): void {
-    if (this.eventSource) {
-      this.eventSource.close();
-      this.eventSource = null;
+    console.log('[Realtime] Disconnecting...');
+    this.reconnectAttempts = this.maxReconnectAttempts;
+    this.connectParams = null;
+    if (this.stompClient) {
+      this.stompClient.deactivate();
+      this.stompClient = null;
     }
+    this.isConnected = false;
+    console.log('[Realtime] Disconnected');
   }
 
-  // Method to manually trigger real-time events for testing
   public triggerTestOrder(): void {
-    this.simulateNewOrder();
+    console.log('Test order trigger is disabled in WebSocket mode');
   }
 
   public triggerTestNotification(): void {
-    this.simulateNewNotification();
+    console.log('Test notification trigger is disabled in WebSocket mode');
+  }
+
+  public connect(userId: string, restaurantId: string, role: string): void {
+    const paramsMatch = this.connectParams &&
+      this.connectParams.userId === userId &&
+      this.connectParams.restaurantId === restaurantId &&
+      this.connectParams.role === role;
+
+    if (this.isConnected && paramsMatch) {
+      console.log('[Realtime] Already connected with same params, skipping');
+      return;
+    }
+
+    if (this.isConnected) {
+      console.log('[Realtime] Already connected with different params, disconnecting first');
+      this.disconnect();
+    }
+
+    if (paramsMatch) {
+      console.log('[Realtime] Already connecting with same params, skipping duplicate request');
+      return;
+    }
+
+    this.reconnectAttempts = 0;
+    this.connectParams = { userId, restaurantId, role };
+    const mySequence = ++this.connectSequence;
+
+    try {
+      const wsUrl = `${environment.api.baseUrl.replace(/^http/, 'ws')}/ws`;
+      console.log('[Realtime] Attempting connect to', wsUrl, 'as user', userId, 'restaurant', restaurantId, 'role', role);
+
+      this.stompClient = new Client({
+        brokerURL: wsUrl,
+        connectHeaders: {},
+        debug: (str) => console.log('[STOMP]', str),
+        reconnectDelay: 5000,
+        heartbeatIncoming: 10000,
+        heartbeatOutgoing: 10000,
+      });
+
+      this.stompClient.onConnect = (frame) => {
+        if (mySequence !== this.connectSequence) {
+          console.log('[Realtime] Ignoring stale connection callback (sequence mismatch)');
+          this.stompClient?.deactivate();
+          return;
+        }
+
+        this.isConnected = true;
+        this.reconnectAttempts = 0;
+        this.connectParams = { userId, restaurantId, role };
+        console.log('[Realtime] Connected successfully');
+
+        if (role !== 'customer') {
+          this.stompClient!.subscribe(`/topic/orders/${restaurantId}/new`, (msg) => {
+            console.log('[Realtime] Received new order for restaurant', restaurantId);
+            const order = JSON.parse(msg.body) as Order;
+            this.newOrderSubject.next(order);
+          });
+
+          this.stompClient!.subscribe(`/topic/orders/${restaurantId}/updates`, (msg) => {
+            console.log('[Realtime] Received order update for restaurant', restaurantId);
+            const order = JSON.parse(msg.body) as Order;
+            this.orderUpdateSubject.next(order);
+          });
+        } else {
+          this.stompClient!.subscribe(`/topic/users/${userId}/orders`, (msg) => {
+            console.log('[Realtime] Received customer order update for user', userId);
+            const order = JSON.parse(msg.body) as Order;
+            this.customerOrderUpdateSubject.next(order);
+          });
+        }
+
+        this.stompClient!.subscribe('/topic/notifications', (msg) => {
+          const notif = JSON.parse(msg.body) as Notification;
+          const storedUserId = this.getStoredUserId();
+          if (notif.recipientId === storedUserId) {
+            this.newNotificationSubject.next(notif);
+            this.showBrowserNotification(notif.title, notif.message, notif.type || 'info');
+          }
+        });
+      };
+
+      this.stompClient.onStompError = (frame) => {
+        console.error('[Realtime] STOMP error:', frame.headers['message']);
+        this.isConnected = false;
+      };
+
+      this.stompClient.onWebSocketClose = () => {
+        console.error('[Realtime] WebSocket closed');
+        this.isConnected = false;
+        this.connectParams = null;
+        this.attemptReconnect(userId, restaurantId, role);
+      };
+
+      this.stompClient.activate();
+    } catch (error) {
+      console.error('[Realtime] Failed to connect:', error);
+    }
+  }
+
+  private getStoredUserId(): string | null {
+    try {
+      const user = sessionStorage.getItem('currentUser') || localStorage.getItem('user');
+      return user ? JSON.parse(user).id : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private attemptReconnect(userId: string, restaurantId: string, role: string): void {
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++;
+      const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+      console.log(`[Realtime] Reconnect attempt ${this.reconnectAttempts} in ${delay}ms`);
+      setTimeout(() => this.connect(userId, restaurantId, role), delay);
+    }
   }
 }

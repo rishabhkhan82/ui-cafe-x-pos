@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { interval, Subscription, Observable } from 'rxjs';
@@ -35,6 +35,8 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   public router: Router;
   private subscriptions: Subscription[] = [];
   public realTimeLoader: boolean = true;
+  private changeDetectorRef = inject(ChangeDetectorRef);
+  private ngZone = inject(NgZone);
 
   currentTime: string = '';
   activeStatus: string = 'all';
@@ -149,16 +151,18 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
 
   private initializeTime(): void {
     if (['kitchen', 'kitchen_manager'].includes(this.userRole)) {
-      // Update current time every second
-      const timeSub = interval(1000).subscribe(() => {
-        this.currentTime = new Date().toLocaleTimeString('en-IN', {
-          hour12: false,
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit'
+      this.ngZone.runOutsideAngular(() => {
+        const timeSub = interval(1000).subscribe(() => {
+          this.currentTime = new Date().toLocaleTimeString('en-IN', {
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+          });
+          this.changeDetectorRef.detectChanges();
         });
+        this.subscriptions.push(timeSub);
       });
-      this.subscriptions.push(timeSub);
     }
   }
 
@@ -180,29 +184,42 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     });
   }
 
-  private setupRealtimeSubscriptions(): void {
-    if (['kitchen', 'kitchen_manager'].includes(this.userRole)) {
-      // Subscribe to new orders
-      const newOrderSub = this.realtimeService.newOrder$.subscribe(order => {
-        if (order) {
-          this.orders.unshift(order);
+   private setupRealtimeSubscriptions(): void {
+    const newOrderSub = this.realtimeService.newOrder$.subscribe(order => {
+      console.log('[orders-mobile] newOrder$ received:', order);
+      if (order) {
+        order.items = order.items || [];
+        const exists = this.allOrders.some(o => o.id === order.id);
+        if (!exists) {
+          this.allOrders.unshift(order);
+        }
+        if (order.status === 'COMPLETED' || order.status === 'CANCELLED') {
+          this.loadOrders();
+        } else {
           this.filterOrders();
         }
-      });
-      this.subscriptions.push(newOrderSub);
+      }
+    });
+    this.subscriptions.push(newOrderSub);
 
-      // Subscribe to order updates
-      const orderUpdateSub = this.realtimeService.orderUpdate$.subscribe(order => {
-        if (order) {
-          const index = this.orders.findIndex(o => o.id === order.id);
-          if (index !== -1) {
-            this.orders[index] = order;
-            this.filterOrders();
-          }
+    const orderUpdateSub = this.realtimeService.orderUpdate$.subscribe(order => {
+      console.log('[orders-mobile] orderUpdate$ received:', order);
+      if (order) {
+        order.items = order.items || [];
+        const index = this.allOrders.findIndex(o => o.id === order.id);
+        if (index !== -1) {
+          this.allOrders[index] = order;
+        } else {
+          this.allOrders.unshift(order);
         }
-      });
-      this.subscriptions.push(orderUpdateSub);
-    }
+        if (order.status === 'COMPLETED' || order.status === 'CANCELLED') {
+          this.loadOrders();
+        } else {
+          this.filterOrders();
+        }
+      }
+    });
+    this.subscriptions.push(orderUpdateSub);
   }
 
   setActiveStatus(status: string): void {
@@ -432,7 +449,6 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         console.log('Order status updated successfully:', response);
         this.loadingService.hide();
         this.notificationService.success('Order Updated', `Order #ORD-${order.order_id.split('-').pop()} status updated to ${newStatus}`);
-        this.loadOrders();
 
         if (['kitchen', 'kitchen_manager'].includes(this.userRole) && newStatus === 'READY') {
           this.deductInventoryForOrder(order);
@@ -529,7 +545,6 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         console.log('Order marked as On the Way successfully:', response);
         this.loadingService.hide();
         this.notificationService.success('Order Updated', `Order #ORD-${order.order_id.split('-').pop()} marked as On the Way`);
-        this.loadOrders();
       },
       error: (error) => {
         console.error('Error marking order as On the Way:', error);
@@ -580,7 +595,6 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         console.log('Order marked as Served successfully:', response);
         this.loadingService.hide();
         this.notificationService.success('Order Updated', `Order #ORD-${order.order_id.split('-').pop()} marked as Served`);
-        this.loadOrders();
       },
       error: (error) => {
         console.error('Error marking order as Served:', error);
@@ -631,7 +645,6 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         console.log('Order marked as Completed successfully:', response);
         this.loadingService.hide();
         this.notificationService.success('Order Updated', `Order #ORD-${order.order_id.split('-').pop()} marked as Completed`);
-        this.loadOrders();
       },
       error: (error) => {
         console.error('Error marking order as Completed:', error);
@@ -682,7 +695,6 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         console.log('Order cancelled successfully:', response);
         this.loadingService.hide();
         this.notificationService.success('Order Cancelled', `Order #ORD-${order.order_id.split('-').pop()} has been cancelled`);
-        this.loadOrders();
       },
       error: (error) => {
         console.error('Error cancelling order:', error);
@@ -982,86 +994,89 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
             this.isCompletingInvoice = false;
             this.pendingInvoiceConfirmationId = null;
             this.notificationService.success('Invoice Completed', `Invoice ${invoiceId} marked as Completed`);
-            this.loadOrders();
 
             if (orders.length > 0) {
               const firstOrder = orders[0];
               const customerId = firstOrder.customer_id;
               const restaurantId = firstOrder.restaurant_id;
-              const invoiceTotal = this.getInvoiceTotal(invoiceId);
+              const invoiceTotal = orders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
               const earnedPoints = Math.round(invoiceTotal);
 
-              this.crudService.getLoyaltyProgramByCustomer(customerId).subscribe({
-                next: (program: NewLoyaltyProgram | null) => {
-                  if (program && program.points_balance != null) {
-                    const balanceBefore = program.points_balance;
-                    const balanceAfter = balanceBefore + earnedPoints;
-                    const loyaltyPayload: NewLoyaltyTransaction = {
-                      transaction_id: '',
-                      customer_id: customerId,
-                      restaurant_id: restaurantId,
-                      transaction_type: 'EARNED',
-                      points: earnedPoints,
-                      balance_before: balanceBefore,
-                      balance_after: balanceAfter,
-                      order_id: String(firstOrder.id),
-                      invoice_id: invoiceId,
-                      description: `Points earned from invoice ${invoiceId}`,
-                      processed_by: this.currentUser?.username || 'owner',
-                      processed_at: new Date(),
-                      created_at: new Date(),
-                      created_by: this.currentUser?.id || null,
-                      approval_required: false,
-                      is_reversal: false
-                    };
-                    this.crudService.createLoyaltyTransaction(loyaltyPayload).subscribe({
-                      next: () => this.loadOrders(),
-                      error: () => this.loadOrders()
-                    });
-                  } else {
-                    const createProgramPayload: NewLoyaltyProgram = {
-                      program_id: `PROG-${customerId}`,
-                      program_name: 'Default Program',
-                      customer_id: customerId,
-                      points_balance: 0,
-                      total_points_earned: 0,
-                      total_points_redeemed: 0,
-                      tier: 'BRONZE',
-                      is_active: true
-                    };
-                    this.crudService.createLoyaltyProgram(createProgramPayload).subscribe({
-                      next: () => {
-                        const balanceBefore = 0;
-                        const balanceAfter = earnedPoints;
-                        const loyaltyPayload: NewLoyaltyTransaction = {
-                          transaction_id: '',
-                          customer_id: customerId,
-                          restaurant_id: restaurantId,
-                          transaction_type: 'EARNED',
-                          points: earnedPoints,
-                          balance_before: balanceBefore,
-                          balance_after: balanceAfter,
-                          order_id: String(firstOrder.id),
-                          invoice_id: invoiceId,
-                          description: `Points earned from invoice ${invoiceId}`,
-                          processed_by: this.currentUser?.username || 'owner',
-                          processed_at: new Date(),
-                          created_at: new Date(),
-                          created_by: this.currentUser?.id || null,
-                          approval_required: false,
-                          is_reversal: false
-                        };
-                        this.crudService.createLoyaltyTransaction(loyaltyPayload).subscribe({
-                          next: () => this.loadOrders(),
-                          error: () => this.loadOrders()
-                        });
-                      },
-                      error: () => this.loadOrders()
-                    });
-                  }
-                },
-                error: () => this.loadOrders()
-              });
+              const processLoyalty = () => {
+                this.crudService.getLoyaltyProgramByCustomer(customerId).subscribe({
+                  next: (program: NewLoyaltyProgram | null) => {
+                    if (program && program.points_balance != null) {
+                      const balanceBefore = program.points_balance;
+                      const balanceAfter = balanceBefore + earnedPoints;
+                      const loyaltyPayload: NewLoyaltyTransaction = {
+                        transaction_id: '',
+                        customer_id: customerId,
+                        restaurant_id: restaurantId,
+                        transaction_type: 'EARNED',
+                        points: earnedPoints,
+                        balance_before: balanceBefore,
+                        balance_after: balanceAfter,
+                        order_id: String(firstOrder.id),
+                        invoice_id: invoiceId,
+                        description: `Points earned from invoice ${invoiceId}`,
+                        processed_by: this.currentUser?.username || 'owner',
+                        processed_at: new Date(),
+                        created_at: new Date(),
+                        created_by: this.currentUser?.id || null,
+                        approval_required: false,
+                        is_reversal: false
+                      };
+                      this.crudService.createLoyaltyTransaction(loyaltyPayload).subscribe({
+                        next: () => this.loadOrders(),
+                        error: () => this.loadOrders()
+                      });
+                    } else {
+                      const createProgramPayload: NewLoyaltyProgram = {
+                        program_id: `PROG-${customerId}`,
+                        program_name: 'Default Program',
+                        customer_id: customerId,
+                        points_balance: 0,
+                        total_points_earned: 0,
+                        total_points_redeemed: 0,
+                        tier: 'BRONZE',
+                        is_active: true
+                      };
+                      this.crudService.createLoyaltyProgram(createProgramPayload).subscribe({
+                        next: () => {
+                          const balanceBefore = 0;
+                          const balanceAfter = earnedPoints;
+                          const loyaltyPayload: NewLoyaltyTransaction = {
+                            transaction_id: '',
+                            customer_id: customerId,
+                            restaurant_id: restaurantId,
+                            transaction_type: 'EARNED',
+                            points: earnedPoints,
+                            balance_before: balanceBefore,
+                            balance_after: balanceAfter,
+                            order_id: String(firstOrder.id),
+                            invoice_id: invoiceId,
+                            description: `Points earned from invoice ${invoiceId}`,
+                            processed_by: this.currentUser?.username || 'owner',
+                            processed_at: new Date(),
+                            created_at: new Date(),
+                            created_by: this.currentUser?.id || null,
+                            approval_required: false,
+                            is_reversal: false
+                          };
+                          this.crudService.createLoyaltyTransaction(loyaltyPayload).subscribe({
+                            next: () => this.loadOrders(),
+                            error: () => this.loadOrders()
+                          });
+                        },
+                        error: () => this.loadOrders()
+                      });
+                    }
+                  },
+                  error: () => this.loadOrders()
+                });
+              };
+
+              processLoyalty();
             } else {
               this.loadOrders();
             }

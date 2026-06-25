@@ -75,14 +75,20 @@ export class AppComponent implements OnInit {
         this.currentUser = {
           id: user.id,
           name: user.name,
-          email: '', // AuthService doesn't have email, so we'll leave it empty
+          email: user.email || '',
           role: user.role as any,
+          restaurantId: user.restaurantId || user.restaurant_id || '',
           avatar: user.avatar ? (user.avatar.startsWith('data:') || user.avatar.startsWith('http://') || user.avatar.startsWith('https://') ? user.avatar : environment.api.baseUrl + '/' + user.avatar.replace(/^\//, '')) : user.avatar
         };
         this.isLoggedIn = true;
+        const restaurantId = user.role === 'customer'
+          ? sessionStorage.getItem('current_customer_restaurant_id') || ''
+          : (this.currentUser.restaurantId || '');
+        this.realtimeService.connect(user.id, String(restaurantId), user.role);
       } else {
         this.currentUser = null;
         this.isLoggedIn = false;
+        this.realtimeService.disconnect();
       }
     });
 
@@ -93,6 +99,14 @@ export class AppComponent implements OnInit {
     // Initialize authentication state on app start
     this.initializeAuthState();
 
+    // If user was already logged in from session, reconnect realtime
+    if (this.isLoggedIn && this.currentUser) {
+      const restaurantId = this.currentUser.role === 'customer'
+        ? sessionStorage.getItem('current_customer_restaurant_id') || ''
+        : (this.currentUser.restaurantId || '');
+      this.realtimeService.connect(this.currentUser.id, String(restaurantId), this.currentUser.role);
+    }
+
     // Subscribe to global loading state
     this.loadingService.loading$.subscribe(
       loading => this.isLoading = loading
@@ -102,25 +116,25 @@ export class AppComponent implements OnInit {
       this.cartItemCount = this.cartService.cartItemCount;
     });
 
-    this.pendingOrdersService.pendingCount$.subscribe(count => {
-      this.pendingOrdersCount = count;
-    });
-
-    this.pendingOrdersService.refreshCount().subscribe();
-
-    this.pendingBillsService.refreshPendingBills().subscribe();
+    if (this.isLoggedIn && this.currentUser?.role === 'customer') {
+      this.pendingOrdersService.pendingCount$.subscribe(count => {
+        this.pendingOrdersCount = count;
+      });
+      this.pendingOrdersService.refreshCount().subscribe();
+      this.pendingBillsService.refreshPendingBills().subscribe();
+    }
   }
 
   private initializeAuthState(): void {
-    // Check if user is already logged in from sessionStorage
     const currentUser = this.authService.getCurrentUser();
     if (currentUser) {
       this.isLoggedIn = true;
       this.currentUser = {
         id: currentUser.id,
         name: currentUser.name,
-        email: '',
+        email: currentUser.email || '',
         role: currentUser.role as any,
+        restaurantId: currentUser.restaurantId || currentUser.restaurant_id || '',
         avatar: currentUser.avatar ? `${environment.api.baseUrl}/${currentUser.avatar.replace(/^\//, '')}` : currentUser.avatar
       };
     } else {
@@ -256,15 +270,6 @@ export class AppComponent implements OnInit {
 
   //   this.currentUser = users[role] || users['platform_owner'];
   // }
-
-  // Test methods for demo
-  triggerTestOrder(): void {
-    this.realtimeService.triggerTestOrder();
-  }
-
-  triggerTestNotification(): void {
-    this.realtimeService.triggerTestNotification();
-  }
 
   logout(): void {
     this.authService.logout();

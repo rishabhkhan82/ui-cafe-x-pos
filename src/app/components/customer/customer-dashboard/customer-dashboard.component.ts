@@ -101,9 +101,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
         created_at: storedGuestUser.customer.createdAt ? new Date(storedGuestUser.customer.createdAt) : new Date(),
         updated_at: storedGuestUser.customer.updatedAt ? new Date(storedGuestUser.customer.updatedAt) : new Date()
       };
-      this.authService.setCurrentUser(this.currentUser);
-    }
-
+      }
     this.loadMenuData();
   }
 
@@ -205,7 +203,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
     const customerId = guest.customerId || 'guest-' + Date.now();
 
     this.currentUser = {
-      id: customerId,
+      id: guest.id,
       name: guest.name || 'Guest',
       email: guest.email || '',
       avatar: guest.avatar || '',
