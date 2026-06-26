@@ -237,25 +237,17 @@ export const routes: Routes = [
     path: 'customer/login',
     loadComponent: () => import('./components/auth/customer-login/customer-login.component').then(m => m.CustomerLoginComponent)
   },
+  // Customer dashboard with restaurantId and tableNumber parameters
+  {
+    path: 'customer/dashboard/:restaurantId/:tableNumber',
+    loadComponent: () => import('./components/customer/customer-dashboard/customer-dashboard.component').then(m => m.CustomerDashboardComponent)
+  },
 
   // Customer section with nested routing
   {
     path: 'customer',
     canActivate: [CustomerGuestGuard],
     children: [
-      {
-        path: '',
-        redirectTo: 'dashboard',
-        pathMatch: 'full'
-      },
-      {
-        path: 'dashboard/:restaurantId/:tableNumber',
-        loadComponent: () => import('./components/customer/customer-dashboard/customer-dashboard.component').then(m => m.CustomerDashboardComponent)
-      },
-      {
-        path: 'dashboard',
-        loadComponent: () => import('./components/customer/customer-dashboard/customer-dashboard.component').then(m => m.CustomerDashboardComponent)
-      },
       {
         path: 'menu',
         loadComponent: () => import('./components/customer/customer-menu/customer-menu.component').then(m => m.CustomerMenuComponent)

@@ -60,15 +60,10 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
     if (restaurantIdParam && tableNumberParam) {
       this.restaurantId = parseInt(restaurantIdParam, 10);
       this.tableNumber = parseInt(tableNumberParam, 10);
-    } else {
-      const storedRestaurantId = this.guestAuthService.getCurrentRestaurantId();
-      const storedTableNo = this.guestAuthService.getCurrentTableNo();
-      this.restaurantId = storedRestaurantId || 1;
-      this.tableNumber = storedTableNo ? parseInt(storedTableNo, 10) : 0;
-    }
 
-    localStorage.setItem(`guest_table_no_${this.restaurantId}`, this.tableNumber.toString());
-    this.guestAuthService.setCurrentRestaurantContext(this.restaurantId);
+      localStorage.setItem(`guest_table_no_${this.restaurantId}`, this.tableNumber.toString());
+      this.guestAuthService.setCurrentRestaurantContext(this.restaurantId);
+    }
 
     this.cartService.cart$.subscribe(() => {
       this.cartItemCount = this.cartService.cartItemCount;
@@ -81,27 +76,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
-  private initializeUser(): void {
-    const storedGuestUser = this.guestAuthService.getCurrentGuestUser(this.restaurantId);
-    if (storedGuestUser) {
-      this.currentUser = {
-        id: storedGuestUser.customer.id,
-        customer_id: storedGuestUser.customer.customerId,
-        name: storedGuestUser.customer.name + '-' + storedGuestUser.customer.id,
-        email: storedGuestUser.customer.email || '',
-        avatar: storedGuestUser.customer.avatar || '',
-        phone: storedGuestUser.customer.phone || '',
-        role: 'customer',
-        username: storedGuestUser.customer.customerId,
-        password: '',
-        user_type: 'customer',
-        is_active: 'true',
-        restaurant_id: storedGuestUser.customer.restaurantId?.toString(),
-        member_since: storedGuestUser.customer.createdAt ? new Date(storedGuestUser.customer.createdAt) : new Date(),
-        created_at: storedGuestUser.customer.createdAt ? new Date(storedGuestUser.customer.createdAt) : new Date(),
-        updated_at: storedGuestUser.customer.updatedAt ? new Date(storedGuestUser.customer.updatedAt) : new Date()
-      };
-      }
+  private initializeComponent(): void {
     this.loadMenuData();
   }
 
@@ -137,14 +112,14 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
             this.currentGuest = response.customer;
             this.setCurrentUserFromGuest(response);
             this.isLoadingGuest = false;
-            setTimeout(() => this.initializeUser(), 100);
+            setTimeout(() => this.initializeComponent(), 100);
           } catch (error) {
             console.error('Error in validate response handler:', error);
             const guest = currentGuestUser.customer;
             this.currentGuest = guest;
             this.setCurrentUserFromGuest(currentGuestUser);
             this.isLoadingGuest = false;
-            setTimeout(() => this.initializeUser(), 100);
+            setTimeout(() => this.initializeComponent(), 100);
           }
         },
         error: (error: any) => {
@@ -158,7 +133,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
             return;
           }
           this.isLoadingGuest = false;
-          setTimeout(() => this.initializeUser(), 100);
+          setTimeout(() => this.initializeComponent(), 100);
         }
       });
       this.subscriptions.push(sub);
@@ -183,7 +158,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
         this.isLoadingGuest = false;
         if (guestResponse) {
           this.setCurrentUserFromGuest(guestResponse);
-          setTimeout(() => this.initializeUser(), 100);
+          setTimeout(() => this.initializeComponent(), 100);
         } else {
           this.guestError = 'Failed to create guest session. Please refresh the page.';
         }
