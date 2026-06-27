@@ -430,7 +430,7 @@ http://localhost:8080/api/orders?status=COMPLETED&page=1&size=10 - done
 
 powner - pages required.
 
-1] Real Time Dashboard
+1] Real Time Dashboard - keep not dynamic
 2] system configuration
 3] restaurant Manangement
 4] plan management
@@ -440,9 +440,9 @@ powner - pages required.
 8] feature management
 9] user management
 10 role access management
-11] subscriptions Analytics
-12] Integrations
-13] user notifications
+11] subscriptions Analytics - keep not dynamic
+12] Integrations - keep not dynamic
+13] user notifications - keep not dynamic
 
 real time operations needed on actions
 1] 
