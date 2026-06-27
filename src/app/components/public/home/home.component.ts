@@ -249,7 +249,8 @@ export class HomeComponent implements AfterViewInit {
     const loginBtn = document.getElementById('login-btn');
     if (loginBtn) {
       loginBtn.addEventListener('click', () => {
-        self.router.navigate(['/admin/login']);
+        const baseHref = document.querySelector('base')?.getAttribute('href');
+        window.open(baseHref + 'admin/login', '_blank');
       });
     }
   }

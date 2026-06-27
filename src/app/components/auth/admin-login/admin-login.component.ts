@@ -44,8 +44,9 @@ export class AdminLoginComponent implements OnInit, OnDestroy {
     this.loadingSubscription.unsubscribe();
   }
 
-  navigateToCustomerLogin() {
-    this.router.navigate(['/customer/login']);
+  navigateToHome() {
+    const baseHref = document.querySelector('base')?.getAttribute('href');
+    window.open(baseHref + '', '_blank');
   }
 
   onSubmit() {
