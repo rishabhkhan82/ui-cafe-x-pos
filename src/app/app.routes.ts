@@ -4,7 +4,10 @@ import { CustomerGuestGuard } from './guards/customer-guest.guard';
 
 export const routes: Routes = [
   // Default redirect to admin login (main entry point)
-  { path: '', redirectTo: '/admin/login', pathMatch: 'full' },
+  { path: '', loadComponent: () => import('./components/public/home/home.component').then(m => m.HomeComponent), pathMatch: 'full' },
+
+  // Default redirect to admin login (main entry point),
+  // { path: '', redirectTo: '/admin/login', pathMatch: 'full' },
 
   // Customer QR Scan (outside layout - no header/footer)
   {

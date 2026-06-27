@@ -1,0 +1,17 @@
+.floating-animation { animation: float 3s ease-in-out infinite; }
+@keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+.menu-item-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.menu-item-hover:hover { transform: translateY(-2px); box-shadow: 0 20px 25px -5px rgba(0,0,0,.1), 0 10px 10px -5px rgba(0,0,0,.04); }
+.shine { position: relative; overflow: hidden; }
+.shine:before {
+    content: "";
+    position: absolute; top: -100%; left: -100%;
+    width: 200%; height: 200%;
+    background: linear-gradient(60deg, transparent 40%, rgba(255,255,255,0.18) 50%, transparent 60%);
+    animation: shine 5s ease-in-out infinite;
+}
+@keyframes shine {
+    0% { transform: translateX(-40%) translateY(-40%); }
+    50% { transform: translateX(0%) translateY(0%); }
+    100% { transform: translateX(40%) translateY(40%); }
+}

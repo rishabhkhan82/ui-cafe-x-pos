@@ -116,7 +116,7 @@
 </header>
 
 <!-- Main Content Area -->
-<main class="flex-1 overflow-y-auto" [style.height.px]="isLoggedIn ? 'calc(100vh - 140px)' : '100vh'" [style.padding-top.px]="isLoggedIn ? 68 : 0" [style.padding-bottom.px]="isLoggedIn ? 44 : 0">
+<main class="flex-1" [class.overflow-y-auto]="isLoggedIn" [style.height.px]="isLoggedIn ? 'calc(100vh - 140px)' : '100vh'" [style.padding-top.px]="isLoggedIn ? 68 : 0" [style.padding-bottom.px]="isLoggedIn ? 44 : 0">
   <router-outlet></router-outlet>
 </main>
 
