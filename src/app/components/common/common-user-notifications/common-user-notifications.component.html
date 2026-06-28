@@ -1,0 +1,119 @@
+<div class="notification-dropdown-container relative">
+  <!-- Bell Button -->
+  <button 
+    (click)="toggleDropdown()" 
+    class="relative p-2 text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
+    aria-label="Notifications"
+  >
+    <i class="fas fa-bell text-sm"></i>
+    <span 
+      *ngIf="unreadCount > 0" 
+      class="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-600 rounded-full shadow-md"
+    >
+      {{ unreadCount > 99 ? '99+' : unreadCount }}
+    </span>
+  </button>
+
+  <!-- Dropdown Panel -->
+  <div  *ngIf="isOpen"  class="fixed md:absolute right-4 md:right-0 top-[68px] md:top-auto md:mt-3 w-[calc(100vw-2rem)] md:w-[420px] md:max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden transform origin-top-right transition-all">
+    <!-- Header -->
+    <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-gray-50 dark:bg-gray-800/50">
+      <h3 class="text-base font-bold text-gray-900 dark:text-white tracking-tight">Notifications</h3>
+      <div class="flex items-center bg-gray-200 dark:bg-gray-700 rounded-lg p-0.5">
+        <button 
+          (click)="setFilter('unread')"
+          class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200"
+          [class.bg-white]="filter === 'unread'"
+          [class.dark:bg-gray-600]="filter === 'unread'"
+          [class.text-gray-900]="filter === 'unread'"
+          [class.dark:text-white]="filter === 'unread'"
+          [class.shadow-sm]="filter === 'unread'"
+          [class.text-gray-500]="filter !== 'unread'"
+          [class.dark:text-gray-400]="filter !== 'unread'"
+        >
+          Unread
+        </button>
+        <button 
+          (click)="setFilter('all')"
+          class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200"
+          [class.bg-white]="filter === 'all'"
+          [class.dark:bg-gray-600]="filter === 'all'"
+          [class.text-gray-900]="filter === 'all'"
+          [class.dark:text-white]="filter === 'all'"
+          [class.shadow-sm]="filter === 'all'"
+          [class.text-gray-500]="filter !== 'all'"
+          [class.dark:text-gray-400]="filter !== 'all'"
+        >
+          All
+        </button>
+      </div>
+    </div>
+
+    <!-- Notification List -->
+    <div class="max-h-[480px] overflow-y-auto">
+      <div *ngIf="notifications.length === 0" class="px-4 py-12 text-center">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
+          <i class="fas fa-bell-slash text-2xl text-gray-400"></i>
+        </div>
+        <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">No notifications found</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">You're all caught up!</p>
+      </div>
+
+      <div 
+        *ngFor="let notif of notifications" 
+        (click)="onNotificationClick(notif)"
+        class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/60 cursor-pointer border-b border-gray-100 dark:border-gray-800 last:border-b-0 transition-colors group"
+      >
+        <div class="flex items-start space-x-3">
+          <div class="flex-shrink-0 mt-0.5">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+                 [ngClass]="{
+                   'bg-blue-100 dark:bg-blue-900/30': notif.status === 'unread',
+                   'bg-gray-100 dark:bg-gray-800': notif.status === 'read'
+                 }">
+              <i [class]="getTypeIcon(notif.type)" 
+                 class="text-sm"
+                 [ngClass]="{
+                   'text-blue-600 dark:text-blue-400': notif.status === 'unread',
+                   'text-gray-500': notif.status === 'read'
+                 }"></i>
+            </div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between">
+              <p class="text-sm font-semibold text-gray-900 dark:text-white truncate pr-2">{{ notif.title }}</p>
+              <span class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">{{ getRelativeTime(notif.created_at) }}</span>
+            </div>
+            <p class="text-xs text-gray-600 dark:text-gray-300 mt-1 clamp-2">{{ notif.message }}</p>
+            <div class="flex items-center justify-between mt-2">
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+                    [class]="getPriorityBadgeClass(notif.priority)">
+                {{ notif.priority }}
+              </span>
+              <button 
+                *ngIf="notif.status === 'unread'"
+                (click)="$event.stopPropagation(); notificationService.markAsRead(notif.id).subscribe()"
+                class="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
+              >
+                Mark read
+              </button>
+            </div>
+          </div>
+          <div *ngIf="notif.status === 'unread'" class="flex-shrink-0 mt-2">
+            <div class="w-2.5 h-2.5 bg-blue-500 rounded-full shadow-sm shadow-blue-500/50"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div *ngIf="unreadCount > 0" class="px-4 py-2.5 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 text-center">
+      <button 
+        (click)="markAllAsRead()" 
+        class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline transition-colors"
+      >
+        Mark all as read
+      </button>
+    </div>
+  </div>
+</div>

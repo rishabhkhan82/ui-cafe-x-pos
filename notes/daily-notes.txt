@@ -447,7 +447,4 @@ powner - pages required.
 real time operations needed on actions
 1] 
 
-
- please read and understand the customer-dashboard and the app.component.ts file. 
-
-and let know everything about the guestuserlogin.
+system-configuration api call at the app.component.ts load

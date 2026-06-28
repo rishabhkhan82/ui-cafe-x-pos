@@ -9,6 +9,7 @@ import { NavigationMenuComponent } from './components/shared/navigation-menu/nav
 import { LoadingService } from './services/loading.service';
 import { ToastNotifierComponent } from './components/common/toast-notifier/app-toast-notifier';
 import { ConfirmationDialogComponent } from './components/common/confirmation-dialog/confirmation-dialog.component';
+import { CommonUserNotificationsComponent } from './components/common/common-user-notifications/common-user-notifications.component';
 import { NavigationMenu } from './services/mock-data.service';
 import { environment } from './environments/environment';
 import { CartService } from './services/cart.service';
@@ -26,7 +27,7 @@ interface User {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterModule, RouterOutlet, NavigationMenuComponent, ToastNotifierComponent, ConfirmationDialogComponent],
+  imports: [CommonModule, RouterModule, RouterOutlet, NavigationMenuComponent, ToastNotifierComponent, ConfirmationDialogComponent, CommonUserNotificationsComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })

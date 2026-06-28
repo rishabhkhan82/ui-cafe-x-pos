@@ -15,6 +15,13 @@ export const routes: Routes = [
     loadComponent: () => import('./components/auth/customer-scar-qr/customer-scar-qr.component').then(m => m.CustomerScarQrComponent)
   },
 
+  // Customer QR Scan (outside layout - no header/footer)
+  {
+    path: 'notifications',
+    loadComponent: () => import('./components/common/common-user-notifications/common-user-notifications.component').then(m => m.CommonUserNotificationsComponent),
+    canActivate: [authGuard]
+  },
+
   // Admin login (outside layout - no header/footer)
   {
     path: 'admin/login',

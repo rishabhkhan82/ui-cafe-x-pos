@@ -169,13 +169,10 @@ export class RealtimeService {
           });
         }
 
-        this.stompClient!.subscribe('/topic/notifications', (msg) => {
+        this.stompClient!.subscribe(`/topic/users/${userId}/notifications`, (msg) => {
           const notif = JSON.parse(msg.body) as Notification;
-          const storedUserId = this.getStoredUserId();
-          if (notif.recipientId === storedUserId) {
-            this.newNotificationSubject.next(notif);
-            this.showBrowserNotification(notif.title, notif.message, notif.type || 'info');
-          }
+          this.newNotificationSubject.next(notif);
+          this.showBrowserNotification(notif.title, notif.message, notif.type || 'info');
         });
       };
 
@@ -194,15 +191,6 @@ export class RealtimeService {
       this.stompClient.activate();
     } catch (error) {
       console.error('[Realtime] Failed to connect:', error);
-    }
-  }
-
-  private getStoredUserId(): string | null {
-    try {
-      const user = sessionStorage.getItem('currentUser') || localStorage.getItem('user');
-      return user ? JSON.parse(user).id : null;
-    } catch {
-      return null;
     }
   }
 
