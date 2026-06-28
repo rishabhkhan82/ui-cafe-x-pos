@@ -16,24 +16,34 @@ export interface NotificationTemplate {
 })
 export class CommonUserNotificationsTemplatesService {
   private readonly TEMPLATES: Record<string, NotificationTemplate> = {
-    restaurant_subscription_approved: {
-      id: 'restaurant_subscription_approved',
-      title: 'Subscription Approved',
-      message: 'Your restaurant "{{restaurant_name}}" subscription has been approved successfully.',
-      type: 'subscription',
+    restaurant_created: {
+      id: 'restaurant_created',
+      title: 'Restaurant Created',
+      message: 'Your restaurant "{{restaurant_name}}" has been created successfully at {{address}}.',
+      type: 'restaurant',
       priority: 'high',
       action_text: 'View Restaurant',
       action_url: '/restaurants/{{restaurant_id}}',
-      icon: 'fas fa-check-circle'
+      icon: 'fas fa-store'
     },
-    restaurant_subscription_rejected: {
-      id: 'restaurant_subscription_rejected',
-      title: 'Subscription Rejected',
-      message: 'Your restaurant "{{restaurant_name}}" subscription has been rejected. Reason: {{reason}}.',
+    subscription_activated: {
+      id: 'subscription_activated',
+      title: 'Subscription Activated',
+      message: 'Your subscription plan "{{plan}}" for restaurant "{{restaurant_name}}" has been activated successfully. Amount paid: ₹{{price}}.',
       type: 'subscription',
       priority: 'high',
-      action_text: 'Contact Support',
-      action_url: '/support',
+      action_text: 'View Subscription',
+      action_url: '/subscriptions/{{subscription_id}}',
+      icon: 'fas fa-check-circle'
+    },
+    subscription_deactivated: {
+      id: 'subscription_deactivated',
+      title: 'Subscription Deactivated',
+      message: 'Your subscription plan "{{plan}}" for restaurant "{{restaurant_name}}" has been deactivated.',
+      type: 'subscription',
+      priority: 'high',
+      action_text: 'Renew Subscription',
+      action_url: '/subscriptions/renew/{{subscription_id}}',
       icon: 'fas fa-times-circle'
     },
     new_order_received: {
@@ -56,7 +66,7 @@ export class CommonUserNotificationsTemplatesService {
       action_url: '/orders/{{order_id}}',
       icon: 'fas fa-sync-alt'
     },
-    payment_received: {
+    payment_received: {   // on order completed 
       id: 'payment_received',
       title: 'Payment Received',
       message: 'Payment of ₹{{amount}} received for order #{{order_id}}. Method: {{payment_method}}.',
@@ -86,16 +96,6 @@ export class CommonUserNotificationsTemplatesService {
       action_url: '/subscriptions/renew/{{subscription_id}}',
       icon: 'fas fa-clock'
     },
-    user_created: {
-      id: 'user_created',
-      title: 'New User Created',
-      message: 'A new user "{{username}}" ({{role}}) has been created for restaurant "{{restaurant_name}}".',
-      type: 'user',
-      priority: 'low',
-      action_text: 'View User',
-      action_url: '/users/{{user_id}}',
-      icon: 'fas fa-user-plus'
-    }
   };
 
   render(templateId: string, data: Record<string, string | number>): NotificationTemplate {

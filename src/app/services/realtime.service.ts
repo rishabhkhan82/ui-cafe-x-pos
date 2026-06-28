@@ -149,7 +149,12 @@ export class RealtimeService {
         this.connectParams = { userId, restaurantId, role };
         console.log('[Realtime] Connected successfully');
 
-        if (role !== 'customer') {
+        // Platform Admin-specific subscriptions
+        if (role === 'platform_owner') {
+        }
+
+        // Restaurant Admin-specific subscriptions
+        if (role === 'restaurant_owner' || role === 'kitchen_manager' || role === 'restaurant_manager' || role === 'cashier' || role === 'waiter') {
           this.stompClient!.subscribe(`/topic/orders/${restaurantId}/new`, (msg) => {
             console.log('[Realtime] Received new order for restaurant', restaurantId);
             const order = JSON.parse(msg.body) as Order;
@@ -161,7 +166,10 @@ export class RealtimeService {
             const order = JSON.parse(msg.body) as Order;
             this.orderUpdateSubject.next(order);
           });
-        } else {
+        }
+
+        // Customer-specific subscriptions
+        if (role === 'customer') {
           this.stompClient!.subscribe(`/topic/users/${userId}/orders`, (msg) => {
             console.log('[Realtime] Received customer order update for user', userId);
             const order = JSON.parse(msg.body) as Order;
