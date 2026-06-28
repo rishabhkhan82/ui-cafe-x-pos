@@ -29,8 +29,19 @@ export const routes: Routes = [
   },
 
   {
+    path: 'terms-and-conditions',
+    loadComponent: () => import('./components/public/terms-and-conditions/terms-and-conditions.component').then(m => m.TermsAndConditionsComponent)
+  },
+
+  {
+    path: 'privacy-policy',
+    loadComponent: () => import('./components/public/privacy-policy/privacy-policy.component').then(m => m.PrivacyPolicyComponent)
+  },
+
+  {
     path: 'support',
-    loadComponent: () => import('./components/common/common-support/common-support.component').then(m => m.CommonSupportComponent)
+    loadComponent: () => import('./components/common/common-support/common-support.component').then(m => m.CommonSupportComponent),
+    canActivate: [authGuard]
   },
 
   {

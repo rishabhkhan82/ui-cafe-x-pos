@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { RealtimeService } from './services/realtime.service';
 import { AuthService } from './services/auth.service';
 import { GuestAuthService } from './services/guest-auth.service';
+import { SystemConfigService } from './services/system-config.service';
 import { NavigationMenuComponent } from './components/shared/navigation-menu/navigation-menu.component';
 import { LoadingService } from './services/loading.service';
 import { ToastNotifierComponent } from './components/common/toast-notifier/app-toast-notifier';
@@ -53,6 +54,7 @@ export class AppComponent implements OnInit {
   private cartService = inject(CartService);
   private pendingOrdersService = inject(PendingordersService);
   private pendingBillsService = inject(PendingBillsService);
+  private systemConfigService = inject(SystemConfigService);
   cartItemCount = 0;
 
   @ViewChild(NavigationMenuComponent) navMenu!: NavigationMenuComponent;
@@ -116,6 +118,7 @@ export class AppComponent implements OnInit {
       this.cartItemCount = this.cartService.cartItemCount;
     });
 
+    this.systemConfigService.getSystemSettings().subscribe();
   }
 
   private updateDateTime(): void {
