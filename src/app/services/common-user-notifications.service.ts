@@ -50,10 +50,12 @@ export class CommonUserNotificationsService {
   // PUBLIC API
   // ===============================
 
-  loadNotifications(recipientId: string, filter: 'unread' | 'all' = 'unread', page: number = 1, size: number = 100): Observable<Notification[]> {
+  loadNotifications(recipientId: string, filter: 'unread' | 'read' | 'all' = 'unread', page: number = 1, size: number = 100): Observable<Notification[]> {
     const params: any = { recipient_id: recipientId, page, size };
     if (filter === 'unread') {
       params.status = 'unread';
+    } else if (filter === 'read') {
+      params.status = 'read';
     }
 
     return this.crudService.getData(this.API_NOTIFICATIONS, params).pipe(
@@ -105,6 +107,7 @@ export class CommonUserNotificationsService {
 
     return this.crudService.patchData(this.API_NOTIFICATIONS, payload, {}, notificationId).pipe(
       tap(() => {
+        console.log('[NotifService] markAsRead success', notificationId);
         const updated = this.notificationsSubject.value.map(n =>
           n.id === notificationId ? ({ ...n, status: 'read', read_at: new Date() } as Notification) : n
         );
@@ -112,7 +115,7 @@ export class CommonUserNotificationsService {
         this.recalculateUnreadCount();
       }),
       catchError(err => {
-        console.error('Failed to mark notification as read', err);
+        console.error('[NotifService] markAsRead failed', notificationId, err);
         return of(null);
       })
     );
@@ -127,12 +130,13 @@ export class CommonUserNotificationsService {
 
     return this.crudService.patchData(`${this.API_NOTIFICATIONS}/mark-all-read`, payload).pipe(
       tap(() => {
+        console.log('[NotifService] markAllAsRead success', recipientId);
         const updated = this.notificationsSubject.value.map(n => ({ ...n, status: 'read', read_at: new Date() } as Notification));
         this.notificationsSubject.next(updated);
         this.unreadCountSubject.next(0);
       }),
       catchError(err => {
-        console.error('Failed to mark all as read', err);
+        console.error('[NotifService] markAllAsRead failed', recipientId, err);
         return of(null);
       })
     );
@@ -206,7 +210,23 @@ export class CommonUserNotificationsService {
       created_at: new Date().toISOString()
     };
 
-    return this.crudService.postData(this.API_NOTIFICATIONS, normalizedPayload);
+    return this.crudService.postData(this.API_NOTIFICATIONS, normalizedPayload).pipe(
+      tap((response: any) => {
+        const notifData = response?.data ?? response;
+        if (notifData) {
+          const newNotif = this.mapSingleNotification(notifData);
+          const current = this.notificationsSubject.value;
+          this.notificationsSubject.next([newNotif, ...current]);
+          if (newNotif.status === 'unread') {
+            this.unreadCountSubject.next(this.unreadCountSubject.value + 1);
+          }
+        }
+      }),
+      catchError(err => {
+        console.error('Failed to create notification from template', err);
+        return of(null);
+      })
+    );
   }
 
   getTemplate(templateId: string): NotificationTemplate | undefined {

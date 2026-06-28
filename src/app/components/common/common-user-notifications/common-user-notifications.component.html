@@ -34,6 +34,19 @@
           Unread
         </button>
         <button 
+          (click)="setFilter('read')"
+          class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200"
+          [class.bg-white]="filter === 'read'"
+          [class.dark:bg-gray-600]="filter === 'read'"
+          [class.text-gray-900]="filter === 'read'"
+          [class.dark:text-white]="filter === 'read'"
+          [class.shadow-sm]="filter === 'read'"
+          [class.text-gray-500]="filter !== 'read'"
+          [class.dark:text-gray-400]="filter !== 'read'"
+        >
+          Read
+        </button>
+        <button 
           (click)="setFilter('all')"
           class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200"
           [class.bg-white]="filter === 'all'"
@@ -90,13 +103,13 @@
                     [class]="getPriorityBadgeClass(notif.priority)">
                 {{ notif.priority }}
               </span>
-              <button 
-                *ngIf="notif.status === 'unread'"
-                (click)="$event.stopPropagation(); notificationService.markAsRead(notif.id).subscribe()"
-                class="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
-              >
-                Mark read
-              </button>
+               <button 
+                 *ngIf="notif.status === 'unread'"
+                 (click)="$event.stopPropagation(); notificationService.markAsRead(notif.id).subscribe(); load()"
+                 class="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
+               >
+                 Mark read
+               </button>
             </div>
           </div>
           <div *ngIf="notif.status === 'unread'" class="flex-shrink-0 mt-2">

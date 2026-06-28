@@ -16,6 +16,8 @@ import { environment } from './environments/environment';
 import { CartService } from './services/cart.service';
 import { PendingordersService } from './services/pendingorders.service';
 import { PendingBillsService } from './services/pending-bills.service';
+import { NotificationService } from './services/notification.service';
+import { NotificationRoutingService } from './services/notification-routing.service';
 interface User {
   id: string;
   name: string;
@@ -55,6 +57,8 @@ export class AppComponent implements OnInit {
   private pendingOrdersService = inject(PendingordersService);
   private pendingBillsService = inject(PendingBillsService);
   private systemConfigService = inject(SystemConfigService);
+  private notificationService = inject(NotificationService);
+  private routingService = inject(NotificationRoutingService);
   cartItemCount = 0;
 
   @ViewChild(NavigationMenuComponent) navMenu!: NavigationMenuComponent;
@@ -150,29 +154,71 @@ export class AppComponent implements OnInit {
   }
 
   private setupRealtimeSubscriptions(): void {
-    // Listen for new orders
     this.realtimeService.newOrder$.subscribe(order => {
-      if (order) {
-        console.log('New order received:', order);
-        // Could show in-app notification or update UI
+      console.log('New order received:', order);
+      console.log('Current user:', this.currentUser);
+      if (order && this.currentUser) {
+        this.processOrderNotification(order);
       }
     });
 
-    // Listen for order updates
     this.realtimeService.orderUpdate$.subscribe(order => {
-      if (order) {
-        console.log('Order updated:', order);
-        // Could show in-app notification or update UI
+      console.log('Order updated:', order);
+      console.log('Current user:', this.currentUser);
+      if (order && this.currentUser) {
+        this.processOrderNotification(order);
       }
     });
 
-    // Listen for new notifications
-    this.realtimeService.newNotification$.subscribe(notification => {
-      if (notification) {
-        console.log('New notification:', notification);
-        // Could show in-app notification or update UI
+    this.realtimeService.customerOrderUpdate$.subscribe(order => {
+      if (order && this.currentUser) {
+        this.processOrderNotification(order);
       }
     });
+
+
+    this.realtimeService.newNotification$.subscribe(notification => {
+      if (notification && this.currentUser) {
+        if (notification.type === 'order') return;
+        const mappedType = this.mapNotificationType(notification.type || 'info');
+        this.notificationService.show({
+          type: mappedType,
+          title: notification.title,
+          message: notification.message,
+          icon: notification.icon || 'fas fa-bell',
+          duration: 5000
+        });
+      }
+    });
+  }
+
+  private processOrderNotification(order: any): void {
+    if (!this.currentUser) {
+      console.log('[AppComponent] processOrderNotification skipped: no currentUser');
+      return;
+    }
+
+    const rule = this.routingService.findRule(this.currentUser.role, order.status);
+    if (!rule) return;
+
+    console.log('[AppComponent] Showing toast + saving notification', { role: this.currentUser.role, status: order.status });
+    this.routingService.showToast(rule, order);
+    this.routingService.createNotification(rule, order, this.currentUser.id, this.currentUser.role).subscribe({
+      next: (res) => console.log('[AppComponent] createNotification success', res),
+      error: (err) => console.error('[AppComponent] createNotification failed', err)
+    });
+  }
+
+  private mapNotificationType(type: string): 'success' | 'error' | 'warning' | 'info' | 'order' | 'payment' | 'inventory' | 'staff' {
+    const validTypes: Record<string, 'success' | 'error' | 'warning' | 'info' | 'order' | 'payment' | 'inventory' | 'staff'> = {
+      'system': 'info',
+      'promotion': 'info',
+      'order': 'order',
+      'payment': 'payment',
+      'inventory': 'inventory',
+      'staff': 'staff',
+    };
+    return validTypes[type] || 'info';
   }
 
   toggleTheme() {

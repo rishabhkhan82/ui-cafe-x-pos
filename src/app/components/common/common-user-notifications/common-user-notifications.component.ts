@@ -13,7 +13,7 @@ import { Subscription } from 'rxjs';
 })
 export class CommonUserNotificationsComponent implements OnInit, OnDestroy {
   isOpen = false;
-  filter: 'unread' | 'all' = 'unread';
+  filter: 'unread' | 'read' | 'all' = 'unread';
   notifications: Notification[] = [];
   unreadCount = 0;
   private subscriptions: Subscription[] = [];
@@ -51,24 +51,24 @@ export class CommonUserNotificationsComponent implements OnInit, OnDestroy {
     }
   }
 
-  setFilter(f: 'unread' | 'all'): void {
+  setFilter(f: 'unread' | 'read' | 'all'): void {
     this.filter = f;
     this.load();
   }
 
   onNotificationClick(notification: Notification): void {
     if (notification.status === 'unread') {
-      this.notificationService.markAsRead(notification.id).subscribe();
+      this.notificationService.markAsRead(notification.id).subscribe(() => this.load());
     }
     if (notification.action_url) {
-      window.open(notification.action_url, '_blank');
+      // window.open(notification.action_url, '_blank');
     }
   }
 
   markAllAsRead(): void {
     const user = this.authService.getCurrentUser();
     if (user?.id) {
-      this.notificationService.markAllAsRead(user.id).subscribe();
+      this.notificationService.markAllAsRead(user.id).subscribe(() => this.load());
     }
   }
 
@@ -80,7 +80,7 @@ export class CommonUserNotificationsComponent implements OnInit, OnDestroy {
     }
   }
 
-  private load(): void {
+  load(): void {
     const user = this.authService.getCurrentUser();
     if (user?.id) {
       this.notificationService.loadNotifications(user.id, this.filter).subscribe();

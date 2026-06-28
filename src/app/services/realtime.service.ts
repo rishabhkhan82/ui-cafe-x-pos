@@ -150,10 +150,11 @@ export class RealtimeService {
         console.log('[Realtime] Connected successfully');
 
         // Platform Admin-specific subscriptions
-        if (role === 'platform_owner') {
-        }
+        // if (role === 'platform_owner') {
 
-        // Restaurant Admin-specific subscriptions
+        // }
+
+        
         if (role === 'restaurant_owner' || role === 'kitchen_manager' || role === 'restaurant_manager' || role === 'cashier' || role === 'waiter') {
           this.stompClient!.subscribe(`/topic/orders/${restaurantId}/new`, (msg) => {
             console.log('[Realtime] Received new order for restaurant', restaurantId);

@@ -49,7 +49,7 @@ export class CommonUserNotificationsTemplatesService {
     new_order_received: {
       id: 'new_order_received',
       title: 'New Order #{{order_id}}',
-      message: 'A new order has been placed for restaurant "{{restaurant_name}}". Table: {{table_no}}.',
+      message: 'A new order has been placed. Table: {{table_no}}.',
       type: 'order',
       priority: 'high',
       action_text: 'View Order',
