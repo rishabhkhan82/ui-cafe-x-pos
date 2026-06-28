@@ -14,6 +14,7 @@ import { AuthService } from '../../../services/auth.service';
 import { ConfirmationDialogComponent } from '../../common/confirmation-dialog/confirmation-dialog.component';
 import { ElapsedTimePipe } from './elapsed-time.pipe';
 import { Router, ActivatedRoute } from '@angular/router';
+import { CommonUserNotificationsService } from '../../../services/common-user-notifications.service';
 
 @Component({
   selector: 'app-orders-mobile',
@@ -37,6 +38,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   public realTimeLoader: boolean = true;
   private changeDetectorRef = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
+  private commonUserNotificationsService = inject(CommonUserNotificationsService);
 
   currentTime: string = '';
   activeStatus: string = 'all';
@@ -1001,6 +1003,20 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
               const restaurantId = firstOrder.restaurant_id;
               const invoiceTotal = orders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
               const earnedPoints = Math.round(invoiceTotal);
+
+              // Create a notification for the customer about the payment received
+              this.commonUserNotificationsService.createFromTemplate('payment_received', {
+                order_id: firstOrder.order_id,
+                amount: invoiceTotal,
+                payment_method: firstOrder.payment_method || 'Cash',
+                payment_id: invoiceId
+              }, {
+                recipient_id: String(customerId),
+                recipient_role: 'customer',
+                restaurant_id: String(restaurantId),
+                related_order_id: firstOrder.order_id,
+                priority: 'medium'
+              }).subscribe();
 
               const processLoyalty = () => {
                 this.crudService.getLoyaltyProgramByCustomer(customerId).subscribe({

@@ -96,6 +96,16 @@ export class CommonUserNotificationsTemplatesService {
       action_url: '/subscriptions/renew/{{subscription_id}}',
       icon: 'fas fa-clock'
     },
+    invoice_generated: {
+      id: 'invoice_generated',
+      title: 'Invoice #{{invoice_number}} Generated',
+      message: 'Invoice #{{invoice_number}} has been generated for order #{{order_id}}. Amount: ₹{{amount}}.',
+      type: 'payment',
+      priority: 'medium',
+      action_text: 'View Invoice',
+      action_url: '/invoices/{{invoice_number}}',
+      icon: 'fas fa-file-invoice'
+    },
   };
 
   render(templateId: string, data: Record<string, string | number>): NotificationTemplate {
