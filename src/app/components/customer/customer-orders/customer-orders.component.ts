@@ -15,6 +15,9 @@ import { PendingordersService } from '../../../services/pendingorders.service';
 import { PendingBillsService } from '../../../services/pending-bills.service';
 import { RealtimeService } from '../../../services/realtime.service';
 import { environment } from '../../../environments/environment';
+import { GetRestAndPlatformUsersService } from '../../../services/get-rest-and-platform-users.service';
+import { CommonUserNotificationsService } from '../../../services/common-user-notifications.service';
+import { take, filter } from 'rxjs/operators';
 
 interface EligibleOffer {
   id: string;
@@ -47,6 +50,8 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
   private pendingOrdersService = inject(PendingordersService);
   private pendingBillsService = inject(PendingBillsService);
   private realtimeService = inject(RealtimeService);
+  private getRestAndPlatformUsersService = inject(GetRestAndPlatformUsersService);
+  private commonUserNotificationsService = inject(CommonUserNotificationsService);
 
   currentUser: any = null;
   userRole: string = 'customer';
@@ -60,6 +65,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
   showOrderDetails = false;
   showAllOrderHistory = false;
   eligibleOffers: EligibleOffer[] = [];
+  restaurantOwnerUserIds: string[] = [];
   cartItemCount = 0;
   isLoading = false;
   isOrderHistoryLoading = false;
@@ -359,6 +365,16 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
   requestBilling(): void {
     if (!this.canRequestBilling()) return;
 
+    this.getRestAndPlatformUsersService.users$.pipe(
+      take(1),
+      filter(users => users.length > 0)
+    ).subscribe(recipients => {
+      this.restaurantOwnerUserIds = recipients
+        .filter(u => u.role === 'restaurant_owner')
+        .map(u => String(u.id));
+    });
+
+
     this.generatedInvoiceId = this.generateInvoiceId();
 
     const totalPreTax = this.invoiceSubtotal;
@@ -461,6 +477,31 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
                         `Your bill of ₹${this.invoiceTotal} has been generated, please show this at counter and pay`
                       );
                       this.pendingBillsService.setPendingBilling(true);
+
+                      const restaurantId = this.activeOrders[0].restaurant_id;
+                      const templateData: Record<string, string | number> = {
+                        invoice_number: this.generatedInvoiceId || '',
+                        order_id: String(this.activeOrders[0].order_id || ''),
+                        amount: String(this.invoiceTotal)
+                      };
+
+                      this.restaurantOwnerUserIds.forEach(ownerId => {
+                        this.commonUserNotificationsService.createFromTemplate(
+                          'invoice_generated',
+                          templateData,
+                          {
+                            recipient_id: ownerId,
+                            recipient_role: 'restaurant_owner',
+                            restaurant_id: restaurantId.toString(),
+                            priority: 'medium',
+                            related_order_id: String(this.activeOrders[0].order_id || ''),
+                            related_entity_type: 'invoice'
+                          }
+                        ).subscribe({
+                          next: () => console.log(`[CustomerOrders] Invoice notification sent to restaurant owner ${ownerId}`),
+                          error: (err) => console.error(`[CustomerOrders] Invoice notification failed for owner ${ownerId}`, err)
+                        });
+                      });
 
                       if (this.invoiceLoyaltyDiscount > 0 && this.activeOrders.length > 0) {
                         const firstOrder = this.activeOrders[0];
