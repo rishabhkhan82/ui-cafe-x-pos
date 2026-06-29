@@ -66,15 +66,14 @@ export class AdminLoginComponent implements OnInit, OnDestroy {
 
     this.authService.loginApi(credentials).subscribe({
       next: (response) => {
-        // Store user data and token
-        this.authService.setCurrentUser(response.user);
-        sessionStorage.setItem('currentUser', JSON.stringify(response.user));
         if (response.accessToken) {
           sessionStorage.setItem('accessToken', response.accessToken);
         }
         if (response.refreshToken) {
           sessionStorage.setItem('refreshToken', response.refreshToken);
         }
+        sessionStorage.setItem('currentUser', JSON.stringify(response.user));
+        this.authService.setCurrentUser(response.user);
 
         // Redirect based on user role
         const user = response.user;

@@ -18,6 +18,7 @@ import { PendingordersService } from './services/pendingorders.service';
 import { PendingBillsService } from './services/pending-bills.service';
 import { NotificationService } from './services/notification.service';
 import { NotificationRoutingService } from './services/notification-routing.service';
+import { GetRestAndPlatformUsersService } from './services/get-rest-and-platform-users.service';
 interface User {
   id: string;
   name: string;
@@ -59,6 +60,7 @@ export class AppComponent implements OnInit {
   private systemConfigService = inject(SystemConfigService);
   private notificationService = inject(NotificationService);
   private routingService = inject(NotificationRoutingService);
+  private getRestAndPlatformUsersService = inject(GetRestAndPlatformUsersService);
   cartItemCount = 0;
 
   @ViewChild(NavigationMenuComponent) navMenu!: NavigationMenuComponent;
@@ -101,6 +103,8 @@ export class AppComponent implements OnInit {
           this.pendingOrdersService.refreshCount().subscribe();
           this.pendingBillsService.refreshPendingBills().subscribe();
         }
+        // Get notification recipients for the restaurant
+        this.loadNotificationRecipients(restaurantId);
       } else {
         this.currentUser = null;
         this.isLoggedIn = false;
@@ -298,6 +302,18 @@ export class AppComponent implements OnInit {
   logout(): void {
     this.authService.logout();
     this.cartService.clearCart();
+  }
+
+  private loadNotificationRecipients(restaurantId: string): void {
+    const rolesArr = ['platform_owner', 'restaurant_owner', 'restaurant_manager', 'kitchen_manager', 'waiter', 'cashier'];
+    this.getRestAndPlatformUsersService.getNotificationRecipients(restaurantId, rolesArr).subscribe({
+      next: (recipients) => {
+        console.log('[AppComponent] Notification recipients loaded:', recipients);
+      },
+      error: (err) => {
+        console.error('[AppComponent] Failed to load notification recipients:', err);
+      }
+    });
   }
 
   viewCart(): void {
