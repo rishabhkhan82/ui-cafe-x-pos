@@ -93,7 +93,7 @@ export class AppComponent implements OnInit {
         console.log('[AppComponent] Current user set:', this.currentUser);
         const restaurantId = user.role === 'customer'
           ? sessionStorage.getItem('current_customer_restaurant_id') || ''
-          : (this.currentUser.restaurantId || '');
+          : (user.role === 'platform_owner' ? null : (this.currentUser.restaurantId || ''));
         this.realtimeService.connect(user.id, String(restaurantId), user.role);
         // Subscribe to pending orders and bills if the user is a customer
         if (this.isLoggedIn && this.currentUser?.role === 'customer') {
@@ -104,7 +104,7 @@ export class AppComponent implements OnInit {
           this.pendingBillsService.refreshPendingBills().subscribe();
         }
         // Get notification recipients for the restaurant
-        this.loadNotificationRecipients(restaurantId);
+        this.loadNotificationRecipients(restaurantId ?? '');
       } else {
         this.currentUser = null;
         this.isLoggedIn = false;
@@ -304,7 +304,7 @@ export class AppComponent implements OnInit {
     this.cartService.clearCart();
   }
 
-  private loadNotificationRecipients(restaurantId: string): void {
+  private loadNotificationRecipients(restaurantId: string | null): void {
     const rolesArr = ['platform_owner', 'restaurant_owner', 'restaurant_manager', 'kitchen_manager', 'waiter', 'cashier'];
     this.getRestAndPlatformUsersService.getNotificationRecipients(restaurantId, rolesArr).subscribe({
       next: (recipients) => {

@@ -12,8 +12,11 @@ export class GetRestAndPlatformUsersService {
 
   constructor(private crudService: CrudService) { }
 
-  getNotificationRecipients(restaurantId: string, roles?: string[]): Observable<User[]> {
-    const payload: any = { restaurantId };
+  getNotificationRecipients(restaurantId: string | null, roles?: string[]): Observable<User[]> {
+    const payload: any = {};
+    if (restaurantId) {
+      payload.restaurantId = restaurantId;
+    }
     if (roles && roles.length > 0) {
       payload.roles = roles;
     }
