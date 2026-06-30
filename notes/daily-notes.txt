@@ -467,3 +467,4 @@ To day today 30/06/26
 6] restaurant profile page with the info and the menus. 
 4] platform owner real time dashboard - Pending
 5] inventory management - Pending
+6] menu real time needed - Pending
