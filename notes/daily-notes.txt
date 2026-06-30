@@ -454,7 +454,16 @@ create above api and then subscribe to service after auth sucess.
 
 things for creating restaurant manager user. 
 - restaurant manager routing - done
-- restaurant manager footer
-- orders mobile working like the restaurant_owner
-- orders notifications 
-- inventory management
+- restaurant manager footer - done
+- orders mobile working like the restaurant_owner - done
+- orders notifications - done
+- inventory management - Pending
+
+To day today 30/06/26
+
+1] check restaruang manager login again - done
+2] remove ui-cafe-x-pos from base url - done
+3] home page - super easy pos plan details changing - pending
+6] restaurant profile page with the info and the menus. 
+4] platform owner real time dashboard - Pending
+5] inventory management - Pending
