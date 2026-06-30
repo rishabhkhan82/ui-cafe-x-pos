@@ -451,3 +451,10 @@ system-configuration api call at the app.component.ts load
 
 create one getRestAndPlatformUsers service - resta and user of type platform_owner 
 create above api and then subscribe to service after auth sucess.
+
+things for creating restaurant manager user. 
+- restaurant manager routing - done
+- restaurant manager footer
+- orders mobile working like the restaurant_owner
+- orders notifications 
+- inventory management

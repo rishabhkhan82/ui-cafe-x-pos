@@ -117,8 +117,7 @@
             </div>
 
             <div class="flex items-center gap-2">
-              <button *ngIf="userRole === 'restaurant_owner'"
-                      (click)="markInvoiceCompleted(invoice.invoiceId)"
+              <button *ngIf="userRole === 'restaurant_owner' || userRole === 'restaurant_manager'"
                       class="flex-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
                 <i class="fas fa-check-double mr-2"></i>Complete Invoice
               </button>
@@ -202,7 +201,7 @@
                 <i class="fas fa-check-circle mr-2"></i>Served
               </button>
 
-                <button *ngIf="userRole === 'restaurant_owner' && ord.status === 'BILLING_REQUESTED' && activeStatus === 'BILLING_REQUESTED'"
+                <button *ngIf="(userRole === 'restaurant_owner' || userRole === 'restaurant_manager') && ord.status === 'BILLING_REQUESTED' && activeStatus === 'BILLING_REQUESTED'"
                         (click)="markCompleted(ord)"
                         class="flex-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
                  <i class="fas fa-check-double mr-2"></i>Completed
@@ -213,7 +212,7 @@
                 <i class="fas fa-eye mr-2"></i>Details
               </button>
 
-                <button *ngIf="['restaurant_owner', 'kitchen', 'kitchen_manager'].includes(userRole) && ord.status !== 'COMPLETED' && ord.status !== 'CANCELLED' && ord.status !== 'SERVED' && ord.status !== 'BILLING_REQUESTED'"
+                <button *ngIf="['restaurant_owner', 'restaurant_manager', 'kitchen', 'kitchen_manager'].includes(userRole) && ord.status !== 'COMPLETED' && ord.status !== 'CANCELLED' && ord.status !== 'SERVED' && ord.status !== 'BILLING_REQUESTED'"
                         (click)="cancelOrder(ord)"
                         class="flex-1 px-3 py-2 bg-red-700 hover:bg-red-800 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
                  <i class="fas fa-times mr-2"></i>Cancel
@@ -434,15 +433,15 @@
            <i class="fas fa-check-circle mr-2"></i>Served
          </button>
 
-         <!-- Mark Completed for restaurant_owner only -->
-          <button *ngIf="userRole === 'restaurant_owner' && selectedOrder.status === 'BILLING_REQUESTED'"
+          <!-- Mark Completed for restaurant_owner and restaurant_manager -->
+           <button *ngIf="(userRole === 'restaurant_owner' || userRole === 'restaurant_manager') && selectedOrder.status === 'BILLING_REQUESTED'"
                   (click)="markCompleted(selectedOrder); closeOrderDetails()"
                   class="px-4 sm:px-6 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg transition-all duration-200 font-medium flex items-center text-sm sm:text-base">
            <i class="fas fa-check-double mr-2"></i>Mark Completed
          </button>
 
-          <!-- Cancel for restaurant_owner and kitchen only -->
-           <button *ngIf="['restaurant_owner', 'kitchen', 'kitchen_manager'].includes(userRole) && selectedOrder.status !== 'COMPLETED' && selectedOrder.status !== 'CANCELLED'"
+           <!-- Cancel for restaurant_owner, restaurant_manager and kitchen only -->
+            <button *ngIf="['restaurant_owner', 'restaurant_manager', 'kitchen', 'kitchen_manager'].includes(userRole) && selectedOrder.status !== 'COMPLETED' && selectedOrder.status !== 'CANCELLED'"
                    (click)="cancelOrder(selectedOrder); closeOrderDetails()"
                    class="px-4 sm:px-6 py-2 bg-red-700 hover:bg-red-800 text-white rounded-lg transition-all duration-200 font-medium flex items-center text-sm sm:text-base">
             <i class="fas fa-times mr-2"></i>Cancel Order

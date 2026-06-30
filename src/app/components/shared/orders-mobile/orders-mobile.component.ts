@@ -133,6 +133,10 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         this.orderStatuses = allStatuses;
         this.statusOptions = allStatusOptions;
         break;
+      case 'restaurant_manager':
+        this.orderStatuses = allStatuses;
+        this.statusOptions = allStatusOptions;
+        break;
       case 'waiter':
         this.orderStatuses = allStatuses;
         this.statusOptions = allStatusOptions;
@@ -335,7 +339,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     const elapsedMinutes = (Date.now() - new Date(order.created_at).getTime()) / (1000 * 60);
 
     // Role-based highlights
-    if (this.userRole === 'restaurant_owner' && order.status === 'BILLING_REQUESTED') {
+    if ((this.userRole === 'restaurant_owner' || this.userRole === 'restaurant_manager') && order.status === 'BILLING_REQUESTED') {
       return `${baseClass} animate-pulse border-2 border-indigo-500`;
     }
     if (this.userRole === 'waiter' && order.status === 'ON_THE_WAY' && elapsedMinutes > 10) {
@@ -607,7 +611,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   async markCompleted(order: Order): Promise<void> {
-    if (this.userRole !== 'restaurant_owner') return;
+    if (!['restaurant_owner', 'restaurant_manager'].includes(this.userRole)) return;
     const confirmed = await this.confirmationService.confirm(
       'Are you sure you want to mark this order as Completed?',
       `Mark Completed (#${order.order_id.split('-').pop()})`
@@ -657,7 +661,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   async cancelOrder(order: Order): Promise<void> {
-    if (!['restaurant_owner', 'kitchen', 'kitchen_manager'].includes(this.userRole)) return;
+    if (!['restaurant_owner', 'restaurant_manager', 'kitchen', 'kitchen_manager'].includes(this.userRole)) return;
     const confirmed = await this.confirmationService.confirm(
       'Are you sure you want to cancel this order? This action cannot be undone.',
       `Cancel Order (#${order.order_id.split('-').pop()})`
@@ -945,7 +949,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   async markInvoiceCompleted(invoiceId: string): Promise<void> {
-    if (!['restaurant_owner'].includes(this.userRole)) return;
+    if (!['restaurant_owner', 'restaurant_manager'].includes(this.userRole)) return;
     if (this.isCompletingInvoice) return;
 
     const confirmed = await this.confirmationService.confirm(

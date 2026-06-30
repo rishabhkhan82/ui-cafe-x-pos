@@ -157,7 +157,7 @@
 <!-- Bottom Navigation -->
 <nav *ngIf="isLoggedIn" class="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 z-50 md:hidden">
   <!-- Navigation For Restaurant Owner -->
-  <div *ngIf="currentUser?.role === 'restaurant_owner'" class="flex items-center justify-around py-2">
+  <div *ngIf="currentUser?.role === 'restaurant_owner' || currentUser?.role === 'restaurant_manager'" class="flex items-center justify-around py-2">
     <a routerLink="/restaurant-navigation-mobile" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
       <i class="fas fa-home text-xl"></i>
       <span class="text-xs font-medium">Home</span>

@@ -85,7 +85,7 @@ export class AdminLoginComponent implements OnInit, OnDestroy {
             this.router.navigate(['/restaurant-navigation-mobile']); // /restaurant-dashboard
             break;
           case 'restaurant_manager':
-            this.router.navigate(['/restaurant-manager-dashboard']);
+            this.router.navigate(['/restaurant-navigation-mobile']); // /restaurant-dashboard
             break;
           case 'kitchen_manager':
             this.router.navigate(['/kitchen-navigation-mobile']); // kitchen-navigation mobile

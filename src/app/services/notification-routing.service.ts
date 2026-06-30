@@ -15,7 +15,7 @@ export interface RouteRule {
 @Injectable({ providedIn: 'root' })
 export class NotificationRoutingService {
   private rules: RouteRule[] = [
-    { toStatus: 'PENDING',            targetRoles: ['restaurant_owner', 'kitchen_manager'], templateId: 'new_order_received', persistToList: true },
+    { toStatus: 'PENDING',            targetRoles: ['restaurant_owner', 'restaurant_manager', 'kitchen_manager'], templateId: 'new_order_received', persistToList: true },
     { toStatus: 'PREPARING',            targetRoles: ['customer'], templateId: 'order_status_updated', persistToList: true },
     { toStatus: 'READY',              targetRoles: ['waiter', 'customer'], templateId: 'order_status_updated', persistToList: true },
     { toStatus: 'ON_THE_WAY',            targetRoles: ['customer'], templateId: 'order_status_updated', persistToList: true },

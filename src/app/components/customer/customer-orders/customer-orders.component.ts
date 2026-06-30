@@ -66,6 +66,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
   showAllOrderHistory = false;
   eligibleOffers: EligibleOffer[] = [];
   restaurantOwnerUserIds: string[] = [];
+  restaurantManagerUserIds: string[] = [];
   cartItemCount = 0;
   isLoading = false;
   isOrderHistoryLoading = false;
@@ -372,6 +373,9 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
       this.restaurantOwnerUserIds = recipients
         .filter(u => u.role === 'restaurant_owner')
         .map(u => String(u.id));
+      this.restaurantManagerUserIds = recipients
+        .filter(u => u.role === 'restaurant_manager')
+        .map(u => String(u.id));
     });
 
 
@@ -500,6 +504,24 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
                         ).subscribe({
                           next: () => console.log(`[CustomerOrders] Invoice notification sent to restaurant owner ${ownerId}`),
                           error: (err) => console.error(`[CustomerOrders] Invoice notification failed for owner ${ownerId}`, err)
+                        });
+                      });
+
+                      this.restaurantManagerUserIds.forEach(managerId => {
+                        this.commonUserNotificationsService.createFromTemplate(
+                          'invoice_generated',
+                          templateData,
+                          {
+                            recipient_id: managerId,
+                            recipient_role: 'restaurant_manager',
+                            restaurant_id: restaurantId.toString(),
+                            priority: 'medium',
+                            related_order_id: String(this.activeOrders[0].order_id || ''),
+                            related_entity_type: 'invoice'
+                          }
+                        ).subscribe({
+                          next: () => console.log(`[CustomerOrders] Invoice notification sent to restaurant manager ${managerId}`),
+                          error: (err) => console.error(`[CustomerOrders] Invoice notification failed for manager ${managerId}`, err)
                         });
                       });
 

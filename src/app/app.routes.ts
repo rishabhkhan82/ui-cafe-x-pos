@@ -146,7 +146,7 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
 
-  // Restaurant Owner Specific Routings
+  // Restaurant Owner & Manager Specific Routings
   {
     path: 'restaurant-navigation-mobile',
     loadComponent: () => import('./components/shared/admin-uses-navigation-mobile/admin-uses-navigation-mobile.component').then(m => m.AdminUsesNavigationMobileComponent),
