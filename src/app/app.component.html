@@ -83,6 +83,12 @@
                     {{ menu.name }}
                   </a>
                 </li> -->
+                <li *ngIf="currentUser.role === 'restaurant_owner' || currentUser.role === 'restaurant_manager'">
+                  <a [routerLink]="'addons-mobile'" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" (click)="isProfileMenuOpen = false">
+                    <i [class]="'fas fa-headset mr-2'"></i>
+                    Add-ons
+                  </a>
+                </li>
                 <li>
                   <a [routerLink]="'support'" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" (click)="isProfileMenuOpen = false">
                     <i [class]="'fas fa-headset mr-2'"></i>

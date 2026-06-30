@@ -60,6 +60,30 @@ export interface MenuItem {
   updated_by?: number;
 }
 
+export interface InventoryItem {
+  id: number;
+  item_id: string;
+  name: string;
+  description: string;
+  category: string;
+  unit_of_measure: string;
+  current_stock: number;
+  minimum_stock: number;
+  maximum_stock: number;
+  unit_cost: number;
+  selling_price: number;
+  supplier_id: string;
+  location_in_store: string;
+  is_active: boolean;
+  expiry_date?: Date;
+  last_stock_update?: Date;
+  restaurant_id: number;
+  created_at?: Date;
+  updated_at?: Date;
+  created_by?: number;
+  updated_by?: number;
+}
+
 export interface RestaurantSubscription {
   id: number;
   subscription_id: string;

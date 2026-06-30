@@ -201,6 +201,12 @@ export const routes: Routes = [
   },
 
   {
+    path: 'owner-inventory-mobile',
+    loadComponent: () => import('./components/restaurant/owner-inventory-mobile/owner-inventory-mobile.component').then(m => m.OwnerInventoryMobileComponent),
+    canActivate: [authGuard]
+  },
+
+  {
     path: 'addons-mobile',
     loadComponent: () => import('./components/restaurant/add-ons-mobile/add-ons-mobile.component').then(m => m.AddOnsMobileComponent),
     canActivate: [authGuard]
