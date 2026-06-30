@@ -156,7 +156,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
           .then(async (response) => {
             let json = await response.json();
             if (response.status == 200) {
-              alert('🎉 Congratulations! Your free trial has been Enrolled. You will receive an SMS notification once Cafe-X is launched, along with further instructions for setup.');
+              alert('🎉 Congratulations! Your free trial has been Enrolled. Cafe-X will contact you soon, along with further instructions for setup.');
               submitBtn.innerHTML = '🎉 Enrolled Successfully';
               submitBtn.disabled = true;
               document.getElementById('preRegisterModal')?.classList.add('hidden');

@@ -1994,19 +1994,19 @@
     </div>
 </footer>
 
-<!-- Pre-Register Popup Modal -->
+<!-- Free Trial Modal -->
 <div id="preRegisterModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm hidden">
     <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-md relative my-8 max-h-[90vh] overflow-y-auto" style="scrollbar-width: none; -ms-overflow-style: none;">
         <style>
             #preRegisterModal > div::-webkit-scrollbar { display: none; }
         </style>
         <button onclick="document.getElementById('preRegisterModal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-primary-500 text-xl">&times;</button>
-        <h2 class="text-1xl md:text-2xl font-extrabold text-gray-900 dark:text-white">Pre Register for Cafe-X</h2>
-        <p class="text-gray-600 dark:text-gray-300 mb-6 text-sm mt-3">Enroll now to receive free starter package, setup, training, and support, plus enjoy 1 month of Pro Plan access when Cafe‑X POS launches.</p>
+        <h2 class="text-1xl md:text-2xl font-extrabold text-gray-900 dark:text-white">Start Your 15-Day Free Trial</h2>
+        <p class="text-gray-600 dark:text-gray-300 mb-6 text-sm mt-3">No credit card required. Get full access to every feature for 15 days and see how Cafe‑X POS transforms your restaurant operations.</p>
         <form  id="pre-register-form" action="https://api.web3forms.com/submit" method="POST">
             <!-- Hidden Access Key -->
             <input type="hidden" name="access_key" value="8d776a4d-06a2-474b-b6be-cbfcae0b8c03">
-            <input type="hidden" id="subject" name="subject" value="Pre Registration form">
+            <input type="hidden" id="subject" name="subject" value="15 Day Free Trial Request">
 <div class="space-y-4">
     <div>
         <label for="pre-name" class="text-xs text-gray-500 dark:text-gray-400">Your Name*</label>
@@ -2024,17 +2024,17 @@
         <label for="pre-notes" class="text-xs text-gray-500 dark:text-gray-400">Anything we should know?</label>
         <textarea id="pre-notes" name="notes" rows="3" class="mt-1 w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 outline-none" placeholder="Special requests, busy hours, etc."></textarea>
     </div>
-    <button type="submit" class="mt-6 w-full px-4 py-3 rounded-xl bg-primary-500 text-white font-semibold hover:bg-primary-600">Pre Register</button>
+    <button type="submit" class="mt-6 w-full px-4 py-3 rounded-xl bg-primary-500 text-white font-semibold hover:bg-primary-600">Register for Free Trial</button>
 </div>
         </form>
     </div>
 </div>
 
-<!-- Fixed Pre-Register Button -->
+<!-- Fixed Free Trial Button -->
 <button onclick="document.getElementById('preRegisterModal').classList.remove('hidden')"
     class="fixed bottom-6 right-6 z-40 px-3 py-2 rounded-lg bg-red-600 text-white shadow-lg hover:bg-red-700 transition-all duration-200 flex items-center gap-2 text-sm animate__animated animate__infinite animate__pulse"
     style="box-shadow: 0 4px 16px rgba(220,38,38,0.18);">
-    <i class="fas fa-gift text-base animate__animated animate__tada animate__infinite"></i>
-    <span class="font-semibold">Pre Register</span>
+    <i class="fas fa-rocket text-base animate__animated animate__tada animate__infinite"></i>
+    <span class="font-semibold">Free Trial</span>
     <span class="px-2 py-0.5 rounded-full bg-white/20 text-xs font-semibold border border-white/30">&#64; ₹0/mo</span>
 </button>
