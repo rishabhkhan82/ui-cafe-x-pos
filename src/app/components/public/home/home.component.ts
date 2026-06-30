@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, HostListener } from '@angular/core';
+import { Component, AfterViewInit, OnDestroy, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 
 @Component({
@@ -8,7 +8,8 @@ import { Router } from '@angular/router';
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
-export class HomeComponent implements AfterViewInit {
+export class HomeComponent implements AfterViewInit, OnDestroy {
+  private countdownInterval: any;
   constructor(private router: Router) {}
 
   ngAfterViewInit(): void {
@@ -252,6 +253,43 @@ export class HomeComponent implements AfterViewInit {
         const baseHref = document.querySelector('base')?.getAttribute('href');
         window.open(baseHref + 'admin/login', '_blank');
       });
+    }
+
+    const offerBadge = document.getElementById('offer-badge');
+    const offerTooltip = document.getElementById('offer-tooltip');
+
+    offerBadge?.addEventListener('click', () => {
+      offerTooltip?.classList.toggle('hidden');
+    });
+
+    const countdownEl = document.getElementById('countdown');
+    const expiryDate = new Date('2026-07-30T23:59:59').getTime();
+
+    const updateCountdown = () => {
+      const now = new Date().getTime();
+      const distance = expiryDate - now;
+
+      if (distance > 0) {
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        if (countdownEl) {
+          countdownEl.textContent = `${days}d ${hours}h ${minutes}m`;
+        }
+      } else {
+        if (countdownEl) {
+          countdownEl.textContent = 'Expired';
+        }
+      }
+    };
+
+    updateCountdown();
+    this.countdownInterval = setInterval(updateCountdown, 60000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
     }
   }
 
