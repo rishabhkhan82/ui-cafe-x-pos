@@ -22,7 +22,7 @@
             "polyfills": [
               "zone.js"
             ],
-            "baseHref": "/ui-cafe-x-pos/",
+            "baseHref": "/",
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {
