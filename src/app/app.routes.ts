@@ -39,6 +39,11 @@ export const routes: Routes = [
   },
 
   {
+    path: 'restaurant-profile/:restaurantId',
+    loadComponent: () => import('./components/public/restaurant-profile/restaurant-profile.component').then(m => m.RestaurantProfileComponent)
+  },
+
+  {
     path: 'support',
     loadComponent: () => import('./components/common/common-support/common-support.component').then(m => m.CommonSupportComponent),
     canActivate: [authGuard]
