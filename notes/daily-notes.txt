@@ -465,7 +465,8 @@ To day today 30/06/26
 2] remove ui-cafe-x-pos from base url - done
 3] home page - super easy pos plan details changing - done
 6] restaurant profile page with the info and the menus - done 
+5] inventory management - done
 4] platform owner real time dashboard - Pending
-5] inventory management - Pending
-6] menu real time needed - Pending
+6] menu items and restaurant profile real time needed - Pending
 7] live chat
+8] role gurard for authentication - pending

@@ -33,10 +33,10 @@
             <i class="fas fa-chart-line text-white"></i>
           </div>
           <span class="text-xs font-medium text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-1 rounded-full">
-            +12.5%
+            +{{ mrrGrowth }}%
           </span>
         </div>
-        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">₹1,54,195</h3>
+        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">₹{{ mrr }}</h3>
         <p class="text-sm text-gray-600 dark:text-gray-400">Monthly Recurring Revenue</p>
       </div>
 
@@ -47,10 +47,10 @@
             <i class="fas fa-calendar-alt text-white"></i>
           </div>
           <span class="text-xs font-medium text-blue-600 bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded-full">
-            +18.2%
+            +{{ mrrGrowth }}%
           </span>
         </div>
-        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">₹18,50,340</h3>
+        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">₹{{ arr }}</h3>
         <p class="text-sm text-gray-600 dark:text-gray-400">Annual Recurring Revenue</p>
       </div>
 
@@ -61,10 +61,10 @@
             <i class="fas fa-building text-white"></i>
           </div>
           <span class="text-xs font-medium text-purple-600 bg-purple-100 dark:bg-purple-900/30 px-2 py-1 rounded-full">
-            89.9%
+            {{ activeTenantsPercentage }}%
           </span>
         </div>
-        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">73/81</h3>
+        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">{{ activeTenants }}/{{ totalTenants }}</h3>
         <p class="text-sm text-gray-600 dark:text-gray-400">Active Tenants</p>
       </div>
 
@@ -75,10 +75,10 @@
             <i class="fas fa-heartbeat text-white"></i>
           </div>
           <span class="text-xs font-medium text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-full">
-            Healthy
+            {{ systemHealth }}
           </span>
         </div>
-        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">99.7%</h3>
+        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">{{ systemUptime }}</h3>
         <p class="text-sm text-gray-600 dark:text-gray-400">System Uptime</p>
       </div>
 
@@ -89,10 +89,10 @@
             <i class="fas fa-plus-circle text-white"></i>
           </div>
           <span class="text-xs font-medium text-orange-600 bg-orange-100 dark:bg-orange-900/30 px-2 py-1 rounded-full">
-            +8
+            +{{ newThisMonth }}
           </span>
         </div>
-        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">8</h3>
+        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">{{ newThisMonth }}</h3>
         <p class="text-sm text-gray-600 dark:text-gray-400">New This Month</p>
       </div>
 
@@ -103,10 +103,10 @@
             <i class="fas fa-chart-pie text-white"></i>
           </div>
           <span class="text-xs font-medium text-red-600 bg-red-100 dark:bg-red-900/30 px-2 py-1 rounded-full">
-            -2.1%
+            {{ churnTrend }}%
           </span>
         </div>
-        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">8.5%</h3>
+        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">{{ churnRate }}%</h3>
         <p class="text-sm text-gray-600 dark:text-gray-400">Churn Rate</p>
       </div>
     </div>

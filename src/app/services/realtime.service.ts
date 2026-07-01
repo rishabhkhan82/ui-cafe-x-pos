@@ -31,6 +31,24 @@ export class RealtimeService {
   private customerOrderUpdateSubject = new BehaviorSubject<Order | null>(null);
   public customerOrderUpdate$ = this.customerOrderUpdateSubject.asObservable();
 
+  private platformOrdersSubject = new BehaviorSubject<any[] | null>(null);
+  public platformOrders$ = this.platformOrdersSubject.asObservable();
+
+  private platformRestaurantsSubject = new BehaviorSubject<any[] | null>(null);
+  public platformRestaurants$ = this.platformRestaurantsSubject.asObservable();
+
+  private platformSubscriptionsSubject = new BehaviorSubject<any[] | null>(null);
+  public platformSubscriptions$ = this.platformSubscriptionsSubject.asObservable();
+
+  private platformUsersSubject = new BehaviorSubject<any[] | null>(null);
+  public platformUsers$ = this.platformUsersSubject.asObservable();
+
+  private platformCustomersSubject = new BehaviorSubject<any[] | null>(null);
+  public platformCustomers$ = this.platformCustomersSubject.asObservable();
+
+  private platformSystemPerformanceSubject = new BehaviorSubject<any | null>(null);
+  public platformSystemPerformance$ = this.platformSystemPerformanceSubject.asObservable();
+
   constructor(private mockDataService: MockDataService) {
     this.requestNotificationPermission();
   }
@@ -150,9 +168,43 @@ export class RealtimeService {
         console.log('[Realtime] Connected successfully');
 
         // Platform Admin-specific subscriptions
-        // if (role === 'platform_owner') {
+        if (role === 'platform_owner') {
+          this.stompClient!.subscribe(`/topic/orders`, (msg) => {
+            console.log('[Realtime] Received platform orders');
+            const data = JSON.parse(msg.body) as any[];
+            this.platformOrdersSubject.next(data);
+          });
 
-        // }
+          this.stompClient!.subscribe(`/topic/restaurants`, (msg) => {
+            console.log('[Realtime] Received platform restaurants');
+            const data = JSON.parse(msg.body) as any[];
+            this.platformRestaurantsSubject.next(data);
+          });
+
+          this.stompClient!.subscribe(`/topic/restaurant_subscriptions`, (msg) => {
+            console.log('[Realtime] Received platform subscriptions');
+            const data = JSON.parse(msg.body) as any[];
+            this.platformSubscriptionsSubject.next(data);
+          });
+
+          this.stompClient!.subscribe(`/topic/users`, (msg) => {
+            console.log('[Realtime] Received platform users');
+            const data = JSON.parse(msg.body) as any[];
+            this.platformUsersSubject.next(data);
+          });
+
+          this.stompClient!.subscribe(`/topic/customers`, (msg) => {
+            console.log('[Realtime] Received platform customers');
+            const data = JSON.parse(msg.body) as any[];
+            this.platformCustomersSubject.next(data);
+          });
+
+          this.stompClient!.subscribe(`/topic/system-performance`, (msg) => {
+            console.log('[Realtime] Received system performance');
+            const data = JSON.parse(msg.body);
+            this.platformSystemPerformanceSubject.next(data);
+          });
+        }
 
         
         if (role === 'restaurant_owner' || role === 'kitchen_manager' || role === 'restaurant_manager' || role === 'cashier' || role === 'waiter') {
