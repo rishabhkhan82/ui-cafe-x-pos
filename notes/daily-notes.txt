@@ -467,9 +467,9 @@ To day today 30/06/26
 6] restaurant profile page with the info and the menus - done 
 5] inventory management - done
 4] platform owner real time dashboard - done
-6] menu items and restaurant profile real time needed - pending
-7] live chat - pending
+6] restaurant real time needed - done
 8] role gurard for authentication - done
 9] subscription guard. - done
 10] restaurant management images upload - pending
-11] restaurant profile edits only in the mobile view
+11] restaurant profile edits only in the mobile view - pending
+6] menu items real time needed - pending
