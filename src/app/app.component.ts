@@ -20,6 +20,7 @@ import { NotificationService } from './services/notification.service';
 import { NotificationRoutingService } from './services/notification-routing.service';
 import { GetRestAndPlatformUsersService } from './services/get-rest-and-platform-users.service';
 import { SubscriptionService } from './services/subscription.service';
+import { RestaurantDataService } from './services/restaurant-data.service';
 interface User {
   id: string;
   name: string;
@@ -38,6 +39,7 @@ interface User {
 })
 export class AppComponent implements OnInit {
   title = 'cafe-x-pos';
+  restaurantName = '';
 
   currentUser: User | any = "";
   notificationPermission: NotificationPermission = 'default';
@@ -63,6 +65,7 @@ export class AppComponent implements OnInit {
   private routingService = inject(NotificationRoutingService);
   private getRestAndPlatformUsersService = inject(GetRestAndPlatformUsersService);
   private subscriptionService = inject(SubscriptionService);
+  private restaurantDataService = inject(RestaurantDataService);
   cartItemCount = 0;
 
   @ViewChild(NavigationMenuComponent) navMenu!: NavigationMenuComponent;
@@ -97,6 +100,16 @@ export class AppComponent implements OnInit {
           ? sessionStorage.getItem('current_customer_restaurant_id') || ''
           : (user.role === 'platform_owner' ? null : (this.currentUser.restaurantId || ''));
         this.realtimeService.connect(user.id, String(restaurantId), user.role);
+
+        if (
+          restaurantId &&
+          user.role !== 'platform_owner'
+        ) {
+          this.restaurantDataService.loadRestaurant().subscribe({
+            error: (err) =>
+              console.error('[AppComponent] Failed to load restaurant on login', err),
+          });
+        }
         // Subscribe to pending orders and bills if the user is a customer
         if (this.isLoggedIn && this.currentUser?.role === 'customer') {
           this.pendingOrdersService.pendingCount$.subscribe(count => {
@@ -112,6 +125,16 @@ export class AppComponent implements OnInit {
         this.currentUser = null;
         this.isLoggedIn = false;
         this.realtimeService.disconnect();
+        this.restaurantName = '';
+      }
+    });
+
+    this.restaurantDataService.restaurant$.subscribe((restaurant) => {
+      console.log('[AppComponent] Current restaurant data:', restaurant);
+      if (restaurant && restaurant.name) {
+        this.restaurantName = restaurant.name;
+      } else {
+        this.restaurantName = '';
       }
     });
 

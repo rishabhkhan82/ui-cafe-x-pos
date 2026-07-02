@@ -471,3 +471,5 @@ To day today 30/06/26
 7] live chat - pending
 8] role gurard for authentication - done
 9] subscription guard. - done
+10] restaurant management images upload - pending
+11] restaurant profile edits only in the mobile view

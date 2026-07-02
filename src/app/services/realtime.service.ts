@@ -52,6 +52,9 @@ export class RealtimeService {
   private platformDashboardMetricsSubject = new BehaviorSubject<any | null>(null);
   public platformDashboardMetrics$ = this.platformDashboardMetricsSubject.asObservable();
 
+  private restaurantSubject = new BehaviorSubject<any | null>(null);
+  public restaurant$ = this.restaurantSubject.asObservable();
+
   constructor(private mockDataService: MockDataService) {
     this.requestNotificationPermission();
   }
@@ -180,7 +183,15 @@ export class RealtimeService {
         }
 
         
-        if (role === 'restaurant_owner' || role === 'kitchen_manager' || role === 'restaurant_manager' || role === 'cashier' || role === 'waiter') {
+        if (
+          role === 'restaurant_owner' || role === 'kitchen_manager' || role === 'restaurant_manager' || role === 'cashier' || role === 'waiter'
+        ) {
+          this.stompClient!.subscribe(`/topic/restaurant/${restaurantId}`, (msg) => {
+            console.log('[Realtime] Received restaurant update for', restaurantId);
+            const data = JSON.parse(msg.body);
+            this.restaurantSubject.next(data);
+          });
+
           this.stompClient!.subscribe(`/topic/orders/${restaurantId}/new`, (msg) => {
             console.log('[Realtime] Received new order for restaurant', restaurantId);
             const order = JSON.parse(msg.body) as Order;
@@ -200,6 +211,12 @@ export class RealtimeService {
             console.log('[Realtime] Received customer order update for user', userId);
             const order = JSON.parse(msg.body) as Order;
             this.customerOrderUpdateSubject.next(order);
+          });
+
+          this.stompClient!.subscribe(`/topic/restaurant/${restaurantId}`, (msg) => {
+            console.log('[Realtime] Received restaurant update for', restaurantId);
+            const data = JSON.parse(msg.body);
+            this.restaurantSubject.next(data);
           });
         }
 
