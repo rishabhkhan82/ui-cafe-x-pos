@@ -473,3 +473,4 @@ To day today 30/06/26
 10] restaurant management images upload - pending
 11] restaurant profile edits only in the mobile view - pending
 6] menu items real time needed - pending
+11] feature wise plans dynamice in home page - pending
