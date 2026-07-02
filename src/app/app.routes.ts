@@ -1,28 +1,23 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
+import { roleGuard } from './guards/role.guard';
 import { CustomerGuestGuard } from './guards/customer-guest.guard';
 
 export const routes: Routes = [
   // Default redirect to admin login (main entry point)
   { path: '', loadComponent: () => import('./components/public/home/home.component').then(m => m.HomeComponent), pathMatch: 'full' },
 
-  // Default redirect to admin login (main entry point),
-  // { path: '', redirectTo: '/admin/login', pathMatch: 'full' },
-
-  // Customer QR Scan (outside layout - no header/footer)
   {
     path: 'customer/scan-qr',
     loadComponent: () => import('./components/auth/customer-scar-qr/customer-scar-qr.component').then(m => m.CustomerScarQrComponent)
   },
 
-  // Customer QR Scan (outside layout - no header/footer)
   {
     path: 'notifications',
     loadComponent: () => import('./components/common/common-user-notifications/common-user-notifications.component').then(m => m.CommonUserNotificationsComponent),
     canActivate: [authGuard]
   },
 
-  // Admin login (outside layout - no header/footer)
   {
     path: 'admin/login',
     loadComponent: () => import('./components/auth/admin-login/admin-login.component').then(m => m.AdminLoginComponent)
@@ -50,166 +45,198 @@ export const routes: Routes = [
   },
 
   {
+    path: 'unauthrized-access',
+    loadComponent: () => import('./components/public/unauthrized-access/unauthrized-access.component').then(m => m.UnauthrizedAccessComponent)
+  },
+
+  {
     path: 'platform-dashboard',
     loadComponent: () => import('./components/platform/platform-dashboard/platform-dashboard.component').then(m => m.PlatformDashboardComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
   },
 
   {
     path: 'navigation-management',
     loadComponent: () => import('./components/platform/navigation-management/navigation-management.component').then(m => m.NavigationManagementComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
   },
 
   {
     path: 'restaurant-management',
     loadComponent: () => import('./components/platform/restaurant-management/restaurant-management.component').then(m => m.RestaurantManagementComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
   },
 
   {
     path: 'user-management',
     loadComponent: () => import('./components/platform/user-management/user-management.component').then(m => m.UserManagementComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
   },
 
   {
     path: 'role-management',
     loadComponent: () => import('./components/platform/role-management/role-management.component').then(m => m.RoleManagementComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
   },
 
   {
     path: 'role-access-management',
     loadComponent: () => import('./components/platform/role-access-management/role-access-management.component').then(m => m.RoleAccessManagementComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
   },
 
   {
     path: 'system-alerts',
     loadComponent: () => import('./components/platform/system-alerts/system-alerts.component').then(m => m.SystemAlertsComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
   },
 
   {
     path: 'user-notifications',
     loadComponent: () => import('./components/platform/user-notifications/user-notifications.component').then(m => m.UserNotificationsComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
   },
 
   {
     path: 'broadcast-message',
     loadComponent: () => import('./components/platform/broadcast-messages/broadcast-messages.component').then(m => m.BroadcastMessagesComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
   },
 
   {
     path: 'plans',
     loadComponent: () => import('./components/platform/plan-management/plan-management.component').then(m => m.PlanManagementComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
   },
 
   {
     path: 'analytics',
     loadComponent: () => import('./components/platform/subscription-analytics/subscription-analytics.component').then(m => m.SubscriptionAnalyticsComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
   },
 
   {
     path: 'features-access-control',
-    loadComponent: () => import('./components/platform/feature-access-control/feature-access-control.component').then(m => m.FeatureAccessControlComponent ),
-    canActivate: [authGuard]
+    loadComponent: () => import('./components/platform/feature-access-control/feature-access-control.component').then(m => m.FeatureAccessControlComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
   },
 
   {
     path: 'system',
     loadComponent: () => import('./components/platform/system-configuration/system-configuration.component').then(m => m.SystemConfigurationComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
   },
 
   {
     path: 'security',
     loadComponent: () => import('./components/platform/security-settings/security-settings.component').then(m => m.SecuritySettingsComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
   },
 
   {
     path: 'api',
     loadComponent: () => import('./components/platform/api-management/api-management.component').then(m => m.ApiManagementComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
   },
 
   {
     path: 'integrations',
     loadComponent: () => import('./components/platform/integrations/integrations.component').then(m => m.IntegrationsComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
   },
 
   {
     path: 'feature-management',
     loadComponent: () => import('./components/platform/feature-management/feature-management.component').then(m => m.FeatureManagementComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
   },
 
   // Restaurant Owner & Manager Specific Routings
   {
     path: 'restaurant-navigation-mobile',
     loadComponent: () => import('./components/shared/admin-uses-navigation-mobile/admin-uses-navigation-mobile.component').then(m => m.AdminUsesNavigationMobileComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
   },
 
   {
     path: 'owner-menus-mobile',
     loadComponent: () => import('./components/restaurant/owner-menus-mobile/owner-menus-mobile.component').then(m => m.OwnerMenusMobileComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
   },
 
   {
     path: 'owner-orders-mobile',
     loadComponent: () => import('./components/shared/orders-mobile/orders-mobile.component').then(m => m.OrdersMobileComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
   },
 
   {
     path: 'owner-plans-mobile',
     loadComponent: () => import('./components/restaurant/owner-plans-mobile/owner-plans-mobile.component').then(m => m.OwnerPlansMobileComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
   },
 
   {
     path: 'restaurant-owner-profile-mobile',
     loadComponent: () => import('./components/shared/admin-user-profile-mobile/admin-user-profile-mobile.component').then(m => m.AdminUserProfileMobileComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
   },
 
   {
     path: 'owner-staff-mobile',
     loadComponent: () => import('./components/restaurant/owner-staff-mobile/owner-staff-mobile.component').then(m => m.OwnerStaffMobileComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
   },
 
   {
     path: 'owner-reports-mobile',
     loadComponent: () => import('./components/restaurant/owner-reports-mobile/owner-reports-mobile.component').then(m => m.OwnerReportsMobileComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
   },
 
   {
     path: 'owner-offers-mobile',
     loadComponent: () => import('./components/restaurant/owner-offers-mobile/owner-offers-mobile.component').then(m => m.OwnerOffersMobileComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
   },
 
   {
     path: 'owner-inventory-mobile',
     loadComponent: () => import('./components/restaurant/owner-inventory-mobile/owner-inventory-mobile.component').then(m => m.OwnerInventoryMobileComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
   },
 
   {
     path: 'addons-mobile',
     loadComponent: () => import('./components/restaurant/add-ons-mobile/add-ons-mobile.component').then(m => m.AddOnsMobileComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
   },
 
   // Kitchen Manager Specific Routings
@@ -223,59 +250,62 @@ export const routes: Routes = [
   {
     path: 'kitchen-navigation-mobile',
     loadComponent: () => import('./components/shared/admin-uses-navigation-mobile/admin-uses-navigation-mobile.component').then(m => m.AdminUsesNavigationMobileComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager', 'kitchen_manager'] }
   },
 
   {
     path: 'kitchen-orders',
     loadComponent: () => import('./components/shared/orders-mobile/orders-mobile.component').then(m => m.OrdersMobileComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager', 'kitchen_manager'] }
   },
 
   {
     path: 'kitchen-profile-mobile',
     loadComponent: () => import('./components/shared/admin-user-profile-mobile/admin-user-profile-mobile.component').then(m => m.AdminUserProfileMobileComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager', 'kitchen_manager'] }
   },
-
   // Waiter Specific Routings
-
   {
     path: 'waiter-navigation-mobile',
     loadComponent: () => import('./components/shared/admin-uses-navigation-mobile/admin-uses-navigation-mobile.component').then(m => m.AdminUsesNavigationMobileComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager', 'waiter'] }
   },
 
   {
     path: 'waiter-orders',
     loadComponent: () => import('./components/shared/orders-mobile/orders-mobile.component').then(m => m.OrdersMobileComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager', 'waiter'] }
   },
 
   {
     path: 'waiter-profile-mobile',
     loadComponent: () => import('./components/shared/admin-user-profile-mobile/admin-user-profile-mobile.component').then(m => m.AdminUserProfileMobileComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager', 'waiter'] }
   },
-  
+
   // {
   //   path: 'waiter-interface',
   //   loadComponent: () => import('./components/waiter/waiter-interface/waiter-interface.component').then(m => m.WaiterInterfaceComponent),
   //   canActivate: [authGuard]
   // },
 
-  // Customer login (outside layout - no header/footer)
+  // Customer login (outside layout - no header/footer)  
   {
     path: 'customer/login',
     loadComponent: () => import('./components/auth/customer-login/customer-login.component').then(m => m.CustomerLoginComponent)
   },
-  // Customer dashboard with restaurantId and tableNumber parameters
+
   {
     path: 'customer/dashboard/:restaurantId/:tableNumber',
     loadComponent: () => import('./components/customer/customer-dashboard/customer-dashboard.component').then(m => m.CustomerDashboardComponent)
   },
 
-  // Customer section with nested routing
   {
     path: 'customer',
     canActivate: [CustomerGuestGuard],
