@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
 import { roleGuard } from './guards/role.guard';
 import { CustomerGuestGuard } from './guards/customer-guest.guard';
+import { subscriptionGuard } from './guards/subscription.guard';
 
 export const routes: Routes = [
   // Default redirect to admin login (main entry point)
@@ -179,14 +180,14 @@ export const routes: Routes = [
   {
     path: 'owner-menus-mobile',
     loadComponent: () => import('./components/restaurant/owner-menus-mobile/owner-menus-mobile.component').then(m => m.OwnerMenusMobileComponent),
-    canActivate: [authGuard, roleGuard],
+    canActivate: [authGuard, roleGuard, subscriptionGuard],
     data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
   },
 
   {
     path: 'owner-orders-mobile',
     loadComponent: () => import('./components/shared/orders-mobile/orders-mobile.component').then(m => m.OrdersMobileComponent),
-    canActivate: [authGuard, roleGuard],
+    canActivate: [authGuard, roleGuard, subscriptionGuard],
     data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
   },
 
@@ -207,28 +208,28 @@ export const routes: Routes = [
   {
     path: 'owner-staff-mobile',
     loadComponent: () => import('./components/restaurant/owner-staff-mobile/owner-staff-mobile.component').then(m => m.OwnerStaffMobileComponent),
-    canActivate: [authGuard, roleGuard],
+    canActivate: [authGuard, roleGuard, subscriptionGuard],
     data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
   },
 
   {
     path: 'owner-reports-mobile',
     loadComponent: () => import('./components/restaurant/owner-reports-mobile/owner-reports-mobile.component').then(m => m.OwnerReportsMobileComponent),
-    canActivate: [authGuard, roleGuard],
+    canActivate: [authGuard, roleGuard, subscriptionGuard],
     data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
   },
 
   {
     path: 'owner-offers-mobile',
     loadComponent: () => import('./components/restaurant/owner-offers-mobile/owner-offers-mobile.component').then(m => m.OwnerOffersMobileComponent),
-    canActivate: [authGuard, roleGuard],
+    canActivate: [authGuard, roleGuard, subscriptionGuard],
     data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
   },
 
   {
     path: 'owner-inventory-mobile',
     loadComponent: () => import('./components/restaurant/owner-inventory-mobile/owner-inventory-mobile.component').then(m => m.OwnerInventoryMobileComponent),
-    canActivate: [authGuard, roleGuard],
+    canActivate: [authGuard, roleGuard, subscriptionGuard],
     data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
   },
 
@@ -257,7 +258,7 @@ export const routes: Routes = [
   {
     path: 'kitchen-orders',
     loadComponent: () => import('./components/shared/orders-mobile/orders-mobile.component').then(m => m.OrdersMobileComponent),
-    canActivate: [authGuard, roleGuard],
+    canActivate: [authGuard, roleGuard, subscriptionGuard],
     data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager', 'kitchen_manager'] }
   },
 
@@ -267,7 +268,7 @@ export const routes: Routes = [
     canActivate: [authGuard, roleGuard],
     data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager', 'kitchen_manager'] }
   },
-  // Waiter Specific Routings
+  // Waiter Specific Routings 
   {
     path: 'waiter-navigation-mobile',
     loadComponent: () => import('./components/shared/admin-uses-navigation-mobile/admin-uses-navigation-mobile.component').then(m => m.AdminUsesNavigationMobileComponent),
@@ -278,7 +279,7 @@ export const routes: Routes = [
   {
     path: 'waiter-orders',
     loadComponent: () => import('./components/shared/orders-mobile/orders-mobile.component').then(m => m.OrdersMobileComponent),
-    canActivate: [authGuard, roleGuard],
+    canActivate: [authGuard, roleGuard, subscriptionGuard],
     data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager', 'waiter'] }
   },
 
@@ -308,7 +309,7 @@ export const routes: Routes = [
 
   {
     path: 'customer',
-    canActivate: [CustomerGuestGuard],
+    canActivate: [CustomerGuestGuard, subscriptionGuard],
     children: [
       {
         path: 'menu',

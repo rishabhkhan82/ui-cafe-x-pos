@@ -9,6 +9,7 @@ import { NotificationService } from '../../../services/notification.service';
 import { ManagedFeature, PlanFeatureMapping, SubscriptionPlan } from '../../../services/mock-data.service';
 import { RestaurantSubscription, SubscriptionHistory } from '../../../interfaces';
 import { AuthService } from '../../../services/auth.service';
+import { SubscriptionService } from '../../../services/subscription.service';
 
 @Component({
   selector: 'app-owner-plans-mobile',
@@ -50,7 +51,8 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     private crudService: CrudService,
     public loadingService: LoadingService,
     private notificationService: NotificationService,
-    public authService: AuthService
+    public authService: AuthService,
+    private subscriptionService: SubscriptionService
   ) {}
 
   ngOnInit(): void {
@@ -389,6 +391,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
       next: (response: any) => {
         console.log('Subscription saved:', response);
         this.notificationService.success('Subscription Activated', 'Your subscription has been activated successfully!');
+        this.subscriptionService.refreshAfterPayment().subscribe();
         this.loadData(); // Refresh data
       },
       error: (error) => {
@@ -419,6 +422,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
       next: (response: any) => {
         console.log('Trial subscription created:', response);
         this.notificationService.success('Trial Activated', 'Trial subscription activated! You have 15 days to try all features.');
+        this.subscriptionService.refreshAfterPayment().subscribe();
         this.loadData(); // Refresh data to show trial status
       },
       error: (error) => {
@@ -485,6 +489,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
           next: (historyResponse: any) => {
             console.log('Subscription history saved:', historyResponse);
             this.notificationService.success('Subscription Activated', 'Your subscription has been activated successfully!');
+            this.subscriptionService.refreshAfterPayment().subscribe();
             this.loadData(); // Refresh data
           },
           error: (historyError) => {

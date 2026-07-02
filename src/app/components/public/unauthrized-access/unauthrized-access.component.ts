@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 
 @Component({
@@ -12,16 +12,30 @@ export class UnauthrizedAccessComponent {
 
   private router = inject(Router);
   private authService = inject(AuthService);
+  private route = inject(ActivatedRoute);
 
   pageTitle = 'Unauthorized Access';
   message = 'You do not have permission to view this page.';
+  isSubscriptionBlock = false;
 
   constructor() {
-    sessionStorage.clear();
-    this.authService.currentUserSubject.next(null);
+    const reason = this.route.snapshot.queryParamMap.get('reason');
+
+    if (reason === 'subscription_inactive') {
+      this.isSubscriptionBlock = true;
+      this.pageTitle = 'Restaurant Unavailable';
+      this.message = 'This restaurant is currently unavailable. Please contact the staff for assistance.';
+    } else {
+      sessionStorage.clear();
+      this.authService.currentUserSubject.next(null);
+    }
   }
 
   goBack(): void {
-    this.router.navigate(['/admin/login']);
+    if (this.isSubscriptionBlock) {
+      this.router.navigate(['/admin/login']);
+    } else {
+      this.router.navigate(['/admin/login']);
+    }
   }
 }
