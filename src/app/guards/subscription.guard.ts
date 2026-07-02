@@ -21,6 +21,10 @@ export const subscriptionGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
+  if (subscriptionService.isLoading()) {
+    return router.parseUrl(state.url);
+  }
+
   if (userRole === 'restaurant_owner' || userRole === 'restaurant_manager') {
     return router.parseUrl('/owner-plans-mobile');
   }

@@ -19,6 +19,7 @@ import { PendingBillsService } from './services/pending-bills.service';
 import { NotificationService } from './services/notification.service';
 import { NotificationRoutingService } from './services/notification-routing.service';
 import { GetRestAndPlatformUsersService } from './services/get-rest-and-platform-users.service';
+import { SubscriptionService } from './services/subscription.service';
 interface User {
   id: string;
   name: string;
@@ -61,6 +62,7 @@ export class AppComponent implements OnInit {
   private notificationService = inject(NotificationService);
   private routingService = inject(NotificationRoutingService);
   private getRestAndPlatformUsersService = inject(GetRestAndPlatformUsersService);
+  private subscriptionService = inject(SubscriptionService);
   cartItemCount = 0;
 
   @ViewChild(NavigationMenuComponent) navMenu!: NavigationMenuComponent;
@@ -105,6 +107,7 @@ export class AppComponent implements OnInit {
         }
         // Get notification recipients for the restaurant
         this.loadNotificationRecipients(restaurantId ?? '');
+        this.subscriptionService.loadActiveSubscription().subscribe();
       } else {
         this.currentUser = null;
         this.isLoggedIn = false;

@@ -26,6 +26,10 @@ export class SubscriptionService {
     return status === 'active' || status === 'trial';
   }
 
+  isLoading(): boolean {
+    return this.loadingSubject.value;
+  }
+
   getActiveSubscription(): any | null {
     return this.activeSubscriptionSubject.value;
   }
