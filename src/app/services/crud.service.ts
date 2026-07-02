@@ -508,6 +508,14 @@ export class CrudService {
     return this.getData('restaurant-subscriptions', params);
   }
 
+  getSystemPerformance(): Observable<any> {
+    return this.getData('system-performance');
+  }
+
+  getPlatformDashboard(): Observable<any> {
+    return this.getData('platform/dashboard');
+  }
+
   getRestaurantSubscriptionById(id: string | number): Observable<any> {
     return this.getData(`restaurant-subscriptions/${id}`);
   }

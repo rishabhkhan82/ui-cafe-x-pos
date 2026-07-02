@@ -49,6 +49,9 @@ export class RealtimeService {
   private platformSystemPerformanceSubject = new BehaviorSubject<any | null>(null);
   public platformSystemPerformance$ = this.platformSystemPerformanceSubject.asObservable();
 
+  private platformDashboardMetricsSubject = new BehaviorSubject<any | null>(null);
+  public platformDashboardMetrics$ = this.platformDashboardMetricsSubject.asObservable();
+
   constructor(private mockDataService: MockDataService) {
     this.requestNotificationPermission();
   }
@@ -169,40 +172,10 @@ export class RealtimeService {
 
         // Platform Admin-specific subscriptions
         if (role === 'platform_owner') {
-          this.stompClient!.subscribe(`/topic/orders`, (msg) => {
-            console.log('[Realtime] Received platform orders');
-            const data = JSON.parse(msg.body) as any[];
-            this.platformOrdersSubject.next(data);
-          });
-
-          this.stompClient!.subscribe(`/topic/restaurants`, (msg) => {
-            console.log('[Realtime] Received platform restaurants');
-            const data = JSON.parse(msg.body) as any[];
-            this.platformRestaurantsSubject.next(data);
-          });
-
-          this.stompClient!.subscribe(`/topic/restaurant_subscriptions`, (msg) => {
-            console.log('[Realtime] Received platform subscriptions');
-            const data = JSON.parse(msg.body) as any[];
-            this.platformSubscriptionsSubject.next(data);
-          });
-
-          this.stompClient!.subscribe(`/topic/users`, (msg) => {
-            console.log('[Realtime] Received platform users');
-            const data = JSON.parse(msg.body) as any[];
-            this.platformUsersSubject.next(data);
-          });
-
-          this.stompClient!.subscribe(`/topic/customers`, (msg) => {
-            console.log('[Realtime] Received platform customers');
-            const data = JSON.parse(msg.body) as any[];
-            this.platformCustomersSubject.next(data);
-          });
-
-          this.stompClient!.subscribe(`/topic/system-performance`, (msg) => {
-            console.log('[Realtime] Received system performance');
+          this.stompClient!.subscribe(`/topic/platform/dashboard`, (msg) => {
+            console.log('[Realtime] Received platform dashboard metrics');
             const data = JSON.parse(msg.body);
-            this.platformSystemPerformanceSubject.next(data);
+            this.platformDashboardMetricsSubject.next(data);
           });
         }
 
@@ -236,6 +209,43 @@ export class RealtimeService {
           this.showBrowserNotification(notif.title, notif.message, notif.type || 'info');
         });
       };
+
+      // Spare topics for future
+      // this.stompClient!.subscribe(`/topic/orders`, (msg) => {
+      //   console.log('[Realtime] Received platform orders');
+      //   const data = JSON.parse(msg.body) as any[];
+      //   this.platformOrdersSubject.next(data);
+      // });
+
+      // this.stompClient!.subscribe(`/topic/restaurants`, (msg) => {
+      //   console.log('[Realtime] Received platform restaurants');
+      //   const data = JSON.parse(msg.body) as any[];
+      //   this.platformRestaurantsSubject.next(data);
+      // });
+
+      // this.stompClient!.subscribe(`/topic/restaurant_subscriptions`, (msg) => {
+      //   console.log('[Realtime] Received platform subscriptions');
+      //   const data = JSON.parse(msg.body) as any[];
+      //   this.platformSubscriptionsSubject.next(data);
+      // });
+
+      // this.stompClient!.subscribe(`/topic/users`, (msg) => {
+      //   console.log('[Realtime] Received platform users');
+      //   const data = JSON.parse(msg.body) as any[];
+      //   this.platformUsersSubject.next(data);
+      // });
+
+      // this.stompClient!.subscribe(`/topic/customers`, (msg) => {
+      //   console.log('[Realtime] Received platform customers');
+      //   const data = JSON.parse(msg.body) as any[];
+      //   this.platformCustomersSubject.next(data);
+      // });
+
+      // this.stompClient!.subscribe(`/topic/system-performance`, (msg) => {
+      //   console.log('[Realtime] Received system performance');
+      //   const data = JSON.parse(msg.body);
+      //   this.platformSystemPerformanceSubject.next(data);
+      // });
 
       this.stompClient.onStompError = (frame) => {
         console.error('[Realtime] STOMP error:', frame.headers['message']);

@@ -7,16 +7,19 @@
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4">
           <div>
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Platform Dashboard</h1>
-            <p class="text-gray-600 dark:text-gray-300">Realtime Updates and advanced analytics</p>
+             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Platform Dashboard</h1>
           </div>
         </div>
-        <div class="flex items-center space-x-4">
-          <div class="text-right">
-            <p class="text-sm text-gray-500 dark:text-gray-400">Last updated</p>
-            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ currentTime }}</p>
-          </div>
-          <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+        <div class="flex items-center space-x-3">
+        <div *ngIf="loading" class="p-2 rounded-full bg-gray-100 dark:bg-gray-800">
+          <svg class="animate-spin h-5 w-5 text-primary-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </div>
+          <button (click)="refreshDashboard()" [disabled]="loading" class="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 ml-0 disabled:opacity-50 disabled:cursor-not-allowed" title="Refresh">
+            <i class="fas fa-sync-alt"></i>
+          </button>
         </div>
       </div>
     </div>
@@ -25,7 +28,7 @@
   <div class="max-w-7xl mx-auto px-6 py-8 space-y-8">
 
     <!-- Key Metrics Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+    <div class="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6">
       <!-- MRR -->
       <div class="enterprise-card group">
         <div class="flex items-center justify-between mb-4">
@@ -33,11 +36,11 @@
             <i class="fas fa-chart-line text-white"></i>
           </div>
           <span class="text-xs font-medium text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-1 rounded-full">
-            +{{ mrrGrowth }}%
+            +{{ revenueGrowth }}%
           </span>
         </div>
-        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">₹{{ mrr }}</h3>
-        <p class="text-sm text-gray-600 dark:text-gray-400">Monthly Recurring Revenue</p>
+         <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-1">₹{{ currentMonthRevenue }}</h3>
+         <p class="text-sm text-gray-600 dark:text-gray-400">Current Month Revenue</p>
       </div>
 
       <!-- ARR -->
@@ -46,12 +49,9 @@
           <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
             <i class="fas fa-calendar-alt text-white"></i>
           </div>
-          <span class="text-xs font-medium text-blue-600 bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded-full">
-            +{{ mrrGrowth }}%
-          </span>
         </div>
-        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">₹{{ arr }}</h3>
-        <p class="text-sm text-gray-600 dark:text-gray-400">Annual Recurring Revenue</p>
+        <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-1">₹{{ totalRevenue }}</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400">Total Revenue</p>
       </div>
 
       <!-- Active Tenants -->
@@ -64,22 +64,22 @@
             {{ activeTenantsPercentage }}%
           </span>
         </div>
-        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">{{ activeTenants }}/{{ totalTenants }}</h3>
+        <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ activeTenants }}/{{ totalTenants }}</h3>
         <p class="text-sm text-gray-600 dark:text-gray-400">Active Tenants</p>
       </div>
 
-      <!-- System Health -->
+      <!-- Total Customers -->
       <div class="enterprise-card group">
         <div class="flex items-center justify-between mb-4">
-          <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
-            <i class="fas fa-heartbeat text-white"></i>
+          <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+            <i class="fas fa-users text-white"></i>
           </div>
-          <span class="text-xs font-medium text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-full">
-            {{ systemHealth }}
+          <span class="text-xs font-medium text-purple-600 bg-purple-100 dark:bg-purple-900/30 px-2 py-1 rounded-full">
+            +{{ userMetrics.newCustomersToday }} today
           </span>
         </div>
-        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">{{ systemUptime }}</h3>
-        <p class="text-sm text-gray-600 dark:text-gray-400">System Uptime</p>
+        <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ userMetrics.endCustomers }}</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400">Total Customers</p>
       </div>
 
       <!-- New Acquisitions -->
@@ -92,7 +92,7 @@
             +{{ newThisMonth }}
           </span>
         </div>
-        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">{{ newThisMonth }}</h3>
+        <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ newThisMonth }}</h3>
         <p class="text-sm text-gray-600 dark:text-gray-400">New This Month</p>
       </div>
 
@@ -106,7 +106,7 @@
             {{ churnTrend }}%
           </span>
         </div>
-        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">{{ churnRate }}%</h3>
+        <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-1">{{ churnRate }}%</h3>
         <p class="text-sm text-gray-600 dark:text-gray-400">Churn Rate</p>
       </div>
     </div>
@@ -118,7 +118,7 @@
         <div class="flex items-center justify-between mb-6">
           <div>
             <h3 class="text-xl font-bold text-gray-900 dark:text-white">Revenue Analytics</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400">Monthly recurring revenue trends</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Monthly subscription revenue trends</p>
           </div>
           <div class="flex space-x-2">
             <button class="px-3 py-1 text-xs font-medium text-blue-600 bg-blue-100 dark:bg-blue-900/30 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors">1M</button>
@@ -147,7 +147,7 @@
 
     <hr class="border-t border-gray-300 dark:border-gray-600 my-8" />
 
-    <!-- Restaurant Ecosystem, Users & Customers, Business Pulse & System Performance -->
+    <!-- Restaurant Ecosystem, Users & Customers & Business Pulse -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
       <!-- Restaurant Ecosystem -->
       <div class="enterprise-card">
@@ -223,27 +223,27 @@
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             <div class="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200/60 dark:border-purple-800/60">
               <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Platform Owners</p>
-              <p class="text-xl font-bold text-gray-900 dark:text-white">{{ userMetrics.platformOwners }}</p>
+              <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ userMetrics.platformOwners }}</p>
             </div>
             <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200/60 dark:border-blue-800/60">
-              <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Restaurant Owners</p>
-              <p class="text-xl font-bold text-gray-900 dark:text-white">{{ userMetrics.restaurantOwners }}</p>
+              <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Rest. Owners</p>
+              <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ userMetrics.restaurantOwners }}</p>
             </div>
             <div class="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200/60 dark:border-green-800/60">
-              <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Restaurant Managers</p>
-              <p class="text-xl font-bold text-gray-900 dark:text-white">{{ userMetrics.restaurantManagers }}</p>
+              <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Rest. Managers</p>
+              <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ userMetrics.restaurantManagers }}</p>
             </div>
             <div class="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200/60 dark:border-orange-800/60">
               <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Kitchen Managers</p>
-              <p class="text-xl font-bold text-gray-900 dark:text-white">{{ userMetrics.kitchenManagers }}</p>
+              <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ userMetrics.kitchenManagers }}</p>
             </div>
             <div class="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200/60 dark:border-yellow-800/60">
               <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Waiters</p>
-              <p class="text-xl font-bold text-gray-900 dark:text-white">{{ userMetrics.waiters }}</p>
+              <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ userMetrics.waiters }}</p>
             </div>
             <div class="p-3 bg-teal-50 dark:bg-teal-900/20 rounded-xl border border-teal-200/60 dark:border-teal-800/60">
               <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Cashiers</p>
-              <p class="text-xl font-bold text-gray-900 dark:text-white">{{ userMetrics.cashiers }}</p>
+              <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ userMetrics.cashiers }}</p>
             </div>
           </div>
           <div class="flex items-center justify-between p-3 bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 rounded-xl border border-pink-200/60 dark:border-pink-800/60">
@@ -272,7 +272,7 @@
 
     <hr class="border-t border-gray-300 dark:border-gray-600 my-8" />
 
-    <!-- Business Pulse, System Performance & Recent Activity -->
+    <!-- Business Pulse & Recent Activity -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
       <!-- Business Activity Pulse -->
       <div class="enterprise-card">
@@ -292,69 +292,39 @@
             <div class="flex items-center space-x-3">
               <i class="fas fa-receipt text-green-600 dark:text-green-400"></i>
               <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Orders Today</span>
+              <span class="text-xs text-gray-500 block">Completed / Uncompleted</span>
             </div>
-            <span class="text-xl font-bold text-green-600 dark:text-green-400">{{ businessPulse.ordersToday }}</span>
+            <div class="text-right">
+              <span class="text-3xl font-bold text-green-600 dark:text-green-400">{{ businessPulse.completedOrdersToday }}</span>
+              <span class="text-xl text-gray-500 ml-2">/ {{ businessPulse.uncompletedOrdersToday }}</span>
+            </div>
           </div>
           <div class="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200/60 dark:border-blue-800/60">
             <div class="flex items-center space-x-3">
               <i class="fas fa-rupee-sign text-blue-600 dark:text-blue-400"></i>
               <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Orders Today Amount</span>
             </div>
-            <span class="text-xl font-bold text-blue-600 dark:text-blue-400">₹{{ businessPulse.ordersTodayAmount }}</span>
+            <span class="text-3xl font-bold text-blue-600 dark:text-blue-400">₹{{ businessPulse.ordersTodayAmount }}</span>
           </div>
           <div class="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200/60 dark:border-purple-800/60">
             <div class="flex items-center space-x-3">
               <i class="fas fa-chart-line text-purple-600 dark:text-purple-400"></i>
               <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Total Orders</span>
             </div>
-            <span class="text-xl font-bold text-purple-600 dark:text-purple-400">{{ businessPulse.totalOrders }}</span>
+            <span class="text-3xl font-bold text-purple-600 dark:text-purple-400">{{ businessPulse.totalOrders }}</span>
           </div>
           <div class="flex items-center justify-between p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200/60 dark:border-orange-800/60">
             <div class="flex items-center space-x-3">
               <i class="fas fa-wallet text-orange-600 dark:text-orange-400"></i>
               <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Total Order Amount</span>
             </div>
-            <span class="text-xl font-bold text-orange-600 dark:text-orange-400">₹{{ businessPulse.totalOrderAmount }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- System Performance -->
-      <div class="enterprise-card">
-        <div class="flex items-center justify-between mb-6">
-          <div class="flex items-center">
-            <div class="w-10 h-10 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center mr-3 shadow-lg">
-              <i class="fas fa-server text-white text-lg"></i>
-            </div>
-            <div>
-              <h3 class="text-xl font-bold text-gray-900 dark:text-white">System Performance</h3>
-              <p class="text-sm text-gray-600 dark:text-gray-400">Real-time health</p>
-            </div>
-          </div>
-          <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="p-4 bg-cyan-50 dark:bg-cyan-900/20 rounded-xl border border-cyan-200/60 dark:border-cyan-800/60">
-            <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">API Requests/min</p>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ systemPerformance.apiRequestsPerMin }}</p>
-          </div>
-          <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200/60 dark:border-blue-800/60">
-            <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Avg Response</p>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ systemPerformance.avgResponseTime }}<span class="text-sm font-normal text-gray-500">ms</span></p>
-          </div>
-          <div class="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200/60 dark:border-purple-800/60">
-            <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Error Rate</p>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ systemPerformance.errorRate }}<span class="text-sm font-normal text-gray-500">%</span></p>
-          </div>
-          <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200/60 dark:border-green-800/60">
-            <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Active Connections</p>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ systemPerformance.activeConnections }}</p>
+            <span class="text-3xl font-bold text-orange-600 dark:text-orange-400">₹{{ businessPulse.totalOrderAmount }}</span>
           </div>
         </div>
       </div>
 
       <!-- Recent Activity -->
-      <div class="enterprise-card">
+      <div class="lg:col-span-2 enterprise-card">
         <div class="flex items-center justify-between mb-6">
           <div class="flex items-center">
             <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mr-3 shadow-lg">
