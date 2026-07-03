@@ -473,10 +473,11 @@ To day today 30/06/26
 9] subscription plans dynamice in home page - done
 10] restaurant management images upload - done
 11] restaurant profile edits only in the mobile view - done
+14] restaurants subscription things - done
 12] menu items real time needed - pending
 13] 5 to 6 important real world reports with export to excel - pending
-14] restaurants subscription things - pending
-
+14] restaurant real time dashboard - partially done testing needed.
+15] give restaurant profile link to all user except platform owner -pending
 
 ==================
 

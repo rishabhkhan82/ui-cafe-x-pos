@@ -55,6 +55,9 @@ export class RealtimeService {
   private restaurantSubject = new BehaviorSubject<any | null>(null);
   public restaurant$ = this.restaurantSubject.asObservable();
 
+  private ownerDashboardSubject = new BehaviorSubject<any | null>(null);
+  public ownerDashboard$ = this.ownerDashboardSubject.asObservable();
+
   constructor(private mockDataService: MockDataService) {
     this.requestNotificationPermission();
   }
@@ -202,6 +205,12 @@ export class RealtimeService {
             console.log('[Realtime] Received order update for restaurant', restaurantId);
             const order = JSON.parse(msg.body) as Order;
             this.orderUpdateSubject.next(order);
+          });
+
+          this.stompClient!.subscribe(`/topic/restaurant/${restaurantId}/owner-dashboard`, (msg) => {
+            console.log('[Realtime] Received owner dashboard update for restaurant', restaurantId);
+            const data = JSON.parse(msg.body);
+            this.ownerDashboardSubject.next(data);
           });
         }
 

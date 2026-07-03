@@ -170,6 +170,14 @@ export const routes: Routes = [
   },
 
   // Restaurant Owner & Manager Specific Routings
+
+  {
+    path: 'restaurant-dashboard',
+    loadComponent: () => import('./components/restaurant/owner-dashboard/owner-dashboard.component').then(m => m.OwnerDashboardComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
+  },
+
   {
     path: 'restaurant-navigation-mobile',
     loadComponent: () => import('./components/shared/admin-uses-navigation-mobile/admin-uses-navigation-mobile.component').then(m => m.AdminUsesNavigationMobileComponent),

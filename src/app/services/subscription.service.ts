@@ -36,7 +36,7 @@ export class SubscriptionService {
 
   loadActiveSubscription(forceRefresh = false): Observable<any | null> {
     const currentUser = this.authService.getCurrentUser();
-    const restaurantId = currentUser?.restaurantId;
+    const restaurantId =  currentUser?.role === 'customer' ? currentUser.restaurant_id : currentUser?.restaurantId;
 
     if (!restaurantId) {
       this.activeSubscriptionSubject.next(null);

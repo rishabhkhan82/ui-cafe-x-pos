@@ -12,8 +12,9 @@ export const subscriptionGuard: CanActivateFn = (route, state) => {
 
   const currentUser = authService.getCurrentUser();
   const userRole = currentUser?.role || authService.getUserRole();
+  const restaurantId =  currentUser?.role === 'customer' ? currentUser.restaurant_id : currentUser?.restaurantId;
 
-  if (!currentUser?.restaurantId) {
+  if (!restaurantId) {
     return router.parseUrl('/admin/login');
   }
 
