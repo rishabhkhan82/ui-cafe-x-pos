@@ -390,6 +390,18 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     this.crudService.createRestaurantSubscription(subscriptionPayload).subscribe({
       next: (response: any) => {
         console.log('Subscription saved:', response);
+        const currentUser = this.authService.getCurrentUser();
+        const restaurantId = currentUser?.restaurantId;
+
+        if (restaurantId) {
+          this.updateRestaurantSubscriptionFields(
+            restaurantId,
+            plan.display_name || plan.name,
+            now,
+            endDate
+          );
+        }
+
         this.notificationService.success('Subscription Activated', 'Your subscription has been activated successfully!');
         this.subscriptionService.refreshAfterPayment().subscribe();
         this.loadData(); // Refresh data
@@ -397,6 +409,26 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Error saving subscription:', error);
         this.notificationService.error('Subscription Error', 'Payment successful but failed to save subscription. Contact support.');
+      }
+    });
+  }
+
+  private updateRestaurantSubscriptionFields(
+    restaurantId: string | number,
+    planName: string,
+    startDate: Date,
+    endDate: Date
+  ): void {
+    this.crudService.updateRestaurant(restaurantId, {
+      subscription_plan: planName,
+      subscription_start_date: startDate,
+      subscription_end_date: endDate
+    }).subscribe({
+      next: () => {
+        console.log('Restaurant subscription fields updated successfully');
+      },
+      error: (error) => {
+        console.error('Error updating restaurant subscription fields:', error);
       }
     });
   }
@@ -421,6 +453,21 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     }).subscribe({
       next: (response: any) => {
         console.log('Trial subscription created:', response);
+        const subData = response.data;
+        const currentUser = this.authService.getCurrentUser();
+        const restaurantId = currentUser?.restaurantId;
+        const planFromList = this.plans$.value.find(p => p.id === parseInt(subData?.plan_id));
+        const planName = planFromList?.display_name || planFromList?.name || 'Trial';
+
+        if (restaurantId && subData) {
+          this.updateRestaurantSubscriptionFields(
+            restaurantId,
+            planName,
+            new Date(subData.trial_start_date),
+            new Date(subData.trial_end_date)
+          );
+        }
+
         this.notificationService.success('Trial Activated', 'Trial subscription activated! You have 15 days to try all features.');
         this.subscriptionService.refreshAfterPayment().subscribe();
         this.loadData(); // Refresh data to show trial status
@@ -461,6 +508,18 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     this.crudService.createRestaurantSubscription(subscriptionPayload).subscribe({
       next: (subscriptionResponse: any) => {
         console.log('Subscription saved:', subscriptionResponse);
+
+        const currentUser = this.authService.getCurrentUser();
+        const restaurantId = currentUser?.restaurantId;
+
+        if (restaurantId) {
+          this.updateRestaurantSubscriptionFields(
+            restaurantId,
+            plan.display_name || plan.name,
+            now,
+            endDate
+          );
+        }
 
         // Now save history
         const historyPayload = {
