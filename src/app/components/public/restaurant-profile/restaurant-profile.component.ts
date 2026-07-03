@@ -150,6 +150,7 @@ export class RestaurantProfileComponent implements OnInit {
       lat: data.lat ?? 0,
       lng: data.lng ?? 0,
       logo_image: data.logo_image,
+      banner_image: data.banner_image,
       created_at: new Date(data.created_at?.toString() ?? Date.now()),
       created_by: data.created_by ?? 0,
       updated_at: data.updated_at ? new Date(data.updated_at.toString()) : null,
@@ -246,6 +247,11 @@ export class RestaurantProfileComponent implements OnInit {
 
   get heroImage(): string {
     if (this.restaurant?.logo_image) return this.getImageUrl(this.restaurant.logo_image);
+    return '';
+  }
+
+  get bannerImage(): string {
+    if (this.restaurant?.banner_image) return this.getImageUrl(this.restaurant.banner_image);
     return '';
   }
 

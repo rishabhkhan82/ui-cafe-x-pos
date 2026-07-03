@@ -1,7 +1,8 @@
 <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800" *ngIf="restaurant">
   <!-- ==================== HERO HEADER ==================== -->
-  <header class="relative overflow-hidden bg-gradient-to-br from-red-600 to-red-700 dark:from-red-700 dark:to-red-800 px-6 py-10 text-center text-white">
+  <header class="relative min-h-[240px] overflow-hidden bg-gradient-to-br from-red-600 to-red-700 dark:from-red-700 dark:to-red-800 px-6 py-10 text-center text-white" [style.background-image]="bannerImage ? 'url(' + bannerImage + ')' : ''" [style.background-size]="'cover'" [style.background-position]="'center'">
     <div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(255,255,255,0.08)_0%,transparent_50%),radial-gradient(circle_at_80%_70%,rgba(255,255,255,0.06)_0%,transparent_50%)] pointer-events-none"></div>
+    <div class="absolute inset-0 bg-gradient-to-b from-black/60 to-black/80 pointer-events-none"></div>
     <div class="relative flex flex-col items-center gap-4">
       <div class="w-24 h-24 rounded-full overflow-hidden border-[3px] border-white/30 shadow-lg flex-shrink-0">
         <img *ngIf="heroImage" [src]="heroImage" [alt]="restaurant.name" class="w-full h-full object-cover" />
