@@ -83,6 +83,12 @@
                     {{ menu.name }}
                   </a>
                 </li> -->
+                <li>
+                  <a *ngIf="currentUser.role !== 'platform_owner' && currentUser.role !== 'customer'" [routerLink]="'/restaurant-dashboard'" [routerLinkActive]="['active']" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" (click)="isProfileMenuOpen = false">
+                    <i [class]="'fas fa-chart-line mr-2'"></i>
+                    Dashboard
+                  </a>
+                </li>
                 <li *ngIf="currentUser.role === 'restaurant_owner' || currentUser.role === 'restaurant_manager'">
                   <a [routerLink]="'addons-mobile'" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" (click)="isProfileMenuOpen = false">
                     <i [class]="'fas fa-headset mr-2'"></i>
@@ -95,8 +101,14 @@
                     Support
                   </a>
                 </li>
+                <li *ngIf="currentUser.role !== 'platform_owner'">
+                  <a [href]="'/restaurant-profile/' +  currentUser.restaurantId" target="_blank" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                    <i [class]="'fas fa-store mr-2'"></i>
+                    {{restaurantName}} Profile
+                  </a>
+                </li>
                 <li>
-                  <a href="https://www.cafexpos.in" target="_blank" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                  <a href="" target="_blank" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
                     <i [class]="'fas fa-coffee mr-2'"></i>
                     About Cafex Pos
                   </a>

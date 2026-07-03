@@ -250,6 +250,12 @@ input[type="radio"]:checked + span {
   animation-duration: 1000ms !important;
 }
 
+/* Active state for profile dropdown menu links */
+.active {
+  color: white !important;
+  background-color: #ef4444 !important;
+}
+
 .animate-duration-1500 {
   animation-duration: 1500ms !important;
 }
