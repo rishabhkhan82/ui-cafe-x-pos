@@ -126,24 +126,20 @@ export class OwnerDashboardComponent implements OnInit, OnDestroy {
     alert('Opening staff management details...');
   }
 
-  viewInventoryDetails(): void {
-    alert('Opening inventory management details...');
+  manageInventory(): void {
+    this.router.navigate(['/owner-inventory-mobile']);
   }
 
   manageMenu(): void {
-    this.router.navigate(['/restaurant/menu']);
+    this.router.navigate(['/owner-menus-mobile']);
   }
 
   manageStaff(): void {
-    this.router.navigate(['/restaurant/staff']);
+    this.router.navigate(['/owner-staff-mobile']);
   }
 
   viewAnalytics(): void {
-    this.router.navigate(['/restaurant/analytics']);
-  }
-
-  manageSettings(): void {
-    this.router.navigate(['/restaurant/settings']);
+    this.router.navigate(['/owner-reports-mobile']);
   }
 
   getOrderStatusClass(status: string): string {
