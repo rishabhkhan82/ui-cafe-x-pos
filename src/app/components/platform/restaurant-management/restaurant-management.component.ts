@@ -801,6 +801,12 @@ export class RestaurantManagementComponent implements OnInit {
     this.restaurantForm.banner_image = '';
   }
 
+  navigateToUserManagement(): void {
+    if (this.selectedRestaurant?.id) {
+      this.router.navigate(['/user-management'], { queryParams: { restaurantId: this.selectedRestaurant.id } });
+    }
+  }
+
   // Helper for template Math operations
   Math = Math;
 

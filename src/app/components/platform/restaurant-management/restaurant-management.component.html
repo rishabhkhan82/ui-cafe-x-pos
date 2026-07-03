@@ -540,8 +540,11 @@
         <!-- Header -->
         <div class="flex items-start justify-between mb-6">
           <div class="flex items-center space-x-4">
-            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/30 dark:to-red-800/30 flex items-center justify-center transition-transform duration-200">
-              <i class="fas fa-utensils text-red-600 dark:text-red-400 text-xl"></i>
+            <div class="w-14 h-14 rounded-2xl overflow-hidden bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/30 dark:to-red-800/30 flex items-center justify-center transition-transform duration-200">
+              <img *ngIf="restaurant.logo_image; else defaultLogoIcon" [src]="getFullImageUrl(restaurant.logo_image)" alt="{{ restaurant.name }} logo" class="w-full h-full object-cover">
+              <ng-template #defaultLogoIcon>
+                <i class="fas fa-utensils text-red-600 dark:text-red-400 text-xl"></i>
+              </ng-template>
             </div>
             <div class="min-w-0 flex-1">
               <h3 class="font-bold text-gray-900 dark:text-white text-lg truncate">{{ restaurant.name }}</h3>
@@ -1151,7 +1154,7 @@
     <!-- Content -->
     <div class="p-6">
       <!-- KPI Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-2xl p-6 border border-purple-200 dark:border-purple-800">
           <div class="flex items-center justify-between mb-4">
             <div class="w-12 h-12 rounded-xl bg-purple-500 flex items-center justify-center">
@@ -1162,6 +1165,21 @@
           <div class="text-2xl font-bold text-gray-900 dark:text-white mb-1">{{ selectedRestaurant.subscription_plan }}</div>
           <div class="text-sm text-gray-600 dark:text-gray-400">Subscription</div>
         </div>
+        
+        <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-2xl p-6 border border-emerald-200 dark:border-emerald-800">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center">
+              <i class="fas fa-calendar-alt text-white"></i>
+            </div>
+            <span class="text-emerald-600 dark:text-emerald-400 text-sm font-medium">Validity</span>
+          </div>
+          <div class="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+            {{ formatDate(selectedRestaurant.subscription_start_date) }}
+            <span class="text-gray-400 mx-1">-</span>
+            {{ formatDate(selectedRestaurant.subscription_end_date) }}
+          </div>
+          <div class="text-sm text-gray-600 dark:text-gray-400">Subscription Period</div>
+        </div>
 
         <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-2xl p-6 border border-orange-200 dark:border-orange-800">
           <div class="flex items-center justify-between mb-4">
@@ -1171,7 +1189,7 @@
             <span class="text-orange-600 dark:text-orange-400 text-sm font-medium">Activity</span>
           </div>
           <div class="text-lg font-bold text-gray-900 dark:text-white mb-1">{{ formatDate(selectedRestaurant.updated_at) }}</div>
-          <div class="text-sm text-gray-600 dark:text-gray-400">Last Active</div>
+          <div class="text-sm text-gray-600 dark:text-gray-400">Last Updated</div>
         </div>
       </div>
 
@@ -1230,7 +1248,7 @@
                 </div>
               </div>
             </button>
-            <button class="w-full text-left p-4 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-xl hover:shadow-lg transition-all duration-200 border border-green-200 dark:border-green-800 group">
+            <button (click)="navigateToUserManagement()" class="w-full text-left p-4 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-xl hover:shadow-lg transition-all duration-200 border border-green-200 dark:border-green-800 group">
               <div class="flex items-center space-x-4">
                 <div class="w-12 h-12 rounded-xl bg-green-500 flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
                   <i class="fas fa-users text-white"></i>
@@ -1241,7 +1259,7 @@
                 </div>
               </div>
             </button>
-            <button class="w-full text-left p-4 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-xl hover:shadow-lg transition-all duration-200 border border-purple-200 dark:border-purple-800 group">
+            <button (click)="showEditRestaurantForm()" class="w-full text-left p-4 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-xl hover:shadow-lg transition-all duration-200 border border-purple-200 dark:border-purple-800 group">
               <div class="flex items-center space-x-4">
                 <div class="w-12 h-12 rounded-xl bg-purple-500 flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
                   <i class="fas fa-cog text-white"></i>

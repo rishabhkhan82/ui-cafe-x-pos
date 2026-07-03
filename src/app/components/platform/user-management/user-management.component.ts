@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { CrudService } from '../../../services/crud.service';
 import { LoadingService } from '../../../services/loading.service';
 import { MockDataService, User, Restaurant } from '../../../services/mock-data.service';
@@ -78,6 +78,7 @@ export class UserManagementComponent implements OnInit {
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private crudService: CrudService,
     private loadingService: LoadingService,
     private mockDataService: MockDataService,
@@ -88,6 +89,10 @@ export class UserManagementComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    const restaurantIdFromUrl = this.route.snapshot.queryParamMap.get('restaurantId');
+    if (restaurantIdFromUrl) {
+      this.restaurantFilter = restaurantIdFromUrl;
+    }
     this.loadUsers();
     this.loadRestaurants();
   }
