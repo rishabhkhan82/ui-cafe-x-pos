@@ -8,6 +8,7 @@ import { environment } from '../../../environments/environment';
 import { forkJoin } from 'rxjs';
 import { Restaurant } from '../../../services/mock-data.service';
 import { MenuItem } from '../../../interfaces';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 const CATEGORY_COLORS: Record<string, string> = {
   'Starters': 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
@@ -46,11 +47,12 @@ export class RestaurantProfileComponent implements OnInit {
   restaurant: Restaurant | null = null;
   menus: MenuItem[] = [];
   allMenus: MenuItem[] = [];
+  mapSrc: SafeResourceUrl | null = null;
 
   errorMessage = '';
   menusErrorMessage = '';
   selectedCategoryFilter = 'all';
-  darkMode = false;
+  darkMode = typeof localStorage !== 'undefined' && localStorage.getItem('theme') === 'dark';
 
   formatCurrency = (amount: number): string =>
     new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
@@ -60,13 +62,19 @@ export class RestaurantProfileComponent implements OnInit {
     private route: ActivatedRoute,
     private loadingService: LoadingService,
     private notificationService: NotificationService,
-    private crudService: CrudService
-  ) {}
+    private crudService: CrudService,
+    private sanitizer: DomSanitizer
+  ) {
+    this.darkMode = document.documentElement.classList.contains('dark');
+  }
 
   ngOnInit(): void {
     this.route.params.subscribe(params => {
       this.loadFromParams();
     });
+    if (this.darkMode) {
+      document.documentElement.classList.add('dark');
+    }
   }
 
   private loadFromParams(): void {
@@ -90,8 +98,10 @@ export class RestaurantProfileComponent implements OnInit {
       next: ({ restaurant, menus }) => {
         try {
           this.restaurant = this.mapRestaurant(restaurant.data || restaurant);
+          this.mapSrc = this.buildMapSrc();
         } catch {
           this.restaurant = null;
+          this.mapSrc = null;
           this.errorMessage = 'Failed to parse restaurant data.';
         }
         try {
@@ -114,7 +124,13 @@ export class RestaurantProfileComponent implements OnInit {
 
   toggleTheme(): void {
     this.darkMode = !this.darkMode;
-    document.documentElement.classList.toggle('dark', this.darkMode);
+    if (this.darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', '');
+    }
   }
 
   private buildMenuParams(restaurantId?: number): any {
@@ -253,6 +269,12 @@ export class RestaurantProfileComponent implements OnInit {
   get bannerImage(): string {
     if (this.restaurant?.banner_image) return this.getImageUrl(this.restaurant.banner_image);
     return '';
+  }
+
+  private buildMapSrc(): SafeResourceUrl | null {
+    if (!this.restaurant?.lat || !this.restaurant?.lng) return null;
+    const url = `https://maps.google.com/maps?q=${this.restaurant.lat},${this.restaurant.lng}&z=15&output=embed`;
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
   }
 
   get initialLetter(): string {
