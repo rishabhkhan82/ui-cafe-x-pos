@@ -36,11 +36,13 @@ export class NavigationMenuComponent implements OnInit {
     // Subscribe to current user changes
     this.authService.currentUser$.subscribe(async user => {
       if (user) {
-        this.currentUser = user; // Now user is already the complete User object from MockDataService
-        // Get navigation menus for the current user role (already hierarchical)
-        this.hierarchicalMenus = await this.mockDataService.getNavigationMenusByRole();
-        // Update active menu based on current route (after paths are updated)
-        this.updateActiveMenu();
+        if(user.role === 'platform_owner') {
+          this.currentUser = user; // Now user is already the complete User object from MockDataService
+          // Get navigation menus for the current user role (already hierarchical)
+          this.hierarchicalMenus = await this.mockDataService.getNavigationMenusByRole();
+          // Update active menu based on current route (after paths are updated)
+          this.updateActiveMenu();
+        }
       } else {
         this.currentUser = undefined;
         this.hierarchicalMenus = [];
