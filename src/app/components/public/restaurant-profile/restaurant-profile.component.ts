@@ -148,7 +148,7 @@ export class RestaurantProfileComponent implements OnInit {
       pincode: data.pincode ?? 0,
       address: data.address ?? '',
       lat: data.lat ?? 0,
-      long: data.long ?? 0,
+      lng: data.lng ?? 0,
       logo_image: data.logo_image,
       created_at: new Date(data.created_at?.toString() ?? Date.now()),
       created_by: data.created_by ?? 0,

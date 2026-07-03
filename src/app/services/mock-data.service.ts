@@ -1074,8 +1074,8 @@ export interface Restaurant {
   owner_email: string;
   owner_phone: string;
   subscription_plan: string;
-  subscription_start_date: Date;
-  subscription_end_date: Date;
+  subscription_start_date: Date | null;
+  subscription_end_date: Date | null;
   gst_number: string;
   license_number: string;
   status: 'ACTIVE' | 'INACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED';
@@ -1086,8 +1086,9 @@ export interface Restaurant {
   pincode: number;
   address: string;
   lat: number;
-  long: number;
+  lng: number;
   logo_image?: string;
+  banner_image?: string;
   created_at: Date;
   created_by: number;
   updated_at: Date | null;
@@ -6460,7 +6461,7 @@ export class MockDataService {
         pincode: 400001,
         address: '123 Main Street',
         lat: 19.0760,
-        long: 72.8777,
+        lng: 72.8777,
         created_at: new Date('2024-01-15'),
         created_by: 1,
         updated_at: new Date('2024-01-15'),
@@ -6487,7 +6488,7 @@ export class MockDataService {
         pincode: 110001,
         address: '456 Business Avenue',
         lat: 28.7041,
-        long: 77.1025,
+        lng: 77.1025,
         created_at: new Date('2024-02-20'),
         created_by: 2,
         updated_at: new Date('2024-02-20'),
@@ -6514,7 +6515,7 @@ export class MockDataService {
         pincode: 560001,
         address: '789 Food Court',
         lat: 12.9716,
-        long: 77.5946,
+        lng: 77.5946,
         created_at: new Date('2024-03-10'),
         created_by: 3,
         updated_at: new Date('2024-03-10'),

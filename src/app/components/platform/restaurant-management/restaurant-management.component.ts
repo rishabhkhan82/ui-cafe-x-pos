@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { environment } from '../../../environments/environment';
 import { CrudService } from '../../../services/crud.service';
 import { LoadingService } from '../../../services/loading.service';
 import { Restaurant } from '../../../services/mock-data.service';
@@ -89,8 +90,8 @@ export class RestaurantManagementComponent implements OnInit {
     owner_email: '',
     owner_phone: '',
     subscription_plan: '',
-    subscription_start_date: new Date(),
-    subscription_end_date: new Date(),
+    subscription_start_date: null,
+    subscription_end_date: null,
     gst_number: '',
     license_number: '',
     status: 'ACTIVE',
@@ -101,7 +102,9 @@ export class RestaurantManagementComponent implements OnInit {
     pincode: 0,
     address: '',
     lat: 0,
-    long: 0,
+    lng: 0,
+    logo_image: '',
+    banner_image: '',
     created_at: new Date(),
     created_by: 0,
     updated_at: null,
@@ -207,9 +210,9 @@ export class RestaurantManagementComponent implements OnInit {
       owner_name: '',
       owner_email: '',
       owner_phone: '',
-      subscription_plan: 'Starter',
-      subscription_start_date: new Date(),
-      subscription_end_date: new Date(),
+      subscription_plan: '',
+      subscription_start_date: null,
+      subscription_end_date: null,
       gst_number: '',
       license_number: '',
       status: 'ACTIVE',
@@ -220,7 +223,9 @@ export class RestaurantManagementComponent implements OnInit {
       pincode: 0,
       address: '',
       lat: 0,
-      long: 0,
+      lng: 0,
+      logo_image: '',
+      banner_image: '',
       created_at: new Date(),
       created_by: 0,
       updated_at: new Date(),
@@ -240,8 +245,8 @@ export class RestaurantManagementComponent implements OnInit {
       owner_email: '',
       owner_phone: '',
       subscription_plan: '',
-      subscription_start_date: new Date(),
-      subscription_end_date: new Date(),
+      subscription_start_date: null,
+      subscription_end_date: null,
       gst_number: '',
       license_number: '',
       status: 'ACTIVE',
@@ -252,7 +257,9 @@ export class RestaurantManagementComponent implements OnInit {
       pincode: 0,
       address: '',
       lat: 0,
-      long: 0,
+      lng: 0,
+      logo_image: '',
+      banner_image: '',
       created_at: new Date(),
       created_by: 0,
       updated_at: new Date(),
@@ -277,7 +284,6 @@ export class RestaurantManagementComponent implements OnInit {
     this.validateEmail();
     this.validatePhone();
     this.validateCity();
-    this.validateSubscriptionPlan();
     this.validateOwnerName();
     this.validateOwnerEmail();
     this.validateOwnerPhone();
@@ -437,14 +443,6 @@ export class RestaurantManagementComponent implements OnInit {
     }
   }
 
-  validateSubscriptionPlan(): void {
-    if (!this.restaurantForm.subscription_plan || this.restaurantForm.subscription_plan.trim() === '') {
-      this.fieldErrors['subscription_plan'] = 'Subscription Plan is required';
-    } else {
-      delete this.fieldErrors['subscription_plan'];
-    }
-  }
-
   validateDescription(): void {
     const validation = this.validationService.required(this.restaurantForm.description, 'Description');
     if (!validation.isValid) {
@@ -455,7 +453,7 @@ export class RestaurantManagementComponent implements OnInit {
   }
 
   validateGeolocation(): void {
-    if (this.restaurantForm.lat === 0 || this.restaurantForm.long === 0) {
+    if (this.restaurantForm.lat === 0 || this.restaurantForm.lng === 0) {
       this.fieldErrors['geolocation'] = 'Geolocation is required. Please provide latitude and longitude.';
     } else {
       delete this.fieldErrors['geolocation'];
@@ -467,20 +465,12 @@ export class RestaurantManagementComponent implements OnInit {
     this.restaurantForm.status = target.checked ? 'ACTIVE' : 'INACTIVE';
   }
 
-  onPlanChange(): void {
-    if (this.restaurantForm.subscription_plan) {
-      const now = new Date();
-      this.restaurantForm.subscription_start_date = now;
-      this.restaurantForm.subscription_end_date = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
-    }
-  }
-
   getCurrentLocation(): void {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           this.restaurantForm.lat = position.coords.latitude;
-          this.restaurantForm.long = position.coords.longitude;
+          this.restaurantForm.lng = position.coords.longitude;
         },
         (error) => {
           console.error('Error getting location:', error);
@@ -511,24 +501,14 @@ export class RestaurantManagementComponent implements OnInit {
     }
   }
 
-  get subscriptionStartDateStr(): string {
-    return this.formatDateForInput(this.restaurantForm.subscription_start_date);
-  }
-
-  set subscriptionStartDateStr(value: string) {
-    this.restaurantForm.subscription_start_date = new Date(value);
-  }
-
-  get subscriptionEndDateStr(): string {
-    return this.formatDateForInput(this.restaurantForm.subscription_end_date);
-  }
-
-  set subscriptionEndDateStr(value: string) {
-    this.restaurantForm.subscription_end_date = new Date(value);
-  }
-
   private onSaveForm(): void {
     this.loadingService.show();
+    const currentUser = this.authService.getCurrentUser();
+    this.restaurantForm.created_by = Number(currentUser?.id) || 0;
+    this.restaurantForm.updated_by = 0;
+    this.restaurantForm.subscription_plan = '';
+    this.restaurantForm.subscription_start_date = null;
+    this.restaurantForm.subscription_end_date = null;
     this.crudService.createRestaurant(this.restaurantForm).subscribe({
       next: (response) => {
         this.loadingService.hide();
@@ -548,23 +528,29 @@ export class RestaurantManagementComponent implements OnInit {
 
   private onUpdateForm(): void {
     if (this.editingRestaurant) {
+      const restaurantId = this.editingRestaurant.id;
       this.loadingService.show();
-      this.crudService.updateRestaurant(this.editingRestaurant.id, this.restaurantForm).subscribe({
-        next: (response) => {
-          this.loadingService.hide();
-          this.notificationService.success('Success', 'Restaurant updated successfully');
-          this.closeEditForm();
-          this.closeDetailsModal();
-          this.resetForm();
-          this.loadRestaurants();
-        },
-        error: (error) => {
-          this.loadingService.hide();
-          console.error('Error updating restaurant:', error);
-          this.errorMessage = 'Failed to update restaurant. Please try again.';
-          this.notificationService.error('Error', 'Failed to update restaurant');
-        }
-      });
+      const currentUser = this.authService.getCurrentUser();
+      this.restaurantForm.updated_by = Number(currentUser?.id) || 0;
+      this.restaurantForm.subscription_plan = '';
+      this.restaurantForm.subscription_start_date = null;
+      this.restaurantForm.subscription_end_date = null;
+      this.crudService.updateRestaurant(restaurantId, this.restaurantForm).subscribe({
+          next: (response) => {
+            this.loadingService.hide();
+            this.notificationService.success('Success', 'Restaurant updated successfully');
+            this.closeEditForm();
+            this.closeDetailsModal();
+            this.resetForm();
+            this.loadRestaurants();
+          },
+          error: (error) => {
+            this.loadingService.hide();
+            console.error('Error updating restaurant:', error);
+            this.errorMessage = 'Failed to update restaurant. Please try again.';
+            this.notificationService.error('Error', 'Failed to update restaurant');
+          }
+        });
     }
   }
 
@@ -581,8 +567,8 @@ export class RestaurantManagementComponent implements OnInit {
       owner_email: '',
       owner_phone: '',
       subscription_plan: '',
-      subscription_start_date: new Date(),
-      subscription_end_date: new Date(),
+      subscription_start_date: null,
+      subscription_end_date: null,
       gst_number: '',
       license_number: '',
       status: 'ACTIVE',
@@ -593,7 +579,9 @@ export class RestaurantManagementComponent implements OnInit {
       pincode: 0,
       address: '',
       lat: 0,
-      long: 0,
+      lng: 0,
+      logo_image: '',
+      banner_image: '',
       created_at: new Date(),
       created_by: 0,
       updated_at: new Date(),
@@ -602,9 +590,7 @@ export class RestaurantManagementComponent implements OnInit {
     this.fieldErrors = {};
     this.errorMessage = '';
   }
-
-
-
+  
   updateRestaurantStatus(restaurant: Restaurant, status: Restaurant['status']): void {
     this.loadingService.show();
     const updatedRestaurant = { ...restaurant, status };
@@ -752,8 +738,8 @@ export class RestaurantManagementComponent implements OnInit {
       owner_email: '',
       owner_phone: '',
       subscription_plan: '',
-      subscription_start_date: new Date(),
-      subscription_end_date: new Date(),
+      subscription_start_date: null,
+      subscription_end_date: null,
       gst_number: '',
       license_number: '',
       status: 'ACTIVE',
@@ -764,7 +750,9 @@ export class RestaurantManagementComponent implements OnInit {
       pincode: 0,
       address: '',
       lat: 0,
-      long: 0,
+      lng: 0,
+      logo_image: '',
+      banner_image: '',
       created_at: new Date(),
       created_by: 0,
       updated_at: new Date(),
@@ -773,6 +761,44 @@ export class RestaurantManagementComponent implements OnInit {
 
     // Reload data
     this.loadRestaurants();
+  }
+
+  onLogoFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.restaurantForm.logo_image = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  onBannerFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.restaurantForm.banner_image = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  getFullImageUrl(imagePath: string): string {
+    if (!imagePath) return '';
+    if (imagePath.startsWith('data:')) {
+      return imagePath;
+    }
+    return environment.api.baseUrl + imagePath;
+  }
+
+  removeLogo(): void {
+    this.restaurantForm.logo_image = '';
+  }
+
+  removeBanner(): void {
+    this.restaurantForm.banner_image = '';
   }
 
   // Helper for template Math operations

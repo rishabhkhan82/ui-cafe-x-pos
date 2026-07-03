@@ -468,9 +468,10 @@ To day today 30/06/26
 5] inventory management - done
 4] platform owner real time dashboard - done
 6] restaurant real time needed - done
-8] role gurard for authentication - done
-9] subscription guard. - done
-10] restaurant management images upload - pending
+7] role gurard for authentication - done
+8] subscription guard. - done
+9] subscription plans dynamice in home page - done
+10] restaurant management images upload - done
 11] restaurant profile edits only in the mobile view - pending
-6] menu items real time needed - pending
-11] feature wise plans dynamice in home page - pending
+12] menu items real time needed - pending
+13] 5 to 6 important real world reports with export to excel - pending
