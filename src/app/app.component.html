@@ -31,19 +31,18 @@
       <!-- Logo & Brand -->
       <div class="flex items-center space-x-4">
         <div class="flex items-center space-x-3">
-
           <div class="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-lg">
             <div class="relative"><i class="fas fa-coffee text-white text-lg"></i></div>
           </div>
-          <div>
+          <div [ngClass]="currentUser.role === 'platform_owner' ? 'hidden md:block' : ''">
             <h1 class="font-bold text-gray-900 dark:text-white text-lg">Cafe-X POS</h1>
-            <p class="text-xs text-gray-500 dark:text-gray-400">{{ restaurantName? restaurantName : 'Multi-Tenant POS' }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 max-w-[100px] truncate">{{ restaurantName? restaurantName : 'Multi-Tenant POS' }}</p>
           </div>
         </div>
       </div>
 
       <!-- Navigation Menu -->
-      <div class="flex-1 flex justify-end mr-4 hidden md:flex">
+      <div class="flex-1 flex justify-end mr-4" [ngClass]="currentUser.role === 'platform_owner' ? '' : 'hidden md:flex'">
         <app-navigation-menu></app-navigation-menu>
       </div>
 

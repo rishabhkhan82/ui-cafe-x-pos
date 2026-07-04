@@ -1,12 +1,26 @@
 <header class="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
     <div class="max-w-6xl mx-auto px-4">
         <div class="flex items-center justify-between py-3">
-            <a href="#home" class="flex items-center space-x-3 group">
+            <!-- <a href="#home" class="flex items-center space-x-3 group">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-md">
                     <i class="fas fa-coffee text-white"></i>
                 </div>
                 <span class="font-bold text-gray-900 dark:text-white group-hover:text-primary-500 transition-colors">Cafe-X POS</span>
-            </a>
+                <p class="text-xs text-gray-500 dark:text-gray-400">'Multi-Tenant Saas Platform</p>
+            </a> -->
+            <div class="flex items-center space-x-4">
+                <a href="#home" class="flex items-center space-x-3 group">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-md">
+                            <i class="fas fa-coffee text-white"></i>
+                        </div>
+                        <div>
+                            <h1 class="font-bold text-gray-900 dark:text-white text-lg">Cafe-X POS</h1>
+                            <p class="text-xs text-gray-500 dark:text-gray-400  max-w-[100px] truncate">Multi-Tenant POS</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
             
             <!-- Desktop Navigation -->
             <nav class="hidden md:flex items-center space-x-6 text-sm">
@@ -700,8 +714,8 @@
             <p class="text-sm font-semibold mb-2 text-gray-900 dark:text-white">Resources</p>
             <ul class="space-y-1 text-sm text-gray-600 dark:text-gray-400">
                 <li><a href="#faq" class="hover:text-primary-500">FAQ</a></li>
-                <li><a href="#contact" class="hover:text-primary-500">Contact</a></li>
-                <li><a href="#" class="hover:text-primary-500">Docs</a></li>
+                <li><a routerLink="/privacy-policy" class="hover:text-primary-500">Privacy Policy</a></li>
+                <li><a routerLink="/terms-and-conditions" class="hover:text-primary-500">Terms & Conditions</a></li>
             </ul>
         </div>
         <div>

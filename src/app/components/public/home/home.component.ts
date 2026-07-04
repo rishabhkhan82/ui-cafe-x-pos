@@ -1,11 +1,11 @@
 import { Component, AfterViewInit, OnDestroy, HostListener } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { SubscriptionPlansListingComponent } from '../subscription-plans-listing/subscription-plans-listing.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [SubscriptionPlansListingComponent],
+  imports: [SubscriptionPlansListingComponent, RouterLink],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
