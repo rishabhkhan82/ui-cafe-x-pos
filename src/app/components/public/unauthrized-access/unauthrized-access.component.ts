@@ -11,7 +11,6 @@ import { AuthService } from '../../../services/auth.service';
 export class UnauthrizedAccessComponent {
 
   private router = inject(Router);
-  private authService = inject(AuthService);
   private route = inject(ActivatedRoute);
 
   pageTitle = 'Unauthorized Access';
@@ -25,9 +24,6 @@ export class UnauthrizedAccessComponent {
       this.isSubscriptionBlock = true;
       this.pageTitle = 'Restaurant Unavailable';
       this.message = 'This restaurant is currently unavailable. Please contact the staff for assistance.';
-    } else {
-      sessionStorage.clear();
-      this.authService.currentUserSubject.next(null);
     }
   }
 

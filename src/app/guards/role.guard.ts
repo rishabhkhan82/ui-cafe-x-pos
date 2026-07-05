@@ -9,7 +9,8 @@ export const roleGuard: CanActivateFn = (route, state) => {
   const allowedRoles: string[] = (route.data as any)?.allowedRoles || [];
 
   if (!allowedRoles.length) {
-    return router.parseUrl('/unauthrized-access');
+    router.navigate(['/unauthrized-access']);
+    return false;
   }
 
   const userRole = authService.getUserRole();
@@ -18,5 +19,6 @@ export const roleGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
-  return router.parseUrl('/unauthrized-access');
+  router.navigate(['/unauthrized-access']);
+  return false;
 };
