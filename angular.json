@@ -22,12 +22,18 @@
             "polyfills": [
               "zone.js"
             ],
-            "baseHref": "/",
+            "baseHref": "/ui-cafe-x-pos/",
+            "deployUrl": "/ui-cafe-x-pos/",
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "web.xml",
+                "input": "deploy",
+                "output": "WEB-INF"
               }
             ],
             "styles": [
@@ -86,6 +92,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "web.xml",
+                "input": "deploy",
+                "output": "WEB-INF"
               }
             ],
             "styles": [
