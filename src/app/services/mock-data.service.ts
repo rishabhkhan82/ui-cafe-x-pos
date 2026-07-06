@@ -1046,6 +1046,7 @@ export interface SubscriptionPlan {
   max_users: number;
   is_active: boolean;
   is_popular?: boolean;
+  is_coming_soon?: boolean;
   subscriber_count : number;
   revenue: number;
   plan_id: any;

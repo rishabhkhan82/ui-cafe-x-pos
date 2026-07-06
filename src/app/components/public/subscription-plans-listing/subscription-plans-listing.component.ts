@@ -30,13 +30,16 @@ export class SubscriptionPlansListingComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    const plans$ = this.crudService.getSubscriptionPlans({ isActive: true });
+    const activePlans$ = this.crudService.getSubscriptionPlans({ isActive: true, isComingSoon: false });
+    const comingSoonPlans$ = this.crudService.getSubscriptionPlans({ isComingSoon: true });
     const features$ = this.crudService.getFeatures();
     const mappings$ = this.crudService.getPlanFeatureMapping();
 
-    const sub = forkJoin([plans$, features$, mappings$]).subscribe({
-      next: ([plansResponse, featuresResponse, mappingsResponse]) => {
-        this.plans$.next((plansResponse.data || plansResponse || []) as SubscriptionPlan[]);
+    const sub = forkJoin([activePlans$, comingSoonPlans$, features$, mappings$]).subscribe({
+      next: ([activePlansResponse, comingSoonPlansResponse, featuresResponse, mappingsResponse]) => {
+        const activePlans = (activePlansResponse.data || activePlansResponse || []) as SubscriptionPlan[];
+        const comingSoonPlans = (comingSoonPlansResponse.data || comingSoonPlansResponse || []) as SubscriptionPlan[];
+        this.plans$.next([...activePlans, ...comingSoonPlans]);
         this.features = (featuresResponse.data || featuresResponse || []) as ManagedFeature[];
         this.planFeatures = (mappingsResponse.data || mappingsResponse || []) as PlanFeatureMapping[];
       },

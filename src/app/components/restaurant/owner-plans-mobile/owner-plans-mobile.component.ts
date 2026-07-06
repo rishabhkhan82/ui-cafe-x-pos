@@ -75,7 +75,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     }
 
     // Load all data in parallel using forkJoin
-    const plans$ = this.crudService.getSubscriptionPlans({ isActive: true });
+    const plans$ = this.crudService.getSubscriptionPlans({ isActive: true, isComingSoon: false });
     const features$ = this.crudService.getFeatures();
     const planFeatures$ = this.crudService.getPlanFeatureMapping();
     // Fetch all subscriptions for this restaurant (trial, active, expired, etc.)

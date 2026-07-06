@@ -312,7 +312,7 @@
               </label>
             </div>
 
-            <!-- Is Popular -->
+             <!-- Is Popular -->
             <div>
               <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 <i class="fas fa-star mr-2 text-yellow-500"></i>Popular Plan
@@ -324,6 +324,21 @@
                   class="sr-only peer">
                 <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-yellow-300 dark:peer-focus:ring-yellow-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-yellow-500"></div>
                 <span class="ml-3 text-sm font-medium text-gray-600 dark:text-gray-400">Mark as popular plan</span>
+              </label>
+            </div>
+
+            <!-- Is Coming Soon -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-clock mr-2 text-gray-500"></i>Coming Soon
+              </label>
+              <label class="inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="planForm.is_coming_soon"
+                  class="sr-only peer">
+                <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 dark:peer-focus:ring-gray-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-gray-600"></div>
+                <span class="ml-3 text-sm font-medium text-gray-600 dark:text-gray-400">Mark as coming soon</span>
               </label>
             </div>
           </div>
@@ -437,10 +452,14 @@
                  <span class="text-gray-600 dark:text-gray-400 font-medium">Trial Days:</span>
                  <span class="text-gray-900 dark:text-white font-semibold">{{ selectedPlan.trial_days }} days</span>
                </div>
-               <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
-                 <span class="text-gray-600 dark:text-gray-400 font-medium">Popular:</span>
-                 <span class="text-gray-900 dark:text-white font-semibold">{{ selectedPlan.is_popular ? 'Yes' : 'No' }}</span>
-               </div>
+                <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                  <span class="text-gray-600 dark:text-gray-400 font-medium">Popular:</span>
+                  <span class="text-gray-900 dark:text-white font-semibold">{{ selectedPlan.is_popular ? 'Yes' : 'No' }}</span>
+                </div>
+                <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                  <span class="text-gray-600 dark:text-gray-400 font-medium">Coming Soon:</span>
+                  <span class="text-gray-900 dark:text-white font-semibold">{{ selectedPlan.is_coming_soon ? 'Yes' : 'No' }}</span>
+                </div>
                <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
                  <span class="text-gray-600 dark:text-gray-400 font-medium">Subscribers:</span>
                  <span class="text-gray-900 dark:text-white font-semibold">{{ selectedPlan.subscriber_count }}</span>
@@ -493,6 +512,11 @@
         <div *ngIf="plan.is_popular" class="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
           <span class="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-4 py-1 text-xs rounded-full font-semibold shadow-lg">
             Most Popular
+          </span>
+        </div>
+        <div *ngIf="plan.is_coming_soon" class="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+          <span class="bg-gradient-to-r from-gray-500 to-gray-700 text-white px-4 py-1 text-xs rounded-full font-semibold shadow-lg">
+            Coming Soon
           </span>
         </div>
 
