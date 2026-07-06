@@ -34,8 +34,38 @@ export class CrudService {
     }
     const url = this.buildUrl('orders/reports');
     const httpParams = this.buildParams(params);
+    const httpHeaders = this.buildHeaders({});
 
-    return this.http.get(url, { params: httpParams });
+    return this.http.get(url, { headers: httpHeaders, params: httpParams });
+  }
+
+  getRestaurantReport(reportType: string, startDate: string, endDate: string, restaurantId: string | number): Observable<any> {
+    const params: any = {
+      reportType: reportType,
+      startDate: startDate,
+      endDate: endDate,
+      restaurantId: restaurantId
+    };
+    const url = this.buildUrl('restaurant-report');
+    const httpParams = this.buildParams(params);
+    const httpHeaders = this.buildHeaders({});
+
+    return this.http.get(url, { headers: httpHeaders, params: httpParams });
+  }
+
+  getRestaurantReportPdf(reportType: string, startDate: string, endDate: string, restaurantId: string | number): Observable<Blob> {
+    const params: any = {
+      reportType: reportType,
+      startDate: startDate,
+      endDate: endDate,
+      restaurantId: restaurantId
+    };
+    const url = this.buildUrl('restaurant-report/pdf');
+    const httpParams = this.buildParams(params);
+    let headers = this.buildHeaders({});
+    headers = headers.set('Accept', 'application/pdf');
+
+    return this.http.get(url, { headers: headers, params: httpParams, responseType: 'blob' });
   }
 
   // ===============================

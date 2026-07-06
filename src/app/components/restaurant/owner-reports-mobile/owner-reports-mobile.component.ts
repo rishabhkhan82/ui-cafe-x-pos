@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Order, OrderItem } from '../../../services/mock-data.service';
 import { CrudService } from '../../../services/crud.service';
 import { LoadingService } from '../../../services/loading.service';
 import { NotificationService } from '../../../services/notification.service';
@@ -16,27 +15,117 @@ import { AuthService } from '../../../services/auth.service';
   styleUrl: './owner-reports-mobile.component.css'
 })
 export class OwnerReportsMobileComponent implements OnInit {
+  reportType: string = 'SALES_SUMMARY';
   fromDate: string = '';
   toDate: string = '';
-  reportData: any = null;
+  reportMeta: any = null;
+  statistics: any = null;
+  data: any[] = [];
   isLoading: boolean = false;
+  hasReport: boolean = false;
+
+  reportTypes: { value: string; label: string; icon: string }[] = [
+    { value: 'SALES_SUMMARY', label: 'Sales Summary', icon: 'fas fa-chart-bar' },
+    { value: 'INVENTORY_STATUS', label: 'Inventory Status', icon: 'fas fa-boxes' },
+    { value: 'TOP_SELLING_ITEMS', label: 'Top Selling Items', icon: 'fas fa-star' },
+    { value: 'CATEGORY_WISE_SALE', label: 'Category Wise Sale', icon: 'fas fa-th-large' },
+    { value: 'TAX_DISCOUNTS', label: 'Tax & Discounts', icon: 'fas fa-receipt' }
+  ];
+
+  dateRequiredReportTypes: string[] = [
+    'SALES_SUMMARY',
+    'TOP_SELLING_ITEMS',
+    'CATEGORY_WISE_SALE',
+    'TAX_DISCOUNTS'
+  ];
+
+  datePresets: { label: string; value: string }[] = [
+    { label: 'Today', value: 'TODAY' },
+    { label: 'This Week', value: 'THIS_WEEK' },
+    { label: 'This Month', value: 'THIS_MONTH' },
+    { label: 'This Year', value: 'THIS_YEAR' }
+  ];
+
+  selectedPreset: string = 'TODAY';
+
+  displayTitle: string = 'Sales Summary';
+  reportPeriod: string = '';
+  generatedAt: string = '';
+  statisticsList: { key: string; label: string; value: string }[] = [];
+  dataColumns: string[] = [];
+  dataColumnLabels: string[] = [];
+  formattedData: any[] = [];
 
   constructor(
     public router: Router,
     private crudService: CrudService,
     private loadingService: LoadingService,
     private notificationService: NotificationService,
-    private authService: AuthService
+    public authService: AuthService
   ) {}
 
   ngOnInit(): void {
-    const today = new Date().toISOString().split('T')[0];
-    this.fromDate = today;
-    this.toDate = today;
+    this.applyDatePreset('TODAY');
+    this.generateReport();
+  }
+
+  isDateRequired(): boolean {
+    return this.dateRequiredReportTypes.includes(this.reportType);
+  }
+
+  applyDatePreset(preset: string) {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const date = today.getDate();
+
+    switch (preset) {
+      case 'TODAY':
+        this.fromDate = this.toDate = today.toISOString().split('T')[0];
+        break;
+      case 'THIS_WEEK': {
+        const startOfWeek = new Date(year, month, date - ((date + 6) % 7));
+        this.fromDate = startOfWeek.toISOString().split('T')[0];
+        this.toDate = today.toISOString().split('T')[0];
+        break;
+      }
+      case 'THIS_MONTH':
+        this.fromDate = new Date(year, month, 1).toISOString().split('T')[0];
+        this.toDate = today.toISOString().split('T')[0];
+        break;
+      case 'THIS_YEAR':
+        this.fromDate = new Date(year, 0, 1).toISOString().split('T')[0];
+        this.toDate = today.toISOString().split('T')[0];
+        break;
+    }
+    this.selectedPreset = preset;
+  }
+
+  private refreshComputedReportFields() {
+    this.displayTitle = this.getReportTitle();
+    this.reportPeriod = this.reportMeta?.period || '';
+    this.generatedAt = this.reportMeta?.generated_at || '';
+
+    const keys = this.statistics ? Object.keys(this.statistics) : [];
+    this.statisticsList = keys.map(k => ({
+      key: k,
+      label: this.formatKey(k),
+      value: this.formatValue(k, this.statistics[k])
+    }));
+
+    this.dataColumns = this.data && this.data.length > 0 ? Object.keys(this.data[0]) : [];
+    this.dataColumnLabels = this.dataColumns.map(col => this.formatKey(col));
+    this.formattedData = this.data.map(row => {
+      const formatted: any = {};
+      this.dataColumns.forEach(col => {
+        formatted[col] = this.formatValue(col, row[col]);
+      });
+      return formatted;
+    });
   }
 
   generateReport() {
-    if (!this.fromDate || !this.toDate) {
+    if (this.isDateRequired() && (!this.fromDate || !this.toDate)) {
       this.notificationService.error('Validation Error', 'Please select both from and to dates');
       return;
     }
@@ -44,150 +133,120 @@ export class OwnerReportsMobileComponent implements OnInit {
     this.isLoading = true;
     this.loadingService.show();
 
-    // Prepare date range filter
-    const startDate = new Date(this.fromDate).toISOString().split('T')[0];
-    const endDate = new Date(this.toDate).toISOString().split('T')[0];
     const currentUser = this.authService.getCurrentUser();
-    const restaurantId = currentUser?.restaurantId || undefined;
+    const restaurantId = currentUser?.restaurantId || currentUser?.restaurant_id;
 
-    this.crudService.getOrdersForReports(startDate, endDate, 'COMPLETED', restaurantId).subscribe({
+    if (!restaurantId) {
+      this.notificationService.error('Error', 'Restaurant information not found');
+      this.loadingService.hide();
+      this.isLoading = false;
+      return;
+    }
+
+    this.crudService.getRestaurantReport(this.reportType, this.fromDate || '', this.toDate || '', restaurantId).subscribe({
       next: (response: any) => {
-        const orders: Order[] = response.data || response || [];
-        this.reportData = this.calculateReport(orders);
+        this.reportMeta = response.report_meta || response.reportMeta;
+        this.statistics = response.statistics;
+        this.data = response.data || [];
+        this.refreshComputedReportFields();
+        this.hasReport = true;
         this.loadingService.hide();
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error fetching orders for reports:', error);
+        console.error('Error fetching report:', error);
         this.notificationService.error('Error', 'Failed to load report data');
+        this.loadingService.hide();
+        this.isLoading = false;
+        this.hasReport = false;
+      }
+    });
+  }
+
+  clearReport() {
+    this.reportMeta = null;
+    this.statistics = null;
+    this.data = [];
+    this.refreshComputedReportFields();
+    this.hasReport = false;
+    this.notificationService.success('Report Cleared', 'Report data has been cleared');
+  }
+
+  downloadReport() {
+    if (!this.hasReport) {
+      this.notificationService.warning('No Report', 'Please generate a report before downloading');
+      return;
+    }
+
+    this.isLoading = true;
+    this.loadingService.show();
+
+    const currentUser = this.authService.getCurrentUser();
+    const restaurantId = currentUser?.restaurantId || currentUser?.restaurant_id;
+
+    if (!restaurantId) {
+      this.notificationService.error('Error', 'Restaurant information not found');
+      this.loadingService.hide();
+      this.isLoading = false;
+      return;
+    }
+
+    const start = this.isDateRequired() ? this.fromDate : '';
+    const end = this.isDateRequired() ? this.toDate : '';
+
+    this.crudService.getRestaurantReportPdf(this.reportType, start, end, restaurantId).subscribe({
+      next: (blob: Blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const filename = this.getReportTitle().replace(/\s+/g, '_').toLowerCase() + '_' + Date.now() + '.pdf';
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        this.loadingService.hide();
+        this.isLoading = false;
+        this.notificationService.success('Download Complete', 'Report PDF downloaded successfully');
+      },
+      error: (error) => {
+        console.error('Error downloading report:', error);
+        this.notificationService.error('Error', 'Failed to download report');
         this.loadingService.hide();
         this.isLoading = false;
       }
     });
   }
 
-  private calculateReport(orders: Order[]) {
-    const totalOrders = orders.length;
-    const totalRevenue = orders.reduce((sum, o) => sum + o.total_amount, 0);
-    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-    const completedOrders = orders.filter(o => o.status === 'COMPLETED').length;
-    const paidOrders = orders.filter(o => o.payment_status === 'PAID').length;
-
-    // Revenue by order type
-    const revenueByType = orders.reduce((acc, order) => {
-      acc[order.order_type] = (acc[order.order_type] || 0) + order.total_amount;
-      return acc;
-    }, {} as Record<string, number>);
-
-    // Order count by type
-    const ordersByType = orders.reduce((acc, order) => {
-      acc[order.order_type] = (acc[order.order_type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    // Calculate popular items dynamically
-    const itemStats = orders.reduce((acc, order) => {
-      order.items.forEach(item => {
-        const itemName = item.menu_item_name;
-        if (!acc[itemName]) {
-          acc[itemName] = { revenue: 0, quantity: 0 };
-        }
-        acc[itemName].revenue += item.total_price;
-        acc[itemName].quantity += item.quantity;
-      });
-      return acc;
-    }, {} as Record<string, { revenue: number; quantity: number }>);
-
-    // Get top 3 items by revenue
-    const topItems = Object.entries(itemStats)
-      .sort(([,a], [,b]) => b.revenue - a.revenue)
-      .slice(0, 3)
-      .map(([name, stats]) => ({ name, ...stats }));
-
-    // Format dates properly
-    const formatDate = (dateStr: string) => {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    };
-
-    const fromFormatted = formatDate(this.fromDate);
-    const toFormatted = formatDate(this.toDate);
-    const period = this.fromDate === this.toDate ? fromFormatted : `${fromFormatted} to ${toFormatted}`;
-
-    return {
-      totalOrders,
-      totalRevenue: totalRevenue.toFixed(2),
-      avgOrderValue: avgOrderValue.toFixed(2),
-      completedOrders,
-      paidOrders,
-      deliveryRevenue: (revenueByType['DELIVERY'] || 0).toFixed(2),
-      dineInRevenue: (revenueByType['DINE_IN'] || 0).toFixed(2),
-      takeawayRevenue: (revenueByType['TAKEAWAY'] || 0).toFixed(2),
-      deliveryOrders: ordersByType['DELIVERY'] || 0,
-      dineInOrders: ordersByType['DINE_IN'] || 0,
-      takeawayOrders: ordersByType['TAKEAWAY'] || 0,
-      popularItems: topItems.length > 0 ? topItems.map(item => ({
-        name: item.name,
-        revenue: item.revenue.toFixed(2),
-        quantity: item.quantity
-      })) : [],
-      period
-    };
-   }
-
-   clearReport() {
-     this.reportData = null;
-     this.notificationService.success('Report Cleared', 'Report data has been cleared');
-   }
-
-   // Helper methods for dynamic item styling
-  getItemCardClasses(index: number): string {
-    const colors = [
-      'bg-gradient-to-r from-orange-50 via-orange-100 to-orange-50 dark:from-orange-900/20 dark:via-orange-800/20 dark:to-orange-900/20 border-orange-200/50 dark:border-orange-700/30',
-      'bg-gradient-to-r from-red-50 via-red-100 to-red-50 dark:from-red-900/20 dark:via-red-800/20 dark:to-red-900/20 border-red-200/50 dark:border-red-700/30',
-      'bg-gradient-to-r from-yellow-50 via-yellow-100 to-yellow-50 dark:from-yellow-900/20 dark:via-yellow-800/20 dark:to-yellow-900/20 border-yellow-200/50 dark:border-yellow-700/30'
-    ];
-    return colors[index] || colors[0];
+  refreshReport() {
+    if (this.hasReport) {
+      this.generateReport();
+    }
   }
 
-  getItemHoverClasses(index: number): string {
-    const colors = [
-      'bg-gradient-to-r from-orange-400/5 to-transparent',
-      'bg-gradient-to-r from-red-400/5 to-transparent',
-      'bg-gradient-to-r from-yellow-400/5 to-transparent'
-    ];
-    return colors[index] || colors[0];
+  getReportTitle(): string {
+    const found = this.reportTypes.find(r => r.value === this.reportType);
+    return found ? found.label : 'Report';
   }
 
-  getItemIconClasses(index: number): string {
-    const colors = [
-      'bg-gradient-to-br from-orange-500 to-orange-600',
-      'bg-gradient-to-br from-red-500 to-red-600',
-      'bg-gradient-to-br from-yellow-500 to-yellow-600'
-    ];
-    return colors[index] || colors[0];
+  formatKey(key: string): string {
+    return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   }
 
-  getItemTextClasses(index: number): string {
-    const colors = [
-      'text-orange-600 dark:text-orange-400',
-      'text-red-600 dark:text-red-400',
-      'text-yellow-600 dark:text-yellow-400'
-    ];
-    return colors[index] || colors[0];
+  formatValue(key: string, value: any): string {
+    if (value === null || value === undefined) return '-';
+    const num = typeof value === 'number' ? value : parseFloat(value);
+    if (!isNaN(num)) {
+      if (key.toLowerCase().includes('amount') || key.toLowerCase().includes('revenue') || key.toLowerCase().includes('value') || key.toLowerCase().includes('tax') || key.toLowerCase().includes('discount')) {
+        return '\u20B9' + num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+      return num.toLocaleString('en-IN');
+    }
+    return value.toString();
   }
 
-  getItemIcon(index: number): string {
-    const icons = ['fas fa-utensils', 'fas fa-pizza-slice', 'fas fa-hamburger'];
-    return icons[index] || 'fas fa-utensils';
-  }
-
-  getItemDescription(index: number): string {
-    const descriptions = ['Most popular dish', 'Customer favorite', 'Quick meal option'];
-    return descriptions[index] || 'Popular item';
+  getDataColumns(): string[] {
+    if (!this.data || this.data.length === 0) return [];
+    return Object.keys(this.data[0]);
   }
 }
