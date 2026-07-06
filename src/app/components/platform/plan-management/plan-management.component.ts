@@ -51,7 +51,9 @@ export class PlanManagementComponent implements OnInit {
     created_at: new Date().toISOString(),
     updated_at: '',
     created_by: 0,
-    updated_by: 0
+    updated_by: 0,
+    offer_name: '',
+    offer_discount_percentage: 0
   };
 
 // ...existing code...
@@ -166,10 +168,8 @@ export class PlanManagementComponent implements OnInit {
     this.showAddForm = true;
     this.editingPlan = plan || null;
     if (plan) {
-      // Editing existing plan
       this.planForm = { ...plan };
     } else {
-      // Adding new plan
       this.clearPlanForm();
     }
   }
@@ -251,6 +251,7 @@ export class PlanManagementComponent implements OnInit {
     this.validateDisplayName();
     this.validatePrice();
     this.validateDescription();
+    this.validateOfferDiscount();
 
     hasErrors = Object.keys(this.fieldErrors).length > 0;
 
@@ -304,6 +305,15 @@ export class PlanManagementComponent implements OnInit {
     }
   }
 
+  validateOfferDiscount(): void {
+    const discount = this.planForm.offer_discount_percentage || 0;
+    if (discount < 0 || discount > 100) {
+      this.fieldErrors['offer_discount_percentage'] = 'Discount must be between 0 and 100';
+    } else {
+      delete this.fieldErrors['offer_discount_percentage'];
+    }
+  }
+
   private onSaveForm(): void {
     this.loadingService.show();
 
@@ -326,7 +336,9 @@ export class PlanManagementComponent implements OnInit {
       trial_days: this.planForm.trial_days || 0,
       created_at: currentTime,
       updated_at: currentTime,
-      created_by: this.authService.getCurrentUser()?.id || 1
+      created_by: this.authService.getCurrentUser()?.id || 1,
+      offer_name: this.planForm.offer_name || '',
+      offer_discount_percentage: this.planForm.offer_discount_percentage || 0
     };
 
     this.crudService.createSubscriptionPlan(planRequest).subscribe({
@@ -369,7 +381,9 @@ export class PlanManagementComponent implements OnInit {
       created_at: this.editingPlan!.created_at,
       updated_at: currentTime,
       created_by: this.editingPlan!.created_by,
-      updated_by: this.authService.getCurrentUser()?.id || 1
+      updated_by: this.authService.getCurrentUser()?.id || 1,
+      offer_name: this.planForm.offer_name || '',
+      offer_discount_percentage: this.planForm.offer_discount_percentage || 0
     };
 
     this.crudService.updateSubscriptionPlan(this.editingPlan!.id, planRequest).subscribe({
@@ -475,6 +489,10 @@ export class PlanManagementComponent implements OnInit {
     return num.toLocaleString();
   }
 
+  getDiscountedPrice(price: number, discountPercentage: number = 0): number {
+    return price * (1 - discountPercentage / 100);
+  }
+
   getTotalRevenue(): number {
     return this.plans.reduce((sum, plan) => sum + plan.revenue, 0);
   }
@@ -512,7 +530,9 @@ export class PlanManagementComponent implements OnInit {
       created_at: new Date().toISOString(),
       updated_at: '',
       created_by: 0,
-      updated_by: 0
+      updated_by: 0,
+      offer_name: '',
+      offer_discount_percentage: 0
     };
   }
 }

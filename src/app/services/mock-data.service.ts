@@ -1048,13 +1048,15 @@ export interface SubscriptionPlan {
   is_popular?: boolean;
   subscriber_count : number;
   revenue: number;
-  plan_id: any; // new in ui
-  setup_fee: number; // new in ui
-  trial_days: number; // new in ui
+  plan_id: any;
+  setup_fee: number;
+  trial_days: number;
   created_at: string;
   updated_at: string;
   created_by: number;
-  updated_by: number; // new in ui add in entity and table
+  updated_by: number;
+  offer_name: string;
+  offer_discount_percentage: number;
 }
 
 export interface PlanFeature {
@@ -6363,7 +6365,9 @@ export class MockDataService {
         created_at: '01-01-2026',
         updated_at: '01-01-2026',
         created_by: 1,
-        updated_by: 1
+        updated_by: 1,
+        offer_name: '',
+        offer_discount_percentage: 0
       },
       {
         id: 2,
@@ -6385,7 +6389,9 @@ export class MockDataService {
         created_at: '01-01-2026',
         updated_at: '01-01-2026',
         created_by: 1,
-        updated_by: 1
+        updated_by: 1,
+        offer_name: 'Launch Offer',
+        offer_discount_percentage: 20
       },
       {
         id: 3,
@@ -6407,7 +6413,9 @@ export class MockDataService {
         created_at: '01-01-2026',
         updated_at: '01-01-2026',
         created_by: 1,
-        updated_by: 1
+        updated_by: 1,
+        offer_name: '',
+        offer_discount_percentage: 0
       }
     ];
 

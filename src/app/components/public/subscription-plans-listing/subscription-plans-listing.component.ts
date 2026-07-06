@@ -68,5 +68,9 @@ export class SubscriptionPlansListingComponent implements OnInit {
   isFeaturesExpanded(planId: number): boolean {
     return this.expandedFeaturesMap.get(planId) || false;
   }
+
+  getDiscountedPrice(price: number, discountPercentage: number = 0): number {
+    return price * (1 - discountPercentage / 100);
+  }
 }
 

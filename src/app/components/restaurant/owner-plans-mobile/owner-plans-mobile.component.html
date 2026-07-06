@@ -422,10 +422,16 @@
                     </div>
                     <h3 class="text-xl font-bold text-white leading-tight flex-1 min-w-0">{{ plan.display_name || plan.name }}</h3>
                   </div>
-                  <div class="text-right flex-shrink-0 ml-4">
-                    <div class="text-3xl font-bold text-white leading-none">₹{{ plan.price }}</div>
-                    <div class="text-white/80 text-sm leading-tight">per {{ plan.billing_cycle }}</div>
-                  </div>
+                   <div class="text-right flex-shrink-0 ml-4">
+                     <div class="flex items-baseline space-x-2 justify-end">
+                       <div *ngIf="plan.offer_discount_percentage > 0" class="text-sm text-white/70 line-through">₹{{ plan.price }}</div>
+                       <div class="text-3xl font-bold text-white leading-none">₹{{ (plan.price * (1 - (plan.offer_discount_percentage || 0) / 100)) }}</div>
+                     </div>
+                     <div class="text-white/80 text-sm leading-tight">per {{ plan.billing_cycle }}</div>
+                     <div *ngIf="plan.offer_name" class="mt-2 inline-flex items-center bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full text-xs font-bold shadow">
+                       {{ plan.offer_name }} | {{ plan.offer_discount_percentage }}% OFF
+                     </div>
+                   </div>
                 </div>
 
                 <!-- Second Line: Description Only -->
@@ -603,8 +609,14 @@
             </div>
   
             <div class="text-right ml-6">
-              <div class="text-3xl font-bold text-white">₹{{ selectedPlanForDetails!.price }}</div>
+              <div class="flex items-baseline space-x-2">
+                <div *ngIf="selectedPlanForDetails!.offer_discount_percentage > 0" class="text-sm text-white/70 line-through">₹{{ selectedPlanForDetails!.price }}</div>
+                <div class="text-3xl font-bold text-white">₹{{ (selectedPlanForDetails!.price * (1 - (selectedPlanForDetails!.offer_discount_percentage || 0) / 100)) }}</div>
+              </div>
               <div class="text-white/80 text-sm">per {{ selectedPlanForDetails!.billing_cycle }}</div>
+              <div *ngIf="selectedPlanForDetails!.offer_name" class="mt-2 inline-flex items-center bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full text-xs font-bold shadow">
+                {{ selectedPlanForDetails!.offer_name }} | {{ selectedPlanForDetails!.offer_discount_percentage }}% OFF
+              </div>
             </div>
           </div>
         </div>

@@ -479,7 +479,7 @@ To day today 30/06/26
 13] 5 to 6 important real world reports with export to excel - done
 12] menu items real time needed - pending
 16] live chat - done
-17] plans additional but deactivate offer Display - pending
+17] plans additional but deactivate offer Display - done
 18] real life restaurant's names and images - pending
 19] api's global errors in response instead of 400 - pending
 
