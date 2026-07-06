@@ -286,6 +286,21 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
     updateCountdown();
     this.countdownInterval = setInterval(updateCountdown, 60000);
+
+    const tawkScript = document.createElement('script');
+    tawkScript.type = 'text/javascript';
+    tawkScript.innerHTML = `
+      var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+      (function(){
+        var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+        s1.async=true;
+        s1.src='https://embed.tawk.to/6a4b31a82734a21d4f1ae144/default';
+        s1.charset='UTF-8';
+        s1.setAttribute('crossorigin','*');
+        s0.parentNode.insertBefore(s1,s0);
+      })();
+    `;
+    document.head.appendChild(tawkScript);
   }
 
   ngOnDestroy(): void {
