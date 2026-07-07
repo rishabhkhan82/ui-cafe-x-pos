@@ -12,6 +12,7 @@ import { MenuItem } from '../../../interfaces';
 import { CartService } from '../../../services/cart.service';
 import { environment } from '../../../environments/environment';
 import { AnimateOnScrollDirective } from '../../../directives/animate-on-scroll.directive';
+import { RealtimeService } from '../../../services/realtime.service';
 
 @Component({
   selector: 'app-customer-dashboard',
@@ -27,6 +28,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private crudService = inject(CrudService);
   private cartService = inject(CartService);
+  private realtimeService = inject(RealtimeService);
   private subscriptions: Subscription[] = [];
 
   currentUser: User | any = null;
@@ -70,6 +72,16 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
     });
 
     this.initializeGuest();
+
+    const sub = this.realtimeService.menuUpdate$.subscribe((update: any) => {
+      if (update) {
+        const currentRestaurantId = this.restaurantId || this.guestAuthService.getCurrentRestaurantId();
+        if (currentRestaurantId && String(update.restaurantId) === String(currentRestaurantId)) {
+          this.loadMenuData();
+        }
+      }
+    });
+    this.subscriptions.push(sub);
   }
 
   ngOnDestroy(): void {

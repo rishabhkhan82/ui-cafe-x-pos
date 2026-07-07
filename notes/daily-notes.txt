@@ -486,10 +486,18 @@ To day today 30/06/26
 
 ==================
 
-Table management & reservation system
-Kitchen Display System (KDS) — full order queue, prep timers, priority routing
 Recipe management & food costing
-Token System
-Export to Excel/PDF
-Customer feedback & review management
 Delivery platform integrations (Swiggy, Zomato, Dunzo)
+Customer feedback & review management
+Token System
+Table management & reservation system
+Advanced Inventory
+
+Customer Feedback & Review Management
+Everything in Starter Plus
+Recipe Management & Food Costing
+Delivery Platform Integrations (Swiggy & Zomato)
+Token System
+Table Management
+Table Reservation System
+Advanced Inventory Management

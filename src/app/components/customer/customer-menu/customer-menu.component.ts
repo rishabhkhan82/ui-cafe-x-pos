@@ -1,8 +1,8 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Subject, Observable } from 'rxjs';
+import { Subject, Observable, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, filter } from 'rxjs/operators';
 import { CrudService } from '../../../services/crud.service';
 import { AuthService } from '../../../services/auth.service';
@@ -11,6 +11,7 @@ import { MenuItem } from '../../../interfaces';
 import { CartService, CartItem } from '../../../services/cart.service';
 import { environment } from '../../../environments/environment';
 import { AnimateOnScrollDirective } from '../../../directives/animate-on-scroll.directive';
+import { RealtimeService } from '../../../services/realtime.service';
 
 interface MenuCategory {
   key: string;
@@ -25,12 +26,14 @@ interface MenuCategory {
   templateUrl: './customer-menu.component.html',
   styleUrl: './customer-menu.component.css'
 })
-export class CustomerMenuComponent implements OnInit {
+export class CustomerMenuComponent implements OnInit, OnDestroy {
   private crudService = inject(CrudService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private authService = inject(AuthService);
   private cartService = inject(CartService);
+  private realtimeService = inject(RealtimeService);
+  private subscriptions: Subscription[] = [];
 
   currentUser: User | null = null;
   allMenuItems: MenuItem[] = [];
@@ -63,6 +66,20 @@ export class CustomerMenuComponent implements OnInit {
     });
     this.readQueryParams();
     this.setupSearch();
+
+    const sub = this.realtimeService.menuUpdate$.subscribe((update: any) => {
+      if (update) {
+        const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
+        const currentRestaurantId = this.currentUser?.restaurant_id || restaurantId;
+        if (currentRestaurantId && String(update.restaurantId) === String(currentRestaurantId)) {
+          this.loadMenuItems(
+            this.activeCategory !== 'all' ? this.activeCategory : undefined,
+            this.activeFeatureFilter !== 'all' ? this.activeFeatureFilter : undefined
+          );
+        }
+      }
+    });
+    this.subscriptions.push(sub);
   }
 
   private readQueryParams(): void {
@@ -334,5 +351,9 @@ export class CustomerMenuComponent implements OnInit {
       return imagePath;
     }
     return environment.api.baseUrl + imagePath;
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 }

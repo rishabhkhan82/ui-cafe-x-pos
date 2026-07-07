@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -10,8 +10,9 @@ import { ValidationService } from '../../../services/validation.service';
 import { CrudService } from '../../../services/crud.service';
 import { MenuItem } from '../../../interfaces';
 import { environment } from '../../../environments/environment';
-import { Subject, Observable } from 'rxjs';
+import { Subject, Observable, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { RealtimeService } from '../../../services/realtime.service';
 
 @Component({
   selector: 'app-owner-menus-mobile',
@@ -20,7 +21,7 @@ import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
   templateUrl: './owner-menus-mobile.component.html',
   styleUrl: './owner-menus-mobile.component.css'
 })
-export class OwnerMenusMobileComponent implements OnInit {
+export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
   menus: MenuItem[] = [];
   selectedMenu: MenuItem | null = null;
   editingMenu: MenuItem | null = null;
@@ -33,6 +34,7 @@ export class OwnerMenusMobileComponent implements OnInit {
   searchSubject = new Subject<string>();
   errorMessage = '';
   selectedFile: File | null = null;
+  private subscriptions: Subscription[] = [];
 
   // Pagination
   currentPage = 1;
@@ -98,12 +100,23 @@ export class OwnerMenusMobileComponent implements OnInit {
     private authService: AuthService,
     private notificationService: NotificationService,
     private crudService: CrudService,
-    private validationService: ValidationService
+    private validationService: ValidationService,
+    private realtimeService: RealtimeService
   ) {}
 
   ngOnInit(): void {
     this.loadMenus();
     this.setupSearch();
+
+    const sub = this.realtimeService.menuUpdate$.subscribe((update: any) => {
+      if (update) {
+        const currentUser = this.authService.getCurrentUser();
+        if (currentUser && String(update.restaurantId) === String(currentUser.restaurantId)) {
+          this.loadMenus();
+        }
+      }
+    });
+    this.subscriptions.push(sub);
   }
 
   loadMenus(): void {
@@ -694,5 +707,9 @@ export class OwnerMenusMobileComponent implements OnInit {
     }
 
     return { isValid: true };
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 }
