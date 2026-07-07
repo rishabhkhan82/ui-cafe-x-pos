@@ -168,8 +168,25 @@ export class UserManagementComponent implements OnInit {
   }
 
   loadRestaurants(): void {
-    this.mockDataService.getRestaurants().subscribe(restaurants => {
-      this.restaurants = restaurants;
+    this.loadingService.show();
+    this.errorMessage = '';
+
+    const params: any = {
+      page: 1,
+      size: 9999
+    };
+
+    this.crudService.getRestaurants(params).subscribe({
+      next: (response: any) => {
+        this.restaurants = response.data;
+        this.loadingService.hide();
+      },
+      error: (error) => {
+        console.error('Error loading restaurants:', error);
+        this.errorMessage = 'Failed to load restaurants. Please try again.';
+        this.notificationService.error('Error', 'Failed to load restaurants');
+        this.loadingService.hide();
+      }
     });
   }
 
