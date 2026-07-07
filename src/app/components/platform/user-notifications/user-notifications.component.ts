@@ -2,15 +2,17 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MockDataService, Notification, User, UserNotification } from '../../../services/mock-data.service';
+import { UnderConstructionComponent } from '../../common/under-construction/under-construction.component';
 
 @Component({
   selector: 'app-user-notifications',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, UnderConstructionComponent],
   templateUrl: './user-notifications.component.html',
   styleUrl: './user-notifications.component.css'
 })
 export class UserNotificationsComponent implements OnInit {
+  isUnderConstruction = true;
   notifications: UserNotification[] = [];
   filteredNotifications: UserNotification[] = [];
   selectedNotification: UserNotification | null = null;

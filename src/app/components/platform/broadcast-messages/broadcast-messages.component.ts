@@ -3,15 +3,17 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { BroadcastMessage, MockDataService, User } from '../../../services/mock-data.service';
+import { UnderConstructionComponent } from '../../common/under-construction/under-construction.component';
 
 @Component({
   selector: 'app-broadcast-messages',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, UnderConstructionComponent],
   templateUrl: './broadcast-messages.component.html',
   styleUrl: './broadcast-messages.component.css'
 })
 export class BroadcastMessagesComponent implements OnInit, OnDestroy {
+  isUnderConstruction = true;
   broadcasts: BroadcastMessage[] = [];
   filteredBroadcasts: BroadcastMessage[] = [];
   selectedBroadcast: BroadcastMessage | null = null;
