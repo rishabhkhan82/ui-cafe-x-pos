@@ -180,24 +180,29 @@
           <!-- Header -->
           <div class="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-5 relative overflow-hidden">
             <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
-            <div class="relative z-10">
+            <div class="relative z-10" *ngIf="currentSubscription$ | async as sub">
               <div class="flex items-center space-x-3 mb-2">
                 <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
                   <i class="fas fa-check-circle text-white"></i>
                 </div>
                 <div>
                   <h3 class="text-lg font-bold text-white">Active Subscription</h3>
-                  <p class="text-emerald-100 text-sm">{{ currentPlan?.display_name || currentPlan?.name || 'Premium Plan' }}</p>
+                  <p class="text-emerald-100 text-sm">{{ sub.plan_name_at_subscription || 'Premium Plan' }}</p>
+                  <div *ngIf="sub.offer_discount_percentage_at_subscription > 0" class="mt-2">
+                    <span class="inline-flex items-center bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full text-xs font-bold">
+                      Applied : {{ sub.offer_name_at_subscription }} - {{ sub.offer_discount_percentage_at_subscription }}% OFF
+                    </span>
+                  </div>
                 </div>
               </div>
               <div class="flex items-center justify-between">
                 <div class="text-white/90">
                   <p class="text-sm">Status</p>
-                  <p class="font-semibold" *ngIf="currentSubscription$ | async as sub">{{ sub.status | titlecase }}</p>
+                  <p class="font-semibold">{{ sub.status | titlecase }}</p>
                 </div>
                 <div class="text-right text-white">
-                  <p class="text-sm text-white/90">₹{{ currentPlan?.price || '0' }}</p>
-                  <p class="text-xs text-white/70">per {{ currentPlan?.billing_cycle || 'month' }}</p>
+                  <p class="text-sm text-white/90">₹{{ sub.plan_price_at_subscription || '0' }}</p>
+                  <p class="text-xs text-white/70">per {{ sub.billing_cycle || 'month' }}</p>
                 </div>
               </div>
             </div>
@@ -522,10 +527,8 @@
                 <select [value]="getSelectedMonths(plan.id)"
                         (change)="onMonthsChange(plan.id, $event)"
                         class="w-full px-4 py-3 bg-white dark:bg-slate-600 border border-slate-200 dark:border-slate-500 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all duration-200">
-                  <option value="1">1 Month</option>
-                  <option value="3">3 Months (Save 1 month)</option>
-                  <option value="6">6 Months (Save 2 months)</option>
-                  <option value="12">12 Months (Save 3 months)</option>
+                  <option value="6">6 Months</option>
+                  <option value="12">12 Months</option>
                 </select>
   
                 <!-- Pricing Breakdown -->
@@ -536,7 +539,7 @@
                   </div>
   
                   <div *ngIf="getDiscountAmount(plan) > 0" class="flex justify-between items-center text-sm">
-                    <span class="text-emerald-600 dark:text-emerald-400">Discount</span>
+                    <span class="text-emerald-600 dark:text-emerald-400">Discount ({{ plan.offer_name }} - {{ plan.offer_discount_percentage }}% OFF)</span>
                     <span class="font-medium text-emerald-600">-₹{{ getDiscountAmount(plan) }}</span>
                   </div>
   

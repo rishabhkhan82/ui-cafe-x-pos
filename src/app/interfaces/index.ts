@@ -108,6 +108,10 @@ export interface RestaurantSubscription {
   cancellation_reason: string | null;
   discount_code: string | null;
   payment_method_id: string | null;
+  plan_price_at_subscription: number;
+  offer_name_at_subscription: string;
+  offer_discount_percentage_at_subscription: number;
+  plan_name_at_subscription: string;
 }
 
 export interface SubscriptionHistory {
@@ -132,4 +136,8 @@ export interface SubscriptionHistory {
   churn_risk_score: number;
   retention_actions: any; // JSON
   created_at: Date;
+  plan_price_at_subscription: number;
+  offer_name_at_subscription: string;
+  offer_discount_percentage_at_subscription: number;
+  plan_name_at_subscription: string;
 }

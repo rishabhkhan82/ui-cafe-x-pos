@@ -290,18 +290,8 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     this.subscribeToPlan(plan);
   }
 
-  private getDiscountMonths(months: number): number {
-    switch (months) {
-      case 1: return 0;
-      case 3: return 1;
-      case 6: return 2;
-      case 12: return 3;
-      default: return 0;
-    }
-  }
-
   getSelectedMonths(planId: number): number {
-    return this.selectedMonthsMap.get(planId) || 1;
+    return this.selectedMonthsMap.get(planId) || 6;
   }
 
   setSelectedMonths(planId: number, months: number): void {
@@ -315,8 +305,9 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
 
   getDiscountAmount(plan: SubscriptionPlan): number {
     const months = this.getSelectedMonths(plan.id);
-    const discountMonths = this.getDiscountMonths(months);
-    return plan.price * discountMonths;
+    const base = plan.price * months;
+    const discountPercentage = plan.offer_discount_percentage || 0;
+    return base * (discountPercentage / 100);
   }
 
   getFinalAmount(plan: SubscriptionPlan): number {
@@ -408,7 +399,11 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
       auto_renew: false,
       discount_amount: discountAmount,
       final_amount: finalAmount,
-      payment_method_id: razorpayResponse.razorpay_payment_id
+      payment_method_id: razorpayResponse.razorpay_payment_id,
+      plan_price_at_subscription: plan.price,
+      offer_name_at_subscription: plan.offer_name || null,
+      offer_discount_percentage_at_subscription: plan.offer_discount_percentage || 0,
+      plan_name_at_subscription: plan.display_name || plan.name
     };
 
     this.crudService.createRestaurantSubscription(subscriptionPayload).subscribe({
@@ -522,10 +517,14 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
       billing_cycle: plan.billing_cycle,
       cancel_at_period_end: false,
       auto_renew: false,
-      created_by : currentUserId, // You need to get current user ID from auth service or context
+      created_by : currentUserId,
       discount_amount: discountAmount,
       final_amount: finalAmount,
-      payment_method_id: razorpayResponse.razorpay_payment_id
+      payment_method_id: razorpayResponse.razorpay_payment_id,
+      plan_price_at_subscription: plan.price,
+      offer_name_at_subscription: plan.offer_name || null,
+      offer_discount_percentage_at_subscription: plan.offer_discount_percentage || 0,
+      plan_name_at_subscription: plan.display_name || plan.name
     };
 
     // Save subscription first
@@ -565,7 +564,11 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
           notes: `Subscribed for ${months} months with discount ${discountAmount}`,
           billing_cycle_change: false,
           churn_risk_score: 0,
-          retention_actions: null
+          retention_actions: null,
+          plan_price_at_subscription: plan.price,
+          offer_name_at_subscription: plan.offer_name || null,
+          offer_discount_percentage_at_subscription: plan.offer_discount_percentage || 0,
+          plan_name_at_subscription: plan.display_name || plan.name
         };
 
         this.crudService.createSubscriptionHistory(historyPayload).subscribe({
