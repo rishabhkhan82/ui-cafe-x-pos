@@ -55,6 +55,26 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     private subscriptionService: SubscriptionService
   ) {}
 
+  planThemes = [
+    'bg-gradient-to-br from-violet-500 to-indigo-700',
+    'bg-gradient-to-br from-orange-400 to-red-600',
+    'bg-gradient-to-br from-emerald-400 to-teal-600'
+  ];
+
+  hoverBorders = [
+    'hover:border-violet-300 dark:hover:border-violet-600',
+    'hover:border-orange-300 dark:hover:border-orange-600',
+    'hover:border-emerald-300 dark:hover:border-emerald-600'
+  ];
+
+  getTheme(index: number): string {
+    return this.planThemes[index] || this.planThemes[0];
+  }
+
+  getHoverBorder(index: number): string {
+    return this.hoverBorders[index] || this.hoverBorders[0];
+  }
+
   ngOnInit(): void {
     this.loadData();
   }
@@ -90,7 +110,11 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     forkJoin([plans$, features$, planFeatures$, currentSub$, history$, trialCheck$]).subscribe({
       next: ([plansResponse, featuresResponse, planFeaturesResponse, currentSubResponse, historyResponse, trialEligibility]) => {
         // Handle success responses
-        this.plans$.next((plansResponse.data || plansResponse || []) as SubscriptionPlan[]);
+        const plansResponseData = (plansResponse.data || plansResponse || []) as SubscriptionPlan[];
+        const sortedPlans = [...plansResponseData].sort((a, b) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+        this.plans$.next(sortedPlans);
         this.features = (featuresResponse.data || featuresResponse || []) as ManagedFeature[];
         this.planFeatures = (planFeaturesResponse.data || planFeaturesResponse || []) as PlanFeatureMapping[];
 

@@ -396,13 +396,14 @@
   
       <!-- Plan Cards -->
       <div class="space-y-6 mx-6">
-        <div *ngFor="let plan of plans$ | async; let i = index"
-              class="plan-card bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-2xl hover:border-violet-300 dark:hover:border-violet-600 transition-all duration-300 transform hover:-translate-y-1">
+  <div *ngFor="let plan of plans$ | async; let i = index"
+        class="plan-card bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+        [ngClass]="getHoverBorder(i)">
   
           <!-- Plan Header -->
           <div class="relative overflow-hidden">
             <!-- Background Gradient -->
-            <div class="bg-gradient-to-br from-violet-500 via-purple-600 to-indigo-700 px-6 py-8 relative">
+             <div [class]="'px-6 py-8 relative ' + getTheme(i)">
               <!-- Decorative Elements -->
               <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
               <div class="absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full -ml-8 -mb-8"></div>

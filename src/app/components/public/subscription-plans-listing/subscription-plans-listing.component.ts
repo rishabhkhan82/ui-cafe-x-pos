@@ -22,6 +22,26 @@ export class SubscriptionPlansListingComponent implements OnInit {
 
   constructor(private crudService: CrudService) {}
 
+  planThemes = [
+    'bg-gradient-to-br from-violet-500 to-indigo-700',
+    'bg-gradient-to-br from-orange-400 to-red-600',
+    'bg-gradient-to-br from-emerald-400 to-teal-600'
+  ];
+
+  hoverBorders = [
+    'hover:border-violet-300 dark:hover:border-violet-600',
+    'hover:border-orange-300 dark:hover:border-orange-600',
+    'hover:border-emerald-300 dark:hover:border-emerald-600'
+  ];
+
+  getTheme(index: number): string {
+    return this.planThemes[index] || this.planThemes[0];
+  }
+
+  getHoverBorder(index: number): string {
+    return this.hoverBorders[index] || this.hoverBorders[0];
+  }
+
   ngOnInit(): void {
     this.loadPlans();
   }
@@ -39,7 +59,10 @@ export class SubscriptionPlansListingComponent implements OnInit {
       next: ([activePlansResponse, comingSoonPlansResponse, featuresResponse, mappingsResponse]) => {
         const activePlans = (activePlansResponse.data || activePlansResponse || []) as SubscriptionPlan[];
         const comingSoonPlans = (comingSoonPlansResponse.data || comingSoonPlansResponse || []) as SubscriptionPlan[];
-        this.plans$.next([...activePlans, ...comingSoonPlans]);
+        const sortedPlans = [...activePlans, ...comingSoonPlans].sort((a, b) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+        this.plans$.next(sortedPlans);
         this.features = (featuresResponse.data || featuresResponse || []) as ManagedFeature[];
         this.planFeatures = (mappingsResponse.data || mappingsResponse || []) as PlanFeatureMapping[];
       },
