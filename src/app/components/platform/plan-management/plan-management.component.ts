@@ -110,8 +110,9 @@ export class PlanManagementComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading plans:', error);
-        this.errorMessage = 'Failed to load plans. Please try again.';
-        this.notificationService.error('Error', 'Failed to load plans');
+        const apiMessage = error.error?.message || 'Failed to load plans. Please try again.';
+        this.errorMessage = apiMessage;
+        this.notificationService.error('Error', apiMessage);
         this.loadingService.hide();
       }
     });
@@ -352,9 +353,20 @@ export class PlanManagementComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error creating plan:', error);
-        this.notificationService.error('Creation Failed', 'Failed to create plan. Please try again.');
-        this.errorMessage = 'Failed to create plan. Please try again.';
+        const apiMessage = error.error?.message || 'Failed to create plan. Please try again.';
+        this.errorMessage = apiMessage;
         this.loadingService.hide();
+
+        const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+        if (apiFieldErrors) {
+          Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+            if (messages && messages.length > 0) {
+              this.fieldErrors[field] = messages[0];
+            }
+          });
+        }
+
+        this.notificationService.error('Creation Failed', apiMessage);
       }
     });
   }
@@ -399,9 +411,20 @@ export class PlanManagementComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error updating plan:', error);
-        this.notificationService.error('Update Failed', 'Failed to update plan. Please try again.');
-        this.errorMessage = 'Failed to update plan. Please try again.';
+        const apiMessage = error.error?.message || 'Failed to update plan. Please try again.';
+        this.errorMessage = apiMessage;
         this.loadingService.hide();
+
+        const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+        if (apiFieldErrors) {
+          Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+            if (messages && messages.length > 0) {
+              this.fieldErrors[field] = messages[0];
+            }
+          });
+        }
+
+        this.notificationService.error('Update Failed', apiMessage);
       }
     });
   }
@@ -424,7 +447,8 @@ export class PlanManagementComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error updating plan status:', error);
-        this.errorMessage = 'Failed to update plan status. Please try again.';
+        const apiMessage = error.error?.message || 'Failed to update plan status. Please try again.';
+        this.errorMessage = apiMessage;
         this.loadingService.hide();
       }
     });
@@ -453,7 +477,8 @@ export class PlanManagementComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error deleting plan:', error);
-          this.errorMessage = 'Failed to delete plan. Please try again.';
+          const apiMessage = error.error?.message || 'Failed to delete plan. Please try again.';
+          this.errorMessage = apiMessage;
           this.loadingService.hide();
         }
       });

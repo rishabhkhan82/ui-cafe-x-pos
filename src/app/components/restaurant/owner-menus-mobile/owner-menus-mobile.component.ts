@@ -132,7 +132,8 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error loading menu items:', error);
-        this.errorMessage = 'Failed to load menu items. Please try again.';
+        const apiMessage = error.error?.message || 'Failed to load menu items. Please try again.';
+        this.errorMessage = error.error?.message || 'Failed to load menu items. Please try again.';
         this.loadingService.hide();
       }
     });
@@ -536,9 +537,20 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error creating menu item:', error);
-          this.notificationService.error('Creation Failed', 'Failed to create menu item. Please try again.');
-          this.errorMessage = 'Failed to create menu item. Please try again.';
+          const apiMessage = error.error?.message || 'Failed to create menu item. Please try again.';
+          this.errorMessage = apiMessage;
           this.loadingService.hide();
+
+          const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+          if (apiFieldErrors) {
+            Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+              if (messages && messages.length > 0) {
+                this.fieldErrors[field] = messages[0];
+              }
+            });
+          }
+
+          this.notificationService.error('Creation Failed', apiMessage);
         }
       });
     } catch (error) {
@@ -600,9 +612,20 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error updating menu item:', error);
-          this.notificationService.error('Update Failed', 'Failed to update menu item. Please try again.');
-          this.errorMessage = 'Failed to update menu item. Please try again.';
+          const apiMessage = error.error?.message || 'Failed to update menu item. Please try again.';
+          this.errorMessage = apiMessage;
           this.loadingService.hide();
+
+          const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+          if (apiFieldErrors) {
+            Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+              if (messages && messages.length > 0) {
+                this.fieldErrors[field] = messages[0];
+              }
+            });
+          }
+
+          this.notificationService.error('Update Failed', apiMessage);
         }
       });
     } catch (error) {
@@ -636,7 +659,8 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error deleting menu item:', error);
-          this.errorMessage = 'Failed to delete menu item. Please try again.';
+          const apiMessage = error.error?.message || 'Failed to delete menu item. Please try again.';
+          this.errorMessage = apiMessage;
           this.loadingService.hide();
         }
       });

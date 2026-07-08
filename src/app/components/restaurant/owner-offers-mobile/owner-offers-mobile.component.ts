@@ -130,7 +130,8 @@ export class OwnerOffersMobileComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading offers:', error);
-        this.errorMessage = 'Failed to load offers. Please try again.';
+        const apiMessage = error.error?.message || 'Failed to load offers. Please try again.';
+        this.errorMessage = apiMessage;
         this.loadingService.hide();
       }
     });
@@ -469,9 +470,20 @@ export class OwnerOffersMobileComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error creating offer:', error);
-        this.notificationService.error('Creation Failed', 'Failed to create offer. Please try again.');
-        this.errorMessage = 'Failed to create offer. Please try again.';
+        const apiMessage = error.error?.message || 'Failed to create offer. Please try again.';
+        this.errorMessage = apiMessage;
         this.loadingService.hide();
+
+        const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+        if (apiFieldErrors) {
+          Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+            if (messages && messages.length > 0) {
+              this.fieldErrors[field] = messages[0];
+            }
+          });
+        }
+
+        this.notificationService.error('Creation Failed', apiMessage);
       }
     });
   }
@@ -518,9 +530,20 @@ export class OwnerOffersMobileComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error updating offer:', error);
-        this.notificationService.error('Update Failed', 'Failed to update offer. Please try again.');
-        this.errorMessage = 'Failed to update offer. Please try again.';
+        const apiMessage = error.error?.message || 'Failed to update offer. Please try again.';
+        this.errorMessage = apiMessage;
         this.loadingService.hide();
+
+        const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+        if (apiFieldErrors) {
+          Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+            if (messages && messages.length > 0) {
+              this.fieldErrors[field] = messages[0];
+            }
+          });
+        }
+
+        this.notificationService.error('Update Failed', apiMessage);
       }
     });
   }
@@ -548,7 +571,8 @@ export class OwnerOffersMobileComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error deleting offer:', error);
-          this.errorMessage = 'Failed to delete offer. Please try again.';
+          const apiMessage = error.error?.message || 'Failed to delete offer. Please try again.';
+          this.errorMessage = apiMessage;
           this.loadingService.hide();
         }
       });

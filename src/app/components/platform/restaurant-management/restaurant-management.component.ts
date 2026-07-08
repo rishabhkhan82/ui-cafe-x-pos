@@ -160,8 +160,9 @@ export class RestaurantManagementComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading restaurants:', error);
-        this.errorMessage = 'Failed to load restaurants. Please try again.';
-        this.notificationService.error('Error', 'Failed to load restaurants');
+        const apiMessage = error.error?.message || 'Failed to load restaurants. Please try again.';
+        this.errorMessage = apiMessage;
+        this.notificationService.error('Error', apiMessage);
         this.loadingService.hide();
       }
     });
@@ -520,8 +521,19 @@ export class RestaurantManagementComponent implements OnInit {
       error: (error) => {
         this.loadingService.hide();
         console.error('Error creating restaurant:', error);
-        this.errorMessage = 'Failed to create restaurant. Please try again.';
-        this.notificationService.error('Error', 'Failed to create restaurant');
+        const apiMessage = error.error?.message || 'Failed to create restaurant. Please try again.';
+        this.errorMessage = apiMessage;
+
+        const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+        if (apiFieldErrors) {
+          Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+            if (messages && messages.length > 0) {
+              this.fieldErrors[field] = messages[0];
+            }
+          });
+        }
+
+        this.notificationService.error('Creation Failed', apiMessage);
       }
     });
   }
@@ -547,8 +559,19 @@ export class RestaurantManagementComponent implements OnInit {
           error: (error) => {
             this.loadingService.hide();
             console.error('Error updating restaurant:', error);
-            this.errorMessage = 'Failed to update restaurant. Please try again.';
-            this.notificationService.error('Error', 'Failed to update restaurant');
+            const apiMessage = error.error?.message || 'Failed to update restaurant. Please try again.';
+            this.errorMessage = apiMessage;
+
+            const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+            if (apiFieldErrors) {
+              Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+                if (messages && messages.length > 0) {
+                  this.fieldErrors[field] = messages[0];
+                }
+              });
+            }
+
+            this.notificationService.error('Update Failed', apiMessage);
           }
         });
     }
@@ -603,7 +626,8 @@ export class RestaurantManagementComponent implements OnInit {
       error: (error) => {
         this.loadingService.hide();
         console.error('Error updating restaurant status:', error);
-        this.notificationService.error('Error', 'Failed to update restaurant status');
+        const apiMessage = error.error?.message || 'Failed to update restaurant status';
+        this.notificationService.error('Error', apiMessage);
       }
     });
   }
@@ -629,7 +653,8 @@ export class RestaurantManagementComponent implements OnInit {
           error: (error) => {
             this.loadingService.hide();
             console.error('Error deleting restaurant:', error);
-            this.notificationService.error('Error', 'Failed to delete restaurant');
+            const apiMessage = error.error?.message || 'Failed to delete restaurant';
+            this.notificationService.error('Error', apiMessage);
           }
         });
       }

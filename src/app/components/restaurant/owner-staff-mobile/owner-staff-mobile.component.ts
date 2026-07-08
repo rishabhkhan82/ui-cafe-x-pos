@@ -142,7 +142,8 @@ export class OwnerStaffMobileComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading users:', error);
-        this.errorMessage = 'Failed to load users. Please try again.';
+        const apiMessage = error.error?.message || 'Failed to load users. Please try again.';
+        this.errorMessage = apiMessage;
         this.loadingService.hide();
       }
     });
@@ -481,9 +482,20 @@ export class OwnerStaffMobileComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error creating user:', error);
-          this.notificationService.error('Creation Failed', 'Failed to create user. Please try again.');
-          this.errorMessage = 'Failed to create user. Please try again.';
+          const apiMessage = error.error?.message || 'Failed to create user. Please try again.';
+          this.errorMessage = apiMessage;
           this.loadingService.hide();
+
+          const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+          if (apiFieldErrors) {
+            Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+              if (messages && messages.length > 0) {
+                this.fieldErrors[field] = messages[0];
+              }
+            });
+          }
+
+          this.notificationService.error('Creation Failed', apiMessage);
         }
       });
     } catch (error) {
@@ -538,9 +550,20 @@ export class OwnerStaffMobileComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error updating user:', error);
-          this.notificationService.error('Update Failed', 'Failed to update user. Please try again.');
-          this.errorMessage = 'Failed to update user. Please try again.';
+          const apiMessage = error.error?.message || 'Failed to update user. Please try again.';
+          this.errorMessage = apiMessage;
           this.loadingService.hide();
+
+          const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+          if (apiFieldErrors) {
+            Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+              if (messages && messages.length > 0) {
+                this.fieldErrors[field] = messages[0];
+              }
+            });
+          }
+
+          this.notificationService.error('Update Failed', apiMessage);
         }
       });
     } catch (error) {
@@ -632,7 +655,8 @@ export class OwnerStaffMobileComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error updating user role:', error);
-        this.errorMessage = 'Failed to update user role. Please try again.';
+        const apiMessage = error.error?.message || 'Failed to update user role. Please try again.';
+        this.errorMessage = apiMessage;
         this.loadingService.hide();
       }
     });
@@ -661,7 +685,8 @@ export class OwnerStaffMobileComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error deleting user:', error);
-          this.errorMessage = 'Failed to delete user. Please try again.';
+          const apiMessage = error.error?.message || 'Failed to delete user. Please try again.';
+          this.errorMessage = apiMessage;
           this.loadingService.hide();
         }
       });

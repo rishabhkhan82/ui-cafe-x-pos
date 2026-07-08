@@ -370,9 +370,20 @@ export class RoleAccessManagementComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error creating permission:', error);
-        this.notificationService.error('Creation Failed', 'Failed to create permission. Please try again.');
-        this.errorMessage = 'Failed to create permission. Please try again.';
+        const apiMessage = error.error?.message || 'Failed to create permission. Please try again.';
+        this.errorMessage = apiMessage;
         this.loadingService.hide();
+
+        const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+        if (apiFieldErrors) {
+          Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+            if (messages && messages.length > 0) {
+              this.fieldErrors[field] = messages[0];
+            }
+          });
+        }
+
+        this.notificationService.error('Creation Failed', apiMessage);
       }
     });
   }
@@ -405,9 +416,20 @@ export class RoleAccessManagementComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error updating permission:', error);
-        this.notificationService.error('Update Failed', 'Failed to update permission. Please try again.');
-        this.errorMessage = 'Failed to update permission. Please try again.';
+        const apiMessage = error.error?.message || 'Failed to update permission. Please try again.';
+        this.errorMessage = apiMessage;
         this.loadingService.hide();
+
+        const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+        if (apiFieldErrors) {
+          Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+            if (messages && messages.length > 0) {
+              this.fieldErrors[field] = messages[0];
+            }
+          });
+        }
+
+        this.notificationService.error('Update Failed', apiMessage);
       }
     });
   }
@@ -454,7 +476,8 @@ export class RoleAccessManagementComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error deleting permission:', error);
-          this.errorMessage = 'Failed to delete permission. Please try again.';
+          const apiMessage = error.error?.message || 'Failed to delete permission. Please try again.';
+          this.errorMessage = apiMessage;
           this.loadingService.hide();
         }
       });

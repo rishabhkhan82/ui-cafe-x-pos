@@ -436,44 +436,53 @@ export class UserManagementComponent implements OnInit {
     try {
       let avatarBase64: string | undefined;
 
-      // Convert selected file to base64 if provided
       if (this.selectedFile) {
         avatarBase64 = await this.fileToBase64(this.selectedFile);
-        this.selectedFile = null; // Clear the selected file after conversion
+        this.selectedFile = null;
       }
 
       const currentTime = new Date();
       const userRequest = {
         username: this.userForm.username,
-        password: this.userForm.password || undefined, // Only send password if provided
+        password: this.userForm.password || undefined,
         name: this.userForm.name,
         email: this.userForm.email,
         phone: this.userForm.phone,
         role: this.userForm.role,
         user_type: this.userForm.user_type,
-        avatar: avatarBase64 || this.userForm.avatar, // Use base64 if available, else keep existing
+        avatar: avatarBase64 || this.userForm.avatar,
         restaurant_id: this.userForm.restaurant_id,
         is_active: this.userForm.is_active,
         member_since: currentTime,
         created_at: currentTime,
         updated_at: undefined,
         last_login: undefined,
-        created_by: this.authService.getCurrentUser()?.id // Assuming platform owner ID
+        created_by: this.authService.getCurrentUser()?.id
       };
 
-      // Create new user
       this.crudService.createUser(userRequest).subscribe({
         next: (response) => {
           console.log('User created successfully:', response);
           this.notificationService.success('User Created', 'The user has been successfully created.');
           this.resetForm();
-          this.loadUsers(); // Reload users
+          this.loadUsers();
         },
         error: (error) => {
           console.error('Error creating user:', error);
-          this.notificationService.error('Creation Failed', 'Failed to create user. Please try again.');
-          this.errorMessage = 'Failed to create user. Please try again.';
+          const apiMessage = error.error?.message || 'Failed to create user. Please try again.';
+          this.errorMessage = apiMessage;
           this.loadingService.hide();
+
+          const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+          if (apiFieldErrors) {
+            Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+              if (messages && messages.length > 0) {
+                this.fieldErrors[field] = messages[0];
+              }
+            });
+          }
+
+          this.notificationService.error('Creation Failed', apiMessage);
         }
       });
     } catch (error) {
@@ -490,22 +499,21 @@ export class UserManagementComponent implements OnInit {
     try {
       let avatarBase64: string | undefined;
 
-      // Convert selected file to base64 if provided
       if (this.selectedFile) {
         avatarBase64 = await this.fileToBase64(this.selectedFile);
-        this.selectedFile = null; // Clear the selected file after conversion
+        this.selectedFile = null;
       }
 
       const currentTime = new Date();
       const userRequest = {
         username: this.userForm.username,
-        password: this.userForm.password || undefined, // Only send password if provided
+        password: this.userForm.password || undefined,
         name: this.userForm.name,
         email: this.userForm.email,
         phone: this.userForm.phone,
         role: this.userForm.role,
         user_type: this.userForm.user_type,
-        avatar: avatarBase64 || this.userForm.avatar, // Use base64 if available, else keep existing
+        avatar: avatarBase64 || this.userForm.avatar,
         restaurant_id: this.userForm.restaurant_id,
         is_active: this.userForm.is_active,
         member_since: this.editingUser!.member_since,
@@ -515,22 +523,30 @@ export class UserManagementComponent implements OnInit {
         created_by: this.editingUser!.created_by
       };
 
-      console.log('Updating user, userRequest.user_type:', userRequest.user_type);
-
-      // Update existing user
       this.crudService.updateUser(this.editingUser!.id, userRequest).subscribe({
         next: (response) => {
           console.log('User updated successfully:', response);
           this.notificationService.success('User Updated', 'The user has been successfully updated.');
           this.resetForm();
-          this.loadUsers(); // Reload users
+          this.loadUsers();
           this.loadingService.hide();
         },
         error: (error) => {
           console.error('Error updating user:', error);
-          this.notificationService.error('Update Failed', 'Failed to update user. Please try again.');
-          this.errorMessage = 'Failed to update user. Please try again.';
+          const apiMessage = error.error?.message || 'Failed to update user. Please try again.';
+          this.errorMessage = apiMessage;
           this.loadingService.hide();
+
+          const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+          if (apiFieldErrors) {
+            Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+              if (messages && messages.length > 0) {
+                this.fieldErrors[field] = messages[0];
+              }
+            });
+          }
+
+          this.notificationService.error('Update Failed', apiMessage);
         }
       });
     } catch (error) {

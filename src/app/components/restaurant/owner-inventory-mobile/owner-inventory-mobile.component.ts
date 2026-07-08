@@ -104,7 +104,8 @@ export class OwnerInventoryMobileComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading inventory items:', error);
-        this.errorMessage = 'Failed to load inventory items. Please try again.';
+        const apiMessage = error.error?.message || 'Failed to load inventory items. Please try again.';
+        this.errorMessage = apiMessage;
         this.loadingService.hide();
       }
     });
@@ -475,9 +476,20 @@ export class OwnerInventoryMobileComponent implements OnInit {
         error: (error) => {
           this.isSubmitting = false;
           console.error('Error creating inventory item:', error);
-          this.notificationService.error('Creation Failed', 'Failed to create inventory item. Please try again.');
-          this.errorMessage = 'Failed to create inventory item. Please try again.';
+          const apiMessage = error.error?.message || 'Failed to create inventory item. Please try again.';
+          this.errorMessage = apiMessage;
           this.loadingService.hide();
+
+          const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+          if (apiFieldErrors) {
+            Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+              if (messages && messages.length > 0) {
+                this.fieldErrors[field] = messages[0];
+              }
+            });
+          }
+
+          this.notificationService.error('Creation Failed', apiMessage);
         }
       });
     } catch (error) {
@@ -530,9 +542,20 @@ export class OwnerInventoryMobileComponent implements OnInit {
         error: (error) => {
           this.isSubmitting = false;
           console.error('Error updating inventory item:', error);
-          this.notificationService.error('Update Failed', 'Failed to update inventory item. Please try again.');
-          this.errorMessage = 'Failed to update inventory item. Please try again.';
+          const apiMessage = error.error?.message || 'Failed to update inventory item. Please try again.';
+          this.errorMessage = apiMessage;
           this.loadingService.hide();
+
+          const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+          if (apiFieldErrors) {
+            Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+              if (messages && messages.length > 0) {
+                this.fieldErrors[field] = messages[0];
+              }
+            });
+          }
+
+          this.notificationService.error('Update Failed', apiMessage);
         }
       });
     } catch (error) {
@@ -567,7 +590,8 @@ export class OwnerInventoryMobileComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error deleting inventory item:', error);
-          this.errorMessage = 'Failed to delete inventory item. Please try again.';
+          const apiMessage = error.error?.message || 'Failed to delete inventory item. Please try again.';
+          this.errorMessage = apiMessage;
           this.loadingService.hide();
         }
       });

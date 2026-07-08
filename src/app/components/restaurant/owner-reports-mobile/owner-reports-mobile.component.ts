@@ -155,7 +155,8 @@ export class OwnerReportsMobileComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error fetching report:', error);
-        this.notificationService.error('Error', 'Failed to load report data');
+        const apiMessage = error.error?.message || 'Failed to load report data';
+        this.notificationService.error('Error', apiMessage);
         this.loadingService.hide();
         this.isLoading = false;
         this.hasReport = false;
@@ -211,7 +212,8 @@ export class OwnerReportsMobileComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error downloading report:', error);
-        this.notificationService.error('Error', 'Failed to download report');
+        const apiMessage = error.error?.message || 'Failed to download report';
+        this.notificationService.error('Error', apiMessage);
         this.loadingService.hide();
         this.isLoading = false;
       }

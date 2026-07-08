@@ -480,24 +480,9 @@ To day today 30/06/26
 16] live chat - done
 17] plans additional but deactivate offer Display - done
 18] real life restaurant's names and images - done
-20] tomcat local server setup -done
-12] menu items real time needed - pending
-19] api's global errors in response instead of 400 - pending
+20] tomcat local server setup - done
+12] menu items real time needed - done
+19] api's global errors in response instead of 400 - in progress
+20] check no of table used with the name, so unused can be deleted. - pending
 
 ==================
-
-Recipe management & food costing
-Delivery platform integrations (Swiggy, Zomato, Dunzo)
-Customer feedback & review management
-Token System
-Table management & reservation system
-Advanced Inventory
-
-Customer Feedback & Review Management
-Everything in Starter Plus
-Recipe Management & Food Costing
-Delivery Platform Integrations (Swiggy & Zomato)
-Token System
-Table Management
-Table Reservation System
-Advanced Inventory Management
