@@ -38,6 +38,10 @@ export class AuthService {
     return this.crudService.postData('auth/login', credentials);
   }
 
+  forgotPassword(identifier: string): Observable<any> {
+    return this.crudService.postData('auth/forgot-password', { identifier });
+  }
+
   logout(): void {
     const userType = this.currentUser?.user_type;
     this.currentUser = null;

@@ -25,6 +25,11 @@ export const routes: Routes = [
   },
 
   {
+    path: 'forgot-password',
+    loadComponent: () => import('./components/auth/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent)
+  },
+
+  {
     path: 'terms-and-conditions',
     loadComponent: () => import('./components/public/terms-and-conditions/terms-and-conditions.component').then(m => m.TermsAndConditionsComponent)
   },

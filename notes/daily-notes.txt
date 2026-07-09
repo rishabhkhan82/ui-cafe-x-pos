@@ -482,7 +482,16 @@ To day today 30/06/26
 18] real life restaurant's names and images - done
 20] tomcat local server setup - done
 12] menu items real time needed - done
-19] api's global errors in response instead of 400 - in progress
-20] check no of table used with the name, so unused can be deleted. - pending
+19] api's global errors in response instead of 400 - done
+
+new points 
+1] forgot password - pending
+2] daily db backup email at platform_owner with download link and db_backup saved in uploads in server - pending
+3] advance iventory with recipe managment and menu_items for low stock alerts - pending
+
+new points Optional
+1] check no of table in db used with the name, so unused can be deleted. - pending
+2] broadcast notification
+3] maintainance mode, site name, site logo, image upload all this from system configuration - pending
 
 ==================

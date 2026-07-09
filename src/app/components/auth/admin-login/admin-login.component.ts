@@ -49,6 +49,10 @@ export class AdminLoginComponent implements OnInit, OnDestroy {
     window.open(baseHref + '', '_blank');
   }
 
+  goToForgotPassword() {
+    this.router.navigate(['/forgot-password']);
+  }
+
   onSubmit() {
     if (!this.username || !this.password) {
       this.errorMessage = 'Please enter both username and password';
