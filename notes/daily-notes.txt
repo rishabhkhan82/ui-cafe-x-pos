@@ -485,7 +485,7 @@ To day today 30/06/26
 19] api's global errors in response instead of 400 - done
 
 new points 
-1] forgot password - pending
+1] forgot password - done
 2] daily db backup email at platform_owner with download link and db_backup saved in uploads in server - pending
 3] advance iventory with recipe managment and menu_items for low stock alerts - pending
 
