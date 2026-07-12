@@ -53,6 +53,7 @@ export interface MenuItem {
   is_vegetarian: boolean;
   is_featured?: boolean;
   is_recommended?: boolean;
+  type?: 'RAW' | 'FINISHED';
   restaurant_id: number;
   created_at?: Date;
   updated_at?: Date;
@@ -82,6 +83,7 @@ export interface InventoryItem {
   updated_at?: Date;
   created_by?: number;
   updated_by?: number;
+  type?: 'RAW' | 'FINISHED';
 }
 
 export interface RestaurantSubscription {
@@ -140,4 +142,30 @@ export interface SubscriptionHistory {
   offer_name_at_subscription: string;
   offer_discount_percentage_at_subscription: number;
   plan_name_at_subscription: string;
+}
+
+export interface ProductionBatch {
+  id: number;
+  type: string;
+  inventory_item_id: number | string;
+  inventory_item_name: string;
+  menu_item_id?: number;
+  menu_item_name?: string;
+  quantity_change: number;
+  balance_after: number;
+  note: string;
+  created_at: Date;
+  created_by?: number;
+  restaurant_id: number;
+}
+
+export interface RecipeProduction {
+  id: number;
+  recipe_id: number;
+  menu_item_id: number;
+  restaurant_id: number;
+  batch_multiplier: number;
+  note: string;
+  created_by?: number;
+  created_at: Date;
 }

@@ -486,8 +486,8 @@ To day today 30/06/26
 
 new points 
 1] forgot password - done
-2] daily db backup email at platform_owner with download link and db_backup saved in uploads in server - pending
-3] advance iventory with recipe managment and menu_items for low stock alerts - pending
+2] daily db backup email at platform_owner with download link and db_backup saved in uploads in server - done
+3] advance iventory with recipe managment and menu_items for low stock alerts - done
 
 new points Optional
 1] check no of table in db used with the name, so unused can be deleted. - pending

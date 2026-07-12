@@ -198,6 +198,34 @@ export const routes: Routes = [
   },
 
   {
+    path: 'recipe-management',
+    loadComponent: () => import('./components/restaurant/recipe-management/recipe-management.component').then(m => m.RecipeManagementComponent),
+    canActivate: [authGuard, roleGuard, subscriptionGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
+  },
+
+  {
+    path: 'production-batch',
+    loadComponent: () => import('./components/restaurant/production-batch/production-batch.component').then(m => m.ProductionBatchComponent),
+    canActivate: [authGuard, roleGuard, subscriptionGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
+  },
+
+  {
+    path: 'waste-management',
+    loadComponent: () => import('./components/restaurant/waste-management/waste-management.component').then(m => m.WasteManagementComponent),
+    canActivate: [authGuard, roleGuard, subscriptionGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
+  },
+
+  {
+    path: 'inventory-stock-log',
+    loadComponent: () => import('./components/restaurant/inventory-stock-log/inventory-stock-log.component').then(m => m.InventoryStockLogComponent),
+    canActivate: [authGuard, roleGuard, subscriptionGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
+  },
+
+  {
     path: 'owner-orders-mobile',
     loadComponent: () => import('./components/shared/orders-mobile/orders-mobile.component').then(m => m.OrdersMobileComponent),
     canActivate: [authGuard, roleGuard, subscriptionGuard],

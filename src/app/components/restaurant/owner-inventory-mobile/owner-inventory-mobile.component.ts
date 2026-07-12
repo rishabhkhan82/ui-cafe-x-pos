@@ -73,7 +73,8 @@ export class OwnerInventoryMobileComponent implements OnInit {
     created_at: undefined,
     updated_at: undefined,
     created_by: undefined,
-    updated_by: undefined
+    updated_by: undefined,
+    type: 'RAW'
   };
 
   constructor(
@@ -185,7 +186,8 @@ export class OwnerInventoryMobileComponent implements OnInit {
       created_at: apiInventoryItem.created_at ? new Date(apiInventoryItem.created_at) : undefined,
       updated_at: apiInventoryItem.updated_at ? new Date(apiInventoryItem.updated_at) : undefined,
       created_by: apiInventoryItem.created_by,
-      updated_by: apiInventoryItem.updated_by
+      updated_by: apiInventoryItem.updated_by,
+      type: apiInventoryItem.type || 'RAW'
     }));
   }
 
@@ -271,7 +273,8 @@ export class OwnerInventoryMobileComponent implements OnInit {
         created_at: undefined,
         updated_at: undefined,
         created_by: undefined,
-        updated_by: undefined
+        updated_by: undefined,
+        type: 'RAW'
       };
     }
   }
@@ -299,7 +302,8 @@ export class OwnerInventoryMobileComponent implements OnInit {
       created_at: undefined,
       updated_at: undefined,
       created_by: undefined,
-      updated_by: undefined
+      updated_by: undefined,
+      type: 'RAW'
     };
     this.editingInventoryItem = null;
     this.fieldErrors = {};
@@ -337,7 +341,7 @@ export class OwnerInventoryMobileComponent implements OnInit {
   }
 
   validateName(): void {
-    const validation = this.validationService.name(this.inventoryForm.name, 'Item name');
+    const validation = this.validationService.multiCharName(this.inventoryForm.name, 'Item name');
     if (!validation.isValid) {
       this.fieldErrors['name'] = validation.message!;
     } else {
@@ -458,21 +462,24 @@ export class OwnerInventoryMobileComponent implements OnInit {
         location_in_store: '',
         is_active: this.inventoryForm.is_active,
         expiry_date: this.inventoryForm.expiry_date ? new Date(this.inventoryForm.expiry_date).toISOString() : null,
-        restaurant_id: currentUser?.restaurantId || 1,
+        type: this.inventoryForm.type || 'RAW',
+        restaurant_id: currentUser?.restaurantId,
         created_at: currentTime.toISOString(),
-        updated_at: currentTime.toISOString(),
-        created_by: Number(currentUser?.id) || 1,
-        updated_by: Number(currentUser?.id) || 1
+        created_by: Number(currentUser?.id),
+        updated_at: null,
+        updated_by: null
+        // updated_at: currentTime.toISOString(),
+        // updated_by: Number(currentUser?.id)
       };
 
-      this.crudService.createInventoryItem(inventoryRequest).subscribe({
-        next: (response) => {
-          this.isSubmitting = false;
-          console.log('Inventory item created successfully:', response);
-          this.notificationService.success('Inventory Item Created', 'The inventory item has been successfully created.');
-          this.cancelAdd();
-          this.loadInventoryItems();
-        },
+       this.crudService.createInventoryItem(inventoryRequest).subscribe({
+         next: (response) => {
+           this.isSubmitting = false;
+           console.log('Inventory item created successfully:', response);
+           this.notificationService.success('Inventory Item Created', 'The inventory item has been successfully created.');
+           this.cancelAdd();
+           this.loadInventoryItems();
+         },
         error: (error) => {
           this.isSubmitting = false;
           console.error('Error creating inventory item:', error);
@@ -520,16 +527,17 @@ export class OwnerInventoryMobileComponent implements OnInit {
         selling_price: this.inventoryForm.selling_price,
         supplier_id: this.inventoryForm.supplier_id,
         location_in_store: '',
-        is_active: this.inventoryForm.is_active,
-        expiry_date: this.inventoryForm.expiry_date ? new Date(this.inventoryForm.expiry_date).toISOString() : null,
-        restaurant_id: this.inventoryForm.restaurant_id,
-        created_at: this.editingInventoryItem!.created_at?.toISOString() || currentTime.toISOString(),
-        updated_at: currentTime.toISOString(),
-        created_by: this.editingInventoryItem!.created_by,
-        updated_by: Number(currentUser?.id) || 1
-      };
+         is_active: this.inventoryForm.is_active,
+         expiry_date: this.inventoryForm.expiry_date ? new Date(this.inventoryForm.expiry_date).toISOString() : null,
+         type: this.inventoryForm.type || 'RAW',
+         restaurant_id: this.inventoryForm.restaurant_id,
+         created_at: this.editingInventoryItem!.created_at?.toISOString() || currentTime.toISOString(),
+         updated_at: currentTime.toISOString(),
+         created_by: this.editingInventoryItem!.created_by,
+         updated_by: Number(currentUser?.id) || 1
+       };
 
-      console.log('Updating inventory item, inventoryRequest:', inventoryRequest);
+       console.log('Updating inventory item, inventoryRequest:', inventoryRequest);
 
       this.crudService.updateInventoryItem(this.editingInventoryItem!.id, inventoryRequest).subscribe({
         next: (response) => {

@@ -260,6 +260,58 @@ export class CrudService {
     return this.deleteData('inventory-items', {}, id);
   }
 
+  // Recipe CRUD operations
+  createRecipe(payload: any): Observable<any> {
+    return this.postData('recipes', payload);
+  }
+
+  updateRecipe(id: string | number, payload: any): Observable<any> {
+    return this.putData('recipes', payload, {}, id);
+  }
+
+  getRecipes(params?: any): Observable<any> {
+    return this.getData('recipes', params);
+  }
+
+  getRecipeById(id: string | number): Observable<any> {
+    return this.getData(`recipes/${id}`);
+  }
+
+  deleteRecipe(id: string | number): Observable<any> {
+    return this.deleteData('recipes', {}, id);
+  }
+
+  // Recipe / Production operations
+  produceRecipe(payload: any): Observable<any> {
+    return this.postData('recipes/produce', payload);
+  }
+
+  getRecipeProductions(params?: any): Observable<any> {
+    return this.getData('recipes/productions', params);
+  }
+
+  // Inventory Stock Log operations
+  getStockLogs(params?: any): Observable<any> {
+    return this.getData('inventory-stock-logs', params);
+  }
+
+  getStockLogSummary(params?: any): Observable<any> {
+    return this.getData('inventory-stock-logs/summary', params);
+  }
+
+  // Waste Management operations
+  createWasteBatch(payload: any): Observable<any> {
+    return this.postData('waste-management/batch', payload);
+  }
+
+  getWasteManagement(params?: any): Observable<any> {
+    return this.getData('waste-management', params);
+  }
+
+  deleteWasteManagement(id: string | number): Observable<any> {
+    return this.deleteData('waste-management', {}, id);
+  }
+
   // Offer operations
   getOffers(params?: CrudParams): Observable<any> {
     return this.getData('offers', params);

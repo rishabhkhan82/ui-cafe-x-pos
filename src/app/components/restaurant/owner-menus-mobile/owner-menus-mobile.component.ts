@@ -86,6 +86,7 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
     is_spicy: false,
     is_veg: true,
     is_vegetarian: true,
+    type: 'RAW',
     restaurant_id: 1,
     created_at: undefined,
     updated_at: undefined,
@@ -211,6 +212,7 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
       is_spicy: apiMenuItem.is_spicy ?? false,
       is_veg: apiMenuItem.is_veg ?? true,
       is_vegetarian: apiMenuItem.is_vegetarian ?? true,
+      type: apiMenuItem.type || 'RAW',
       restaurant_id: apiMenuItem.restaurant_id || 1,
       created_at: apiMenuItem.created_at ? new Date(apiMenuItem.created_at) : undefined,
       updated_at: apiMenuItem.updated_at ? new Date(apiMenuItem.updated_at) : undefined,
@@ -299,6 +301,7 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
         is_spicy: false,
         is_veg: true,
         is_vegetarian: true,
+        type: 'RAW',
         restaurant_id: 1,
         created_at: undefined,
         updated_at: undefined,
@@ -329,6 +332,7 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
       is_spicy: false,
       is_veg: true,
       is_vegetarian: true,
+      type: 'RAW',
       restaurant_id: 1,
       created_at: undefined,
       updated_at: undefined,
@@ -517,24 +521,25 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
         is_popular: this.menuForm.is_popular,
         is_featured: this.menuForm.is_featured,
         is_recommended: this.menuForm.is_recommended,
-        is_spicy: this.menuForm.is_spicy,
-        is_veg: this.menuForm.is_veg,
-        is_vegetarian: this.menuForm.is_vegetarian,
-        restaurant_id: currentUser?.restaurantId || 1,
-        created_at: currentTime.toISOString(),
-        updated_at: currentTime.toISOString(),
-        created_by: Number(currentUser?.id) || 1,
-        updated_by: Number(currentUser?.id) || 1
-      };
+         is_spicy: this.menuForm.is_spicy,
+         is_veg: this.menuForm.is_veg,
+         is_vegetarian: this.menuForm.is_vegetarian,
+         type: this.menuForm.type || 'RAW',
+         restaurant_id: currentUser?.restaurantId || 1,
+         created_at: currentTime.toISOString(),
+         updated_at: currentTime.toISOString(),
+         created_by: Number(currentUser?.id) || 1,
+         updated_by: Number(currentUser?.id) || 1
+       };
 
-      // Create new menu item
-      this.crudService.createMenuItem(menuRequest).subscribe({
-        next: (response) => {
-          console.log('Menu item created successfully:', response);
-          this.notificationService.success('Menu Item Created', 'The menu item has been successfully created.');
-          this.cancelAdd();
-          this.loadMenus(); // Reload menu items
-        },
+       // Create new menu item
+       this.crudService.createMenuItem(menuRequest).subscribe({
+         next: (response) => {
+           console.log('Menu item created successfully:', response);
+           this.notificationService.success('Menu Item Created', 'The menu item has been successfully created.');
+           this.cancelAdd();
+           this.loadMenus(); // Reload menu items
+         },
         error: (error) => {
           console.error('Error creating menu item:', error);
           const apiMessage = error.error?.message || 'Failed to create menu item. Please try again.';
@@ -590,17 +595,18 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
         is_popular: this.menuForm.is_popular,
         is_featured: this.menuForm.is_featured,
         is_recommended: this.menuForm.is_recommended,
-        is_spicy: this.menuForm.is_spicy,
-        is_veg: this.menuForm.is_veg,
-        is_vegetarian: this.menuForm.is_vegetarian,
-        restaurant_id: this.menuForm.restaurant_id,
-        created_at: this.editingMenu!.created_at?.toISOString() || currentTime.toISOString(),
-        updated_at: currentTime.toISOString(),
-        created_by: this.editingMenu!.created_by,
-        updated_by: Number(currentUser?.id) || 1
-      };
+         is_spicy: this.menuForm.is_spicy,
+         is_veg: this.menuForm.is_veg,
+         is_vegetarian: this.menuForm.is_vegetarian,
+         type: this.menuForm.type || 'RAW',
+         restaurant_id: this.menuForm.restaurant_id,
+         created_at: this.editingMenu!.created_at?.toISOString() || currentTime.toISOString(),
+         updated_at: currentTime.toISOString(),
+         created_by: this.editingMenu!.created_by,
+         updated_by: Number(currentUser?.id) || 1
+       };
 
-      console.log('Updating menu item, menuRequest:', menuRequest);
+       console.log('Updating menu item, menuRequest:', menuRequest);
 
       // Update existing menu item
       this.crudService.updateMenuItem(this.editingMenu!.id, menuRequest).subscribe({

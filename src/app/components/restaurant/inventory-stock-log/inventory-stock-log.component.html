@@ -1,0 +1,259 @@
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <!-- Header -->
+  <div class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 dark:shadow-lg" style="min-height: 73px;">
+    <div class="px-4 py-3">
+      <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-4 flex-1">
+        <button
+          (click)="router.navigate(['/restaurant-navigation-mobile'])"
+          class="p-2 rounded-xl bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-md hover:shadow-lg border border-red-200 dark:border-gray-600">
+          <i class="fas fa-arrow-left text-red-600 dark:text-red-400 text-lg"></i>
+        </button>
+
+        <div class="flex items-center space-x-3 flex-1">
+          <div class="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg">
+            <i class="fas fa-clipboard-list text-white text-sm"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold text-gray-900 dark:text-white">
+              Stock Log
+            </h1>
+            <p class="text-xs text-gray-600 dark:text-gray-400">Inventory movement history</p>
+          </div>
+        </div>
+
+        <div class="flex space-x-2 ml-4">
+          <button
+            (click)="loadStockLogs()"
+            class="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
+            <i class="fas fa-refresh"></i>
+          </button>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pt-5 pb-24 px-4 space-y-6">
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div class="group relative overflow-hidden rounded-2xl border-0 bg-emerald-600 dark:bg-emerald-500 p-5 shadow-lg hover:shadow-xl transition-all duration-300 lg:col-span-1">
+        <div class="relative z-10">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-[11px] font-semibold uppercase tracking-wider text-emerald-100 dark:text-emerald-100">Total Logs</p>
+              <p class="text-3xl font-black text-white mt-2 tracking-tight">{{ summary.totalLogs }}</p>
+            </div>
+            <div class="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
+              <i class="fas fa-list text-white/90 text-sm"></i>
+            </div>
+          </div>
+        </div>
+        <div class="absolute -bottom-4 -right-4 w-24 h-24 rounded-full bg-white/10 group-hover:scale-150 transition-transform duration-500"></div>
+      </div>
+
+      <div class="group relative overflow-hidden rounded-2xl border-0 bg-yellow-500 dark:bg-yellow-600 p-5 shadow-lg hover:shadow-xl transition-all duration-300">
+        <div class="relative z-10">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-[11px] font-semibold uppercase tracking-wider text-yellow-100 dark:text-yellow-100">Adjustments</p>
+              <p class="text-3xl font-black text-white mt-2 tracking-tight">{{ summary.adjustments }}</p>
+            </div>
+            <div class="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
+              <i class="fas fa-edit text-white text-sm"></i>
+            </div>
+          </div>
+        </div>
+        <div class="absolute -bottom-4 -right-4 w-24 h-24 rounded-full bg-white/10 group-hover:scale-150 transition-transform duration-500"></div>
+      </div>
+
+      <div class="group relative overflow-hidden rounded-2xl border-0 bg-blue-600 dark:bg-blue-500 p-5 shadow-lg hover:shadow-xl transition-all duration-300">
+        <div class="relative z-10">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-[11px] font-semibold uppercase tracking-wider text-blue-100 dark:text-blue-100">Sales</p>
+              <p class="text-3xl font-black text-white mt-2 tracking-tight">{{ summary.sales }}</p>
+            </div>
+            <div class="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
+              <i class="fas fa-shopping-cart text-white text-sm"></i>
+            </div>
+          </div>
+        </div>
+        <div class="absolute -bottom-4 -right-4 w-24 h-24 rounded-full bg-white/10 group-hover:scale-150 transition-transform duration-500"></div>
+      </div>
+
+      <div class="group relative overflow-hidden rounded-2xl border-0 bg-red-600 dark:bg-red-500 p-5 shadow-lg hover:shadow-xl transition-all duration-300">
+        <div class="relative z-10">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-[11px] font-semibold uppercase tracking-wider text-red-100 dark:text-red-100">Waste</p>
+              <p class="text-3xl font-black text-white mt-2 tracking-tight">{{ summary.waste }}</p>
+            </div>
+            <div class="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
+              <i class="fas fa-trash text-white text-sm"></i>
+            </div>
+          </div>
+        </div>
+        <div class="absolute -bottom-4 -right-4 w-24 h-24 rounded-full bg-white/10 group-hover:scale-150 transition-transform duration-500"></div>
+      </div>
+
+      <div class="group relative overflow-hidden rounded-2xl border-0 bg-purple-600 dark:bg-purple-500 p-5 shadow-lg hover:shadow-xl transition-all duration-300 col-span-2 md:col-span-3 lg:col-span-4">
+        <div class="relative z-10 flex items-center justify-between">
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-purple-100 dark:text-purple-100">Production</p>
+            <p class="text-3xl font-black text-white mt-2 tracking-tight">{{ summary.production }}</p>
+          </div>
+          <div class="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
+            <i class="fas fa-blender text-white text-sm"></i>
+          </div>
+        </div>
+        <div class="absolute -bottom-4 -right-4 w-32 h-32 rounded-full bg-white/10 group-hover:scale-150 transition-transform duration-500"></div>
+      </div>
+    </div>
+
+    <!-- Combined Filter + List Box -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+      <!-- Filters -->
+      <div class="border-b border-gray-200 dark:border-gray-700 p-4">
+        <div class="flex items-center space-x-2 overflow-x-auto pb-1">
+          <button
+            (click)="onFilterChange('ALL')"
+            [class]="filterType === 'ALL' ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">
+            All
+          </button>
+          <button
+            (click)="onFilterChange('SALE')"
+            [class]="filterType === 'SALE' ? 'bg-blue-600 text-white' : 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/30'"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">
+            Sales
+          </button>
+          <button
+            (click)="onFilterChange('PRODUCTION')"
+            [class]="filterType === 'PRODUCTION' ? 'bg-purple-600 text-white' : 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/30'"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">
+            Production
+          </button>
+          <button
+            (click)="onFilterChange('WASTAGE')"
+            [class]="filterType === 'WASTAGE' ? 'bg-red-600 text-white' : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30'"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">
+            Waste
+          </button>
+          <button
+            (click)="onFilterChange('ADJUSTMENT')"
+            [class]="filterType === 'ADJUSTMENT' ? 'bg-yellow-600 text-white' : 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-900/30'"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">
+            Adjustments
+          </button>
+        </div>
+      </div>
+
+      <!-- List -->
+      <div class="divide-y divide-gray-200 dark:divide-gray-700">
+        <div *ngIf="stockLogs.length === 0" class="p-12 text-center">
+          <div class="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-gray-700 mx-auto mb-4 flex items-center justify-center">
+            <i class="fas fa-clipboard-list text-gray-400 text-2xl"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">No stock logs found</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Stock movements will appear here as they happen.</p>
+        </div>
+
+        <div *ngFor="let log of stockLogs" class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+          <div class="flex items-start justify-between">
+            <div class="flex items-start space-x-4 flex-1">
+              <!-- Type Icon -->
+              <div [class]="getTypeIconBg(log.type)" class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
+                <i [class]="getTypeIcon(log.type)" class="text-white"></i>
+              </div>
+
+              <!-- Details -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center space-x-2 mb-1">
+                  <span [class]="getTypeClass(log.type)" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium">
+                    {{ log.type }}
+                  </span>
+                  <span class="text-xs text-gray-500 dark:text-gray-400">
+                    {{ log.created_at | date:'short' }}
+                  </span>
+                </div>
+
+                <div class="flex items-center space-x-4 text-sm">
+                  <span class="text-gray-900 dark:text-white font-medium">
+                    {{ log.inventory_item_name || ('Item #' + log.inventory_item_id) }}
+                  </span>
+                  <span class="text-xs text-gray-500 dark:text-gray-400">
+                    #{{ log.inventory_item_id }}
+                  </span>
+                  <span [class]="log.quantity_change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'" class="font-semibold">
+                    {{ log.quantity_change >= 0 ? '+' : '' }}{{ log.quantity_change | number:'1.2-2' }}
+                  </span>
+                  <span class="text-gray-500 dark:text-gray-400">
+                    Balance: {{ log.balance_after | number:'1.2-2' }}
+                  </span>
+                </div>
+
+                <p *ngIf="log.note" class="text-xs text-gray-600 dark:text-gray-400 mt-1 truncate">
+                  {{ log.note }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="totalElements > 0" class="fixed bottom-20 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-10 py-2 px-4">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+          <div class="text-sm text-gray-700 dark:text-gray-300">
+            {{ paginationRange }} of {{ totalElements }}
+          </div>
+          <div class="flex items-center space-x-1">
+            <span class="text-xs text-gray-500 dark:text-gray-400">Show:</span>
+            <select
+              [(ngModel)]="itemsPerPage"
+              (change)="onItemsPerPageChange($event)"
+              class="px-2 py-1 text-xs w-14 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-gray-900 dark:text-gray-300">
+              <option *ngFor="let option of itemsPerPageOptions" [value]="option">{{ option }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-1">
+          <button
+            (click)="changePage(1)"
+            [disabled]="currentPage === 1"
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
+            <i class="fas fa-angle-double-left text-xs"></i>
+          </button>
+          <button
+            (click)="changePage(currentPage - 1)"
+            [disabled]="currentPage === 1"
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
+            <i class="fas fa-chevron-left text-xs"></i>
+          </button>
+          <button
+            *ngFor="let page of pageNumbers"
+            (click)="changePage(page)"
+            [class]="page === currentPage ? 'w-7 h-7 rounded bg-red-500 text-white flex items-center justify-center text-xs' : 'w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center text-xs text-gray-900 dark:text-gray-300'">
+            {{ page }}
+          </button>
+          <button
+            (click)="changePage(currentPage + 1)"
+            [disabled]="currentPage === totalPages"
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
+            <i class="fas fa-chevron-right text-xs"></i>
+          </button>
+          <button
+            (click)="changePage(totalPages)"
+            [disabled]="currentPage === totalPages"
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
+            <i class="fas fa-angle-double-right text-xs"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
