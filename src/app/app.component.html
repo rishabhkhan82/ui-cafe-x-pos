@@ -174,82 +174,82 @@
 <!-- Bottom Navigation -->
 <nav *ngIf="isLoggedIn" class="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 z-50">
   <!-- Navigation For Restaurant Owner -->
-  <div *ngIf="currentUser?.role === 'restaurant_owner' || currentUser?.role === 'restaurant_manager'" class="flex items-center justify-around py-2">
-    <a routerLink="/restaurant-navigation-mobile" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
-      <i class="fas fa-home text-xl"></i>
+  <div *ngIf="currentUser?.role === 'restaurant_owner' || currentUser?.role === 'restaurant_manager'" class="flex items-center justify-around py-2 md:py-0">
+    <a routerLink="/restaurant-navigation-mobile" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors">
+      <i class="fas fa-home text-xl md:text-lg"></i>
       <span class="text-xs font-medium">Home</span>
     </a>
-    <a routerLink="/owner-menus-mobile" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
-      <i class="fas fa-utensils text-xl"></i>
+    <a routerLink="/owner-menus-mobile" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors">
+      <i class="fas fa-utensils text-xl md:text-lg"></i>
       <span class="text-xs font-medium">Menu</span>
     </a>
-    <a routerLink="/owner-orders-mobile" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors relative">
-      <i class="fas fa-receipt text-xl"></i>
+    <a routerLink="/owner-orders-mobile" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors relative">
+      <i class="fas fa-receipt text-xl md:text-lg"></i>
       <span class="text-xs font-medium">Orders</span>
       <span *ngIf="pendingOrdersCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">{{ pendingOrdersCount }}</span>
     </a>
     <a routerLink="/restaurant-owner-profile-mobile" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
-      <i class="fas fa-user text-xl"></i>
+      <i class="fas fa-user text-xl md:text-lg"></i>
       <span class="text-xs font-medium">Profile</span>
     </a>
-    <a routerLink="/owner-plans-mobile" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
-      <i class="fas fa-crown text-xl"></i>
+    <a routerLink="/owner-plans-mobile" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors">
+      <i class="fas fa-crown text-xl md:text-lg"></i>
       <span class="text-xs font-medium">Plan</span>
     </a>
   </div>
   <!-- Navigation For kitchen Manager -->
-  <div *ngIf="currentUser?.role === 'kitchen_manager'" class="flex items-center justify-around py-2">
-    <a routerLink="/kitchen-navigation-mobile" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
-      <i class="fas fa-home text-xl"></i>
+  <div *ngIf="currentUser?.role === 'kitchen_manager'" class="flex items-center justify-around py-2 md:py-0">
+    <a routerLink="/kitchen-navigation-mobile" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors">
+      <i class="fas fa-home text-xl md:text-lg"></i>
       <span class="text-xs font-medium">Home</span>
     </a>
-    <a routerLink="/kitchen-orders" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors relative">
-      <i class="fas fa-receipt text-xl"></i>
+    <a routerLink="/kitchen-orders" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors relative">
+      <i class="fas fa-receipt text-xl md:text-lg"></i>
       <span class="text-xs font-medium">Orders</span>
       <span *ngIf="pendingOrdersCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">{{ pendingOrdersCount }}</span>
     </a>
-    <a routerLink="/kitchen-profile-mobile" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
-      <i class="fas fa-user text-xl"></i>
+    <a routerLink="/kitchen-profile-mobile" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors">
+      <i class="fas fa-user text-xl md:text-lg"></i>
       <span class="text-xs font-medium">Profile</span>
     </a>
-  </div>
+  </div> 
   <!-- Navigation For Waiter -->
-  <div *ngIf="currentUser?.role === 'waiter'" class="flex items-center justify-around py-2">
-    <a routerLink="/waiter-navigation-mobile" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
-      <i class="fas fa-home text-xl"></i>
+  <div *ngIf="currentUser?.role === 'waiter'" class="flex items-center justify-around py-2 md:py-0">
+    <a routerLink="/waiter-navigation-mobile" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors">
+      <i class="fas fa-home text-xl md:text-lg"></i>
       <span class="text-xs font-medium">Home</span>
     </a>
-    <a routerLink="/waiter-orders" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors relative">
-      <i class="fas fa-receipt text-xl"></i>
+    <a routerLink="/waiter-orders" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors relative">
+      <i class="fas fa-receipt text-xl md:text-lg"></i>
       <span class="text-xs font-medium">Orders</span>
       <span *ngIf="pendingOrdersCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">{{ pendingOrdersCount }}</span>
     </a>
-    <a routerLink="/waiter-profile-mobile" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
-      <i class="fas fa-user text-xl"></i>
+    <a routerLink="/waiter-profile-mobile" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors">
+      <i class="fas fa-user text-xl md:text-lg"></i>
       <span class="text-xs font-medium">Profile</span>
     </a>
   </div>
   <!-- Navigation For Customer -->
-  <div *ngIf="currentUser?.role === 'customer'" class="flex items-center justify-around py-2">
-    <a [routerLink]="customerHomeRoute" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
-      <i class="fas fa-home text-xl"></i>
+  <div *ngIf="currentUser?.role === 'customer'" class="flex items-center justify-around py-2 md:py-0">
+    <a [routerLink]="customerHomeRoute" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors">
+      <i class="fas fa-home text-xl md:text-lg"></i>
       <span class="text-xs font-medium">Home</span>
     </a>
-    <a routerLink="/customer/menu" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
-      <i class="fas fa-utensils text-xl"></i>
+    <a routerLink="/customer/menu" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors">
+      <i class="fas fa-utensils text-xl md:text-lg"></i>
       <span class="text-xs font-medium">Menu</span>
     </a>
-    <a routerLink="/customer/orders" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors relative">
-      <i class="fas fa-receipt text-xl"></i>
+    <a routerLink="/customer/orders" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors relative">
+      <i class="fas fa-receipt text-xl md:text-lg"></i>
       <span class="text-xs font-medium">Orders</span>
       <span *ngIf="pendingOrdersCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">{{ pendingOrdersCount }}</span>
     </a>
-    <a routerLink="/customer/offers" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
-      <i class="fas fa-gift text-xl"></i>
+    <a routerLink="/customer/offers" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors">
+      <i class="fas fa-gift text-xl md:text-lg"></i>
       <span class="text-xs font-medium">Offers</span>
     </a>
-    <a routerLink="/customer/profile" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 text-gray-400 hover:text-primary-500 transition-colors">
-      <i class="fas fa-user text-xl"></i>
+    <a routerLink="/customer/profile" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors">
+      <i class="fas fa-user text-xl md:text-lg"></i>
       <span class="text-xs font-medium">Profile</span>
     </a>
   </div>

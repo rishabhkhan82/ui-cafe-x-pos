@@ -1,7 +1,7 @@
 <!-- Main Container -->
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
   <!-- Premium Fixed Header -->
-  <div class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 dark:shadow-lg" style="min-height: 73px;">
+  <div *ngIf="!showAddForm" class="fixed top-0 md:top-[73px] left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 dark:shadow-lg" style="min-height: 73px;">
     <div class="px-4 py-3">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4 flex-1">
@@ -68,7 +68,7 @@
     </div>
   </div>
 
-  <div class="px-6 py-8 space-y-6 mb-20" *ngIf="!showAddForm">
+  <div class="px-6 space-y-6 pt-[25px] pb-[105px] md:pt-[100px] md:pb-[90px]" *ngIf="!showAddForm">
 
     <!-- Results Header -->
     <div *ngIf="totalElements > 0" class="flex items-center justify-between">
@@ -82,7 +82,7 @@
     </div>
 
     <!-- Menu Items Grid -->
-    <div class="grid gap-6 grid-cols-1">
+    <div class="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <div
         *ngFor="let menu of menus"
         class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer group"
@@ -190,7 +190,7 @@
     </div>
 
     <!-- Pagination -->
-    <div *ngIf="totalElements > 0 && !showAddForm" class="fixed bottom-20 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-10 py-2 px-4">
+    <div *ngIf="totalElements > 0 && !showAddForm" class="fixed bottom-20 md:bottom-[65px] left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-10 py-2 px-4">
       <div class="flex justify-between items-center">
         <div class="flex items-center space-x-3">
           <div class="text-sm text-gray-700 dark:text-gray-300">
@@ -244,9 +244,9 @@
   </div>
 
   <!-- Add/Edit Menu Modal -->
-  <div *ngIf="showAddForm" class="fixed top-0 bottom-20 left-0 right-0 bg-white dark:bg-gray-800 z-50 overflow-y-auto">
+  <div *ngIf="showAddForm" class="fixed top-0 md:top-[73px] bottom-20 md:bottom-[65px] left-0 right-0 bg-white dark:bg-gray-800 z-50 overflow-y-auto">
     <div class="h-full flex flex-col">
-      <div class="fixed top-0 left-0 right-0 px-6 py-4 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 flex items-center justify-between z-[100]">
+      <div class="fixed top-0 md:top-[73px] left-0 right-0 px-6 py-4 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 flex items-center justify-between z-[100]">
         <div class="flex items-center space-x-4">
           <button (click)="cancelAdd()" class="w-8 h-8 rounded-lg hover:bg-red-100 dark:hover:bg-gray-700 flex items-center justify-center">
             <i class="fas fa-arrow-left text-red-600 dark:text-red-400"></i>
