@@ -11,8 +11,8 @@
             <i class="fas fa-arrow-left text-red-600 dark:text-red-400 text-lg"></i>
           </button>
 
-          <!-- Header Content (Shown when not searching) -->
-          <div *ngIf="!showSearchBar" class="flex items-center space-x-3 flex-1">
+          <!-- Header Content (always visible on md+, hidden on mobile when searching) -->
+          <div [class.hidden]="showSearchBar" class="flex items-center space-x-3 flex-1 md:!flex">
             <div class="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg">
               <i class="fas fa-utensils text-white text-sm"></i>
             </div>
@@ -29,18 +29,18 @@
             <select
               [(ngModel)]="categoryFilter"
               (change)="filterMenus()"
-              class="hidden min-w-[200px] md:block px-3 py-2.5 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-[2rem] text-gray-900 dark:text-gray-300 focus:ring-2 focus:ring-red-500 focus:border-red-500">
-              <option value="all">All Categories</option>
-              <option *ngFor="let category of categories" [value]="category.code" [disabled]="category.code === 'all'">{{ category.label }}</option>
+              class="hidden min-w-[200px] md:block px-3 py-2.5 text-sm bg-gray-50 dark:bg-transparent border border-gray-200 dark:border-gray-600 rounded-[2rem] text-gray-900 dark:text-gray-300 focus:ring-2 focus:ring-red-500 focus:border-red-500">
+              <option class="bg-gray-50 dark:bg-gray-700" value="all">All Categories</option>
+              <option class="bg-gray-50 dark:bg-gray-700" *ngFor="let category of categories" [value]="category.code" [disabled]="category.code === 'all'">{{ category.label }}</option>
             </select>
 
             <!-- Type Filter (md+ only) -->
             <select
               [(ngModel)]="typeFilter"
               (change)="filterMenus()"
-              class="hidden min-w-[200px] md:block px-3 py-2.5 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-[2rem] text-gray-900 dark:text-gray-300 focus:ring-2 focus:ring-red-500 focus:border-red-500">
-              <option value="all">All Types</option>
-              <option *ngFor="let type of typeOptions" [value]="type.code">{{ type.label }}</option>
+              class="hidden min-w-[200px] md:block px-3 py-2.5 text-sm bg-gray-50 dark:bg-transparent border border-gray-200 dark:border-gray-600 rounded-[2rem] text-gray-900 dark:text-gray-300 focus:ring-2 focus:ring-red-500 focus:border-red-500">
+              <option class="bg-gray-50 dark:bg-gray-700" value="all">All Types</option>
+              <option class="bg-gray-50 dark:bg-gray-700" *ngFor="let type of typeOptions" [value]="type.code">{{ type.label }}</option>
             </select>
           </div>
 
