@@ -32,6 +32,7 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
   showSearchBar = false;
   searchInput = '';
   searchSubject = new Subject<string>();
+  typeFilter = 'all';
   errorMessage = '';
   selectedFile: File | null = null;
   private subscriptions: Subscription[] = [];
@@ -48,13 +49,18 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
 
   // Menu Categories
   categories = [
-    {code : 'all', label: 'All'},
     {code : 'starters', label: 'Starters'},
     {code : 'main-course', label: 'Main Course'},
     {code : 'salads', label: 'Salads'},
     {code : 'desserts', label: 'Desserts'},
     {code : 'beverages', label: 'Beverages'},
     {code : 'snacks', label: 'Snacks'}
+  ];
+
+  // Menu Types
+  typeOptions = [
+    { code: 'RAW', label: 'RAW (Recipe-based)' },
+    { code: 'FINISHED', label: 'FINISHED (Direct Stock)' }
   ];
 
   // Category color mapping to avoid function calls in templates
@@ -165,6 +171,10 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
       params.is_available = this.statusFilter === 'available';
     }
 
+    if (this.typeFilter && this.typeFilter !== 'all') {
+      params.type = this.typeFilter;
+    }
+
     console.log(params);
     return params;
   }
@@ -230,6 +240,7 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
     this.searchTerm = '';
     this.categoryFilter = 'all';
     this.statusFilter = 'all';
+    this.typeFilter = 'all';
     this.currentPage = 1; // Reset to first page
     this.loadMenus();
   }
@@ -682,7 +693,8 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
   get hasActiveFilters(): boolean {
     return !!(this.searchTerm?.trim() ||
               this.categoryFilter !== 'all' ||
-              this.statusFilter !== 'all');
+              this.statusFilter !== 'all' ||
+              this.typeFilter !== 'all');
   }
 
   // Calculate pagination range to avoid Math.min in template

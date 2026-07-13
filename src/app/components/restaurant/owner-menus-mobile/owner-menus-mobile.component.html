@@ -24,8 +24,28 @@
             </div>
           </div>
 
+          <div class="hidden md:flex items-center space-x-2 flex-1 justify-end">
+            <!-- Category Filter (md+ only) -->
+            <select
+              [(ngModel)]="categoryFilter"
+              (change)="filterMenus()"
+              class="hidden min-w-[200px] md:block px-3 py-2.5 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-[2rem] text-gray-900 dark:text-gray-300 focus:ring-2 focus:ring-red-500 focus:border-red-500">
+              <option value="all">All Categories</option>
+              <option *ngFor="let category of categories" [value]="category.code" [disabled]="category.code === 'all'">{{ category.label }}</option>
+            </select>
+
+            <!-- Type Filter (md+ only) -->
+            <select
+              [(ngModel)]="typeFilter"
+              (change)="filterMenus()"
+              class="hidden min-w-[200px] md:block px-3 py-2.5 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-[2rem] text-gray-900 dark:text-gray-300 focus:ring-2 focus:ring-red-500 focus:border-red-500">
+              <option value="all">All Types</option>
+              <option *ngFor="let type of typeOptions" [value]="type.code">{{ type.label }}</option>
+            </select>
+          </div>
+
           <!-- Simple Search Bar (Shown when searching) -->
-          <div *ngIf="showSearchBar" class="flex-1 ml-4 animate-fadeInSlide">
+          <div *ngIf="showSearchBar" class="flex-1 ml-4 animate-fadeInSlide md:max-w-[200px]">
             <div class="relative">
               <input
                 type="text"
@@ -40,7 +60,7 @@
           </div>
         </div>
 
-        <div class="flex space-x-2 ml-4">
+        <div class="flex items-center space-x-2 ml-4">
           <button
             *ngIf="!showSearchBar"
             (click)="toggleSearchBar()"
