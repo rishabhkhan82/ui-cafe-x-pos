@@ -130,8 +130,8 @@
         </div>
 
         <!-- Regular Order Cards for all other tabs -->
-        <div *ngIf="activeStatus !== 'BILLING_REQUESTED'">
-          <div *ngFor="let ord of orders" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden mb-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4" *ngIf="activeStatus !== 'BILLING_REQUESTED'">
+          <div *ngFor="let ord of orders" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden mb-4">
 
           <!-- Card Header -->
           <div class="border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">

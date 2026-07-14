@@ -129,7 +129,7 @@
 </header>
 
 <!-- Main Content Area -->
-<main class="flex-1" [class.overflow-y-auto]="isLoggedIn" [style.height.px]="isLoggedIn ? 'calc(100vh - 140px)' : '100vh'" [style.padding-top.px]="isLoggedIn ? 68 : 0" [style.padding-bottom.px]="isLoggedIn ? 44 : 0">
+<main class="flex-1 overflow-x-hidden" [class.overflow-y-auto]="isLoggedIn" [style.height.px]="isLoggedIn ? 'calc(100vh - 140px)' : '100vh'" [style.padding-top.px]="isLoggedIn ? 68 : 0" [style.padding-bottom.px]="isLoggedIn ? 44 : 0">
   <router-outlet></router-outlet>
 </main>
 
@@ -198,7 +198,7 @@
     </a>
   </div>
   <!-- Navigation For kitchen Manager -->
-  <div *ngIf="currentUser?.role === 'kitchen_manager'" class="flex items-center justify-around py-2 md:py-0">
+  <div *ngIf="currentUser?.role === 'kitchen_manager'" class="flex items-center justify-around py-2">
     <a routerLink="/kitchen-navigation-mobile" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors">
       <i class="fas fa-home text-xl md:text-lg"></i>
       <span class="text-xs font-medium">Home</span>
@@ -214,7 +214,7 @@
     </a>
   </div> 
   <!-- Navigation For Waiter -->
-  <div *ngIf="currentUser?.role === 'waiter'" class="flex items-center justify-around py-2 md:py-0">
+  <div *ngIf="currentUser?.role === 'waiter'" class="flex items-center justify-around py-2">
     <a routerLink="/waiter-navigation-mobile" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors">
       <i class="fas fa-home text-xl md:text-lg"></i>
       <span class="text-xs font-medium">Home</span>

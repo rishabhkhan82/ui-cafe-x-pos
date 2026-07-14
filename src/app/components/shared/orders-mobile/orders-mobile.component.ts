@@ -315,7 +315,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
 
   // UI Helper Methods
   getStatusButtonClass(status: string): string {
-    const baseClass = 'px-4 py-2 rounded-full font-medium transition-colors flex items-center text-sm border whitespace-nowrap';
+    const baseClass = 'px-4 py-2 rounded-full font-medium transition-colors flex items-center text-sm border whitespace-nowrap lg:flex-1 lg:justify-around';
     const isActive = this.activeStatus === status;
 
     if (isActive) {
