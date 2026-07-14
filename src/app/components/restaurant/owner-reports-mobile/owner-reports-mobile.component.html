@@ -1,7 +1,7 @@
 <!-- Main Container -->
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900 mb-7">
   <!-- Fixed Header -->
-  <div class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 dark:shadow-lg" style="min-height: 73px;">
+  <div class="fixed top-0 md:top-[73px] left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 dark:shadow-lg" style="min-height: 73px;">
     <div class="px-4 py-3">
       <div class="flex items-center">
         <div class="flex items-center space-x-4 flex-1">
@@ -36,9 +36,9 @@
   </div>
 
   <!-- Controls & Report Display -->
-  <div class="px-6 pt-5 pb-6 space-y-6 no-print">
+  <div class="px-6 pt-[25px] pb-[30px] md:pt-[100px] md:pb-[14px] no-print grid grid-cols-1 md:grid-cols-3 gap-6">
     <!-- Report Type Selection & Date Controls -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-4 px-6">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-4 px-6 order-1 md:order-2">
       <div class="flex flex-col sm:flex-row gap-4 mb-4">
         <div class="flex-1">
           <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">Report Type</label>
@@ -51,13 +51,13 @@
 
       <!-- Date Selection (for date-based reports) -->
       <div *ngIf="isDateRequired()" class="space-y-4">
-        <div class="flex flex-wrap gap-2 justify-between">
+        <div class="flex flex-wrap gap-2 justify-start">
           <button *ngFor="let preset of datePresets"
                   (click)="applyDatePreset(preset.value)"
                   [ngClass]="selectedPreset === preset.value
                     ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md'
                     : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'"
-                  class="px-3 py-1 rounded-md font-medium text-xs transition-all duration-200 shadow-sm">
+                  class="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 shadow-sm">
             {{ preset.label }}
           </button>
         </div>
@@ -90,7 +90,7 @@
     </div>
 
     <!-- Report Display -->
-    <div *ngIf="hasReport && !isLoading" class="space-y-6">
+    <div class="grid grid-cols-1 md:col-span-2 gap-6 order-2 md:order-1">
       <!-- Report Meta Info -->
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -107,7 +107,7 @@
 
       <!-- Statistics Cards -->
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6">
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div *ngFor="let stat of statisticsList"
                class="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/20 rounded-xl p-4 text-center border border-red-200/50 dark:border-red-700/30">
             <div class="text-2xl font-bold text-red-600 dark:text-red-400 mb-1">{{ stat.value }}</div>
@@ -115,8 +115,10 @@
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Data Table -->
+    <!-- Data Table -->
+    <div class="md:col-span-3 order-3">
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div class="p-6 border-b border-gray-200 dark:border-gray-700">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Details</h3>

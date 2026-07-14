@@ -43,7 +43,11 @@ export class OwnerReportsMobileComponent implements OnInit {
     { label: 'Today', value: 'TODAY' },
     { label: 'This Week', value: 'THIS_WEEK' },
     { label: 'This Month', value: 'THIS_MONTH' },
-    { label: 'This Year', value: 'THIS_YEAR' }
+    { label: 'This Year', value: 'THIS_YEAR' },
+    { label: 'Yesterday', value: 'YESTERDAY' },
+    { label: '3 Months', value: 'LAST_3_MONTHS' },
+    { label: '6 Months', value: 'LAST_6_MONTHS' },
+    { label: 'Last Year', value: 'LAST_YEAR' }
   ];
 
   selectedPreset: string = 'TODAY';
@@ -83,6 +87,11 @@ export class OwnerReportsMobileComponent implements OnInit {
       case 'TODAY':
         this.fromDate = this.toDate = today.toISOString().split('T')[0];
         break;
+      case 'YESTERDAY': {
+        const yesterday = new Date(year, month, date - 1);
+        this.fromDate = this.toDate = yesterday.toISOString().split('T')[0];
+        break;
+      }
       case 'THIS_WEEK': {
         const startOfWeek = new Date(year, month, date - ((date + 6) % 7));
         this.fromDate = startOfWeek.toISOString().split('T')[0];
@@ -97,6 +106,24 @@ export class OwnerReportsMobileComponent implements OnInit {
         this.fromDate = new Date(year, 0, 1).toISOString().split('T')[0];
         this.toDate = today.toISOString().split('T')[0];
         break;
+      case 'LAST_3_MONTHS': {
+        const last3 = new Date(year, month - 3, date);
+        this.fromDate = last3.toISOString().split('T')[0];
+        this.toDate = new Date(year, month, date - 1).toISOString().split('T')[0];
+        break;
+      }
+      case 'LAST_6_MONTHS': {
+        const last6 = new Date(year, month - 6, date);
+        this.fromDate = last6.toISOString().split('T')[0];
+        this.toDate = new Date(year, month, date - 1).toISOString().split('T')[0];
+        break;
+      }
+      case 'LAST_YEAR': {
+        const lastYear = new Date(year - 1, 0, 1);
+        this.fromDate = lastYear.toISOString().split('T')[0];
+        this.toDate = new Date(year - 1, 11, 31).toISOString().split('T')[0];
+        break;
+      }
     }
     this.selectedPreset = preset;
   }
