@@ -1,6 +1,6 @@
 <div  class="min-h-screen via-white to-slate-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 mb-6">
   <!-- Premium Header -->
-  <div class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 dark:shadow-lg" style="min-height: 73px;">
+  <div class="fixed top-0 md:top-[73px] left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 dark:shadow-lg" style="min-height: 73px;">
     <div class="px-4 py-3">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4">
@@ -46,14 +46,14 @@
     </div>
   </div>
 
-  <main *ngIf="((this.loadingService.loading$ | async) === false)" class="px-4 py-4 pb-10 pt-6">
+  <main *ngIf="((this.loadingService.loading$ | async) === false)" class="px-6 space-y-6 pt-[25px] pb-10 md:pb-6 md:pt-[100px] md:max-w-5xl md:mx-auto">
     <!-- Welcome Banner -->
     <div class="mb-6 animate__animated animate__fadeInUp">
-      <div class="gradient-bg rounded-2xl p-6 text-white relative overflow-hidden">
+      <div class="gradient-bg rounded-2xl p-6 md:p-8 text-white relative overflow-hidden">
         <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
         <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
         <div class="relative z-10">
-          <h2 class="text-2xl font-bold mb-2">Hi {{ user?.name}}!</h2>
+          <h2 class="text-2xl md:text-3xl font-bold mb-2">Hi {{ user?.name}}!</h2>
           <p class="text-white/90">Manage your admin account and settings.</p>
         </div>
       </div>
@@ -63,8 +63,8 @@
     <div *ngIf="user" class="space-y-6">
       <!-- Account Section -->
       <section class="mb-6 animate__animated animate__fadeInUp animate__delay-1s">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Account</h3>
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
+        <h3 class="md:text-xl font-bold text-gray-900 dark:text-white mb-3">Account</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 shadow-sm">
           <div class="flex items-center">
             <div class="relative">
               <img class="w-12 h-12 rounded-full mr-4 border-2 border-primary-500 shadow-md object-cover" [src]="getFullImageUrl(userForm.avatar || user.avatar)" alt="Profile">
@@ -85,7 +85,7 @@
               <button *ngIf="isEditing" (click)="toggleEdit()" class="px-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm">Cancel</button>
             </div>
           </div>
-          <div class="mt-4 grid grid-cols-2 gap-3">
+          <div class="mt-4 grid grid-cols-2 gap-3 md:gap-4">
             <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
               <p class="text-xs text-gray-500 dark:text-gray-400">Phone</p>
               <p class="font-medium text-gray-900 dark:text-white mt-0.5">{{ user.phone }}</p>
@@ -100,8 +100,8 @@
 
       <!-- Contact Information -->
       <section class="animate__animated animate__fadeInUp animate__delay-2s">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Contact Information</h3>
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm space-y-4">
+        <h3 class="md:text-xl font-bold text-gray-900 dark:text-white mb-3">Contact Information</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 shadow-sm space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
           <!-- Email -->
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email Address</label>
@@ -137,9 +137,9 @@
 
       <!-- Account Details -->
       <section class="animate__animated animate__fadeInUp animate__delay-3s">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Account Details</h3>
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
-          <div class="grid grid-cols-2 gap-4">
+        <h3 class="md:text-xl font-bold text-gray-900 dark:text-white mb-3">Account Details</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 shadow-sm">
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <!-- Role -->
             <div>
               <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">User Role</label>
@@ -194,8 +194,8 @@
 
       <!-- Preferences & Security -->
       <section class="animate__animated animate__fadeInUp animate__delay-4s">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Preferences & Security</h3>
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm space-y-4">
+        <h3 class="md:text-xl font-bold text-gray-900 dark:text-white mb-3">Preferences & Security</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 shadow-sm space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
           <div class="flex items-center justify-between">
             <div>
               <p class="font-medium text-gray-900 dark:text-white">Dark Mode</p>
