@@ -1,10 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LoadingService } from '../../../services/loading.service';
 import { AuthService } from '../../../services/auth.service';
 import { CrudService } from '../../../services/crud.service';
+import { Subject, Observable, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-inventory-stock-log',
@@ -13,10 +15,15 @@ import { CrudService } from '../../../services/crud.service';
   templateUrl: './inventory-stock-log.component.html',
   styleUrl: './inventory-stock-log.component.css'
 })
-export class InventoryStockLogComponent implements OnInit {
+export class InventoryStockLogComponent implements OnInit, OnDestroy {
   stockLogs: any[] = [];
   filterType: string = 'ALL';
   isLoading = false;
+  searchTerm = '';
+  showSearchBar = false;
+  searchInput = '';
+  searchSubject = new Subject<string>();
+  private subscriptions: Subscription[] = [];
 
   currentPage = 1;
   totalPages = 1;
@@ -43,6 +50,7 @@ export class InventoryStockLogComponent implements OnInit {
   ngOnInit(): void {
     this.loadSummary();
     this.loadStockLogs();
+    this.setupSearch();
   }
 
   loadStockLogs(): void {
@@ -56,6 +64,9 @@ export class InventoryStockLogComponent implements OnInit {
     };
     if (this.filterType !== 'ALL') {
       params.type = this.filterType;
+    }
+    if (this.searchTerm && this.searchTerm.trim()) {
+      params.search = this.searchTerm.trim();
     }
     this.crudService.getStockLogs(params).subscribe({
       next: (response: any) => {
@@ -120,6 +131,63 @@ export class InventoryStockLogComponent implements OnInit {
     this.filterType = type;
     this.currentPage = 1;
     this.loadStockLogs();
+  }
+
+  private setupSearch(): void {
+    const sub = this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(term => {
+        this.searchTerm = term;
+        this.currentPage = 1;
+        return this.crudService.getStockLogs(this.buildSearchParams());
+      })
+    ).subscribe({
+      next: (response: any) => {
+        this.stockLogs = response.data || [];
+        this.currentPage = response.currentPage || this.currentPage;
+        this.totalPages = response.pageCount || 1;
+        this.totalElements = response.totalRowCount || 0;
+        this.loadingService.hide();
+      },
+      error: (error) => {
+        console.error('Failed to search stock logs', error);
+        this.loadingService.hide();
+      }
+    });
+    this.subscriptions.push(sub);
+  }
+
+  private buildSearchParams(): any {
+    const currentUser = this.authService.getCurrentUser();
+    const params: any = {
+      restaurant_id: currentUser?.restaurantId,
+      page: this.currentPage,
+      size: this.itemsPerPage
+    };
+    if (this.filterType !== 'ALL') {
+      params.type = this.filterType;
+    }
+    if (this.searchTerm && this.searchTerm.trim()) {
+      params.search = this.searchTerm.trim();
+    }
+    return params;
+  }
+
+  toggleSearchBar(): void {
+    this.showSearchBar = !this.showSearchBar;
+    if (!this.showSearchBar) {
+      this.searchInput = '';
+      this.searchSubject.next('');
+    }
+  }
+
+  onSearchInputChange(value: string): void {
+    this.searchSubject.next(value);
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   getCountByType(type: string): number {

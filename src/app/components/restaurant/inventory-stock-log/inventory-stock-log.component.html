@@ -1,8 +1,7 @@
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
   <!-- Header -->
-  <div class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 dark:shadow-lg" style="min-height: 73px;">
+  <div class="fixed top-0 md:top-[73px] left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 dark:shadow-lg" style="min-height: 73px;">
     <div class="px-4 py-3">
-      <div class="flex items-center justify-between">
       <div class="flex items-center space-x-4 flex-1">
         <button
           (click)="router.navigate(['/restaurant-navigation-mobile'])"
@@ -10,7 +9,7 @@
           <i class="fas fa-arrow-left text-red-600 dark:text-red-400 text-lg"></i>
         </button>
 
-        <div class="flex items-center space-x-3 flex-1">
+        <div [class.hidden]="showSearchBar" class="flex items-center space-x-3 flex-1 md:!flex">
           <div class="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg">
             <i class="fas fa-clipboard-list text-white text-sm"></i>
           </div>
@@ -22,7 +21,33 @@
           </div>
         </div>
 
-        <div class="flex space-x-2 ml-4">
+        <div *ngIf="showSearchBar" class="flex-1 ml-4 animate-fadeInSlide md:max-w-[210px]">
+          <div class="relative">
+            <input
+              type="text"
+              [(ngModel)]="searchInput"
+              (ngModelChange)="onSearchInputChange($event)"
+              placeholder="Search by item name"
+              class="w-full px-4 py-2 pl-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-[2rem] shadow-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+              autofocus
+            >
+            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"></i>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2 ml-4">
+          <button
+            *ngIf="!showSearchBar"
+            (click)="toggleSearchBar()"
+            class="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
+            <i class="fas fa-search"></i>
+          </button>
+          <button
+            *ngIf="showSearchBar"
+            (click)="toggleSearchBar()"
+            class="p-2 bg-red-100 dark:bg-red-900/20 hover:bg-red-200 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
+            <i class="fas fa-times"></i>
+          </button>
           <button
             (click)="loadStockLogs()"
             class="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
@@ -30,11 +55,10 @@
           </button>
         </div>
       </div>
-      </div>
     </div>
   </div>
 
-  <div class="pt-5 pb-24 px-4 space-y-6">
+  <div class="px-6 space-y-6 pt-[25px] pb-[105px] md:pt-[100px] md:pb-[90px]">
     <div class="flex flex-col md:flex-row md:gap-4 md:items-start">
       <!-- Summary Cards -->
       <div class="w-full md:w-2/5">
