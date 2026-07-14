@@ -1,7 +1,7 @@
 <!-- Main Container -->
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
   <!-- Premium Fixed Header -->
-    <div *ngIf="!showAddForm" class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 dark:shadow-lg" style="min-height: 73px;">
+    <div class="fixed top-0 md:top-[73px] left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 dark:shadow-lg" style="min-height: 73px;">
     <div class="px-4 py-3">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4 flex-1">
@@ -12,7 +12,7 @@
           </button>
 
           <!-- Header Content (Shown when not searching) -->
-          <div *ngIf="!showSearchBar" class="flex items-center space-x-3 flex-1">
+          <div [class.hidden]="showSearchBar" class="flex items-center space-x-3 flex-1 md:!flex">
             <div class="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg">
               <i class="fas fa-percentage text-white text-sm"></i>
             </div>
@@ -25,7 +25,7 @@
           </div>
 
           <!-- Simple Search Bar (Shown when searching) -->
-          <div *ngIf="showSearchBar" class="flex-1 ml-4 animate-fadeInSlide">
+          <div *ngIf="showSearchBar" class="flex-1 ml-4 animate-fadeInSlide md:max-w-[240px]">
             <div class="relative">
               <input
                 type="text"
@@ -68,7 +68,7 @@
     </div>
   </div>
 
-  <div class="px-6 pt-8 mb-24 space-y-6" *ngIf="!showAddForm">
+  <div class="px-6 space-y-6 pt-[25px] pb-[105px] md:pt-[100px] md:pb-[90px]">
 
     <!-- Results Header -->
     <div *ngIf="totalElements > 0" class="flex items-center justify-between">
@@ -82,7 +82,7 @@
     </div>
 
     <!-- Offers Grid -->
-    <div class="grid gap-4 grid-cols-1">
+    <div class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
       <div
         *ngFor="let offer of offers"
         class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer group"
@@ -189,7 +189,7 @@
     </div>
 
     <!-- Pagination -->
-    <div *ngIf="totalElements > 0 && !showAddForm" class="fixed bottom-20 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-10 py-2 px-4">
+    <div *ngIf="totalElements > 0 && !showAddForm" class="fixed bottom-20 md:bottom-[65px] left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-10 py-2 px-4">
       <div class="flex justify-between items-center">
         <div class="flex items-center space-x-3">
           <div class="text-sm text-gray-700 dark:text-gray-300">
@@ -243,9 +243,10 @@
   </div>
 
   <!-- Add/Edit Offer Modal -->
-  <div *ngIf="showAddForm" class="fixed top-0 bottom-20 left-0 right-0 bg-white dark:bg-gray-800 z-50 overflow-y-auto">
-    <div class="h-full flex flex-col">
-      <div class="fixed top-0 left-0 right-0 px-6 py-4 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 flex items-center justify-between z-[100]">
+  <div *ngIf="showAddForm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] md:py-10">
+    <div class="h-full flex flex-col bg-white dark:bg-gray-800 z-50 w-full md:w-[672px] md:rounded-2xl md:shadow-lg overflow-hidden">
+      <!-- Modal Header -->
+      <div class="px-6 py-4 bg-white/95 dark:bg-gray-800 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 flex items-center justify-between z-[100]">
         <div class="flex items-center space-x-4">
           <button (click)="cancelAdd()" class="w-8 h-8 rounded-lg hover:bg-red-100 dark:hover:bg-gray-700 flex items-center justify-center transition-colors duration-200">
             <i class="fas fa-arrow-left text-red-600 dark:text-red-400"></i>
@@ -258,8 +259,8 @@
           <i class="fas fa-save mr-2"></i>{{ editingOffer ? 'Update' : 'Save' }}
         </button>
       </div>
-
-      <div class="flex-1 pt-20 p-6 overflow-y-auto">
+      <!-- Modal Body -->
+      <div class="flex-1 p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-red-500 scrollbar-track-gray-100 dark:scrollbar-track-gray-700">
         <form class="space-y-4">
           <div class="grid grid-cols-2 gap-4">
             <div>
@@ -442,6 +443,28 @@
             </div>
           </div>
         </form>
+      </div>
+      <!-- Modal Footer -->
+      <div class="px-6 py-4 bg-white/95 dark:bg-gray-800 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 flex items-center justify-between z-[100]">
+        <div>
+          <button (click)="cancelAdd()" class="flex items-center justify-center border border-gray-300 dark:border-gray-600 px-4 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium">
+              <i class="fas fa-arrow-left text-red-600 dark:text-red-400 mr-2"></i> Go Back
+          </button>
+        </div>
+        <div>
+          <button
+            type="button"
+            (click)="cancelAdd()"
+            class="px-4 py-2 mr-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            (click)="onSubmitForm()"
+            class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium">
+            {{ editingOffer ? 'Update' : 'Save' }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
