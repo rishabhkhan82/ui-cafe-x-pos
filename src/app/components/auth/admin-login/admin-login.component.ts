@@ -19,6 +19,7 @@ export class AdminLoginComponent implements OnInit, OnDestroy {
   password = '';
   errorMessage = '';
   isLoading = false;
+  showPassword = false;
   private loadingSubscription: Subscription = new Subscription();
 
   constructor(
@@ -51,6 +52,10 @@ export class AdminLoginComponent implements OnInit, OnDestroy {
 
   goToForgotPassword() {
     this.router.navigate(['/forgot-password']);
+  }
+
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
   }
 
   onSubmit() {

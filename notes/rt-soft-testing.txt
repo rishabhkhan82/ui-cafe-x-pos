@@ -3,3 +3,6 @@
 
 2] Privacy policy & Terms & condition page
 - checked, review and testing - Done
+
+3] Login page
+- checked, reveiw and tesing - Done

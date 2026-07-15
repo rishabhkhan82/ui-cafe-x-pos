@@ -495,3 +495,5 @@ new points Optional
 3] maintainance mode, site name, site logo, image upload all this from system configuration - pending
 
 ==================
+
+versioning come at home,login and dashboard footer. 
