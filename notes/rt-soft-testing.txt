@@ -1,2 +1,5 @@
-1] Home componenet
+1] Home page
 - home component review and testing - Done
+
+2] Privacy policy & Terms & condition page
+- checked, review and testing - Done
