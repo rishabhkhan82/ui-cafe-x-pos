@@ -2,13 +2,15 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { ManagedFeature, PlanFeatureMapping, RoleFeatureMapping, SubscriptionPlan, MockDataService } from '../../../services/mock-data.service';
+import { ManagedFeature, PlanFeatureMapping, RoleFeatureMapping, SubscriptionPlan, MockDataService, NavigationMenu, MenuAccessPermission } from '../../../services/mock-data.service';
 import { CrudService } from '../../../services/crud.service';
+import { Router } from '@angular/router';
+import { NoViewAccessComponent } from '../../shared/no-view-access/no-view-access.component';
 
 @Component({
   selector: 'app-feature-access-control',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NoViewAccessComponent],
   templateUrl: './feature-access-control.component.html',
   styleUrl: './feature-access-control.component.css'
 })
@@ -73,10 +75,18 @@ export class FeatureAccessControlComponent implements OnInit, OnDestroy {
 
   private subscriptions: Subscription[] = [];
 
+  currentPagePermissions: MenuAccessPermission | null = null;
+
   constructor(
     private mockDataService: MockDataService,
-    private crudService: CrudService
-  ) {}
+    private crudService: CrudService, private router: Router
+  ) {
+    // Subscribe to the observable stream
+    const navSub = this.mockDataService.navMenuByRole$.subscribe(data => {
+      this.currentPagePermissions = this.setMenuPermissionsFromRoute(data);  // Update permissions when menu data arrives
+    });
+    this.subscriptions.push(navSub);
+  }
 
   ngOnInit(): void {
     this.loadFeatures();
@@ -164,15 +174,6 @@ export class FeatureAccessControlComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error loading plans:', error);
-        // Fallback to mock data on error
-        this.mockDataService.getSubscriptionPlans().subscribe(plans => {
-          this.plans = plans;
-          if (this.plans.length > 0) {
-            this.selectedPlan = this.plans[0];
-            this.tempSelectedPlan = this.plans[0];
-          }
-          this.updateComputedProperties();
-        });
       }
     });
     this.subscriptions.push(subscription);
@@ -622,5 +623,44 @@ export class FeatureAccessControlComponent implements OnInit, OnDestroy {
     return this.getFilteredFeatures().filter(feature =>
       this.featureStates[feature.feature_id]?.planEnabled
     );
+  }
+
+  private setMenuPermissionsFromRoute(menus: NavigationMenu[]): MenuAccessPermission | null {
+    const currentUrl = this.router.url;
+    console.log('Current URL:', currentUrl);
+
+    // Normalize the current route - remove leading slash for comparison
+    const normalizedRoute = currentUrl.startsWith('/') ? currentUrl.substring(1) : currentUrl;
+
+    // Recursively find menu by path
+    const findMenu = (menuList: NavigationMenu[]): NavigationMenu | null => {
+      for (const menu of menuList) {
+        // Handle path comparison - menu path may or may not start with /
+        const menuPath = menu.path || '';
+        const normalizedMenuPath = menuPath.startsWith('/') ? menuPath.substring(1) : menuPath;
+        
+        // Exact match or path starts with menu path (for child routes)
+        if (normalizedMenuPath && (normalizedRoute === normalizedMenuPath || normalizedRoute.startsWith(normalizedMenuPath + '/'))) {
+          return menu;
+        }
+        
+        // Check children recursively
+        if (menu.children && menu.children.length > 0) {
+          const found = findMenu(menu.children);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    const matchedMenu = findMenu(menus);
+    
+    if (matchedMenu) {
+      console.log('Matched menu:', matchedMenu);
+      return matchedMenu.permissions || null;
+    }
+
+    console.log('No matching menu found for route:', currentUrl);
+    return null;
   }
 }

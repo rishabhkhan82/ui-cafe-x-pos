@@ -11,12 +11,14 @@
         <button
           type="button"
           (click)="resetToDefaults()"
-          class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          disabled
+          class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors opacity-50 cursor-not-allowed">
           Reset to Defaults
         </button>
         <button
           (click)="saveChanges()"
-          class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
+          disabled
+          class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2 opacity-50 cursor-not-allowed">
           <i class="fas fa-plus"></i>
           <span>Save Changes</span>
         </button>
@@ -24,33 +26,11 @@
     </div>
   </div>
 
-  <!-- Feature Overview -->
-  <div class="pos-card rounded-2xl p-6 mb-6">
-    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-      <i class="fas fa-chart-bar mr-3 text-purple-600"></i>
-      Feature Overview
-    </h3>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl">
-        <div class="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">{{ coreFeaturesCount }}</div>
-        <div class="text-sm font-medium text-gray-700 dark:text-gray-300">Core Features</div>
-        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Essential functionality</div>
-      </div>
-      <div class="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-xl">
-        <div class="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">{{ advancedFeaturesCount }}</div>
-        <div class="text-sm font-medium text-gray-700 dark:text-gray-300">Advanced Features</div>
-        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Enhanced capabilities</div>
-      </div>
-      <div class="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-xl">
-        <div class="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">{{ premiumFeaturesCount }}</div>
-        <div class="text-sm font-medium text-gray-700 dark:text-gray-300">Premium Features</div>
-        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Enterprise-grade tools</div>
-      </div>
-    </div>
-  </div>
+  <!-- No Access -->
+  <app-no-view-access *ngIf="currentPagePermissions?.can_view === false"></app-no-view-access>
 
   <!-- Filters and Search -->
-  <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+  <div *ngIf="currentPagePermissions?.can_view === true" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
       <div>
         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
@@ -130,7 +110,7 @@
   </div>
 
   <!-- Feature Configuration -->
-  <div *ngIf="selectedPlan" class="pos-card rounded-2xl p-6">
+  <div *ngIf="selectedPlan && currentPagePermissions?.can_view === true" class="pos-card rounded-2xl p-6">
     <div class="flex items-center justify-between mb-6">
       <div>
         <h3 class="text-xl font-bold text-gray-900 dark:text-white flex items-center">
@@ -188,7 +168,7 @@
                   </div>
                 </div>
               </div>
-              <label class="relative inline-flex items-center cursor-pointer">
+              <label *ngIf="currentPagePermissions?.can_edit === true" class="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   [checked]="featureStates[feature.feature_id].planEnabled"
@@ -196,6 +176,10 @@
                   class="sr-only peer">
                 <div class="w-10 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-500"></div>
               </label>
+              <span *ngIf="currentPagePermissions?.can_edit === false">
+                <i *ngIf="featureStates[feature.feature_id].planEnabled === true" class="fas fa-check text-green-500 mr-2"></i>
+                <i *ngIf="featureStates[feature.feature_id].planEnabled === false" class="fas fa-times text-gray-400 mr-2"></i>
+              </span>
             </div>
           </div>
         </div>
@@ -241,7 +225,7 @@
                   </div>
                 </div>
               </div>
-              <label class="relative inline-flex items-center cursor-pointer">
+              <label *ngIf="currentPagePermissions?.can_edit === true" class="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   [checked]="featureRoleStates[feature.feature_id][role.id]"
@@ -249,6 +233,10 @@
                   class="sr-only peer">
                 <div class="w-10 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-500"></div>
               </label>
+              <span *ngIf="currentPagePermissions?.can_edit === false">
+                <i *ngIf="featureRoleStates[feature.feature_id][role.id] === true" class="fas fa-check text-green-500 mr-2"></i>
+                <i *ngIf="featureRoleStates[feature.feature_id][role.id] === false" class="fas fa-times text-gray-400 mr-2"></i>
+              </span>
             </div>
           </div>
         </ng-container>
@@ -259,7 +247,7 @@
   </div>
 
   <!-- No Plan Selected Message -->
-  <div *ngIf="!selectedPlan" class="pos-card rounded-2xl p-12 text-center">
+  <div *ngIf="!selectedPlan && currentPagePermissions?.can_view === true" class="pos-card rounded-2xl p-12 text-center">
     <div class="max-w-md mx-auto">
       <i class="fas fa-crown text-6xl text-yellow-500 mb-4"></i>
       <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Select a Plan</h3>
