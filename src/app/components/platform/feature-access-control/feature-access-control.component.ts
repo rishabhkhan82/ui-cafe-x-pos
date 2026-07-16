@@ -6,6 +6,7 @@ import { ManagedFeature, PlanFeatureMapping, RoleFeatureMapping, SubscriptionPla
 import { CrudService } from '../../../services/crud.service';
 import { Router } from '@angular/router';
 import { NoViewAccessComponent } from '../../shared/no-view-access/no-view-access.component';
+import { MenuPermissionService } from '../../../services/menu-permission.service';
 
 @Component({
   selector: 'app-feature-access-control',
@@ -79,11 +80,11 @@ export class FeatureAccessControlComponent implements OnInit, OnDestroy {
 
   constructor(
     private mockDataService: MockDataService,
-    private crudService: CrudService, private router: Router
+    private crudService: CrudService, private menuPermissionService: MenuPermissionService
   ) {
     // Subscribe to the observable stream
     const navSub = this.mockDataService.navMenuByRole$.subscribe(data => {
-      this.currentPagePermissions = this.setMenuPermissionsFromRoute(data);  // Update permissions when menu data arrives
+      this.currentPagePermissions = this.menuPermissionService.setMenuPermissionsFromRoute(data); // Update permissions when menu data arrives
     });
     this.subscriptions.push(navSub);
   }
@@ -625,42 +626,4 @@ export class FeatureAccessControlComponent implements OnInit, OnDestroy {
     );
   }
 
-  private setMenuPermissionsFromRoute(menus: NavigationMenu[]): MenuAccessPermission | null {
-    const currentUrl = this.router.url;
-    console.log('Current URL:', currentUrl);
-
-    // Normalize the current route - remove leading slash for comparison
-    const normalizedRoute = currentUrl.startsWith('/') ? currentUrl.substring(1) : currentUrl;
-
-    // Recursively find menu by path
-    const findMenu = (menuList: NavigationMenu[]): NavigationMenu | null => {
-      for (const menu of menuList) {
-        // Handle path comparison - menu path may or may not start with /
-        const menuPath = menu.path || '';
-        const normalizedMenuPath = menuPath.startsWith('/') ? menuPath.substring(1) : menuPath;
-        
-        // Exact match or path starts with menu path (for child routes)
-        if (normalizedMenuPath && (normalizedRoute === normalizedMenuPath || normalizedRoute.startsWith(normalizedMenuPath + '/'))) {
-          return menu;
-        }
-        
-        // Check children recursively
-        if (menu.children && menu.children.length > 0) {
-          const found = findMenu(menu.children);
-          if (found) return found;
-        }
-      }
-      return null;
-    };
-
-    const matchedMenu = findMenu(menus);
-    
-    if (matchedMenu) {
-      console.log('Matched menu:', matchedMenu);
-      return matchedMenu.permissions || null;
-    }
-
-    console.log('No matching menu found for route:', currentUrl);
-    return null;
-  }
 }
