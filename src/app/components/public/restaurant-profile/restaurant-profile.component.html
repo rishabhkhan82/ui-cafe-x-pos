@@ -139,10 +139,10 @@
     </div>
 
     <!-- Menus loading -->
-    <div *ngIf="menus.length === 0 && !menusErrorMessage" class="flex items-center justify-center gap-3 py-10">
+    <!-- <div *ngIf="menus.length === 0 && !menusErrorMessage" class="flex items-center justify-center gap-3 py-10">
       <div class="w-5 h-5 border-2 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
       <span class="text-sm text-red-700 dark:text-red-300 font-medium">Loading menu items...</span>
-    </div>
+    </div> -->
 
     <!-- Menus error -->
     <div *ngIf="menusErrorMessage" class="text-center text-red-600 dark:text-red-300 py-6 text-sm font-medium">{{ menusErrorMessage }}</div>

@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../../services/auth.service';
 import { RealtimeService } from '../../../services/realtime.service';
@@ -22,6 +22,7 @@ export class OwnerDashboardComponent implements OnInit, OnDestroy {
   private realtimeService = inject(RealtimeService);
   private crudService = inject(CrudService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   currentUser: User | null = null;
   currentDate = new Date();
@@ -65,7 +66,16 @@ export class OwnerDashboardComponent implements OnInit, OnDestroy {
     this.currentUser = this.authService.getCurrentUser();
 
     const user = this.authService.getCurrentUser();
-    const restaurantId = user?.restaurantId || user?.restaurant_id;
+
+    // First priority: get from user data
+    let restaurantId: string | null = user?.restaurantId || user?.restaurant_id || null;
+    
+    // Second priority: get from query param if user data is null/undefined
+    if (!restaurantId) {
+      const queryParamRestaurantId = this.route.snapshot.queryParamMap.get('restaurantId');
+      restaurantId = queryParamRestaurantId || null;
+    }
+    
     this.currentRestaurantId = restaurantId || null;
   }
 

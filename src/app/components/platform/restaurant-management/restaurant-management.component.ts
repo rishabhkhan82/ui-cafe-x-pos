@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { CrudService } from '../../../services/crud.service';
 import { LoadingService } from '../../../services/loading.service';
@@ -14,7 +14,7 @@ import { ValidationService } from '../../../services/validation.service';
 @Component({
   selector: 'app-restaurant-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './restaurant-management.component.html',
   styleUrl: './restaurant-management.component.css'
 })
@@ -829,6 +829,19 @@ export class RestaurantManagementComponent implements OnInit {
 
   removeBanner(): void {
     this.restaurantForm.banner_image = '';
+  }
+
+  navigateToViewProfile(): void {
+    if (this.selectedRestaurant?.id) {
+      const url = `/restaurant-profile/${this.selectedRestaurant.id}`;
+      window.open(url, '_blank');
+    }
+  }
+
+  navigateToAnalytics(): void {
+    if (this.selectedRestaurant?.id) {
+      this.router.navigate(['/restaurant-dashboard'], { queryParams: { restaurantId: this.selectedRestaurant.id } });
+    }
   }
 
   navigateToUserManagement(): void {
