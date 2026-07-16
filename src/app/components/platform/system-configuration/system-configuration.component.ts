@@ -6,6 +6,8 @@ import { CrudService } from '../../../services/crud.service';
 import { LoadingService } from '../../../services/loading.service';
 import { Subscription } from 'rxjs';
 import { NotificationService } from '../../../services/notification.service';
+import { SystemConfigService } from '../../../services/system-config.service';
+import { RealtimeService } from '../../../services/realtime.service';
 
 @Component({
   selector: 'app-system-configuration',
@@ -27,11 +29,20 @@ export class SystemConfigurationComponent implements OnInit, OnDestroy, AfterVie
     private mockDataService: MockDataService,
     private crudService: CrudService,
     private loadingService: LoadingService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private systemConfigService: SystemConfigService,
+    private realtimeService: RealtimeService
   ) {
     // Subscribe to global loading state
     this.loadingSubscription = this.loadingService.loading$.subscribe(
       loading => this.isLoading = loading
+    );
+
+    // Subscribe to real-time system settings updates
+    this.loadingSubscription.add(
+      this.realtimeService.systemSettingsUpdate$.subscribe(() => {
+        this.loadSystemSettings();
+      })
     );
   }
 
@@ -110,12 +121,15 @@ export class SystemConfigurationComponent implements OnInit, OnDestroy, AfterVie
       next: (response) => {
         this.hasUnsavedChanges = false;
         console.log('System settings saved successfully:', response);
-        // Show success message (you can replace with a toast notification)
         this.loadingService.hide();
         this.notificationService.success(
           'System Configuration',
           'Settings saved successfully!.'
         );
+        this.systemConfigService.refreshSettings().subscribe((data) => {
+          console.log('Set-Data',data);
+           this.settings = data;
+        });
       },
       error: (error) => {
         this.errorMessage = error.error?.message || 'Failed to save settings. Please try again.';

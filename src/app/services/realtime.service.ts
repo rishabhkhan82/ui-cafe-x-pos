@@ -61,6 +61,9 @@ export class RealtimeService {
   private menuUpdateSubject = new BehaviorSubject<any | null>(null);
   public menuUpdate$ = this.menuUpdateSubject.asObservable();
 
+  private systemSettingsUpdateSubject = new BehaviorSubject<boolean>(false);
+  public systemSettingsUpdate$ = this.systemSettingsUpdateSubject.asObservable();
+
   constructor(private mockDataService: MockDataService) {
     this.requestNotificationPermission();
   }
@@ -248,6 +251,11 @@ export class RealtimeService {
           const notif = JSON.parse(msg.body) as Notification;
           this.newNotificationSubject.next(notif);
           this.showBrowserNotification(notif.title, notif.message, notif.type || 'info');
+        });
+
+        this.stompClient!.subscribe(`/topic/system/settings-updated`, (msg) => {
+          console.log('[Realtime] System settings updated');
+          this.systemSettingsUpdateSubject.next(true);
         });
       };
 

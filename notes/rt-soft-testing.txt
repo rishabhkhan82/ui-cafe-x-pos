@@ -83,10 +83,9 @@
 
 system configuration dynamic changes needed
 
-1] Platform Name
-2] Platform URL
-3] Platform Logo
-4] Maintenance Mode
+1] Platform Name - not done
+3] Platform Logo - not done
+4] Maintenance Mode - not done
 5] Maintenance Mode - not Done
 6] Maintenance Message - not Done
 7] File Upload Max Size (MB) - not Done
@@ -94,9 +93,9 @@ system configuration dynamic changes needed
 9] Backup Frequency - not Done
 10] Support Email - not done
 11] Support Phone - not done
-12] Terms URL
-13] Privacy URL
-14] Session Timeout (minutes)
-15] Password Min Length
-16] Email Notifications
-17] Webhook Retries
+12] Terms URL - not done
+13] Privacy URL - not done
+14] Session Timeout (minutes) - not done
+15] Password Min Length - not done
+16] Email Notifications - not done
+17] Webhook Retries - not done

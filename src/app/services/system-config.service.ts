@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, EMPTY } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../environments/environment';
+import { RealtimeService } from './realtime.service';
 
 export interface SystemSettings {
   id?: string;
@@ -46,8 +47,11 @@ export class SystemConfigService {
   private settingsSubject = new BehaviorSubject<SystemSettings | null>(null);
   settings$ = this.settingsSubject.asObservable();
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private realtimeService: RealtimeService) {
     this.loadFromStorage();
+    this.realtimeService.systemSettingsUpdate$.subscribe(() => {
+      this.refreshSettings().subscribe();
+    });
   }
 
   getSystemSettings(): Observable<SystemSettings> {
@@ -101,4 +105,79 @@ export class SystemConfigService {
     if (!cachedAt) return true;
     return Date.now() > cachedAt + ttl;
   }
+
+  // Add these to SystemConfigService
+  get platformName(): string {
+    return this.currentSettings?.platform_name || 'Cafe-X POS';
+  }
+
+  get platformUrl(): string {
+    return this.currentSettings?.platform_url || '';
+  }
+
+  get platformLogo(): string {
+    return this.currentSettings?.platform_logo || '';
+  }
+
+  get maintenanceMode(): boolean {
+    return this.currentSettings?.maintenance_mode ?? false;
+  }
+
+  get maintenanceMessage(): string {
+    return this.currentSettings?.maintenance_message || 'System is under maintenance.';
+  }
+
+  get fileUploadMaxSizeMB(): number {
+    return this.currentSettings?.file_upload_max_size ?? 5;
+  }
+
+  get backupEnabled(): boolean {
+    return this.currentSettings?.backup_enabled ?? true;
+  }
+
+  get backupFrequency(): string {
+    return this.currentSettings?.backup_frequency || 'daily';
+  }
+
+  get supportEmail(): string {
+    return this.currentSettings?.support_email || '';
+  }
+
+  get supportPhone(): string {
+    return this.currentSettings?.support_phone || '';
+  }
+
+  get termsUrl(): string {
+    return this.currentSettings?.terms_url || '';
+  }
+
+  get privacyUrl(): string {
+    return this.currentSettings?.privacy_url || '';
+  }
+
+  get sessionTimeoutMinutes(): number {
+    return this.currentSettings?.session_timeout ?? 30;
+  }
+
+  get passwordMinLength(): number {
+    return this.currentSettings?.password_min_length ?? 8;
+  }
+
+  get emailNotificationsEnabled(): boolean {
+    return this.currentSettings?.email_notifications ?? true;
+  }
+
+  get webhookRetries(): number {
+    return this.currentSettings?.webhook_retries ?? 3;
+  }
+
+  // Generic fallback getter
+  get<K extends keyof SystemSettings>(key: K, fallback?: SystemSettings[K]): SystemSettings[K] {
+    return this.currentSettings?.[key] ?? fallback as SystemSettings[K];
+  }
+
+  refreshSettings(): Observable<SystemSettings> {
+    return this.getSystemSettings();
+  }
+
 }
