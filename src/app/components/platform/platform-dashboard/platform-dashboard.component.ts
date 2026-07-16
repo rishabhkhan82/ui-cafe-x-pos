@@ -4,13 +4,16 @@ import { Chart, registerables } from 'chart.js';
 import { Subscription } from 'rxjs';
 import { CrudService } from '../../../services/crud.service';
 import { RealtimeService } from '../../../services/realtime.service';
+import { MenuAccessPermission, MockDataService, NavigationMenu } from '../../../services/mock-data.service';
+import { Router } from '@angular/router';
+import { NoViewAccessComponent } from '../../shared/no-view-access/no-view-access.component';
 
 Chart.register(...registerables);
 
 @Component({
   selector: 'app-platform-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NoViewAccessComponent],
   templateUrl: './platform-dashboard.component.html',
   styleUrls: ['./platform-dashboard.component.css']
 })
@@ -66,9 +69,19 @@ export class PlatformDashboardComponent implements OnInit, AfterViewInit, OnDest
   churnTrend: string = '0.0';
   loading = false;
 
+  currentPagePermissions: MenuAccessPermission | null = null;
+  pagePerLoader = true;
+
   private planNameMap: Record<number, string> = {};
 
-  constructor(private realtimeService: RealtimeService, private crudService: CrudService) {}
+  constructor(private router: Router, private realtimeService: RealtimeService, private crudService: CrudService, private mockDataService: MockDataService) {
+  // Subscribe to the observable stream
+    const navSub = this.mockDataService.navMenuByRole$.subscribe(data => {
+      this.currentPagePermissions = this.setMenuPermissionsFromRoute(data);  // Update permissions when menu data arrives
+      this.pagePerLoader = false;
+    });
+    this.subscriptions.push(navSub);
+  }
 
   ngOnInit(): void {
     this.loading = true;
@@ -91,6 +104,45 @@ export class PlatformDashboardComponent implements OnInit, AfterViewInit, OnDest
       }
     });
     this.subscriptions.push(metricsSub);
+  }
+
+  private setMenuPermissionsFromRoute(menus: NavigationMenu[]): MenuAccessPermission | null {
+    const currentUrl = this.router.url;
+    console.log('Current URL:', currentUrl);
+
+    // Normalize the current route - remove leading slash for comparison
+    const normalizedRoute = currentUrl.startsWith('/') ? currentUrl.substring(1) : currentUrl;
+
+    // Recursively find menu by path
+    const findMenu = (menuList: NavigationMenu[]): NavigationMenu | null => {
+      for (const menu of menuList) {
+        // Handle path comparison - menu path may or may not start with /
+        const menuPath = menu.path || '';
+        const normalizedMenuPath = menuPath.startsWith('/') ? menuPath.substring(1) : menuPath;
+        
+        // Exact match or path starts with menu path (for child routes)
+        if (normalizedMenuPath && (normalizedRoute === normalizedMenuPath || normalizedRoute.startsWith(normalizedMenuPath + '/'))) {
+          return menu;
+        }
+        
+        // Check children recursively
+        if (menu.children && menu.children.length > 0) {
+          const found = findMenu(menu.children);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    const matchedMenu = findMenu(menus);
+    
+    if (matchedMenu) {
+      console.log('Matched menu:', matchedMenu);
+      return matchedMenu.permissions || null;
+    }
+
+    console.log('No matching menu found for route:', currentUrl);
+    return null;
   }
 
   refreshDashboard(): void {

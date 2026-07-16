@@ -1979,6 +1979,10 @@ export class MockDataService {
   private orderFilterOptionsSubject = new BehaviorSubject<OrderFilterOption[]>([]);
   private orderSortOptionsSubject = new BehaviorSubject<OrderSortOption[]>([]);
 
+  // Navigation menus and permissions observables
+  public navMenuByRoleSubject = new BehaviorSubject<NavigationMenu[]>([]);
+  public navMenuByRole$ = this.navMenuByRoleSubject.asObservable();  // ADD THIS LINE
+
   // Observable streams
   users$ = this.usersSubject.asObservable();
   roles$ = this.rolesSubject.asObservable();
@@ -8833,7 +8837,8 @@ export class MockDataService {
 
     // Filter MenuAccessPermission[] where role_id === loginUserRoleId AND can_view === true
     const accessPermissions = menuAccessPermissions.filter(
-      perm => perm.role_id === loginUserRoleId && perm.can_view === true
+      // perm => perm.role_id === loginUserRoleId && perm.can_view === true
+      perm => perm.role_id === loginUserRoleId
     );
 
     // Extract allowed menu IDs
@@ -8860,6 +8865,8 @@ export class MockDataService {
     });
 
     console.log('Allowed Menus:', allowedMenus);
+
+    this.navMenuByRoleSubject.next(allowedMenus);
 
     // Build menu hierarchy and return
     return this.buildMenuHierarchy(allowedMenus);

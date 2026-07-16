@@ -6,3 +6,9 @@
 
 3] Login page
 - checked, reveiw and tesing - Done
+
+4] Forgot Password
+- checked, review and testing - Done
+
+5] platform-Dashboard
+- checked, review, changes and testing - Done
