@@ -398,6 +398,7 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">Default timezone for the platform</p>
           <select
             [(ngModel)]="settings.timezone"
+            disabled
             (input)="hasUnsavedChanges = true"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
             <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
@@ -423,6 +424,7 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">Default currency for the platform</p>
           <select
             [(ngModel)]="settings.currency"
+            disabled
             (input)="hasUnsavedChanges = true"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
             <option value="INR">INR (₹)</option>
@@ -463,6 +465,7 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">Maximum number of users that can be logged in simultaneously</p>
           <input
             type="number"
+            disabled
             [(ngModel)]="settings.max_concurrent_users"
             (input)="hasUnsavedChanges = true"
             min="1"
@@ -487,6 +490,7 @@
           <label class="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
+              disabled
               [(ngModel)]="settings.cache_enabled"
               (input)="hasUnsavedChanges = true"
               class="sr-only peer">
@@ -513,6 +517,7 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">Time to live for cached data in seconds</p>
           <input
             type="number"
+            disabled
             [(ngModel)]="settings.cache_ttl"
             (input)="hasUnsavedChanges = true"
             min="60"
@@ -598,6 +603,7 @@
           <label class="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
+              disabled
               [(ngModel)]="settings.two_factor_required"
               (input)="hasUnsavedChanges = true"two_factor_required
               class="sr-only peer">
@@ -667,6 +673,7 @@
           <label class="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
+              disabled
               [(ngModel)]="settings.sms_notifications"
               (input)="hasUnsavedChanges = true"sms_notifications
               class="sr-only peer">
@@ -693,6 +700,7 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">Number of notifications to process in each batch</p>
           <input
             type="number"
+            disabled
             [(ngModel)]="settings.notification_batch_size"
             (input)="hasUnsavedChanges = true"notification_batch_size
             min="10"
@@ -731,6 +739,7 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">Maximum API requests per minute</p>
           <input
             type="number"
+            disabled
             [(ngModel)]="settings.api_rate_limit"
             (input)="hasUnsavedChanges = true"api_rate_limit
             min="10"

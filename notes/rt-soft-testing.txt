@@ -78,3 +78,25 @@
   <app-no-view-access *ngIf="currentPagePermissions?.can_view === false"></app-no-view-access>
 
    <div *ngIf="loading && this.currentPagePermissions?.can_view === true"></div>
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+system configuration dynamic changes needed
+
+1] Platform Name
+2] Platform URL
+3] Platform Logo
+4] Maintenance Mode
+5] Maintenance Mode - not Done
+6] Maintenance Message - not Done
+7] File Upload Max Size (MB) - not Done
+8] Backup Enabled - not Done
+9] Backup Frequency - not Done
+10] Support Email - not done
+11] Support Phone - not done
+12] Terms URL
+13] Privacy URL
+14] Session Timeout (minutes)
+15] Password Min Length
+16] Email Notifications
+17] Webhook Retries
