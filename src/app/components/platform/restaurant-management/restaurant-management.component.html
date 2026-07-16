@@ -1163,7 +1163,17 @@
             <span class="text-purple-600 dark:text-purple-400 text-sm font-medium">Plan</span>
           </div>
           <div class="text-2xl font-bold text-gray-900 dark:text-white mb-1">{{ selectedRestaurant.subscription_plan }}</div>
-          <div class="text-sm text-gray-600 dark:text-gray-400">Subscription</div>
+          <div class="flex items-center justify-between">
+            <div class="text-sm text-gray-600 dark:text-gray-400">Subscription</div>
+            <button
+              type="button"
+              (click)="viewSubscriptions()"
+              [disabled]="subscriptionLoading"
+              class="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 transition-colors flex items-center space-x-1 disabled:opacity-50 disabled:cursor-not-allowed">
+              View Plan Details
+              <i class="fas fa-external-link-alt text-[10px] ml-1"></i>
+            </button>
+          </div>
         </div>
         
         <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-2xl p-6 border border-emerald-200 dark:border-emerald-800">
@@ -1272,6 +1282,141 @@
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Subscription Details Modal -->
+  <div *ngIf="showSubscriptionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+            <i class="fas fa-crown text-white"></i>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">Subscription Details</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">{{ selectedRestaurant?.name }} - Plan Information</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          (click)="closeSubscriptionModal()"
+          class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+          <i class="fas fa-times text-gray-500 dark:text-gray-400"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="flex-1 overflow-y-auto p-6">
+        <div class="text-center py-12" *ngIf="subscriptionLoading === true">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+          <p class="mt-2 text-gray-600 dark:text-gray-400">Loading subscriptions...</p>
+        </div>
+
+        <div *ngIf="subscriptions.length === 0" class="text-center py-12">
+          <i class="fas fa-crown text-gray-400 text-4xl mb-4"></i>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No subscriptions found</h3>
+          <p class="text-gray-500 dark:text-gray-400">This restaurant has no subscription records.</p>
+        </div>
+
+        <div *ngIf="subscriptions.length > 0" class="space-y-6">
+          <div *ngFor="let sub of subscriptions" class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+            <table class="w-full text-left border-collapse">
+              <thead class="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th class="py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300 w-1/3">Field</th>
+                  <th class="py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Value</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td class="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">Subscription ID</td>
+                  <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{{ sub.subscription_id }}</td>
+                </tr>
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td class="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">Status</td>
+                  <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
+                    <span [class]="sub.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'" class="px-2 py-1 text-xs rounded-full font-semibold capitalize">
+                      {{ sub.status }}
+                    </span>
+                  </td>
+                </tr>
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td class="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">Plan ID</td>
+                  <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{{ sub.plan_id }}</td>
+                </tr>
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td class="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">Billing Cycle</td>
+                  <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300 capitalize">{{ sub.billing_cycle }}</td>
+                </tr>
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td class="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">Start Date</td>
+                  <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{{ formatSubscriptionDate(sub.start_date) }}</td>
+                </tr>
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td class="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">End Date</td>
+                  <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{{ formatSubscriptionDate(sub.end_date) }}</td>
+                </tr>
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td class="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">Next Billing Date</td>
+                  <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{{ formatSubscriptionDate(sub.end_date) }}</td>
+                </tr>
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td class="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">Discount Amount</td>
+                  <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{{ sub.discount_amount ? '₹' + sub.discount_amount : '-' }}</td>
+                </tr>
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td class="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">Final Amount</td>
+                  <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{{ sub.final_amount ? '₹' + sub.final_amount : '-' }}</td>
+                </tr>
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td class="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">Auto Renew</td>
+                  <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{{ sub.auto_renew ? 'Yes' : 'No' }}</td>
+                </tr>
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td class="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">Payment Method ID</td>
+                  <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300 font-mono text-xs">{{ sub.payment_method_id || '-' }}</td>
+                </tr>
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td class="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">Cancel At Period End</td>
+                  <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{{ sub.cancel_at_period_end ? 'Yes' : 'No' }}</td>
+                </tr>
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td class="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">Cancelled At</td>
+                  <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{{ formatSubscriptionDate(sub.cancelled_at) }}</td>
+                </tr>
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td class="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">Cancellation Reason</td>
+                  <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{{ sub.cancellation_reason || '-' }}</td>
+                </tr>
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td class="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">Trial Start Date</td>
+                  <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{{ formatSubscriptionDate(sub.trial_start_date) }}</td>
+                </tr>
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td class="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">Trial End Date</td>
+                  <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{{ formatSubscriptionDate(sub.trial_end_date) }}</td>
+                </tr>
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td class="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">Is Trial Used</td>
+                  <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{{ sub.is_trial_used ? 'Yes' : 'No' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <button
+          type="button"
+          (click)="closeSubscriptionModal()"
+          class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          Close
+        </button>
       </div>
     </div>
   </div>

@@ -111,6 +111,11 @@ export class RestaurantManagementComponent implements OnInit {
     updated_by: 0
   };
 
+  // Subscription data
+  showSubscriptionModal = false;
+  subscriptions: any[] = [];
+  subscriptionLoading = false;
+
   constructor(
     private router: Router,
     private crudService: CrudService,
@@ -841,5 +846,32 @@ export class RestaurantManagementComponent implements OnInit {
               this.subscriptionPlanFilter !== 'all' ||
               this.cityFilter?.trim() ||
               this.statusFilter !== 'all');
+  }
+
+  viewSubscriptions(): void {
+    if (!this.selectedRestaurant?.id) return;
+    this.subscriptionLoading = true;
+    this.crudService.getRestaurantSubscriptions({ restaurantId: this.selectedRestaurant.id }).subscribe({
+      next: (response: any) => {
+        this.subscriptions = response.data || [];
+        this.subscriptionLoading = false;
+        this.showSubscriptionModal = true;
+      },
+      error: (error) => {
+        this.subscriptionLoading = false;
+        console.error('Error loading subscriptions:', error);
+        this.notificationService.error('Error', error.error?.message || 'Failed to load subscription details');
+      }
+    });
+  }
+
+  closeSubscriptionModal(): void {
+    this.showSubscriptionModal = false;
+    this.subscriptions = [];
+  }
+
+  formatSubscriptionDate(date: string | Date | null): string {
+    if (!date) return '-';
+    return this.formatDate(date);
   }
 }
