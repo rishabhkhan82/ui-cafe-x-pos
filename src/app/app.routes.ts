@@ -174,6 +174,13 @@ export const routes: Routes = [
     data: { allowedRoles: ['platform_owner'] }
   },
 
+  {
+    path: 'feature-category-master',
+    loadComponent: () => import('./components/masters/feature-category-master/feature-category-master.component').then(m => m.FeatureCategoryMasterComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
+  },
+
   // Restaurant Owner & Manager Specific Routings
 
   {

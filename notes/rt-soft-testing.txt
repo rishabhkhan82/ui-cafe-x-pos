@@ -99,3 +99,218 @@ system configuration dynamic changes needed
 15] Password Min Length - not done
 16] Email Notifications - not done
 17] Webhook Retries - not done
+
+=================================================
+
+Masters Needed in Platform-dashboare with ui,db and api's
+
+1] features-access-control
+ [(ngModel)]="tempSelectedCategory"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Categories</option>
+          <option value="GENERAL">General</option>
+          <option value="POS">POS</option>
+          <option value="INVENTORY">Inventory</option>
+          <option value="ORDERS">Orders</option>
+          <option value="ANALYTICS">Analytics</option>
+          <option value="CUSTOMERS">Customers</option>
+          <option value="STAFF">Staff</option>
+          <option value="INTEGRATION">Integration</option>
+          <option value="SECURITY">Security</option>
+          <option value="BRANDING">Branding</option>
+          <option value="SUPPORT">Support</option>
+          <option value="MENU">Menu</option>
+          <option value="CRM">CRM</option>
+        </select>
+
+2] navigation-management
+
+<div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-list mr-2 text-indigo-500"></i>Menu Type Filter
+        </label>
+        <select
+          [(ngModel)]="typeFilter"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Types</option>
+          <option value="ACTION">Action Menu</option>
+          <option value="PARENT">Parent Menu</option>
+        </select>
+      </div>
+
+
+4] app-user-management
+
+<select
+          [(ngModel)]="roleFilter"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Roles</option>
+          <option value="platform_owner">Platform Owner</option>
+          <option value="restaurant_owner">Restaurant Owner</option>
+          <option value="restaurant_manager">Restaurant Manager</option>
+          <option value="cashier">Cashier</option>
+          <option value="kitchen_manager">Kitchen Manager</option>
+          <option value="waiter">Waiter</option>
+          <option value="customer">Customer</option>
+        </select>
+
+        all ready api ready - just use it here. 
+
+    User Type - has hardcoded value
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-user mr-2 text-blue-500"></i>User Type
+        </label>
+        <select
+          [(ngModel)]="userTypeFilter"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All User Types</option>
+          <option *ngFor="let usertype of userTypes" [value]="usertype.value">{{ usertype.name }}</option>
+        </select>
+      </div>
+
+5] app-feature-management
+
+     <select - allready done above. just use it here. 
+          [(ngModel)]="categoryFilter"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="">All Categories</option>
+          <option value="POS">POS</option>
+          <option value="INVENTORY">Inventory</option>
+          <option value="ORDERS">Orders</option>
+          <option value="ANALYTICS">Analytics</option>
+          <option value="CUSTOMERS">Customers</option>
+          <option value="STAFF">Staff</option>
+          <option value="INTEGRATION">Integration</option>
+          <option value="SECURITY">Security</option>
+          <option value="BRANDING">Branding</option>
+          <option value="SUPPORT">Support</option>
+          <option value="MENU">Menu</option>
+          <option value="CRM">CRM</option>
+        </select> 
+
+        <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-layer-group mr-2 text-green-500"></i>Feature Type
+        </label>
+        <select
+          [(ngModel)]="featureTypeFilter"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Types</option>
+          <option value="BASIC">Basic</option>
+          <option value="PREMIUM">Premium</option>
+          <option value="ENTERPRISE">Enterprise</option>
+        </select>
+      </div>
+
+6] app-plan-management
+
+<!-- Billing Cycle -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-calendar mr-2 text-purple-500"></i>Billing Cycle
+              </label>
+              <select
+                [(ngModel)]="planForm.billing_cycle"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+            </div>
+
+            <!-- Setup Fee -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-money-bill mr-2 text-yellow-500"></i>Setup Fee
+              </label>
+              <select
+                [(ngModel)]="planForm.setup_fee"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                <option [value]="0">Free</option>
+                <option [value]="3000">₹3,000</option>
+                <option [value]="5000">₹5,000</option>
+                <option [value]="10000">₹10,000</option>
+                <option [value]="15000">₹15,000</option>
+                <option [value]="20000">₹20,000</option>
+              </select>
+            </div>
+
+            <!-- Trial Days -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-calendar-check mr-2 text-purple-500"></i>Trial Days
+              </label>
+              <select
+                [(ngModel)]="planForm.trial_days"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                <option [value]="0">No Trial</option>
+                <option [value]="7">7 Days</option>
+                <option [value]="15">15 Days</option>
+                <option [value]="30">30 Days</option>
+                <option [value]="60">60 Days</option>
+                <option [value]="90">90 Days</option>
+              </select>
+            </div>
+
+7] app-restaurant-management
+
+      <div> - allready available you just use it.
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-crown mr-2 text-yellow-500"></i>Subscription Plan Filter
+        </label>
+        <select
+          [(ngModel)]="subscriptionPlanFilter"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Plans</option>
+          <option value="Starter">Starter Plan</option>
+          <option value="Pro">Pro Plan</option>
+          <option value="Enterprise">Enterprise Plan</option>
+        </select>
+      </div>
+
+            <div> restaurant status
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-filter mr-2 text-blue-500"></i>Status Filter
+        </label>
+        <select
+          [(ngModel)]="statusFilter"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Status</option>
+          <option value="ACTIVE">Active</option>
+          <option value="INACTIVE">Inactive</option>
+          <option value="SUSPENDED">Suspended</option>
+          <option value="PENDING_VERIFICATION">Pending Verification</option>
+        </select>
+      </div>
+
+      <!-- State --> 
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-map mr-2 text-yellow-500"></i>State <span class="text-red-500">*</span>
+              </label>
+              <select
+                [(ngModel)]="restaurantForm.state"
+                name="state"
+                (blur)="validateState()"
+                (change)="validateState()"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                <option value="0">Select State</option>
+                <option *ngFor="let state of states" [value]="state.id">{{ state.name }}</option>
+              </select>
+              <div *ngIf="fieldErrors['state']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ fieldErrors['state'] }}
+              </div>
+            </div>
+
+
+All masters needed list - all done, db and api remains
+
+1] Feature Category
+2] Navigation Menu Type
+3] Feature Type
+4] User Type
+5] Billing Cycle
+6] Setup Fee
+7] Trial Days
+8] Restaurant Status
+9] States

@@ -706,6 +706,27 @@ export class CrudService {
     return this.deleteData('offer-redemptions', {}, id);
   }
 
+  // Feature Category operations
+  getFeatureCategories(params?: CrudParams): Observable<any> {
+    return this.getData('feature-categories', params);
+  }
+
+  getFeatureCategoryById(id: string | number): Observable<any> {
+    return this.getData(`feature-categories/${id}`);
+  }
+
+  createFeatureCategory(payload: any): Observable<any> {
+    return this.postData('feature-categories', payload);
+  }
+
+  updateFeatureCategory(id: string | number, payload: any): Observable<any> {
+    return this.putData('feature-categories', payload, {}, id);
+  }
+
+  deleteFeatureCategory(id: string | number): Observable<any> {
+    return this.deleteData('feature-categories', {}, id);
+  }
+
   // ===============================
   // LOYALTY PROGRAM OPERATIONS
   // ===============================
