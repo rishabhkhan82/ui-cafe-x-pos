@@ -307,7 +307,6 @@ Masters Needed in Platform-dashboare with ui,db and api's
               </div>
             </div>
 
-
 All masters needed list - all done, db and api remains
 
 1] Feature Category
@@ -319,3 +318,89 @@ All masters needed list - all done, db and api remains
 7] Trial Days
 8] Restaurant Status
 9] States
+
+==============================
+Restaurant owner side Master tables required
+
+1] owner-menus-mobile
+   - menu_categories_master
+       categories = [
+        {code : 'starters', label: 'Starters'},
+        {code : 'main-course', label: 'Main Course'},
+        {code : 'salads', label: 'Salads'},
+        {code : 'desserts', label: 'Desserts'},
+        {code : 'beverages', label: 'Beverages'},
+        {code : 'snacks', label: 'Snacks'}
+      ];
+
+    - menu_items_type_master
+      <select
+        [(ngModel)]="menuForm.type"
+        name="type"
+        class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white">
+        <option value="RAW">RAW (Recipe-based)</option>
+        <option value="FINISHED">FINISHED (Direct Stock)</option>
+      </select>
+      new colums required - colors classes, icon
+
+2] owner-reports-mobile 
+   - report_type_master
+       reportTypes: { value: string; label: string; icon: string }[] = [
+        { value: 'SALES_SUMMARY', label: 'Sales Summary', icon: 'fas fa-chart-bar' },
+        { value: 'INVENTORY_STATUS', label: 'Inventory Status', icon: 'fas fa-boxes' },
+        { value: 'TOP_SELLING_ITEMS', label: 'Top Selling Items', icon: 'fas fa-star' },
+        { value: 'CATEGORY_WISE_SALE', label: 'Category Wise Sale', icon: 'fas fa-th-large' },
+        { value: 'TAX_DISCOUNTS', label: 'Tax & Discounts', icon: 'fas fa-receipt' }
+      ];
+
+3] owner-inventory-mobile
+   - inventory_item_categories_master
+       categories = [
+        {code: 'all', label: 'All'},
+        {code: 'raw-materials', label: 'Raw Materials'},
+        {code: 'packaged-goods', label: 'Packaged Goods'},
+        {code: 'beverages', label: 'Beverages'},
+        {code: 'dairy', label: 'Dairy'},
+        {code: 'spices', label: 'Spices'},
+        {code: 'cleaning', label: 'Cleaning Supplies'}
+      ];
+
+  - inventory_item_units_master
+    <option value="">Select Unit</option>
+    <option value="pcs">Pieces</option>
+    <option value="kg">Kilograms</option>
+    <option value="g">Grams</option>
+    <option value="ltr">Liters</option>
+    <option value="ml">Milliliters</option>
+    <option value="box">Box</option>
+    <option value="dozen">Dozen</option>
+    <option value="pack">Pack</option>
+     
+  - inventory_item_types_master
+    <option value="RAW">RAW (Ingredient)</option>
+    <option value="FINISHED">FINISHED (Product)</option>
+
+4] app-waste-management
+
+   - waste_type_master
+     wasteTypeOptions = [
+      { value: 'INGREDIENT', label: 'Ingredient' },
+      { value: 'DISH', label: 'Dish' },
+      { value: 'OTHER', label: 'Other' }
+    ];
+
+   - waste_reason_type_master
+     <option value="SPOILED">Spoiled</option>
+      <option value="DROPPED">Dropped</option>
+      <option value="EXPIRED">Expired</option>
+      <option value="PREPARATION_WASTE">Preparation Waste</option>
+      <option value="OTHER">Other</option>
+
+5] owner-plans-mobile
+
+   - billing_period_months_master
+    <option value="6">6 Months</option>
+    <option value="12">12 Months</option>
+
+6] app-customer-categories
+   - order_type_master

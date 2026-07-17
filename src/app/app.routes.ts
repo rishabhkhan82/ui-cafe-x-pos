@@ -237,6 +237,76 @@ export const routes: Routes = [
     data: { allowedRoles: ['platform_owner'] }
   },
 
+  {
+    path: 'billing-period-months-master',
+    loadComponent: () => import('./components/masters/billing-period-months-master/billing-period-months-master.component').then(m => m.BillingPeriodMonthsMasterComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
+  },
+
+  {
+    path: 'inventory-item-categories-master',
+    loadComponent: () => import('./components/masters/inventory-item-categories-master/inventory-item-categories-master.component').then(m => m.InventoryItemCategoriesMasterComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
+  },
+
+  {
+    path: 'inventory-item-types-master',
+    loadComponent: () => import('./components/masters/inventory-item-types-master/inventory-item-types-master.component').then(m => m.InventoryItemTypesMasterComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
+  },
+
+  {
+    path: 'inventory-item-units-master',
+    loadComponent: () => import('./components/masters/inventory-item-units-master/inventory-item-units-master.component').then(m => m.InventoryItemUnitsMasterComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
+  },
+
+  {
+    path: 'menu-categories-master',
+    loadComponent: () => import('./components/masters/menu-categories-master/menu-categories-master.component').then(m => m.MenuCategoriesMasterComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
+  },
+
+  {
+    path: 'menu-items-type-master',
+    loadComponent: () => import('./components/masters/menu-items-type-master/menu-items-type-master.component').then(m => m.MenuItemsTypeMasterComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
+  },
+
+  {
+    path: 'order-type-master',
+    loadComponent: () => import('./components/masters/order-type-master/order-type-master.component').then(m => m.OrderTypeMasterComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
+  },
+
+  {
+    path: 'report-type-master',
+    loadComponent: () => import('./components/masters/report-type-master/report-type-master.component').then(m => m.ReportTypeMasterComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
+  },
+
+  {
+    path: 'waste-reason-type-master',
+    loadComponent: () => import('./components/masters/waste-reason-type-master/waste-reason-type-master.component').then(m => m.WasteReasonTypeMasterComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
+  },
+
+  {
+    path: 'waste-type-master',
+    loadComponent: () => import('./components/masters/waste-type-master/waste-type-master.component').then(m => m.WasteTypeMasterComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
+  },
+
   // Restaurant Owner & Manager Specific Routings
 
   {

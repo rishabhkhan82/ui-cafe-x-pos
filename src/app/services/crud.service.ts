@@ -938,4 +938,204 @@ export class CrudService {
   deleteLoyaltyTransaction(id: string | number): Observable<any> {
     return this.deleteData('loyalty-transactions', {}, id);
   }
+
+  // ===============================
+  // BILLING PERIOD MONTHS OPERATIONS
+  // ===============================
+
+  getBillingPeriodMonths(params?: CrudParams): Observable<any> {
+    return this.getData('billing-period-months', params);
+  }
+
+  createBillingPeriodMonth(payload: any): Observable<any> {
+    return this.postData('billing-period-months', payload);
+  }
+
+  updateBillingPeriodMonth(id: string | number, payload: any): Observable<any> {
+    return this.putData('billing-period-months', payload, {}, id);
+  }
+
+  deleteBillingPeriodMonth(id: string | number): Observable<any> {
+    return this.deleteData('billing-period-months', {}, id);
+  }
+
+  // ===============================
+  // INVENTORY ITEM CATEGORIES OPERATIONS
+  // ===============================
+
+  getInventoryItemCategories(params?: CrudParams): Observable<any> {
+    return this.getData('inventory-item-categories', params);
+  }
+
+  createInventoryItemCategory(payload: any): Observable<any> {
+    return this.postData('inventory-item-categories', payload);
+  }
+
+  updateInventoryItemCategory(id: string | number, payload: any): Observable<any> {
+    return this.putData('inventory-item-categories', payload, {}, id);
+  }
+
+  deleteInventoryItemCategory(id: string | number): Observable<any> {
+    return this.deleteData('inventory-item-categories', {}, id);
+  }
+
+  // ===============================
+  // INVENTORY ITEM TYPES OPERATIONS
+  // ===============================
+
+  getInventoryItemTypes(params?: CrudParams): Observable<any> {
+    return this.getData('inventory-item-types', params);
+  }
+
+  createInventoryItemType(payload: any): Observable<any> {
+    return this.postData('inventory-item-types', payload);
+  }
+
+  updateInventoryItemType(id: string | number, payload: any): Observable<any> {
+    return this.putData('inventory-item-types', payload, {}, id);
+  }
+
+  deleteInventoryItemType(id: string | number): Observable<any> {
+    return this.deleteData('inventory-item-types', {}, id);
+  }
+
+  // ===============================
+  // INVENTORY ITEM UNITS OPERATIONS
+  // ===============================
+
+  getInventoryItemUnits(params?: CrudParams): Observable<any> {
+    return this.getData('inventory-item-units', params);
+  }
+
+  createInventoryItemUnit(payload: any): Observable<any> {
+    return this.postData('inventory-item-units', payload);
+  }
+
+  updateInventoryItemUnit(id: string | number, payload: any): Observable<any> {
+    return this.putData('inventory-item-units', payload, {}, id);
+  }
+
+  deleteInventoryItemUnit(id: string | number): Observable<any> {
+    return this.deleteData('inventory-item-units', {}, id);
+  }
+
+  // ===============================
+  // MENU CATEGORIES OPERATIONS
+  // ===============================
+
+  getMenuCategories(params?: CrudParams): Observable<any> {
+    return this.getData('menu-categories', params);
+  }
+
+  createMenuCategory(payload: any): Observable<any> {
+    return this.postData('menu-categories', payload);
+  }
+
+  updateMenuCategory(id: string | number, payload: any): Observable<any> {
+    return this.putData('menu-categories', payload, {}, id);
+  }
+
+  deleteMenuCategory(id: string | number): Observable<any> {
+    return this.deleteData('menu-categories', {}, id);
+  }
+
+  // ===============================
+  // MENU ITEMS TYPE OPERATIONS
+  // ===============================
+
+  getMenuItemsTypes(params?: CrudParams): Observable<any> {
+    return this.getData('menu-items-types', params);
+  }
+
+  createMenuItemsType(payload: any): Observable<any> {
+    return this.postData('menu-items-types', payload);
+  }
+
+  updateMenuItemsType(id: string | number, payload: any): Observable<any> {
+    return this.putData('menu-items-types', payload, {}, id);
+  }
+
+  deleteMenuItemsType(id: string | number): Observable<any> {
+    return this.deleteData('menu-items-types', {}, id);
+  }
+
+  // ===============================
+  // ORDER TYPE OPERATIONS
+  // ===============================
+
+  getOrderTypes(params?: CrudParams): Observable<any> {
+    return this.getData('order-types', params);
+  }
+
+  createOrderType(payload: any): Observable<any> {
+    return this.postData('order-types', payload);
+  }
+
+  updateOrderType(id: string | number, payload: any): Observable<any> {
+    return this.putData('order-types', payload, {}, id);
+  }
+
+  deleteOrderType(id: string | number): Observable<any> {
+    return this.deleteData('order-types', {}, id);
+  }
+
+  // ===============================
+  // REPORT TYPE OPERATIONS
+  // ===============================
+
+  getReportTypes(params?: CrudParams): Observable<any> {
+    return this.getData('report-types', params);
+  }
+
+  createReportType(payload: any): Observable<any> {
+    return this.postData('report-types', payload);
+  }
+
+  updateReportType(id: string | number, payload: any): Observable<any> {
+    return this.putData('report-types', payload, {}, id);
+  }
+
+  deleteReportType(id: string | number): Observable<any> {
+    return this.deleteData('report-types', {}, id);
+  }
+
+  // ===============================
+  // WASTE REASON TYPE OPERATIONS
+  // ===============================
+
+  getWasteReasonTypes(params?: CrudParams): Observable<any> {
+    return this.getData('waste-reason-types', params);
+  }
+
+  createWasteReasonType(payload: any): Observable<any> {
+    return this.postData('waste-reason-types', payload);
+  }
+
+  updateWasteReasonType(id: string | number, payload: any): Observable<any> {
+    return this.putData('waste-reason-types', payload, {}, id);
+  }
+
+  deleteWasteReasonType(id: string | number): Observable<any> {
+    return this.deleteData('waste-reason-types', {}, id);
+  }
+
+  // ===============================
+  // WASTE TYPE OPERATIONS
+  // ===============================
+
+  getWasteTypes(params?: CrudParams): Observable<any> {
+    return this.getData('waste-types', params);
+  }
+
+  createWasteType(payload: any): Observable<any> {
+    return this.postData('waste-types', payload);
+  }
+
+  updateWasteType(id: string | number, payload: any): Observable<any> {
+    return this.putData('waste-types', payload, {}, id);
+  }
+
+  deleteWasteType(id: string | number): Observable<any> {
+    return this.deleteData('waste-types', {}, id);
+  }
 }

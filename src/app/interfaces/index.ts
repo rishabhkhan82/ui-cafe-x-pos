@@ -281,4 +281,136 @@ export interface UserType {
   updated_at: Date;
 }
 
+export interface BillingPeriodMonths {
+  id: number;
+  name: string;
+  key: string;
+  description: string;
+  is_active: boolean;
+  display_order: number;
+  created_by: string;
+  updated_by: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface InventoryItemCategory {
+  id: number;
+  name: string;
+  key: string;
+  description: string;
+  is_active: boolean;
+  display_order: number;
+  created_by: string;
+  updated_by: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface InventoryItemType {
+  id: number;
+  name: string;
+  key: string;
+  description: string;
+  is_active: boolean;
+  display_order: number;
+  created_by: string;
+  updated_by: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface InventoryItemUnit {
+  id: number;
+  name: string;
+  key: string;
+  description: string;
+  is_active: boolean;
+  display_order: number;
+  created_by: string;
+  updated_by: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface MenuCategory {
+  id: number;
+  name: string;
+  key: string;
+  description: string;
+  is_active: boolean;
+  display_order: number;
+  created_by: string;
+  updated_by: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface MenuItemsType {
+  id: number;
+  name: string;
+  key: string;
+  description: string;
+  is_active: boolean;
+  display_order: number;
+  color_classes: string;
+  icon: string;
+  created_by: string;
+  updated_by: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface OrderType {
+  id: number;
+  name: string;
+  key: string;
+  description: string;
+  is_active: boolean;
+  display_order: number;
+  created_by: string;
+  updated_by: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface ReportType {
+  id: number;
+  name: string;
+  key: string;
+  description: string;
+  is_active: boolean;
+  display_order: number;
+  created_by: string;
+  updated_by: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface WasteReasonType {
+  id: number;
+  name: string;
+  key: string;
+  description: string;
+  is_active: boolean;
+  display_order: number;
+  created_by: string;
+  updated_by: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface WasteType {
+  id: number;
+  name: string;
+  key: string;
+  description: string;
+  is_active: boolean;
+  display_order: number;
+  created_by: string;
+  updated_by: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
 // Master interfaces starts here

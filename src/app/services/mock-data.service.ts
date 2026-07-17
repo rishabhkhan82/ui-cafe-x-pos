@@ -8744,7 +8744,7 @@ export class MockDataService {
   async getNavigationMenu(): Promise<NavigationMenu[]> {
     // Mock API call - in real implementation, this would call actual API
     return new Promise(resolve => {
-      let params = {page: 1, size: 1000};
+      let params = {page: 1, size: 1000, isActive : true};
       this.crudService.getNavigationMenus(params).subscribe({
         next: (response: any) => {
           let navData = response.data.map((menu: any) => ({
