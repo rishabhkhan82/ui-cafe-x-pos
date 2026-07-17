@@ -7,18 +7,18 @@ import { AuthService } from '../../../services/auth.service';
 import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ValidationService } from '../../../services/validation.service';
-import { FeatureCategory } from '../../../interfaces';
+import { RestaurantStatus } from '../../../interfaces';
 
 @Component({
-  selector: 'app-feature-category-master',
+  selector: 'app-restaurant-status-master',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './feature-category-master.component.html'
+  templateUrl: './restaurant-status-master.component.html'
 })
-export class FeatureCategoryMasterComponent implements OnInit {
-  categories: FeatureCategory[] = [];
-  selectedCategory: FeatureCategory | null = null;
-  editingCategory: FeatureCategory | null = null;
+export class RestaurantStatusMasterComponent implements OnInit {
+  items: RestaurantStatus[] = [];
+  selectedItem: RestaurantStatus | null = null;
+  editingItem: RestaurantStatus | null = null;
   searchTerm = '';
   statusFilter = 'all';
   showAddForm = false;
@@ -32,7 +32,7 @@ export class FeatureCategoryMasterComponent implements OnInit {
 
   fieldErrors: { [key: string]: string } = {};
 
-  categoryForm: FeatureCategory = {
+  itemForm: RestaurantStatus = {
     id: 0,
     name: '',
     key: '',
@@ -55,10 +55,10 @@ export class FeatureCategoryMasterComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadCategories();
+    this.loadItems();
   }
 
-  loadCategories(): void {
+  loadItems(): void {
     this.loadingService.show();
     this.errorMessage = '';
 
@@ -75,16 +75,16 @@ export class FeatureCategoryMasterComponent implements OnInit {
       params.isActive = this.statusFilter === 'active' ? 'true' : 'false';
     }
 
-    this.crudService.getFeatureCategories(params).subscribe({
+    this.crudService.getRestaurantStatuses(params).subscribe({
       next: (response: any) => {
-        this.categories = response.data || [];
+        this.items = response.data || [];
         this.totalPages = response.pageCount || 1;
         this.totalElements = response.totalRowCount || 0;
         this.loadingService.hide();
       },
       error: (error) => {
-        console.error('Error loading feature categories:', error);
-        const apiMessage = error.error?.message || 'Failed to load feature categories. Please try again.';
+        console.error('Error loading restaurant statuses:', error);
+        const apiMessage = error.error?.message || 'Failed to load restaurant statuses. Please try again.';
         this.errorMessage = apiMessage;
         this.notificationService.error('Error', apiMessage);
         this.loadingService.hide();
@@ -92,34 +92,34 @@ export class FeatureCategoryMasterComponent implements OnInit {
     });
   }
 
-  filterCategories(): void {
-    this.loadCategories();
+  filterItems(): void {
+    this.loadItems();
   }
 
   clearFilters(): void {
     this.searchTerm = '';
     this.statusFilter = 'all';
     this.currentPage = 1;
-    this.loadCategories();
+    this.loadItems();
   }
 
   changePage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
-      this.loadCategories();
+      this.loadItems();
     }
   }
 
   changeItemsPerPage(newLimit: number): void {
     this.itemsPerPage = newLimit;
     this.currentPage = 1;
-    this.loadCategories();
+    this.loadItems();
   }
 
   onItemsPerPageChange(event: any): void {
     this.itemsPerPage = +event.target.value;
     this.currentPage = 1;
-    this.loadCategories();
+    this.loadItems();
   }
 
   get pageNumbers(): number[] {
@@ -130,17 +130,17 @@ export class FeatureCategoryMasterComponent implements OnInit {
     return pages;
   }
 
-  selectCategory(category: FeatureCategory): void {
-    this.selectedCategory = category;
+  selectItem(item: RestaurantStatus): void {
+    this.selectedItem = item;
   }
 
-  showCategoryForm(category?: FeatureCategory): void {
+  showItemForm(item?: RestaurantStatus): void {
     this.showAddForm = true;
-    this.editingCategory = category || null;
-    if (category) {
-      this.categoryForm = { ...category };
+    this.editingItem = item || null;
+    if (item) {
+      this.itemForm = { ...item };
     } else {
-      this.categoryForm = {
+      this.itemForm = {
         id: 0,
         name: '',
         key: '',
@@ -157,7 +157,7 @@ export class FeatureCategoryMasterComponent implements OnInit {
 
   cancelAdd(): void {
     this.showAddForm = false;
-    this.categoryForm = {
+    this.itemForm = {
       id: 0,
       name: '',
       key: '',
@@ -169,7 +169,7 @@ export class FeatureCategoryMasterComponent implements OnInit {
       created_at: new Date(),
       updated_at: new Date()
     };
-    this.editingCategory = null;
+    this.editingItem = null;
     this.fieldErrors = {};
     this.errorMessage = '';
   }
@@ -178,7 +178,7 @@ export class FeatureCategoryMasterComponent implements OnInit {
     this.fieldErrors = {};
     this.errorMessage = '';
 
-    const isUpdate = !!this.editingCategory;
+    const isUpdate = !!this.editingItem;
     let hasErrors = false;
 
     this.validateName();
@@ -201,7 +201,7 @@ export class FeatureCategoryMasterComponent implements OnInit {
   }
 
   validateName(): void {
-    const validation = this.validationService.name(this.categoryForm.name, 'Category Name');
+    const validation = this.validationService.name(this.itemForm.name, 'Name');
     if (!validation.isValid) {
       this.fieldErrors['name'] = validation.message!;
     } else {
@@ -210,7 +210,7 @@ export class FeatureCategoryMasterComponent implements OnInit {
   }
 
   validateKey(): void {
-    const validation = this.validationService.required(this.categoryForm.key, 'Key');
+    const validation = this.validationService.required(this.itemForm.key, 'Key');
     if (!validation.isValid) {
       this.fieldErrors['key'] = validation.message!;
     } else {
@@ -219,7 +219,7 @@ export class FeatureCategoryMasterComponent implements OnInit {
   }
 
   validateDescription(): void {
-    const validation = this.validationService.required(this.categoryForm.description, 'Description');
+    const validation = this.validationService.required(this.itemForm.description, 'Description');
     if (!validation.isValid) {
       this.fieldErrors['description'] = validation.message!;
     } else {
@@ -231,27 +231,27 @@ export class FeatureCategoryMasterComponent implements OnInit {
     this.loadingService.show();
 
     const currentTime = new Date();
-    const categoryRequest = {
-      name: this.categoryForm.name,
-      key: this.categoryForm.key,
-      description: this.categoryForm.description,
-      is_active: this.categoryForm.is_active,
-      display_order: this.categoryForm.display_order,
+    const itemRequest = {
+      name: this.itemForm.name,
+      key: this.itemForm.key,
+      description: this.itemForm.description,
+      is_active: this.itemForm.is_active,
+      display_order: this.itemForm.display_order,
       created_at: currentTime,
       updated_at: currentTime,
       created_by: this.authService.getCurrentUser()?.id || 'system'
     };
 
-    this.crudService.createFeatureCategory(categoryRequest).subscribe({
+    this.crudService.createRestaurantStatus(itemRequest).subscribe({
       next: (response) => {
-        console.log('Feature category created successfully:', response);
-        this.notificationService.success('Category Created', 'The feature category has been successfully created.');
+        console.log('Restaurant status created successfully:', response);
+        this.notificationService.success('Item Created', 'The restaurant status has been successfully created.');
         this.resetForm();
-        this.loadCategories();
+        this.loadItems();
       },
       error: (error) => {
-        console.error('Error creating feature category:', error);
-        const apiMessage = error.error?.message || 'Failed to create feature category. Please try again.';
+        console.error('Error creating restaurant status:', error);
+        const apiMessage = error.error?.message || 'Failed to create restaurant status. Please try again.';
         this.errorMessage = apiMessage;
         this.loadingService.hide();
 
@@ -273,29 +273,29 @@ export class FeatureCategoryMasterComponent implements OnInit {
     this.loadingService.show();
 
     const currentTime = new Date();
-    const categoryRequest = {
-      name: this.categoryForm.name,
-      key: this.categoryForm.key,
-      description: this.categoryForm.description,
-      is_active: this.categoryForm.is_active,
-      display_order: this.categoryForm.display_order,
-      created_at: this.editingCategory!.created_at,
+    const itemRequest = {
+      name: this.itemForm.name,
+      key: this.itemForm.key,
+      description: this.itemForm.description,
+      is_active: this.itemForm.is_active,
+      display_order: this.itemForm.display_order,
+      created_at: this.editingItem!.created_at,
       updated_at: currentTime,
-      created_by: this.editingCategory!.created_by,
+      created_by: this.editingItem!.created_by,
       updated_by: this.authService.getCurrentUser()?.id || 'system'
     };
 
-    this.crudService.updateFeatureCategory(this.editingCategory!.id, categoryRequest).subscribe({
+    this.crudService.updateRestaurantStatus(this.editingItem!.id, itemRequest).subscribe({
       next: (response) => {
-        console.log('Feature category updated successfully:', response);
-        this.notificationService.success('Category Updated', 'The feature category has been successfully updated.');
+        console.log('Restaurant status updated successfully:', response);
+        this.notificationService.success('Item Updated', 'The restaurant status has been successfully updated.');
         this.resetForm();
-        this.loadCategories();
+        this.loadItems();
         this.loadingService.hide();
       },
       error: (error) => {
-        console.error('Error updating feature category:', error);
-        const apiMessage = error.error?.message || 'Failed to update feature category. Please try again.';
+        console.error('Error updating restaurant status:', error);
+        const apiMessage = error.error?.message || 'Failed to update restaurant status. Please try again.';
         this.errorMessage = apiMessage;
         this.loadingService.hide();
 
@@ -315,7 +315,7 @@ export class FeatureCategoryMasterComponent implements OnInit {
 
   private resetForm(): void {
     this.showAddForm = false;
-    this.categoryForm = {
+    this.itemForm = {
       id: 0,
       name: '',
       key: '',
@@ -327,13 +327,13 @@ export class FeatureCategoryMasterComponent implements OnInit {
       created_at: new Date(),
       updated_at: new Date()
     };
-    this.editingCategory = null;
+    this.editingItem = null;
   }
 
-  async deleteCategory(category: FeatureCategory): Promise<void> {
+  async deleteItem(item: RestaurantStatus): Promise<void> {
     const confirmed = await this.confirmationService.confirm(
-      `Are you sure you want to delete "${category.name}"? This action cannot be undone.`,
-      'Delete Feature Category',
+      `Are you sure you want to delete "${item.name}"? This action cannot be undone.`,
+      'Delete Restaurant Status',
       'Delete',
       'Cancel'
     );
@@ -342,18 +342,18 @@ export class FeatureCategoryMasterComponent implements OnInit {
       this.loadingService.show();
       this.errorMessage = '';
 
-      this.crudService.deleteFeatureCategory(category.id).subscribe({
+      this.crudService.deleteRestaurantStatus(item.id).subscribe({
         next: () => {
-          console.log('Feature category deleted successfully:', category.id);
-          if (this.selectedCategory?.id === category.id) {
-            this.selectedCategory = null;
+          console.log('Restaurant status deleted successfully:', item.id);
+          if (this.selectedItem?.id === item.id) {
+            this.selectedItem = null;
           }
-          this.loadCategories();
+          this.loadItems();
           this.loadingService.hide();
         },
         error: (error) => {
-          console.error('Error deleting feature category:', error);
-          const apiMessage = error.error?.message || 'Failed to delete feature category. Please try again.';
+          console.error('Error deleting restaurant status:', error);
+          const apiMessage = error.error?.message || 'Failed to delete restaurant status. Please try again.';
           this.errorMessage = apiMessage;
           this.loadingService.hide();
         }
@@ -361,19 +361,19 @@ export class FeatureCategoryMasterComponent implements OnInit {
     }
   }
 
-  updateCategoryStatus(category: FeatureCategory, newStatus: boolean): void {
+  updateItemStatus(item: RestaurantStatus, newStatus: boolean): void {
     this.loadingService.show();
-    const updatedCategory = { ...category, is_active: newStatus, updated_at: new Date() };
+    const updatedItem = { ...item, is_active: newStatus, updated_at: new Date() };
 
-    this.crudService.updateFeatureCategory(category.id, updatedCategory).subscribe({
+    this.crudService.updateRestaurantStatus(item.id, updatedItem).subscribe({
       next: (response) => {
-        console.log('Feature category status updated successfully:', response);
-        category.is_active = newStatus;
+        console.log('Restaurant status updated successfully:', response);
+        item.is_active = newStatus;
         this.loadingService.hide();
       },
       error: (error) => {
-        console.error('Error updating feature category status:', error);
-        const apiMessage = error.error?.message || 'Failed to update feature category status. Please try again.';
+        console.error('Error updating restaurant status:', error);
+        const apiMessage = error.error?.message || 'Failed to update restaurant status. Please try again.';
         this.errorMessage = apiMessage;
         this.loadingService.hide();
       }
@@ -399,9 +399,9 @@ export class FeatureCategoryMasterComponent implements OnInit {
   }
 
   reloadComponent(): void {
-    this.categories = [];
-    this.selectedCategory = null;
-    this.editingCategory = null;
+    this.items = [];
+    this.selectedItem = null;
+    this.editingItem = null;
     this.searchTerm = '';
     this.statusFilter = 'all';
     this.showAddForm = false;
@@ -412,7 +412,7 @@ export class FeatureCategoryMasterComponent implements OnInit {
     this.totalElements = 0;
     this.fieldErrors = {};
 
-    this.categoryForm = {
+    this.itemForm = {
       id: 0,
       name: '',
       key: '',
@@ -425,7 +425,7 @@ export class FeatureCategoryMasterComponent implements OnInit {
       updated_at: new Date()
     };
 
-    this.loadCategories();
+    this.loadItems();
   }
 
   Math = Math;

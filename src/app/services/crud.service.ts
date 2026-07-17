@@ -727,6 +727,174 @@ export class CrudService {
     return this.deleteData('feature-categories', {}, id);
   }
 
+  // Navigation Menu Type operations
+  getNavigationMenuTypes(params?: CrudParams): Observable<any> {
+    return this.getData('navigation-menu-types', params);
+  }
+
+  getNavigationMenuTypeById(id: string | number): Observable<any> {
+    return this.getData(`navigation-menu-types/${id}`);
+  }
+
+  createNavigationMenuType(payload: any): Observable<any> {
+    return this.postData('navigation-menu-types', payload);
+  }
+
+  updateNavigationMenuType(id: string | number, payload: any): Observable<any> {
+    return this.putData('navigation-menu-types', payload, {}, id);
+  }
+
+  deleteNavigationMenuType(id: string | number): Observable<any> {
+    return this.deleteData('navigation-menu-types', {}, id);
+  }
+
+  // Feature Type operations
+  getFeatureTypes(params?: CrudParams): Observable<any> {
+    return this.getData('feature-types', params);
+  }
+
+  getFeatureTypeById(id: string | number): Observable<any> {
+    return this.getData(`feature-types/${id}`);
+  }
+
+  createFeatureType(payload: any): Observable<any> {
+    return this.postData('feature-types', payload);
+  }
+
+  updateFeatureType(id: string | number, payload: any): Observable<any> {
+    return this.putData('feature-types', payload, {}, id);
+  }
+
+  deleteFeatureType(id: string | number): Observable<any> {
+    return this.deleteData('feature-types', {}, id);
+  }
+
+  // User Type operations
+  getUserTypes(params?: CrudParams): Observable<any> {
+    return this.getData('user-types', params);
+  }
+
+  getUserTypeById(id: string | number): Observable<any> {
+    return this.getData(`user-types/${id}`);
+  }
+
+  createUserType(payload: any): Observable<any> {
+    return this.postData('user-types', payload);
+  }
+
+  updateUserType(id: string | number, payload: any): Observable<any> {
+    return this.putData('user-types', payload, {}, id);
+  }
+
+  deleteUserType(id: string | number): Observable<any> {
+    return this.deleteData('user-types', {}, id);
+  }
+
+  // Billing Cycle operations
+  getBillingCycles(params?: CrudParams): Observable<any> {
+    return this.getData('billing-cycles', params);
+  }
+
+  getBillingCycleById(id: string | number): Observable<any> {
+    return this.getData(`billing-cycles/${id}`);
+  }
+
+  createBillingCycle(payload: any): Observable<any> {
+    return this.postData('billing-cycles', payload);
+  }
+
+  updateBillingCycle(id: string | number, payload: any): Observable<any> {
+    return this.putData('billing-cycles', payload, {}, id);
+  }
+
+  deleteBillingCycle(id: string | number): Observable<any> {
+    return this.deleteData('billing-cycles', {}, id);
+  }
+
+  // Setup Fee operations
+  getSetupFees(params?: CrudParams): Observable<any> {
+    return this.getData('setup-fees', params);
+  }
+
+  getSetupFeeById(id: string | number): Observable<any> {
+    return this.getData(`setup-fees/${id}`);
+  }
+
+  createSetupFee(payload: any): Observable<any> {
+    return this.postData('setup-fees', payload);
+  }
+
+  updateSetupFee(id: string | number, payload: any): Observable<any> {
+    return this.putData('setup-fees', payload, {}, id);
+  }
+
+  deleteSetupFee(id: string | number): Observable<any> {
+    return this.deleteData('setup-fees', {}, id);
+  }
+
+  // Trial Day operations
+  getTrialDays(params?: CrudParams): Observable<any> {
+    return this.getData('trial-days', params);
+  }
+
+  getTrialDayById(id: string | number): Observable<any> {
+    return this.getData(`trial-days/${id}`);
+  }
+
+  createTrialDay(payload: any): Observable<any> {
+    return this.postData('trial-days', payload);
+  }
+
+  updateTrialDay(id: string | number, payload: any): Observable<any> {
+    return this.putData('trial-days', payload, {}, id);
+  }
+
+  deleteTrialDay(id: string | number): Observable<any> {
+    return this.deleteData('trial-days', {}, id);
+  }
+
+  // Restaurant Status operations
+  getRestaurantStatuses(params?: CrudParams): Observable<any> {
+    return this.getData('restaurant-statuses', params);
+  }
+
+  getRestaurantStatusById(id: string | number): Observable<any> {
+    return this.getData(`restaurant-statuses/${id}`);
+  }
+
+  createRestaurantStatus(payload: any): Observable<any> {
+    return this.postData('restaurant-statuses', payload);
+  }
+
+  updateRestaurantStatus(id: string | number, payload: any): Observable<any> {
+    return this.putData('restaurant-statuses', payload, {}, id);
+  }
+
+  deleteRestaurantStatus(id: string | number): Observable<any> {
+    return this.deleteData('restaurant-statuses', {}, id);
+  }
+
+  // State operations
+  getStates(params?: CrudParams): Observable<any> {
+    return this.getData('states', params);
+  }
+
+  getStateById(id: string | number): Observable<any> {
+    return this.getData(`states/${id}`);
+  }
+
+  createState(payload: any): Observable<any> {
+    return this.postData('states', payload);
+  }
+
+  updateState(id: string | number, payload: any): Observable<any> {
+    return this.putData('states', payload, {}, id);
+  }
+
+  deleteState(id: string | number): Observable<any> {
+    return this.deleteData('states', {}, id);
+  }
+
   // ===============================
   // LOYALTY PROGRAM OPERATIONS
   // ===============================

@@ -169,3 +169,116 @@ export interface RecipeProduction {
   created_by?: number;
   created_at: Date;
 }
+
+// Master interfaces starts here
+export interface FeatureCategory {
+  id: number;
+  name: string;
+  key: string;
+  description: string;
+  is_active: boolean;
+  display_order: number;
+  created_by: string;
+  updated_by: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface BillingCycle {
+  id: number;
+  name: string;
+  key: string;
+  description: string;
+  is_active: boolean;
+  display_order: number;
+  created_by: string;
+  updated_by: string;
+  created_at: Date;
+  updated_at: Date;
+}
+export interface FeatureType {
+  id: number;
+  name: string;
+  key: string;
+  description: string;
+  is_active: boolean;
+  display_order: number;
+  created_by: string;
+  updated_by: string;
+  created_at: Date;
+  updated_at: Date;
+}
+export interface NavigationMenuType {
+  id: number;
+  name: string;
+  key: string;
+  description: string;
+  is_active: boolean;
+  display_order: number;
+  created_by: string;
+  updated_by: string;
+  created_at: Date;
+  updated_at: Date;
+}
+export interface RestaurantStatus {
+  id: number;
+  name: string;
+  key: string;
+  description: string;
+  is_active: boolean;
+  display_order: number;
+  created_by: string;
+  updated_by: string;
+  created_at: Date;
+  updated_at: Date;
+}
+export interface SetupFee {
+  id: number;
+  name: string;
+  key: string;
+  description: string;
+  is_active: boolean;
+  display_order: number;
+  created_by: string;
+  updated_by: string;
+  created_at: Date;
+  updated_at: Date;
+}
+export interface State {
+  id: number;
+  name: string;
+  key: string;
+  description: string;
+  is_active: boolean;
+  display_order: number;
+  created_by: string;
+  updated_by: string;
+  created_at: Date;
+  updated_at: Date;
+}
+export interface TrialDay {
+  id: number;
+  name: string;
+  key: string;
+  description: string;
+  is_active: boolean;
+  display_order: number;
+  created_by: string;
+  updated_by: string;
+  created_at: Date;
+  updated_at: Date;
+}
+export interface UserType {
+  id: number;
+  name: string;
+  key: string;
+  description: string;
+  is_active: boolean;
+  display_order: number;
+  created_by: string;
+  updated_by: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+// Master interfaces starts here

@@ -181,6 +181,62 @@ export const routes: Routes = [
     data: { allowedRoles: ['platform_owner'] }
   },
 
+  {
+    path: 'navigation-menu-type-master',
+    loadComponent: () => import('./components/masters/navigation-menu-type-master/navigation-menu-type-master.component').then(m => m.NavigationMenuTypeMasterComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
+  },
+
+  {
+    path: 'feature-type-master',
+    loadComponent: () => import('./components/masters/feature-type-master/feature-type-master.component').then(m => m.FeatureTypeMasterComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
+  },
+
+  {
+    path: 'user-type-master',
+    loadComponent: () => import('./components/masters/user-type-master/user-type-master.component').then(m => m.UserTypeMasterComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
+  },
+
+  {
+    path: 'billing-cycle-master',
+    loadComponent: () => import('./components/masters/billing-cycle-master/billing-cycle-master.component').then(m => m.BillingCycleMasterComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
+  },
+
+  {
+    path: 'setup-fee-master',
+    loadComponent: () => import('./components/masters/setup-fee-master/setup-fee-master.component').then(m => m.SetupFeeMasterComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
+  },
+
+  {
+    path: 'trial-days-master',
+    loadComponent: () => import('./components/masters/trial-day-master/trial-day-master.component').then(m => m.TrialDayMasterComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
+  },
+
+  {
+    path: 'cafe-restaurant-status-master',
+    loadComponent: () => import('./components/masters/restaurant-status-master/restaurant-status-master.component').then(m => m.RestaurantStatusMasterComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
+  },
+
+  {
+    path: 'state-master',
+    loadComponent: () => import('./components/masters/state-master/state-master.component').then(m => m.StateMasterComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner'] }
+  },
+
   // Restaurant Owner & Manager Specific Routings
 
   {

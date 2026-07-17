@@ -168,6 +168,11 @@ Masters Needed in Platform-dashboare with ui,db and api's
           <option *ngFor="let usertype of userTypes" [value]="usertype.value">{{ usertype.name }}</option>
         </select>
       </div>
+        userTypes : any = [
+    {name: 'Admin', value: 'admin'},
+    {name: 'Customer', value: 'customer'}
+  ];
+
 
 5] app-feature-management
 
