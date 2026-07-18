@@ -26,8 +26,8 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
   errorMessage : any = '';
   selectedPlanForDetails: SubscriptionPlan | undefined | any;
   selectedMonthsMap: Map<number, number> = new Map();
-  selectedPlanForPlanId: number | null = null;
-  selectedPlan: SubscriptionPlan | null = null;
+  // selectedPlanForPlanId: number | null = null;
+  // selectedPlan: SubscriptionPlan | null = null;
   expandedFeaturesMap: Map<number, boolean> = new Map();
   private subscriptions: Subscription[] = [];
 
@@ -241,6 +241,12 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     const finalAmount = this.getFinalAmount(plan);
     const discountAmount = this.getDiscountAmount(plan);
 
+    // FREE PLAN: skip Razorpay entirely and activate directly
+    if (finalAmount === 0) {
+      this.activateFreePlan(plan, selectedMonths, discountAmount);
+      return;
+    }
+
     // 1) Tell backend to create a Razorpay order
     this.crudService.postData('payments/create-order', {
       planId: plan.id,
@@ -278,10 +284,28 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     });
   }
 
-  closeSubscriptionSelection(): void {
-    this.selectedPlanForPlanId = null;
-    this.selectedPlan = null;
+  private activateFreePlan(plan: SubscriptionPlan, months: number, discountAmount: number): void {
+    const currentUser = this.authService.getCurrentUser();
+    const restaurantId = currentUser?.restaurantId;
+    const currentUserId = currentUser?.id;
+    const now = new Date();
+    const endDate = new Date();
+    endDate.setMonth(now.getMonth() + months);
+
+    const freeOrderId = `FREE-${Date.now()}`;
+    const mockRzpResponse = {
+      razorpay_order_id: freeOrderId,
+      razorpay_payment_id: freeOrderId
+    };
+
+    this.loadingService.show();
+    this.saveSubscriptionAndHistory(mockRzpResponse, plan, months, 0, discountAmount);
   }
+
+  // closeSubscriptionSelection(): void {
+  //   this.selectedPlanForPlanId = null;
+  //   this.selectedPlan = null;
+  // }
 
   subscribeToPlan(plan: SubscriptionPlan): void {
     const selectedMonths = this.getSelectedMonths(plan.id);
@@ -379,64 +403,64 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     rzp.open();
   }
 
-  private saveSubscription(razorpayResponse: any, plan: SubscriptionPlan, months: number, finalAmount: number, discountAmount: number): void {
-    const currentUser = this.authService.getCurrentUser();
-    const restaurantId = currentUser?.restaurantId;
+  // private saveSubscription(razorpayResponse: any, plan: SubscriptionPlan, months: number, finalAmount: number, discountAmount: number): void {
+  //   const currentUser = this.authService.getCurrentUser();
+  //   const restaurantId = currentUser?.restaurantId;
 
-    if (!restaurantId) {
-      console.error('No restaurant ID found for current user');
-      this.notificationService.error('Subscription Error', 'Payment successful but failed to save subscription. Please contact support.');
-      return;
-    }
+  //   if (!restaurantId) {
+  //     console.error('No restaurant ID found for current user');
+  //     this.notificationService.error('Subscription Error', 'Payment successful but failed to save subscription. Please contact support.');
+  //     return;
+  //   }
 
-    const now = new Date();
-    const endDate = new Date();
-    endDate.setMonth(now.getMonth() + months);
+  //   const now = new Date();
+  //   const endDate = new Date();
+  //   endDate.setMonth(now.getMonth() + months);
 
-    const subscriptionPayload = {
-      subscription_id: razorpayResponse.razorpay_order_id,
-      restaurant_id: restaurantId,
-      plan_id: plan.id,
-      status: 'active',
-      start_date: now.toISOString(),
-      end_date: endDate.toISOString(),
-      billing_cycle: plan.billing_cycle,
-      cancel_at_period_end: false,
-      auto_renew: false,
-      discount_amount: discountAmount,
-      final_amount: finalAmount,
-      payment_method_id: razorpayResponse.razorpay_payment_id,
-      plan_price_at_subscription: plan.price,
-      offer_name_at_subscription: plan.offer_name || null,
-      offer_discount_percentage_at_subscription: plan.offer_discount_percentage || 0,
-      plan_name_at_subscription: plan.display_name || plan.name
-    };
+  //   const subscriptionPayload = {
+  //     subscription_id: razorpayResponse.razorpay_order_id,
+  //     restaurant_id: restaurantId,
+  //     plan_id: plan.id,
+  //     status: 'active',
+  //     start_date: now.toISOString(),
+  //     end_date: endDate.toISOString(),
+  //     billing_cycle: plan.billing_cycle,
+  //     cancel_at_period_end: false,
+  //     auto_renew: false,
+  //     discount_amount: discountAmount,
+  //     final_amount: finalAmount,
+  //     payment_method_id: razorpayResponse.razorpay_payment_id,
+  //     plan_price_at_subscription: plan.price,
+  //     offer_name_at_subscription: plan.offer_name || null,
+  //     offer_discount_percentage_at_subscription: plan.offer_discount_percentage || 0,
+  //     plan_name_at_subscription: plan.display_name || plan.name
+  //   };
 
-    this.crudService.createRestaurantSubscription(subscriptionPayload).subscribe({
-      next: (response: any) => {
-        console.log('Subscription saved:', response);
-        const currentUser = this.authService.getCurrentUser();
-        const restaurantId = currentUser?.restaurantId;
+  //   this.crudService.createRestaurantSubscription(subscriptionPayload).subscribe({
+  //     next: (response: any) => {
+  //       console.log('Subscription saved:', response);
+  //       const currentUser = this.authService.getCurrentUser();
+  //       const restaurantId = currentUser?.restaurantId;
 
-        if (restaurantId) {
-          this.updateRestaurantSubscriptionFields(
-            restaurantId,
-            plan.display_name || plan.name,
-            now,
-            endDate
-          );
-        }
+  //       if (restaurantId) {
+  //         this.updateRestaurantSubscriptionFields(
+  //           restaurantId,
+  //           plan.display_name || plan.name,
+  //           now,
+  //           endDate
+  //         );
+  //       }
 
-        this.notificationService.success('Subscription Activated', 'Your subscription has been activated successfully!');
-        this.subscriptionService.refreshAfterPayment().subscribe();
-        this.loadData(); // Refresh data
-      },
-      error: (error) => {
-        console.error('Error saving subscription:', error);
-        this.notificationService.error('Subscription Error', 'Payment successful but failed to save subscription. Contact support.');
-      }
-    });
-  }
+  //       this.notificationService.success('Subscription Activated', 'Your subscription has been activated successfully!');
+  //       this.subscriptionService.refreshAfterPayment().subscribe();
+  //       this.loadData(); // Refresh data
+  //     },
+  //     error: (error) => {
+  //       console.error('Error saving subscription:', error);
+  //       this.notificationService.error('Subscription Error', 'Payment successful but failed to save subscription. Contact support.');
+  //     }
+  //   });
+  // }
 
   private updateRestaurantSubscriptionFields(
     restaurantId: string | number,
@@ -444,10 +468,14 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     startDate: Date,
     endDate: Date
   ): void {
-    this.crudService.updateRestaurant(restaurantId, {
+    const currentUser = this.authService.getCurrentUser();
+    const updatedBy = currentUser?.id;
+
+    this.crudService.updateRestaurantSubscriptionDetails(restaurantId, {
       subscription_plan: planName,
       subscription_start_date: startDate,
-      subscription_end_date: endDate
+      subscription_end_date: endDate,
+      updated_by: updatedBy
     }).subscribe({
       next: () => {
         console.log('Restaurant subscription fields updated successfully');

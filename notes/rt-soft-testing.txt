@@ -404,3 +404,18 @@ Restaurant owner side Master tables required
 
 6] app-customer-categories
    - order_type_master
+
+   ==============================================
+
+   2. Roo Code ⭐⭐⭐⭐⭐ (My Recommendation)
+✅ Open source
+✅ VS Code extension
+✅ Fork of Cline with additional agent modes
+✅ Excellent for large Angular projects
+✅ Can generate and run Playwright tests
+
+{
+    "subscription_plan": "Free",
+    "subscription_start_date": "2026-07-18T17:49:17.981Z",
+    "subscription_end_date": "2027-07-18T17:49:17.981Z"
+}

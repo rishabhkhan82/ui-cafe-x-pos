@@ -434,6 +434,10 @@ export class CrudService {
     return this.putData('restaurants', payload, {}, id);
   }
 
+  updateRestaurantSubscriptionDetails(id: string | number, payload: any): Observable<any> {
+    return this.putData(`restaurants/${id}/subscription-details`, payload);
+  }
+
   deleteRestaurant(id: string | number): Observable<any> {
     return this.deleteData('restaurants', {}, id);
   }
