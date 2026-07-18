@@ -10,6 +10,7 @@ import { AuthService } from '../../../services/auth.service';
 import { NotificationService } from '../../../services/notification.service';
 import { PendingBillsService } from '../../../services/pending-bills.service';
 import { environment } from '../../../environments/environment';
+import { OrderType } from '../../../interfaces';
 
 @Component({
   selector: 'app-customer-cart',
@@ -28,6 +29,8 @@ export class CustomerCartComponent implements OnInit {
   orderType: 'DINE_IN' | 'TAKEAWAY' = 'DINE_IN';
   isPlacingOrder = false;
 
+  orderTypes: OrderType[] = [];
+
   constructor(
     private location: Location,
     private router: Router,
@@ -39,9 +42,33 @@ export class CustomerCartComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.loadOrderTypes();
     this.cartService.cart$.subscribe(items => {
       this.cartItems = items;
       this.computeTotals();
+    });
+  }
+
+  loadOrderTypes(): void {
+    this.crudService.getOrderTypes({ isActive: true, page: 0, size: 0 }).subscribe({
+      next: (response: any) => {
+        const types = response.data || response || [];
+        this.orderTypes = types.map((type: any) => ({
+          id: type.id,
+          name: type.name,
+          key: type.key,
+          description: type.description,
+          is_active: type.is_active ?? type.isActive ?? true,
+          display_order: type.display_order ?? type.displayOrder ?? 0,
+          created_by: type.created_by ?? type.createdBy ?? '',
+          updated_by: type.updated_by ?? type.updatedBy ?? '',
+          created_at: type.created_at ? new Date(type.created_at) : new Date(),
+          updated_at: type.updated_at ? new Date(type.updated_at) : new Date()
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading order types:', error);
+      }
     });
   }
 

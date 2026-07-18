@@ -47,8 +47,9 @@
           [(ngModel)]="typeFilter"
           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
           <option value="all">All Types</option>
-          <option value="ACTION">Action Menu</option>
-          <option value="PARENT">Parent Menu</option>
+          <option *ngFor="let type of navigationMenuTypes" [value]="type.key">
+            {{ type.name }}
+          </option>
         </select>
       </div>
       <div>

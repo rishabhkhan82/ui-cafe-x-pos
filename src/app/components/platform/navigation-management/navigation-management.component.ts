@@ -9,6 +9,7 @@ import { AuthService } from '../../../services/auth.service';
 import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ValidationService } from '../../../services/validation.service';
+import { NavigationMenuType } from '../../../interfaces';
 
 @Component({
   selector: 'app-navigation-management',
@@ -27,6 +28,7 @@ export class NavigationManagementComponent implements OnInit {
   codeFilter = '';
   statusFilter = 'all';
   typeFilter = 'all';
+  navigationMenuTypes: NavigationMenuType[] = [];
   showAddForm = false;
   showViewModal = false;
   errorMessage = '';
@@ -70,6 +72,7 @@ export class NavigationManagementComponent implements OnInit {
   ngOnInit(): void {
     this.loadNavigationMenus();
     this.loadParentMenus();
+    this.loadNavigationMenuTypes();
   }
 
   loadNavigationMenus(): void {
@@ -139,6 +142,29 @@ export class NavigationManagementComponent implements OnInit {
         this.errorMessage = 'Failed to load navigation menus. Please try again.';
         this.notificationService.error('Error', 'Failed to load navigation menus');
         this.loadingService.hide();
+      }
+    });
+  }
+
+  loadNavigationMenuTypes(): void {
+    this.crudService.getNavigationMenuTypes({ isActive: true }).subscribe({
+      next: (response: any) => {
+        const types = response.data || response || [];
+        this.navigationMenuTypes = types.map((type: any) => ({
+          id: type.id,
+          name: type.name,
+          key: type.key,
+          description: type.description,
+          is_active: type.is_active ?? type.isActive ?? true,
+          display_order: type.display_order ?? type.displayOrder ?? 0,
+          created_by: type.created_by ?? type.createdBy ?? '',
+          updated_by: type.updated_by ?? type.updatedBy ?? '',
+          created_at: type.created_at ? new Date(type.created_at) : new Date(),
+          updated_at: type.updated_at ? new Date(type.updated_at) : new Date()
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading navigation menu types:', error);
       }
     });
   }

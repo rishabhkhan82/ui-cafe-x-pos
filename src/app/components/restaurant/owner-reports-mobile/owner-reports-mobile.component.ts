@@ -6,6 +6,7 @@ import { CrudService } from '../../../services/crud.service';
 import { LoadingService } from '../../../services/loading.service';
 import { NotificationService } from '../../../services/notification.service';
 import { AuthService } from '../../../services/auth.service';
+import { ReportType } from '../../../interfaces';
 
 @Component({
   selector: 'app-owner-reports-mobile',
@@ -24,13 +25,7 @@ export class OwnerReportsMobileComponent implements OnInit {
   isLoading: boolean = false;
   hasReport: boolean = false;
 
-  reportTypes: { value: string; label: string; icon: string }[] = [
-    { value: 'SALES_SUMMARY', label: 'Sales Summary', icon: 'fas fa-chart-bar' },
-    { value: 'INVENTORY_STATUS', label: 'Inventory Status', icon: 'fas fa-boxes' },
-    { value: 'TOP_SELLING_ITEMS', label: 'Top Selling Items', icon: 'fas fa-star' },
-    { value: 'CATEGORY_WISE_SALE', label: 'Category Wise Sale', icon: 'fas fa-th-large' },
-    { value: 'TAX_DISCOUNTS', label: 'Tax & Discounts', icon: 'fas fa-receipt' }
-  ];
+  reportTypes: ReportType[] = [];
 
   dateRequiredReportTypes: string[] = [
     'SALES_SUMMARY',
@@ -69,8 +64,32 @@ export class OwnerReportsMobileComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.loadReportTypes();
     this.applyDatePreset('TODAY');
     this.generateReport();
+  }
+
+  loadReportTypes(): void {
+    this.crudService.getReportTypes({ isActive: true }).subscribe({
+      next: (response: any) => {
+        const types = response.data || response || [];
+        this.reportTypes = types.map((type: any) => ({
+          id: type.id,
+          name: type.name,
+          key: type.key,
+          description: type.description,
+          is_active: type.is_active ?? type.isActive ?? true,
+          display_order: type.display_order ?? type.displayOrder ?? 0,
+          created_by: type.created_by ?? type.createdBy ?? '',
+          updated_by: type.updated_by ?? type.updatedBy ?? '',
+          created_at: type.created_at ? new Date(type.created_at) : new Date(),
+          updated_at: type.updated_at ? new Date(type.updated_at) : new Date()
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading report types:', error);
+      }
+    });
   }
 
   isDateRequired(): boolean {
@@ -254,8 +273,8 @@ export class OwnerReportsMobileComponent implements OnInit {
   }
 
   getReportTitle(): string {
-    const found = this.reportTypes.find(r => r.value === this.reportType);
-    return found ? found.label : 'Report';
+    const found = this.reportTypes.find(r => r.key === this.reportType);
+    return found ? found.name : 'Report';
   }
 
   formatKey(key: string): string {

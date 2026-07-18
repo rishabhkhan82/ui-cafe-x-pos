@@ -10,6 +10,7 @@ import { ConfirmationDialogService } from '../../../services/confirmation-dialog
 import { NotificationService } from '../../../services/notification.service';
 import { ValidationService } from '../../../services/validation.service';
 import { environment } from '../../../environments/environment';
+import { UserType } from '../../../interfaces';
 
 @Component({
   selector: 'app-user-management',
@@ -29,6 +30,7 @@ export class UserManagementComponent implements OnInit {
   userTypeFilter = 'all';
   showAddForm = false;
   restaurants: Restaurant[] = [];
+  userRoles : any = [];
   errorMessage = '';
   selectedFile: File | null = null;
 
@@ -43,10 +45,7 @@ export class UserManagementComponent implements OnInit {
   fieldErrors: { [key: string]: string } = {};
 
   // User Types
-  userTypes : any = [
-    {name: 'Admin', value: 'admin'},
-    {name: 'Customer', value: 'customer'}
-  ];
+  userTypes : UserType[] = [];
 
   userForm: User = {
     id: '',
@@ -95,6 +94,8 @@ export class UserManagementComponent implements OnInit {
     }
     this.loadUsers();
     this.loadRestaurants();
+    this.loadUserRoles();
+    this.loadUserTypes();
   }
 
   loadUsers(): void {
@@ -736,6 +737,8 @@ export class UserManagementComponent implements OnInit {
     // Reload data
     this.loadUsers();
     this.loadRestaurants();
+    this.loadUserRoles();
+    this.loadUserTypes();
   }
 
   // Helper for template Math operations
@@ -804,4 +807,51 @@ export class UserManagementComponent implements OnInit {
 
     return { isValid: true };
   }
+
+  loadUserRoles(): void {
+    this.loadingService.show();
+    this.errorMessage = '';
+
+    const params: any = {
+      page: 1,
+      size: 9999,
+      isActive: true
+    };
+
+    this.crudService.getUserRoles(params).subscribe({
+      next: (response: any) => {
+        this.userRoles = response.data;
+        this.loadingService.hide();
+      },
+      error: (error) => {
+        console.error('Error loading restaurants:', error);
+        this.errorMessage = 'Failed to load restaurants. Please try again.';
+        this.notificationService.error('Error', 'Failed to load restaurants');
+        this.loadingService.hide();
+      }
+    });
+  }
+  
+  loadUserTypes(): void {
+    this.loadingService.show();
+    this.errorMessage = '';
+
+    const params: any = {
+      isActive : true
+    };
+
+    this.crudService.getUserTypes(params).subscribe({
+      next: (response: any) => {
+        this.userTypes = response.data;
+        this.loadingService.hide();
+      },
+      error: (error) => {
+        console.error('Error loading restaurants:', error);
+        this.errorMessage = 'Failed to load restaurants. Please try again.';
+        this.notificationService.error('Error', 'Failed to load restaurants');
+        this.loadingService.hide();
+      }
+    });
+  }
+
 }

@@ -13,6 +13,7 @@ import { environment } from '../../../environments/environment';
 import { Subject, Observable, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { RealtimeService } from '../../../services/realtime.service';
+import { MenuCategory, MenuItemsType } from '../../../interfaces';
 
 @Component({
   selector: 'app-owner-menus-mobile',
@@ -48,20 +49,10 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
   fieldErrors: { [key: string]: string } = {};
 
   // Menu Categories
-  categories = [
-    {code : 'starters', label: 'Starters'},
-    {code : 'main-course', label: 'Main Course'},
-    {code : 'salads', label: 'Salads'},
-    {code : 'desserts', label: 'Desserts'},
-    {code : 'beverages', label: 'Beverages'},
-    {code : 'snacks', label: 'Snacks'}
-  ];
+  categories: MenuCategory[] = [];
 
   // Menu Types
-  typeOptions = [
-    { code: 'RAW', label: 'RAW (Recipe-based)' },
-    { code: 'FINISHED', label: 'FINISHED (Direct Stock)' }
-  ];
+  typeOptions: MenuItemsType[] = [];
 
   // Category color mapping to avoid function calls in templates
   categoryColorMap: { [key: string]: string } = {
@@ -113,6 +104,8 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadMenus();
+    this.loadMenuCategories();
+    this.loadMenuItemsTypes();
     this.setupSearch();
 
     const sub = this.realtimeService.menuUpdate$.subscribe((update: any) => {
@@ -146,6 +139,54 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
     });
   }
 
+  loadMenuCategories(): void {
+    this.crudService.getMenuCategories({ isActive: true }).subscribe({
+      next: (response: any) => {
+        const categories = response.data || response || [];
+        this.categories = categories.map((category: any) => ({
+          id: category.id,
+          name: category.name,
+          key: category.key,
+          description: category.description,
+          is_active: category.is_active ?? category.isActive ?? true,
+          display_order: category.display_order ?? category.displayOrder ?? 0,
+          created_by: category.created_by ?? category.createdBy ?? '',
+          updated_by: category.updated_by ?? category.updatedBy ?? '',
+          created_at: category.created_at ? new Date(category.created_at) : new Date(),
+          updated_at: category.updated_at ? new Date(category.updated_at) : new Date()
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading menu categories:', error);
+      }
+    });
+  }
+
+  loadMenuItemsTypes(): void {
+    this.crudService.getMenuItemsTypes({ isActive: true }).subscribe({
+      next: (response: any) => {
+        const types = response.data || response || [];
+        this.typeOptions = types.map((type: any) => ({
+          id: type.id,
+          name: type.name,
+          key: type.key,
+          description: type.description,
+          is_active: type.is_active ?? type.isActive ?? true,
+          display_order: type.display_order ?? type.displayOrder ?? 0,
+          color_classes: type.color_classes ?? type.colorClasses ?? '',
+          icon: type.icon ?? '',
+          created_by: type.created_by ?? type.createdBy ?? '',
+          updated_by: type.updated_by ?? type.updatedBy ?? '',
+          created_at: type.created_at ? new Date(type.created_at) : new Date(),
+          updated_at: type.updated_at ? new Date(type.updated_at) : new Date()
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading menu item types:', error);
+      }
+    });
+  }
+
   private getMenusObservable(params: any): Observable<any> {
     return this.crudService.getMenuItems(params);
   }
@@ -163,8 +204,8 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
     }
 
     if (this.categoryFilter && this.categoryFilter !== 'all') {
-      const selectedCategory = this.categories.find(c => c.code === this.categoryFilter);
-      params.category = selectedCategory ? selectedCategory.code : this.categoryFilter;
+      const selectedCategory = this.categories.find(c => c.key === this.categoryFilter);
+      params.category = selectedCategory ? selectedCategory.key : this.categoryFilter;
     }
 
     if (this.statusFilter !== 'all') {

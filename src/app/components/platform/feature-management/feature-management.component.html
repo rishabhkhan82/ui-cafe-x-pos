@@ -46,18 +46,7 @@
           [(ngModel)]="categoryFilter"
           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
           <option value="">All Categories</option>
-          <option value="POS">POS</option>
-          <option value="INVENTORY">Inventory</option>
-          <option value="ORDERS">Orders</option>
-          <option value="ANALYTICS">Analytics</option>
-          <option value="CUSTOMERS">Customers</option>
-          <option value="STAFF">Staff</option>
-          <option value="INTEGRATION">Integration</option>
-          <option value="SECURITY">Security</option>
-          <option value="BRANDING">Branding</option>
-          <option value="SUPPORT">Support</option>
-          <option value="MENU">Menu</option>
-          <option value="CRM">CRM</option>
+          <option *ngFor="let category of featureCategories" [value]="category.key">{{ category.name }}</option>
         </select>
       </div>
       <div>
@@ -68,9 +57,7 @@
           [(ngModel)]="featureTypeFilter"
           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
           <option value="all">All Types</option>
-          <option value="BASIC">Basic</option>
-          <option value="PREMIUM">Premium</option>
-          <option value="ENTERPRISE">Enterprise</option>
+          <option *ngFor="let ftype of featureTypes" [value]="ftype.key">{{ ftype.name }}</option>
         </select>
       </div>
       <div>
@@ -164,19 +151,7 @@
                 (change)="onCategoryChange()"
                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
                 <option value="">Select Category</option>
-                <option value="GENERAL">General</option>
-                <option value="POS">POS</option>
-                <option value="INVENTORY">Inventory</option>
-                <option value="ORDERS">Orders</option>
-                <option value="ANALYTICS">Analytics</option>
-                <option value="CUSTOMERS">Customers</option>
-                <option value="STAFF">Staff</option>
-                <option value="INTEGRATION">Integration</option>
-                <option value="SECURITY">Security</option>
-                <option value="BRANDING">Branding</option>
-                <option value="SUPPORT">Support</option>
-                <option value="MENU">Menu</option>
-                <option value="CRM">CRM</option>
+                <option *ngFor="let category of featureCategories" [value]="category.key">{{ category.name }}</option>
               </select>
               <div *ngIf="fieldErrors['category']" class="text-red-500 text-sm mt-1">
                 {{ fieldErrors['category'] }}
@@ -204,9 +179,7 @@
               <select
                 [(ngModel)]="featureForm.feature_type"
                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
-                <option value="BASIC">Basic</option>
-                <option value="PREMIUM">Premium</option>
-                <option value="ENTERPRISE">Enterprise</option>
+                <option *ngFor="let ftype of featureTypes" [value]="ftype.key">{{ ftype.name }}</option>
               </select>
             </div>
 

@@ -44,7 +44,7 @@
           <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">Report Type</label>
           <select [(ngModel)]="reportType" (change)="generateReport()"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white bg-white dark:bg-gray-700">
-            <option *ngFor="let type of reportTypes" [value]="type.value">{{ type.label }}</option>
+            <option *ngFor="let type of reportTypes" [value]="type.key">{{ type.name }}</option>
           </select>
         </div>
       </div>

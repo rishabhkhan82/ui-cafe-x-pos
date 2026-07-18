@@ -183,18 +183,17 @@
               </div>
             </div>
 
-            <!-- Billing Cycle -->
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                <i class="fas fa-calendar mr-2 text-purple-500"></i>Billing Cycle
-              </label>
-              <select
-                [(ngModel)]="planForm.billing_cycle"
-                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
-                <option value="monthly">Monthly</option>
-                <option value="yearly">Yearly</option>
-              </select>
-            </div>
+             <!-- Billing Cycle -->
+             <div>
+               <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                 <i class="fas fa-calendar mr-2 text-purple-500"></i>Billing Cycle
+               </label>
+               <select
+                 [(ngModel)]="planForm.billing_cycle"
+                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                 <option *ngFor="let cycle of billingCycles" [value]="cycle.key">{{ cycle.name }}</option>
+               </select>
+             </div>
 
             <!-- Max Restaurants -->
             <div>
@@ -222,39 +221,29 @@
                 min="-1">
             </div>
 
-            <!-- Setup Fee -->
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                <i class="fas fa-money-bill mr-2 text-yellow-500"></i>Setup Fee
-              </label>
-              <select
-                [(ngModel)]="planForm.setup_fee"
-                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
-                <option [value]="0">Free</option>
-                <option [value]="3000">₹3,000</option>
-                <option [value]="5000">₹5,000</option>
-                <option [value]="10000">₹10,000</option>
-                <option [value]="15000">₹15,000</option>
-                <option [value]="20000">₹20,000</option>
-              </select>
-            </div>
+             <!-- Setup Fee -->
+             <div>
+               <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                 <i class="fas fa-money-bill mr-2 text-yellow-500"></i>Setup Fee
+               </label>
+               <select
+                 [(ngModel)]="planForm.setup_fee"
+                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                 <option *ngFor="let fee of setupFees" [value]="fee.key">{{ fee.name }}</option>
+               </select>
+             </div>
 
-            <!-- Trial Days -->
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                <i class="fas fa-calendar-check mr-2 text-purple-500"></i>Trial Days
-              </label>
-              <select
-                [(ngModel)]="planForm.trial_days"
-                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
-                <option [value]="0">No Trial</option>
-                <option [value]="7">7 Days</option>
-                <option [value]="15">15 Days</option>
-                <option [value]="30">30 Days</option>
-                <option [value]="60">60 Days</option>
-                <option [value]="90">90 Days</option>
-              </select>
-            </div>
+             <!-- Trial Days -->
+             <div>
+               <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                 <i class="fas fa-calendar-check mr-2 text-purple-500"></i>Trial Days
+               </label>
+               <select
+                 [(ngModel)]="planForm.trial_days"
+                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                 <option *ngFor="let day of trialDays" [value]="day.key">{{ day.name }}</option>
+               </select>
+             </div>
 
             <!-- Offer Name -->
             <div>

@@ -47,9 +47,8 @@
           [(ngModel)]="subscriptionPlanFilter"
           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
           <option value="all">All Plans</option>
-          <option value="Starter">Starter Plan</option>
-          <option value="Pro">Pro Plan</option>
-          <option value="Enterprise">Enterprise Plan</option>
+          subscriptionPlan
+          <option *ngFor="let plan of subscriptionPlan" value="plan.name">{{plan.name}}</option>
         </select>
       </div>
       <div>
@@ -70,10 +69,7 @@
           [(ngModel)]="statusFilter"
           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
           <option value="all">All Status</option>
-          <option value="ACTIVE">Active</option>
-          <option value="INACTIVE">Inactive</option>
-          <option value="SUSPENDED">Suspended</option>
-          <option value="PENDING_VERIFICATION">Pending Verification</option>
+          <option *ngFor="let status of restaurantStatuses" [value]="status.key">{{ status.name }}</option>
         </select>
       </div>
     </div>
@@ -352,41 +348,14 @@
                     <i class="fas fa-toggle-on mr-2 text-cyan-500"></i>Status
                   </label>
                   <div class="flex flex-wrap gap-4">
-                    <label class="flex items-center">
+                    <label class="flex items-center" *ngFor="let status of restaurantStatuses">
                       <input
                         type="radio"
                         name="status"
-                        value="ACTIVE"
+                        [value]="status.key"
                         [(ngModel)]="restaurantForm.status"
                         class="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                      <span class="text-sm text-gray-700 dark:text-gray-300">Active</span>
-                    </label>
-                    <label class="flex items-center">
-                      <input
-                        type="radio"
-                        name="status"
-                        value="INACTIVE"
-                        [(ngModel)]="restaurantForm.status"
-                        class="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                      <span class="text-sm text-gray-700 dark:text-gray-300">Inactive</span>
-                    </label>
-                    <label class="flex items-center">
-                      <input
-                        type="radio"
-                        name="status"
-                        value="PENDING_VERIFICATION"
-                        [(ngModel)]="restaurantForm.status"
-                        class="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                      <span class="text-sm text-gray-700 dark:text-gray-300">Pending Verification</span>
-                    </label>
-                    <label class="flex items-center">
-                      <input
-                        type="radio"
-                        name="status"
-                        value="SUSPENDED"
-                        [(ngModel)]="restaurantForm.status"
-                        class="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                      <span class="text-sm text-gray-700 dark:text-gray-300">Suspended</span>
+                      <span class="text-sm text-gray-700 dark:text-gray-300">{{ status.name }}</span>
                     </label>
                   </div>
                 </div>
@@ -949,41 +918,14 @@
                   <i class="fas fa-toggle-on mr-2 text-cyan-500"></i>Status
                 </label>
                 <div class="flex flex-wrap gap-4">
-                  <label class="flex items-center space-x-2">
+                  <label class="flex items-center space-x-2" *ngFor="let status of restaurantStatuses">
                     <input
                       type="radio"
                       name="editStatus"
-                      value="ACTIVE"
+                      [value]="status.key"
                       [(ngModel)]="restaurantForm.status"
                       class="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                    <span class="text-sm text-gray-700 dark:text-gray-300">Active</span>
-                  </label>
-                  <label class="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      name="editStatus"
-                      value="INACTIVE"
-                      [(ngModel)]="restaurantForm.status"
-                      class="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                    <span class="text-sm text-gray-700 dark:text-gray-300">Inactive</span>
-                  </label>
-                  <label class="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      name="editStatus"
-                      value="PENDING_VERIFICATION"
-                      [(ngModel)]="restaurantForm.status"
-                      class="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                    <span class="text-sm text-gray-700 dark:text-gray-300">Pending Verification</span>
-                  </label>
-                  <label class="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      name="editStatus"
-                      value="SUSPENDED"
-                      [(ngModel)]="restaurantForm.status"
-                      class="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                    <span class="text-sm text-gray-700 dark:text-gray-300">Suspended</span>
+                    <span class="text-sm text-gray-700 dark:text-gray-300">{{ status.name }}</span>
                   </label>
                 </div>
               </div>

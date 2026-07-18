@@ -9,6 +9,7 @@ import { AuthService } from '../../../services/auth.service';
 import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ValidationService } from '../../../services/validation.service';
+import { BillingCycle, SetupFee, TrialDay } from '../../../interfaces';
 
 @Component({
   selector: 'app-plan-management',
@@ -28,6 +29,10 @@ export class PlanManagementComponent implements OnInit {
   viewingPlan: SubscriptionPlan | null = null;
   expandedSections: { [key: string]: boolean } = {};
   errorMessage = '';
+
+  billingCycles: BillingCycle[] = [];
+  setupFees: SetupFee[] = [];
+  trialDays: TrialDay[] = [];
 
 // ...existing code...
 
@@ -82,6 +87,9 @@ export class PlanManagementComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadPlans();
+    this.loadBillingCycles();
+    this.loadSetupFees();
+    this.loadTrialDays();
   }
 
   loadPlans(): void {
@@ -114,6 +122,75 @@ export class PlanManagementComponent implements OnInit {
         this.errorMessage = apiMessage;
         this.notificationService.error('Error', apiMessage);
         this.loadingService.hide();
+      }
+    });
+  }
+
+  loadBillingCycles(): void {
+    this.crudService.getBillingCycles({ isActive: true, page: 0, size: 0 }).subscribe({
+      next: (response: any) => {
+        const cycles = response.data || response || [];
+        this.billingCycles = cycles.map((cycle: any) => ({
+          id: cycle.id,
+          name: cycle.name,
+          key: cycle.key,
+          description: cycle.description,
+          is_active: cycle.is_active ?? cycle.isActive ?? true,
+          display_order: cycle.display_order ?? cycle.displayOrder ?? 0,
+          created_by: cycle.created_by ?? cycle.createdBy ?? '',
+          updated_by: cycle.updated_by ?? cycle.updatedBy ?? '',
+          created_at: cycle.created_at ? new Date(cycle.created_at) : new Date(),
+          updated_at: cycle.updated_at ? new Date(cycle.updated_at) : new Date()
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading billing cycles:', error);
+      }
+    });
+  }
+
+  loadSetupFees(): void {
+    this.crudService.getSetupFees({ isActive: true, page: 0, size: 0 }).subscribe({
+      next: (response: any) => {
+        const fees = response.data || response || [];
+        this.setupFees = fees.map((fee: any) => ({
+          id: fee.id,
+          name: fee.name,
+          key: fee.key,
+          description: fee.description,
+          is_active: fee.is_active ?? fee.isActive ?? true,
+          display_order: fee.display_order ?? fee.displayOrder ?? 0,
+          created_by: fee.created_by ?? fee.createdBy ?? '',
+          updated_by: fee.updated_by ?? fee.updatedBy ?? '',
+          created_at: fee.created_at ? new Date(fee.created_at) : new Date(),
+          updated_at: fee.updated_at ? new Date(fee.updated_at) : new Date()
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading setup fees:', error);
+      }
+    });
+  }
+
+  loadTrialDays(): void {
+    this.crudService.getTrialDays({ isActive: true, page: 0, size: 0 }).subscribe({
+      next: (response: any) => {
+        const days = response.data || response || [];
+        this.trialDays = days.map((day: any) => ({
+          id: day.id,
+          name: day.name,
+          key: day.key,
+          description: day.description,
+          is_active: day.is_active ?? day.isActive ?? true,
+          display_order: day.display_order ?? day.displayOrder ?? 0,
+          created_by: day.created_by ?? day.createdBy ?? '',
+          updated_by: day.updated_by ?? day.updatedBy ?? '',
+          created_at: day.created_at ? new Date(day.created_at) : new Date(),
+          updated_at: day.updated_at ? new Date(day.updated_at) : new Date()
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading trial days:', error);
       }
     });
   }

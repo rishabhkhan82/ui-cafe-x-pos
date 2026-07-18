@@ -5,11 +5,12 @@ import { Router, RouterModule } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { CrudService } from '../../../services/crud.service';
 import { LoadingService } from '../../../services/loading.service';
-import { Restaurant } from '../../../services/mock-data.service';
+import { Restaurant, SubscriptionPlan } from '../../../services/mock-data.service';
 import { AuthService } from '../../../services/auth.service';
 import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ValidationService } from '../../../services/validation.service';
+import { RestaurantStatus, State } from '../../../interfaces';
 
 @Component({
   selector: 'app-restaurant-management',
@@ -40,46 +41,10 @@ export class RestaurantManagementComponent implements OnInit {
   showDetailsModal = false;
   showEditForm = false;
 
-  // States for dropdown
-  states = [
-    { id: '37', name: 'Andhra Pradesh' },
-    { id: '12', name: 'Arunachal Pradesh' },
-    { id: '18', name: 'Assam' },
-    { id: '10', name: 'Bihar' },
-    { id: '22', name: 'Chhattisgarh' },
-    { id: '30', name: 'Goa' },
-    { id: '24', name: 'Gujarat' },
-    { id: '06', name: 'Haryana' },
-    { id: '02', name: 'Himachal Pradesh' },
-    { id: '20', name: 'Jharkhand' },
-    { id: '29', name: 'Karnataka' },
-    { id: '32', name: 'Kerala' },
-    { id: '23', name: 'Madhya Pradesh' },
-    { id: '27', name: 'Maharashtra' },
-    { id: '14', name: 'Manipur' },
-    { id: '17', name: 'Meghalaya' },
-    { id: '15', name: 'Mizoram' },
-    { id: '13', name: 'Nagaland' },
-    { id: '21', name: 'Odisha' },
-    { id: '03', name: 'Punjab' },
-    { id: '08', name: 'Rajasthan' },
-    { id: '11', name: 'Sikkim' },
-    { id: '33', name: 'Tamil Nadu' },
-    { id: '36', name: 'Telangana' },
-    { id: '16', name: 'Tripura' },
-    { id: '09', name: 'Uttar Pradesh' },
-    { id: '05', name: 'Uttarakhand' },
-    { id: '19', name: 'West Bengal' },
-    { id: '35', name: 'Andaman and Nicobar Islands' },
-    { id: '04', name: 'Chandigarh' },
-    { id: '26', name: 'Dadra and Nagar Haveli and Daman and Diu' },
-    { id: '07', name: 'Delhi' },
-    { id: '01', name: 'Jammu and Kashmir' },
-    { id: '38', name: 'Ladakh' },
-    { id: '31', name: 'Lakshadweep' },
-    { id: '34', name: 'Puducherry' }
-  ];
-
+  // Dynamic dropdown data
+  restaurantStatuses: RestaurantStatus[] = [];
+  states: State[] = [];
+  subscriptionPlan : SubscriptionPlan[] = [];
 
   restaurantForm: Restaurant = {
     id: 0,
@@ -128,6 +93,9 @@ export class RestaurantManagementComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadRestaurants();
+    this.loadRestaurantStatuses();
+    this.loadStates();
+    this.loadSubscriptions();
   }
 
   loadRestaurants(): void {
@@ -169,6 +137,52 @@ export class RestaurantManagementComponent implements OnInit {
         this.errorMessage = apiMessage;
         this.notificationService.error('Error', apiMessage);
         this.loadingService.hide();
+      }
+    });
+  }
+
+  loadRestaurantStatuses(): void {
+    this.crudService.getRestaurantStatuses({ isActive: true, page: 0, size: 0 }).subscribe({
+      next: (response: any) => {
+        const statuses = response.data || response || [];
+        this.restaurantStatuses = statuses.map((status: any) => ({
+          id: status.id,
+          name: status.name,
+          key: status.key,
+          description: status.description,
+          is_active: status.is_active ?? status.isActive ?? true,
+          display_order: status.display_order ?? status.displayOrder ?? 0,
+          created_by: status.created_by ?? status.createdBy ?? '',
+          updated_by: status.updated_by ?? status.updatedBy ?? '',
+          created_at: status.created_at ? new Date(status.created_at) : new Date(),
+          updated_at: status.updated_at ? new Date(status.updated_at) : new Date()
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading restaurant statuses:', error);
+      }
+    });
+  }
+
+  loadStates(): void {
+    this.crudService.getStates({ isActive: true, page: 0, size: 0 }).subscribe({
+      next: (response: any) => {
+        const states = response.data || response || [];
+        this.states = states.map((state: any) => ({
+          id: state.id,
+          name: state.name,
+          key: state.key,
+          description: state.description,
+          is_active: state.is_active ?? state.isActive ?? true,
+          display_order: state.display_order ?? state.displayOrder ?? 0,
+          created_by: state.created_by ?? state.createdBy ?? '',
+          updated_by: state.updated_by ?? state.updatedBy ?? '',
+          created_at: state.created_at ? new Date(state.created_at) : new Date(),
+          updated_at: state.updated_at ? new Date(state.updated_at) : new Date()
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading states:', error);
       }
     });
   }
@@ -791,6 +805,9 @@ export class RestaurantManagementComponent implements OnInit {
 
     // Reload data
     this.loadRestaurants();
+    this.loadRestaurantStatuses();
+    this.loadStates();
+    this.loadSubscriptions();
   }
 
   onLogoFileSelected(event: any): void {
@@ -886,5 +903,16 @@ export class RestaurantManagementComponent implements OnInit {
   formatSubscriptionDate(date: string | Date | null): string {
     if (!date) return '-';
     return this.formatDate(date);
+  }
+
+  loadSubscriptions(): void {
+    this.crudService.getSubscriptionPlans({ isActive: true}).subscribe({
+      next: (response: any) => {
+        this.subscriptionPlan = response?.data;
+      },
+      error: (error) => {
+        console.error('Error loading states:', error);
+      }
+    });
   }
 }

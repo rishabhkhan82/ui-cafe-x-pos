@@ -7,7 +7,7 @@ import { CrudService } from '../../../services/crud.service';
 import { LoadingService } from '../../../services/loading.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ManagedFeature, PlanFeatureMapping, SubscriptionPlan } from '../../../services/mock-data.service';
-import { RestaurantSubscription, SubscriptionHistory } from '../../../interfaces';
+import { RestaurantSubscription, SubscriptionHistory, BillingPeriodMonths } from '../../../interfaces';
 import { AuthService } from '../../../services/auth.service';
 import { SubscriptionService } from '../../../services/subscription.service';
 
@@ -39,6 +39,8 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
   currentPlan: SubscriptionPlan | null = null;
   currentPlanFeatures: ManagedFeature[] = [];
   isSubscribed: boolean = false;
+
+  billingPeriodMonths: BillingPeriodMonths[] = [];
 
   // Trial-related properties
   isOnTrial: boolean = false;
@@ -98,6 +100,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     const plans$ = this.crudService.getSubscriptionPlans({ isActive: true, isComingSoon: false });
     const features$ = this.crudService.getFeatures();
     const planFeatures$ = this.crudService.getPlanFeatureMapping();
+    const billingPeriodMonths$ = this.crudService.getBillingPeriodMonths({ isActive: true, page: 0, size: 0 });
     // Fetch all subscriptions for this restaurant (trial, active, expired, etc.)
     const currentSub$ = this.crudService.getRestaurantSubscriptions({
       restaurantId: restaurantId.toString()
@@ -107,8 +110,8 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     // Check trial eligibility
     const trialCheck$ = restaurantId ? this.crudService.getData(`restaurant-subscriptions/trial/check/${restaurantId}`) : of(false);
 
-    forkJoin([plans$, features$, planFeatures$, currentSub$, history$, trialCheck$]).subscribe({
-      next: ([plansResponse, featuresResponse, planFeaturesResponse, currentSubResponse, historyResponse, trialEligibility]) => {
+    forkJoin([plans$, features$, planFeatures$, billingPeriodMonths$, currentSub$, history$, trialCheck$]).subscribe({
+      next: ([plansResponse, featuresResponse, planFeaturesResponse, billingPeriodMonthsResponse, currentSubResponse, historyResponse, trialEligibility]) => {
         // Handle success responses
         const plansResponseData = (plansResponse.data || plansResponse || []) as SubscriptionPlan[];
         const sortedPlans = [...plansResponseData].sort((a, b) =>
@@ -117,6 +120,9 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
         this.plans$.next(sortedPlans);
         this.features = (featuresResponse.data || featuresResponse || []) as ManagedFeature[];
         this.planFeatures = (planFeaturesResponse.data || planFeaturesResponse || []) as PlanFeatureMapping[];
+
+        const billingMonths = (billingPeriodMonthsResponse.data || billingPeriodMonthsResponse || []) as BillingPeriodMonths[];
+        this.billingPeriodMonths = billingMonths;
 
         // Handle paginated response - extract data array
         const subscriptionResponse = currentSubResponse.data || currentSubResponse || { data: [] };

@@ -167,7 +167,7 @@ export class FeatureAccessControlComponent implements OnInit, OnDestroy {
   }
 
   loadPlans(): void {
-    const subscription = this.crudService.getSubscriptionPlans().subscribe({
+    const subscription = this.crudService.getSubscriptionPlans({ isActive: true}).subscribe({
       next: (response: any) => {
         this.plans = response.data || response || [];
         // Auto-select first plan

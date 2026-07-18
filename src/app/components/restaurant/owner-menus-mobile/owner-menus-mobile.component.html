@@ -31,7 +31,7 @@
               (change)="filterMenus()"
               class="hidden min-w-[200px] md:block px-3 py-2.5 text-sm bg-gray-50 dark:bg-transparent border border-gray-200 dark:border-gray-600 rounded-[2rem] text-gray-900 dark:text-gray-300 focus:ring-2 focus:ring-red-500 focus:border-red-500">
               <option class="bg-gray-50 dark:bg-gray-700" value="all">All Categories</option>
-              <option class="bg-gray-50 dark:bg-gray-700" *ngFor="let category of categories" [value]="category.code" [disabled]="category.code === 'all'">{{ category.label }}</option>
+              <option class="bg-gray-50 dark:bg-gray-700" *ngFor="let category of categories" [value]="category.key" [disabled]="category.key === 'all'">{{ category.name }}</option>
             </select>
 
             <!-- Type Filter (md+ only) -->
@@ -40,7 +40,7 @@
               (change)="filterMenus()"
               class="hidden min-w-[200px] md:block px-3 py-2.5 text-sm bg-gray-50 dark:bg-transparent border border-gray-200 dark:border-gray-600 rounded-[2rem] text-gray-900 dark:text-gray-300 focus:ring-2 focus:ring-red-500 focus:border-red-500">
               <option class="bg-gray-50 dark:bg-gray-700" value="all">All Types</option>
-              <option class="bg-gray-50 dark:bg-gray-700" *ngFor="let type of typeOptions" [value]="type.code">{{ type.label }}</option>
+              <option class="bg-gray-50 dark:bg-gray-700" *ngFor="let type of typeOptions" [value]="type.key">{{ type.name }}</option>
             </select>
           </div>
 
@@ -397,7 +397,7 @@
                 (change)="validateCategory()"
                 class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white">
                 <option value="">Select Category</option>
-                <option *ngFor="let category of categories" [value]="category.code" [disabled]="category.code === 'all'">{{ category.label }}</option>
+                <option *ngFor="let category of categories" [value]="category.key" [disabled]="category.key === 'all'">{{ category.name }}</option>
               </select>
               <div *ngIf="fieldErrors['category']" class="mt-1 text-xs text-red-500">{{ fieldErrors['category'] }}</div>
             </div>
@@ -448,8 +448,7 @@
                 [(ngModel)]="menuForm.type"
                 name="type"
                 class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white">
-                <option value="RAW">RAW (Recipe-based)</option>
-                <option value="FINISHED">FINISHED (Direct Stock)</option>
+                <option *ngFor="let type of typeOptions" [value]="type.key">{{ type.name }}</option>
               </select>
             </div>
           </div>

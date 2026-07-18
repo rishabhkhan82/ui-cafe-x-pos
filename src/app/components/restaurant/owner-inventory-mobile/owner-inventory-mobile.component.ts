@@ -11,6 +11,7 @@ import { CrudService } from '../../../services/crud.service';
 import { InventoryItem } from '../../../interfaces';
 import { Subject, Observable } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { InventoryItemCategory, InventoryItemUnit, InventoryItemType } from '../../../interfaces';
 
 @Component({
   selector: 'app-owner-inventory-mobile',
@@ -42,23 +43,17 @@ export class OwnerInventoryMobileComponent implements OnInit {
 
   isSubmitting = false;
 
-  categories = [
-    {code: 'all', label: 'All'},
-    {code: 'raw-materials', label: 'Raw Materials'},
-    {code: 'packaged-goods', label: 'Packaged Goods'},
-    {code: 'beverages', label: 'Beverages'},
-    {code: 'dairy', label: 'Dairy'},
-    {code: 'spices', label: 'Spices'},
-    {code: 'cleaning', label: 'Cleaning Supplies'}
-  ];
+  categories: InventoryItemCategory[] = [];
+  inventoryItemUnits: InventoryItemUnit[] = [];
+  inventoryItemTypes: InventoryItemType[] = [];
 
   inventoryForm: InventoryItem = {
     id: 0,
     item_id: '',
     name: '',
     description: '',
-    category: 'raw-materials',
-    unit_of_measure: 'pcs',
+    category: '',
+    unit_of_measure: '',
     current_stock: 0,
     minimum_stock: 0,
     maximum_stock: 0,
@@ -89,6 +84,9 @@ export class OwnerInventoryMobileComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadInventoryItems();
+    this.loadInventoryItemCategories();
+    this.loadInventoryItemUnits();
+    this.loadInventoryItemTypes();
     this.setupSearch();
   }
 
@@ -112,6 +110,75 @@ export class OwnerInventoryMobileComponent implements OnInit {
     });
   }
 
+  loadInventoryItemCategories(): void {
+    this.crudService.getInventoryItemCategories({ isActive: true, page: 0, size: 0 }).subscribe({
+      next: (response: any) => {
+        const categories = response.data || response || [];
+        this.categories = categories.map((category: any) => ({
+          id: category.id,
+          name: category.name,
+          key: category.key,
+          description: category.description,
+          is_active: category.is_active ?? category.isActive ?? true,
+          display_order: category.display_order ?? category.displayOrder ?? 0,
+          created_by: category.created_by ?? category.createdBy ?? '',
+          updated_by: category.updated_by ?? category.updatedBy ?? '',
+          created_at: category.created_at ? new Date(category.created_at) : new Date(),
+          updated_at: category.updated_at ? new Date(category.updated_at) : new Date()
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading inventory item categories:', error);
+      }
+    });
+  }
+
+  loadInventoryItemUnits(): void {
+    this.crudService.getInventoryItemUnits({ isActive: true, page: 0, size: 0 }).subscribe({
+      next: (response: any) => {
+        const units = response.data || response || [];
+        this.inventoryItemUnits = units.map((unit: any) => ({
+          id: unit.id,
+          name: unit.name,
+          key: unit.key,
+          description: unit.description,
+          is_active: unit.is_active ?? unit.isActive ?? true,
+          display_order: unit.display_order ?? unit.displayOrder ?? 0,
+          created_by: unit.created_by ?? unit.createdBy ?? '',
+          updated_by: unit.updated_by ?? unit.updatedBy ?? '',
+          created_at: unit.created_at ? new Date(unit.created_at) : new Date(),
+          updated_at: unit.updated_at ? new Date(unit.updated_at) : new Date()
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading inventory item units:', error);
+      }
+    });
+  }
+
+  loadInventoryItemTypes(): void {
+    this.crudService.getInventoryItemTypes({ isActive: true, page: 0, size: 0 }).subscribe({
+      next: (response: any) => {
+        const types = response.data || response || [];
+        this.inventoryItemTypes = types.map((type: any) => ({
+          id: type.id,
+          name: type.name,
+          key: type.key,
+          description: type.description,
+          is_active: type.is_active ?? type.isActive ?? true,
+          display_order: type.display_order ?? type.displayOrder ?? 0,
+          created_by: type.created_by ?? type.createdBy ?? '',
+          updated_by: type.updated_by ?? type.updatedBy ?? '',
+          created_at: type.created_at ? new Date(type.created_at) : new Date(),
+          updated_at: type.updated_at ? new Date(type.updated_at) : new Date()
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading inventory item types:', error);
+      }
+    });
+  }
+
   private getInventoryItemsObservable(params: any): Observable<any> {
     return this.crudService.getInventoryItems(params);
   }
@@ -129,8 +196,8 @@ export class OwnerInventoryMobileComponent implements OnInit {
     }
 
     if (this.categoryFilter && this.categoryFilter !== 'all') {
-      const selectedCategory = this.categories.find(c => c.code === this.categoryFilter);
-      params.category = selectedCategory ? selectedCategory.code : this.categoryFilter;
+      const selectedCategory = this.categories.find(c => c.key === this.categoryFilter);
+      params.category = selectedCategory ? selectedCategory.key : this.categoryFilter;
     }
 
     if (this.statusFilter !== 'all') {

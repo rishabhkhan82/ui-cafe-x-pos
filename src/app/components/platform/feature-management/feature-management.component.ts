@@ -9,6 +9,7 @@ import { AuthService } from '../../../services/auth.service';
 import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ValidationService } from '../../../services/validation.service';
+import { FeatureCategory, FeatureType } from '../../../interfaces';
 
 @Component({
   selector: 'app-feature-management',
@@ -38,6 +39,9 @@ export class FeatureManagementComponent implements OnInit {
   // Field validation errors
   fieldErrors: { [key: string]: string } = {};
 
+  featureCategories : FeatureCategory[] = [];
+  featureTypes : FeatureType[] = [];
+
   featureForm: ManagedFeature = {
     id: 0,
     name: '',
@@ -66,6 +70,8 @@ export class FeatureManagementComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadFeatures();
+    this.loadCategories();
+    this.loadFeatureTypes();
   }
 
   onCategoryChange(): void {
@@ -522,6 +528,8 @@ export class FeatureManagementComponent implements OnInit {
 
     // Reload data
     this.loadFeatures();
+    this.loadCategories();
+    this.loadFeatureTypes();
   }
 
   // Helper for template Math operations
@@ -531,4 +539,49 @@ export class FeatureManagementComponent implements OnInit {
   get hasActiveFilters(): boolean {
     return !!(this.searchTerm?.trim() || this.categoryFilter?.trim() || this.featureTypeFilter !== 'all' || this.statusFilter !== 'all');
   }
+
+  loadCategories(): void {
+    this.loadingService.show();
+    this.errorMessage = '';
+
+    const params: any = {
+      isActive: true
+    };
+
+    this.crudService.getFeatureCategories(params).subscribe({
+      next: (response: any) => {
+        this.featureCategories = response.data;
+        this.loadingService.hide();
+      },
+      error: (error) => {
+        console.error('Error loading restaurants:', error);
+        this.errorMessage = 'Failed to load restaurants. Please try again.';
+        this.notificationService.error('Error', 'Failed to load restaurants');
+        this.loadingService.hide();
+      }
+    });
+  }
+
+  loadFeatureTypes(): void {
+    this.loadingService.show();
+    this.errorMessage = '';
+
+    const params: any = {
+      isActive: true
+    };
+
+    this.crudService.getFeatureTypes(params).subscribe({
+      next: (response: any) => {
+        this.featureTypes = response.data;
+        this.loadingService.hide();
+      },
+      error: (error) => {
+        console.error('Error loading restaurants:', error);
+        this.errorMessage = 'Failed to load restaurants. Please try again.';
+        this.notificationService.error('Error', 'Failed to load restaurants');
+        this.loadingService.hide();
+      }
+    });
+  }
+
 }

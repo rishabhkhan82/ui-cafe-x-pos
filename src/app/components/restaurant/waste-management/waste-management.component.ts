@@ -9,6 +9,7 @@ import { NotificationService } from '../../../services/notification.service';
 import { CrudService } from '../../../services/crud.service';
 import { Subject, Observable } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { WasteType, WasteReasonType } from '../../../interfaces';
 
 @Component({
   selector: 'app-waste-management',
@@ -42,11 +43,8 @@ export class WasteManagementComponent implements OnInit {
 
   fieldErrors: { [key: string]: string } = {};
 
-  wasteTypeOptions = [
-    { value: 'INGREDIENT', label: 'Ingredient' },
-    { value: 'DISH', label: 'Dish' },
-    { value: 'OTHER', label: 'Other' }
-  ];
+  wasteTypeOptions: WasteType[] = [];
+  wasteReasonTypes: WasteReasonType[] = [];
 
   constructor(
     public router: Router,
@@ -60,6 +58,8 @@ export class WasteManagementComponent implements OnInit {
   ngOnInit(): void {
     this.loadInventoryItems();
     this.loadRecipes();
+    this.loadWasteTypes();
+    this.loadWasteReasonTypes();
     this.loadWasteEntries();
     this.setupSearch();
     this.addRow();
@@ -95,6 +95,52 @@ export class WasteManagementComponent implements OnInit {
       },
       error: (error) => {
         console.error('Failed to load recipes', error);
+      }
+    });
+  }
+
+  loadWasteTypes(): void {
+    this.crudService.getWasteTypes({ isActive: true, page: 0, size: 0 }).subscribe({
+      next: (response: any) => {
+        const types = response.data || response || [];
+        this.wasteTypeOptions = types.map((type: any) => ({
+          id: type.id,
+          name: type.name,
+          key: type.key,
+          description: type.description,
+          is_active: type.is_active ?? type.isActive ?? true,
+          display_order: type.display_order ?? type.displayOrder ?? 0,
+          created_by: type.created_by ?? type.createdBy ?? '',
+          updated_by: type.updated_by ?? type.updatedBy ?? '',
+          created_at: type.created_at ? new Date(type.created_at) : new Date(),
+          updated_at: type.updated_at ? new Date(type.updated_at) : new Date()
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading waste types:', error);
+      }
+    });
+  }
+
+  loadWasteReasonTypes(): void {
+    this.crudService.getWasteReasonTypes({ isActive: true, page: 0, size: 0 }).subscribe({
+      next: (response: any) => {
+        const reasons = response.data || response || [];
+        this.wasteReasonTypes = reasons.map((reason: any) => ({
+          id: reason.id,
+          name: reason.name,
+          key: reason.key,
+          description: reason.description,
+          is_active: reason.is_active ?? reason.isActive ?? true,
+          display_order: reason.display_order ?? reason.displayOrder ?? 0,
+          created_by: reason.created_by ?? reason.createdBy ?? '',
+          updated_by: reason.updated_by ?? reason.updatedBy ?? '',
+          created_at: reason.created_at ? new Date(reason.created_at) : new Date(),
+          updated_at: reason.updated_at ? new Date(reason.updated_at) : new Date()
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading waste reason types:', error);
       }
     });
   }
