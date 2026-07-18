@@ -7,6 +7,7 @@ import { CrudService } from '../../../services/crud.service';
 import { Router } from '@angular/router';
 import { NoViewAccessComponent } from '../../shared/no-view-access/no-view-access.component';
 import { MenuPermissionService } from '../../../services/menu-permission.service';
+import { FeatureCategory } from '../../../interfaces';
 
 @Component({
   selector: 'app-feature-access-control',
@@ -25,6 +26,8 @@ export class FeatureAccessControlComponent implements OnInit, OnDestroy {
   selectedRole: string = 'all';
   selectedCategory = 'all';
   searchTerm = '';
+
+  featureCategories: FeatureCategory[] = [];
 
   // Temporary filter values (applied only when filter button is clicked)
   tempSelectedPlan: SubscriptionPlan | null = null;
@@ -95,6 +98,7 @@ export class FeatureAccessControlComponent implements OnInit, OnDestroy {
     this.loadRoles();
     this.loadPlanFeatures();
     this.loadRoleFeatures();
+    this.loadFeatureCategories();
   }
 
   private updateComputedProperties(): void {
@@ -244,6 +248,22 @@ export class FeatureAccessControlComponent implements OnInit, OnDestroy {
           this.roleFeatures = roleFeatures;
           this.updateComputedProperties();
         });
+      }
+    });
+    this.subscriptions.push(subscription);
+  }
+
+  loadFeatureCategories(): void {
+    const subscription = this.crudService.getFeatureCategories({ isActive: true }).subscribe({
+      next: (response: any) => {
+        const categories = response.data || response || [];
+        this.featureCategories = categories.map((category: any) => ({
+          key: category.key || category.value,
+          name: category.name
+        }));
+      },
+      error: (error: any) => {
+        console.error('Error loading feature categories:', error);
       }
     });
     this.subscriptions.push(subscription);
