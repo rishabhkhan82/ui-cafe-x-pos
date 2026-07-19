@@ -468,14 +468,10 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     startDate: Date,
     endDate: Date
   ): void {
-    const currentUser = this.authService.getCurrentUser();
-    const updatedBy = currentUser?.id;
-
     this.crudService.updateRestaurantSubscriptionDetails(restaurantId, {
       subscription_plan: planName,
       subscription_start_date: startDate,
-      subscription_end_date: endDate,
-      updated_by: updatedBy
+      subscription_end_date: endDate
     }).subscribe({
       next: () => {
         console.log('Restaurant subscription fields updated successfully');
