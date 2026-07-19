@@ -82,6 +82,7 @@ export class CustomerMenuComponent implements OnInit, OnDestroy {
         const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
         const currentRestaurantId = this.currentUser?.restaurant_id || restaurantId;
         if (currentRestaurantId && String(update.restaurantId) === String(currentRestaurantId)) {
+          console.log('Menu item updated successfully: ', update);
           this.loadMenuItems(
             this.activeCategory !== 'all' ? this.activeCategory : undefined,
             this.activeFeatureFilter !== 'all' ? this.activeFeatureFilter : undefined

@@ -87,6 +87,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
       if (update) {
         const currentRestaurantId = this.restaurantId || this.guestAuthService.getCurrentRestaurantId();
         if (currentRestaurantId && String(update.restaurantId) === String(currentRestaurantId)) {
+          console.log('Menu item updated successfully: ', update);
           this.loadMenuData();
         }
       }
