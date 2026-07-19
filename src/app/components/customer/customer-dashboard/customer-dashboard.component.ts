@@ -13,6 +13,7 @@ import { CartService } from '../../../services/cart.service';
 import { environment } from '../../../environments/environment';
 import { AnimateOnScrollDirective } from '../../../directives/animate-on-scroll.directive';
 import { RealtimeService } from '../../../services/realtime.service';
+import { SubscriptionService } from '../../../services/subscription.service';
 
 @Component({
   selector: 'app-customer-dashboard',
@@ -29,6 +30,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   private crudService = inject(CrudService);
   private cartService = inject(CartService);
   private realtimeService = inject(RealtimeService);
+  public subscriptionService = inject(SubscriptionService);
   private subscriptions: Subscription[] = [];
 
   currentUser: User | any = null;
@@ -40,6 +42,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   estimatedDeliveryTime: string = '05-10';
   activeCategory: string = 'all';
   cartItemCount: number = 0;
+  currentPlan: string | null = null;
 
   menuCategories = [
     { key: 'starters', name: 'Starters', icon: 'fas fa-pepper-hot', colorClass: 'bg-red-100 dark:bg-red-900/30 text-red-500', itemCount: 0 },
@@ -53,6 +56,13 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   featuredItems: MenuItem[] = [];
   popularItems: MenuItem[] = [];
   private allMenuItems: MenuItem[] = [];
+
+  constructor() {
+    // Keep local copy in sync
+    this.subscriptionService.planName$.subscribe(name => {
+      this.currentPlan = name;
+    });
+  }
 
   ngOnInit(): void {
     const params = this.route.snapshot.params;

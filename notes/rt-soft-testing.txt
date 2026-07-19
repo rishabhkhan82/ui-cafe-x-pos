@@ -419,3 +419,11 @@ Restaurant owner side Master tables required
     "subscription_start_date": "2026-07-18T17:49:17.981Z",
     "subscription_end_date": "2027-07-18T17:49:17.981Z"
 }
+
+=============================
+
+stock adjustment - new menu
+default/customization - recipe, menu, inventory 
+edit facility to the waiter
+
+=============================

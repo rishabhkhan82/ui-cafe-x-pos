@@ -14,6 +14,10 @@ export class SubscriptionService {
   private loadingSubject = new BehaviorSubject<boolean>(false);
   public loading$ = this.loadingSubject.asObservable();
 
+  // --- NEW: dedicated plan-name state ---
+  private planNameSubject = new BehaviorSubject<string | null>(null);
+  public planName$ = this.planNameSubject.asObservable();
+
   constructor(
     private crudService: CrudService,
     private authService: AuthService
@@ -34,12 +38,22 @@ export class SubscriptionService {
     return this.activeSubscriptionSubject.value;
   }
 
+  // NEW: synchronous getter
+  getPlanName(): string | null {
+    return this.planNameSubject.value;
+  }
+
+  private syncPlanName(sub: any | null): void {
+    this.planNameSubject.next(sub?.plan_name_at_subscription ?? null);
+  }
+
   loadActiveSubscription(forceRefresh = false): Observable<any | null> {
     const currentUser = this.authService.getCurrentUser();
     const restaurantId =  currentUser?.role === 'customer' ? currentUser.restaurant_id : currentUser?.restaurantId;
 
     if (!restaurantId) {
       this.activeSubscriptionSubject.next(null);
+      this.syncPlanName(null);
       return of(null);
     }
 
@@ -58,6 +72,7 @@ export class SubscriptionService {
           .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0] || null;
 
         this.activeSubscriptionSubject.next(activeSub);
+        this.syncPlanName(activeSub);
         this.loadingSubject.next(false);
         return of(activeSub);
       })

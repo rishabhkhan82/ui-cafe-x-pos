@@ -134,16 +134,18 @@
 </main>
 
 <!-- Customer Floating Cart Button -->
-<div *ngIf="currentUser?.role === 'customer'" class="fixed bottom-24 right-4 z-50">
-  <button (click)="viewCart()"
-          class="w-14 h-14 bg-primary-500 text-white rounded-full shadow-lg hover:bg-primary-600 transition-all duration-300 floating-animation relative">
-    <i class="fas fa-shopping-cart text-xl"></i>
-    <span *ngIf="cartItemCount > 0"
-          class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-      {{ cartItemCount }}
-    </span>
-  </button>
-</div>
+<ng-container *ngIf="currentPlan === 'Starter'">
+  <div *ngIf="currentUser?.role === 'customer'" class="fixed bottom-24 right-4 z-50">
+    <button (click)="viewCart()"
+            class="w-14 h-14 bg-primary-500 text-white rounded-full shadow-lg hover:bg-primary-600 transition-all duration-300 floating-animation relative">
+      <i class="fas fa-shopping-cart text-xl"></i>
+      <span *ngIf="cartItemCount > 0"
+            class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+        {{ cartItemCount }}
+      </span>
+    </button>
+  </div>
+</ng-container>
 
 <!-- POS Footer - Only show when logged in -->
 <footer *ngIf="isLoggedIn && currentUser?.role === 'platform_owner'" class="fixed bottom-0 left-0 right-0 z-40 bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700 flex w-full">
@@ -231,24 +233,24 @@
   </div>
   <!-- Navigation For Customer -->
   <div *ngIf="currentUser?.role === 'customer'" class="flex items-center justify-around py-2 md:py-0">
-    <a [routerLink]="customerHomeRoute" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors">
+    <a *ngIf="currentPlan === 'Free' || currentPlan === 'Starter'" [routerLink]="customerHomeRoute" routerLinkActive="!text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors">
       <i class="fas fa-home text-xl md:text-lg"></i>
       <span class="text-xs font-medium">Home</span>
     </a>
-    <a routerLink="/customer/menu" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors">
+    <a *ngIf="currentPlan === 'Free' || currentPlan === 'Starter'" routerLink="/customer/menu" routerLinkActive="!text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors">
       <i class="fas fa-utensils text-xl md:text-lg"></i>
       <span class="text-xs font-medium">Menu</span>
     </a>
-    <a routerLink="/customer/orders" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors relative">
+    <a *ngIf="currentPlan === 'Starter'" routerLink="/customer/orders" routerLinkActive="!text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors relative">
       <i class="fas fa-receipt text-xl md:text-lg"></i>
       <span class="text-xs font-medium">Orders</span>
       <span *ngIf="pendingOrdersCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">{{ pendingOrdersCount }}</span>
     </a>
-    <a routerLink="/customer/offers" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors">
+    <a *ngIf="currentPlan === 'Starter'" routerLink="/customer/offers" routerLinkActive="!text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors">
       <i class="fas fa-gift text-xl md:text-lg"></i>
       <span class="text-xs font-medium">Offers</span>
     </a>
-    <a routerLink="/customer/profile" routerLinkActive="text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors">
+    <a *ngIf="currentPlan === 'Free' || currentPlan === 'Starter'" routerLink="/customer/profile" routerLinkActive="!text-primary-500" class="flex flex-col items-center space-y-1 p-2 md:p-0 text-gray-400 hover:text-primary-500 transition-colors">
       <i class="fas fa-user text-xl md:text-lg"></i>
       <span class="text-xs font-medium">Profile</span>
     </a>

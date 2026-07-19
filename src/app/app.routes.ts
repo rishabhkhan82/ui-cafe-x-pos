@@ -327,42 +327,42 @@ export const routes: Routes = [
     path: 'owner-menus-mobile',
     loadComponent: () => import('./components/restaurant/owner-menus-mobile/owner-menus-mobile.component').then(m => m.OwnerMenusMobileComponent),
     canActivate: [authGuard, roleGuard, subscriptionGuard],
-    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'], allowedSubscriptionPlans: ['Free', 'Starter'] }
   },
 
   {
     path: 'recipe-management',
     loadComponent: () => import('./components/restaurant/recipe-management/recipe-management.component').then(m => m.RecipeManagementComponent),
     canActivate: [authGuard, roleGuard, subscriptionGuard],
-    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'], allowedSubscriptionPlans: ['Starter'] }
   },
 
   {
     path: 'production-batch',
     loadComponent: () => import('./components/restaurant/production-batch/production-batch.component').then(m => m.ProductionBatchComponent),
     canActivate: [authGuard, roleGuard, subscriptionGuard],
-    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'], allowedSubscriptionPlans: ['Starter'] }
   },
 
   {
     path: 'waste-management',
     loadComponent: () => import('./components/restaurant/waste-management/waste-management.component').then(m => m.WasteManagementComponent),
     canActivate: [authGuard, roleGuard, subscriptionGuard],
-    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'], allowedSubscriptionPlans: ['Starter'] }
   },
 
   {
     path: 'inventory-stock-log',
     loadComponent: () => import('./components/restaurant/inventory-stock-log/inventory-stock-log.component').then(m => m.InventoryStockLogComponent),
     canActivate: [authGuard, roleGuard, subscriptionGuard],
-    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'], allowedSubscriptionPlans: ['Starter'] }
   },
 
   {
     path: 'owner-orders-mobile',
     loadComponent: () => import('./components/shared/orders-mobile/orders-mobile.component').then(m => m.OrdersMobileComponent),
     canActivate: [authGuard, roleGuard, subscriptionGuard],
-    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'], allowedSubscriptionPlans: ['Starter'] }
   },
 
   {
@@ -383,28 +383,28 @@ export const routes: Routes = [
     path: 'owner-staff-mobile',
     loadComponent: () => import('./components/restaurant/owner-staff-mobile/owner-staff-mobile.component').then(m => m.OwnerStaffMobileComponent),
     canActivate: [authGuard, roleGuard, subscriptionGuard],
-    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'], allowedSubscriptionPlans: ['Starter'] }
   },
 
   {
     path: 'owner-reports-mobile',
     loadComponent: () => import('./components/restaurant/owner-reports-mobile/owner-reports-mobile.component').then(m => m.OwnerReportsMobileComponent),
     canActivate: [authGuard, roleGuard, subscriptionGuard],
-    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'], allowedSubscriptionPlans: ['Starter'] }
   },
 
   {
     path: 'owner-offers-mobile',
     loadComponent: () => import('./components/restaurant/owner-offers-mobile/owner-offers-mobile.component').then(m => m.OwnerOffersMobileComponent),
     canActivate: [authGuard, roleGuard, subscriptionGuard],
-    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'], allowedSubscriptionPlans: ['Starter'] }
   },
 
   {
     path: 'owner-inventory-mobile',
     loadComponent: () => import('./components/restaurant/owner-inventory-mobile/owner-inventory-mobile.component').then(m => m.OwnerInventoryMobileComponent),
     canActivate: [authGuard, roleGuard, subscriptionGuard],
-    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'], allowedSubscriptionPlans: ['Starter'] }
   },
 
   {
@@ -426,14 +426,14 @@ export const routes: Routes = [
     path: 'kitchen-navigation-mobile',
     loadComponent: () => import('./components/shared/admin-uses-navigation-mobile/admin-uses-navigation-mobile.component').then(m => m.AdminUsesNavigationMobileComponent),
     canActivate: [authGuard, roleGuard],
-    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager', 'kitchen_manager'] }
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager', 'kitchen_manager']}
   },
 
   {
     path: 'kitchen-orders',
     loadComponent: () => import('./components/shared/orders-mobile/orders-mobile.component').then(m => m.OrdersMobileComponent),
     canActivate: [authGuard, roleGuard, subscriptionGuard],
-    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager', 'kitchen_manager'] }
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager', 'kitchen_manager'], allowedSubscriptionPlans: ['Starter'] }
   },
 
   {
@@ -454,7 +454,7 @@ export const routes: Routes = [
     path: 'waiter-orders',
     loadComponent: () => import('./components/shared/orders-mobile/orders-mobile.component').then(m => m.OrdersMobileComponent),
     canActivate: [authGuard, roleGuard, subscriptionGuard],
-    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager', 'waiter'] }
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager', 'waiter'], allowedSubscriptionPlans: ['Starter'] }
   },
 
   {
@@ -483,19 +483,25 @@ export const routes: Routes = [
 
   {
     path: 'customer',
-    canActivate: [CustomerGuestGuard, subscriptionGuard],
+    canActivate: [CustomerGuestGuard],
     children: [
       {
         path: 'menu',
-        loadComponent: () => import('./components/customer/customer-menu/customer-menu.component').then(m => m.CustomerMenuComponent)
+        loadComponent: () => import('./components/customer/customer-menu/customer-menu.component').then(m => m.CustomerMenuComponent),
+        canActivate: [CustomerGuestGuard, subscriptionGuard],
+        data: { allowedSubscriptionPlans: ['Free', 'Starter'] }
       },
       {
         path: 'orders',
-        loadComponent: () => import('./components/customer/customer-orders/customer-orders.component').then(m => m.CustomerOrdersComponent)
+        loadComponent: () => import('./components/customer/customer-orders/customer-orders.component').then(m => m.CustomerOrdersComponent),
+        canActivate: [CustomerGuestGuard, subscriptionGuard],
+        data: { allowedSubscriptionPlans: ['Starter'] }
       },
       {
         path: 'offers',
-        loadComponent: () => import('./components/customer/customer-offers/customer-offers.component').then(m => m.CustomerOffersComponent)
+        loadComponent: () => import('./components/customer/customer-offers/customer-offers.component').then(m => m.CustomerOffersComponent),
+        canActivate: [CustomerGuestGuard, subscriptionGuard],
+        data: { allowedSubscriptionPlans: ['Starter'] }
       },
       {
         path: 'profile',
@@ -503,7 +509,9 @@ export const routes: Routes = [
       },
       {
         path: 'cart',
-        loadComponent: () => import('./components/customer/customer-cart/customer-cart.component').then(m => m.CustomerCartComponent)
+        loadComponent: () => import('./components/customer/customer-cart/customer-cart.component').then(m => m.CustomerCartComponent),
+        canActivate: [CustomerGuestGuard, subscriptionGuard],
+        data: { allowedSubscriptionPlans: ['Starter'] }
       }
     ]
   },

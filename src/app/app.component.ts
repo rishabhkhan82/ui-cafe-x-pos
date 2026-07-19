@@ -51,6 +51,8 @@ export class AppComponent implements OnInit {
 
   currentDateTime: string = '';
   lastBackupTime: string = '2 hours ago';
+  cartItemCount = 0;
+  currentPlan: string | null = null;
 
   private realtimeService = inject(RealtimeService);
   private authService = inject(AuthService);
@@ -64,11 +66,17 @@ export class AppComponent implements OnInit {
   private notificationService = inject(NotificationService);
   private routingService = inject(NotificationRoutingService);
   private getRestAndPlatformUsersService = inject(GetRestAndPlatformUsersService);
-  private subscriptionService = inject(SubscriptionService);
+  protected subscriptionService = inject(SubscriptionService);
   private restaurantDataService = inject(RestaurantDataService);
-  cartItemCount = 0;
 
   @ViewChild(NavigationMenuComponent) navMenu!: NavigationMenuComponent;
+
+  constructor() {
+    // Keep local copy in sync
+    this.subscriptionService.planName$.subscribe(name => {
+      this.currentPlan = name;
+    });
+  }
 
   ngOnInit() {
     // Load theme preference

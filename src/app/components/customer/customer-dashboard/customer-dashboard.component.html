@@ -69,7 +69,8 @@
                   <span *ngIf="item.is_featured" class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-full">Featured</span>
                 </div>
               </div>
-              <div class="flex flex-col items-center space-y-2 pl-2">
+
+              <div *ngIf="currentPlan === 'Starter'" class="flex flex-col items-center space-y-2 pl-2">
                 <button (click)="increaseQuantity(item)" class="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors">
                   <i class="fas fa-plus text-sm"></i>
                 </button>
@@ -118,7 +119,7 @@
               <span *ngIf="item.is_featured" class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-full">Featured</span>
             </div>
           </div>
-          <div class="flex items-center justify-end space-x-2">
+          <div *ngIf="currentPlan === 'Starter'" class="flex items-center justify-end space-x-2">
             <button *ngIf="getItemQuantity(item) > 0" (click)="decreaseQuantity(item)" class="w-7 h-7 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full border border-gray-200 dark:border-gray-600 flex items-center justify-center hover:text-primary-500 transition-colors">
               <i class="fas fa-minus text-[10px]"></i>
             </button>
@@ -133,7 +134,7 @@
   </div>
 </main>
 
-<div *ngIf="!isLoadingGuest && !guestError" class="fixed bottom-24 right-4 z-40">
+<!-- <div *ngIf="!isLoadingGuest && !guestError" class="fixed bottom-24 right-4 z-40">
   <button (click)="viewCart()"
           class="w-14 h-14 bg-primary-500 text-white rounded-full shadow-lg hover:bg-primary-600 transition-all duration-300 floating-animation relative">
     <i class="fas fa-shopping-cart text-xl"></i>
@@ -142,4 +143,4 @@
       {{ cartItemCount }}
     </span>
   </button>
-</div>
+</div> -->

@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
+import { Location } from '@angular/common';
 
 @Component({
   selector: 'app-unauthrized-access',
@@ -12,6 +13,7 @@ export class UnauthrizedAccessComponent {
 
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private location = inject(Location);
 
   pageTitle = 'Unauthorized Access';
   message = 'You do not have permission to view this page.';
@@ -28,10 +30,6 @@ export class UnauthrizedAccessComponent {
   }
 
   goBack(): void {
-    if (this.isSubscriptionBlock) {
-      this.router.navigate(['/admin/login']);
-    } else {
-      this.router.navigate(['/admin/login']);
-    }
+    this.location.back();
   }
 }

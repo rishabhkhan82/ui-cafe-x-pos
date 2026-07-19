@@ -12,6 +12,7 @@ import { CartService, CartItem } from '../../../services/cart.service';
 import { environment } from '../../../environments/environment';
 import { AnimateOnScrollDirective } from '../../../directives/animate-on-scroll.directive';
 import { RealtimeService } from '../../../services/realtime.service';
+import { SubscriptionService } from '../../../services/subscription.service';
 
 interface MenuCategory {
   key: string;
@@ -34,6 +35,7 @@ export class CustomerMenuComponent implements OnInit, OnDestroy {
   private cartService = inject(CartService);
   private realtimeService = inject(RealtimeService);
   private subscriptions: Subscription[] = [];
+  public subscriptionService = inject(SubscriptionService);
 
   currentUser: User | null = null;
   allMenuItems: MenuItem[] = [];
@@ -41,6 +43,7 @@ export class CustomerMenuComponent implements OnInit, OnDestroy {
   recommendedItems: MenuItem[] = [];
   cartItemCount = 0;
   isLoading = false;
+  currentPlan: string | null = null;
 
   searchQuery: string = '';
   activeCategory: string = 'all';
@@ -58,6 +61,13 @@ export class CustomerMenuComponent implements OnInit, OnDestroy {
     { key: 'beverages', label: 'Beverages', icon: 'fas fa-coffee' },
     { key: 'snacks', label: 'Snacks', icon: 'fas fa-cookie' }
   ];
+
+  constructor() {
+    // Keep local copy in sync
+    this.subscriptionService.planName$.subscribe(name => {
+      this.currentPlan = name;
+    });
+  }
 
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
