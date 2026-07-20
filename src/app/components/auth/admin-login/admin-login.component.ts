@@ -6,6 +6,7 @@ import { AuthService } from '../../../services/auth.service';
 import { LoadingService } from '../../../services/loading.service';
 import { LoginRequest } from '../../../services/mock-data.service';
 import { Subscription } from 'rxjs';
+import { APP_VERSION } from '../../../version';
 
 @Component({
   selector: 'app-admin-login',
@@ -20,6 +21,7 @@ export class AdminLoginComponent implements OnInit, OnDestroy {
   errorMessage = '';
   isLoading = false;
   showPassword = false;
+  appVersion = APP_VERSION;
   private loadingSubscription: Subscription = new Subscription();
 
   constructor(

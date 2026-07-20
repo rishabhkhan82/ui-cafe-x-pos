@@ -13,6 +13,7 @@ import { ConfirmationDialogComponent } from './components/common/confirmation-di
 import { CommonUserNotificationsComponent } from './components/common/common-user-notifications/common-user-notifications.component';
 import { NavigationMenu } from './services/mock-data.service';
 import { environment } from './environments/environment';
+import { APP_VERSION } from './version';
 import { CartService } from './services/cart.service';
 import { PendingordersService } from './services/pendingorders.service';
 import { PendingBillsService } from './services/pending-bills.service';
@@ -53,6 +54,7 @@ export class AppComponent implements OnInit {
   lastBackupTime: string = '2 hours ago';
   cartItemCount = 0;
   currentPlan: string | null = null;
+  appVersion = APP_VERSION;
 
   private realtimeService = inject(RealtimeService);
   private authService = inject(AuthService);

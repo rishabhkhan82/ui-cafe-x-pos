@@ -1,6 +1,7 @@
 import { Component, AfterViewInit, OnDestroy, HostListener } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { SubscriptionPlansListingComponent } from '../subscription-plans-listing/subscription-plans-listing.component';
+import { APP_VERSION } from '../../../version';
 
 @Component({
   selector: 'app-home',
@@ -10,6 +11,7 @@ import { SubscriptionPlansListingComponent } from '../subscription-plans-listing
   styleUrl: './home.component.css'
 })
 export class HomeComponent implements AfterViewInit, OnDestroy {
+  appVersion = APP_VERSION;
   private countdownInterval: any;
   constructor(private router: Router) {}
 
