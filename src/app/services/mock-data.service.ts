@@ -1199,6 +1199,8 @@ export interface SystemSettings {
   notification_batch_size: number;
   api_rate_limit: number;
   webhook_retries: number;
+  is_gst: boolean;
+  gst_percentage: string;
 }
 
 export interface UserNotification extends Notification {
@@ -7268,7 +7270,9 @@ export class MockDataService {
       sms_notifications: false,
       notification_batch_size: 100,
       api_rate_limit: 1000,
-      webhook_retries: 3
+      webhook_retries: 3,
+      is_gst: false,
+      gst_percentage: '0'
     };
 
     // Initialize user notifications
@@ -8688,7 +8692,9 @@ export class MockDataService {
       sms_notifications: false,
       notification_batch_size: 100,
       api_rate_limit: 1000,
-      webhook_retries: 3
+      webhook_retries: 3,
+      is_gst: false,
+      gst_percentage: '0'
     };
 
     const path = settingId.split('.');
@@ -8735,7 +8741,9 @@ export class MockDataService {
       sms_notifications: false,
       notification_batch_size: 100,
       api_rate_limit: 1000,
-      webhook_retries: 3
+      webhook_retries: 3,
+      is_gst: false,
+      gst_percentage: '0'
     };
     this.systemSettingsSubject.next(defaultSettings);
   }

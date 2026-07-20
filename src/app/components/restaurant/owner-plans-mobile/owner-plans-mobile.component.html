@@ -479,32 +479,37 @@
                   <option *ngFor="let month of billingPeriodMonths" [value]="month.key">{{ month.name }}</option>
                 </select>
   
-                <!-- Pricing Breakdown -->
-                <div class="mt-4 space-y-2">
-                  <div class="flex justify-between items-center text-sm">
-                    <span class="text-slate-600 dark:text-slate-400">Base Price</span>
-                    <span class="font-medium text-slate-900 dark:text-white">₹{{ plan.price * getSelectedMonths(plan.id) }}</span>
-                  </div>
-  
-                  <div *ngIf="getDiscountAmount(plan) > 0" class="flex justify-between items-center text-sm">
-                    <span class="text-emerald-600 dark:text-emerald-400">Discount ({{ plan.offer_name }} - {{ plan.offer_discount_percentage }}% OFF)</span>
-                    <span class="font-medium text-emerald-600">-₹{{ getDiscountAmount(plan) }}</span>
-                  </div>
-  
-                  <div class="border-t border-slate-200 dark:border-slate-600 pt-2 mt-3">
-                    <div class="flex justify-between items-center">
-                      <span class="font-bold text-slate-900 dark:text-white">Total</span>
-                      <span class="font-bold text-violet-600 text-lg">₹{{ getFinalAmount(plan) }}</span>
-                    </div>
-                  </div>
-                </div>
+                 <!-- Pricing Breakdown -->
+                 <div class="mt-4 space-y-2">
+                   <div class="flex justify-between items-center text-sm">
+                     <span class="text-slate-600 dark:text-slate-400">Base Price</span>
+                      <span class="font-medium text-slate-900 dark:text-white">₹{{ (plan.price * getSelectedMonths(plan.id)) | number:'1.2-2' }}</span>
+                   </div>
+   
+                   <div *ngIf="getDiscountAmount(plan) > 0" class="flex justify-between items-center text-sm">
+                     <span class="text-emerald-600 dark:text-emerald-400 text-xs">Discount ({{ plan.offer_name }} - {{ plan.offer_discount_percentage }}% OFF)</span>
+                      <span class="font-medium text-emerald-600">-₹{{ getDiscountAmount(plan) | number:'1.2-2' }}</span>
+                   </div>
+   
+                   <div *ngIf="getGstPercentage() !== '0'" class="flex justify-between items-center text-sm">
+                     <span class="text-slate-600 dark:text-slate-400">GST ({{ getGstPercentage() }}%)</span>
+                      <span class="font-medium text-slate-900 dark:text-white">₹{{ getGstAmount(plan) | number:'1.2-2' }}</span>
+                   </div>
+   
+                   <div class="border-t border-slate-200 dark:border-slate-600 pt-2 mt-3">
+                     <div class="flex justify-between items-center">
+                       <span class="font-bold text-slate-900 dark:text-white">Total</span>
+                        <span class="font-bold text-slate-900 dark:text-white text-md">₹{{ getFinalAmount(plan) | number:'1.2-2' }}</span>
+                     </div>
+                   </div>
+                 </div>
               </div>
   
               <!-- Subscribe Button -->
               <button
                 *ngIf="plan.id !== currentPlan?.id"
                 (click)="openSubscriptionForPlan(plan)"
-                class="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white py-4 rounded-2xl font-bold text-base shadow-xl hover:shadow-2xl transition-all duration-300 active:scale-95 flex items-center justify-center space-x-2">
+                [class]="'w-full text-white py-4 rounded-2xl font-bold text-base shadow-xl hover:shadow-2xl transition-all duration-300 active:scale-95 flex items-center justify-center space-x-2 ' + getTheme(i)">
                 <i class="fas fa-rocket"></i>
                 <span>Subscribe Now</span>
               </button>

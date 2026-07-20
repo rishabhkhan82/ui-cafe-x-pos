@@ -10,6 +10,7 @@ import { ManagedFeature, PlanFeatureMapping, SubscriptionPlan } from '../../../s
 import { RestaurantSubscription, SubscriptionHistory, BillingPeriodMonths } from '../../../interfaces';
 import { AuthService } from '../../../services/auth.service';
 import { SubscriptionService } from '../../../services/subscription.service';
+import { SystemConfigService } from '../../../services/system-config.service';
 
 @Component({
   selector: 'app-owner-plans-mobile',
@@ -54,7 +55,8 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     public loadingService: LoadingService,
     private notificationService: NotificationService,
     public authService: AuthService,
-    private subscriptionService: SubscriptionService
+    private subscriptionService: SubscriptionService,
+    private systemConfigService: SystemConfigService
   ) {}
 
   planThemes = [
@@ -240,10 +242,12 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     const selectedMonths = this.getSelectedMonths(plan.id);
     const finalAmount = this.getFinalAmount(plan);
     const discountAmount = this.getDiscountAmount(plan);
+    const gstAmount = this.getGstAmount(plan);
+    const gstPercentage = this.getGstPercentage();
 
     // FREE PLAN: skip Razorpay entirely and activate directly
     if (finalAmount === 0) {
-      this.activateFreePlan(plan, selectedMonths, discountAmount);
+      this.activateFreePlan(plan, selectedMonths, discountAmount, gstAmount, gstPercentage);
       return;
     }
 
@@ -265,7 +269,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
           description: `Subscription for ${selectedMonths} months`,
           handler: (rzpResponse: any) => {
             // 3) On success -> save subscription and history via backend
-            this.saveSubscriptionAndHistory(rzpResponse, plan, selectedMonths, finalAmount, discountAmount);
+            this.saveSubscriptionAndHistory(rzpResponse, plan, selectedMonths, finalAmount, discountAmount, gstAmount, gstPercentage);
           },
           prefill: {
             name: 'Restaurant Owner',
@@ -284,7 +288,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     });
   }
 
-  private activateFreePlan(plan: SubscriptionPlan, months: number, discountAmount: number): void {
+  private activateFreePlan(plan: SubscriptionPlan, months: number, discountAmount: number, gstAmount: number, gstPercentage: string): void {
     const currentUser = this.authService.getCurrentUser();
     const restaurantId = currentUser?.restaurantId;
     const currentUserId = currentUser?.id;
@@ -299,7 +303,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     };
 
     this.loadingService.show();
-    this.saveSubscriptionAndHistory(mockRzpResponse, plan, months, 0, discountAmount);
+    this.saveSubscriptionAndHistory(mockRzpResponse, plan, months, 0, discountAmount, gstAmount, gstPercentage);
   }
 
   // closeSubscriptionSelection(): void {
@@ -311,9 +315,11 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     const selectedMonths = this.getSelectedMonths(plan.id);
     const discountAmount = this.getDiscountAmount(plan);
     const finalAmount = this.getFinalAmount(plan);
+    const gstAmount = this.getGstAmount(plan);
+    const gstPercentage = this.getGstPercentage();
 
     // Proceed to payment
-    this.proceedToPaymentDirect(plan, selectedMonths, finalAmount, discountAmount);
+    this.proceedToPaymentDirect(plan, selectedMonths, finalAmount, discountAmount, gstAmount, gstPercentage);
   }
 
   openSubscriptionDialog(plan: SubscriptionPlan): void {
@@ -337,17 +343,32 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     const months = this.getSelectedMonths(plan.id);
     const base = plan.price * months;
     const discountPercentage = plan.offer_discount_percentage || 0;
-    return base * (discountPercentage / 100);
+    return Number((base * (discountPercentage / 100)).toFixed(2));
   }
 
   getFinalAmount(plan: SubscriptionPlan): number {
     const months = this.getSelectedMonths(plan.id);
     const base = plan.price * months;
     const discount = this.getDiscountAmount(plan);
-    return base - discount;
+    const subtotal = base - discount;
+    const gstPercentage = parseFloat(this.getGstPercentage());
+    const gstAmount = subtotal * (gstPercentage / 100);
+    return Number((subtotal + gstAmount).toFixed(2));
   }
 
-  proceedToPaymentDirect(plan: SubscriptionPlan, months: number, finalAmount: number, discountAmount: number): void {
+  getGstPercentage(): string {
+    return this.systemConfigService.gstEnabled ? this.systemConfigService.gstPercentage : '0';
+  }
+
+  getGstAmount(plan: SubscriptionPlan): number {
+    const months = this.getSelectedMonths(plan.id);
+    const base = plan.price * months;
+    const discount = this.getDiscountAmount(plan);
+    const subtotal = base - discount;
+    return Number((subtotal * (parseFloat(this.getGstPercentage()) / 100)).toFixed(2));
+  }
+
+  proceedToPaymentDirect(plan: SubscriptionPlan, months: number, finalAmount: number, discountAmount: number, gstAmount: number, gstPercentage: string): void {
     const currentUser = this.authService.getCurrentUser();
     const restaurantId = currentUser?.restaurantId;
 
@@ -367,7 +388,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     this.crudService.postData('payments/create-order', payload).subscribe({
       next: (response: any) => {
         const order = response;
-        this.launchRazorpay(order, plan, months, finalAmount, discountAmount);
+        this.launchRazorpay(order, plan, months, finalAmount, discountAmount, gstAmount, gstPercentage);
       },
       error: (error) => {
         console.error('Error creating order:', error);
@@ -376,7 +397,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     });
   }
 
-  private launchRazorpay(order: any, plan: SubscriptionPlan, months: number, finalAmount: number, discountAmount: number): void {
+  private launchRazorpay(order: any, plan: SubscriptionPlan, months: number, finalAmount: number, discountAmount: number, gstAmount: number, gstPercentage: string): void {
     const options = {
       key: order.keyId,
       amount: order.amount * 100, // In paise
@@ -387,7 +408,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
       handler: (response: any) => {
         // Payment successful
         console.log('Payment successful:', response);
-        this.saveSubscriptionAndHistory(response, plan, months, finalAmount, discountAmount);
+        this.saveSubscriptionAndHistory(response, plan, months, finalAmount, discountAmount, gstAmount, gstPercentage);
       },
       prefill: {
         name: 'Restaurant Owner',
@@ -529,7 +550,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     });
   }
 
-  private saveSubscriptionAndHistory(razorpayResponse: any, plan: SubscriptionPlan, months: number, finalAmount: number, discountAmount: number): void {
+  private saveSubscriptionAndHistory(razorpayResponse: any, plan: SubscriptionPlan, months: number, finalAmount: number, discountAmount: number, gstAmount: number, gstPercentage: string): void {
     const currentUser = this.authService.getCurrentUser();
     const restaurantId = currentUser?.restaurantId;
     const currentUserId = currentUser?.id;
@@ -550,6 +571,8 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
       created_by : currentUserId,
       discount_amount: discountAmount,
       final_amount: finalAmount,
+      gst_amount: gstAmount,
+      gst_percentage: gstPercentage,
       payment_method_id: razorpayResponse.razorpay_payment_id,
       plan_price_at_subscription: plan.price,
       offer_name_at_subscription: plan.offer_name || null,

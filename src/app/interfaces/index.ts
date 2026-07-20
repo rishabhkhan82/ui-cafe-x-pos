@@ -97,6 +97,8 @@ export interface RestaurantSubscription {
   cancel_at_period_end: boolean;
   discount_amount: number;
   final_amount: number;
+  gst_amount: number;
+  gst_percentage: string;
   cancelled_at: Date | null;
   created_at: Date;
   created_by: number;

@@ -489,11 +489,16 @@ new points
 2] daily db backup email at platform_owner with download link and db_backup saved in uploads in server - done
 3] advance iventory with recipe managment and menu_items for low stock alerts - done
 
-new points Optional
+New Points Must for Starter Package
+
 1] check no of table in db used with the name, so unused can be deleted. - pending
-2] broadcast notification
-3] maintainance mode, site name, site logo, image upload all this from system configuration - pending
+2] broadcast notification - pending
+3] system configuration using it in application - pending
+4] edit facility of order to all admin users - pending
+5] order customisation as per the menu_item - pending
+6] stock adjustment new menu - pending
+7] versioning come at home,login and dashboard footer - pending
+8] gst at system config, and it's use in the plan purchase - in_progress
+9] gst at restaurant creation, and it's use in the order purchase, add new field gst_percentage in order - pending
 
-==================
-
-versioning come at home,login and dashboard footer. 
+10] retesting for the starter package

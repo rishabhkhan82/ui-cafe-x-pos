@@ -191,9 +191,11 @@ export class SystemConfigurationComponent implements OnInit, OnDestroy, AfterVie
         email_notifications: this.settings.email_notifications,
         sms_notifications: this.settings.sms_notifications,
         notification_batch_size: this.settings.notification_batch_size,
-        api_rate_limit: this.settings.api_rate_limit,
-        webhook_retries: this.settings.webhook_retries,
-      };
+         api_rate_limit: this.settings.api_rate_limit,
+         webhook_retries: this.settings.webhook_retries,
+         is_gst: this.settings.is_gst,
+         gst_percentage: this.settings.gst_percentage,
+       };
       console.log('Exporting settings:', settingsData);
       // Create and download JSON file
       const dataStr = JSON.stringify(settingsData, null, 2);

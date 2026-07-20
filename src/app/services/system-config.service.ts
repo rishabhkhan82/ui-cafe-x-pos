@@ -36,6 +36,8 @@ export interface SystemSettings {
   notification_batch_size?: number;
   api_rate_limit?: number;
   webhook_retries?: number;
+  is_gst?: boolean;
+  gst_percentage?: string;
   _cachedAt?: number;
 }
 
@@ -169,6 +171,14 @@ export class SystemConfigService {
 
   get webhookRetries(): number {
     return this.currentSettings?.webhook_retries ?? 3;
+  }
+
+  get gstEnabled(): boolean {
+    return this.currentSettings?.is_gst ?? false;
+  }
+
+  get gstPercentage(): string {
+    return this.currentSettings?.gst_percentage || '0';
   }
 
   // Generic fallback getter
