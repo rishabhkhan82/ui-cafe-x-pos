@@ -16,12 +16,14 @@
             <div class="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg">
               <i class="fas fa-boxes text-white text-sm"></i>
             </div>
-            <div>
-              <h1 class="text-xl font-bold text-gray-900 dark:text-white">
-                Inventory Items
-              </h1>
-              <p class="text-xs text-gray-600 dark:text-gray-400">Manage Your Stock</p>
-            </div>
+             <div>
+               <h1 class="text-xl font-bold text-gray-900 dark:text-white">
+                 {{ isStockManagementMode ? 'Stock Adjustment' : 'Inventory Items' }}
+               </h1>
+               <p class="text-sm text-gray-500 dark:text-gray-400">
+                 {{ isStockManagementMode ? 'Stock Management' : 'Manage Your Stock' }}
+               </p>
+             </div>
           </div>
 
           <!-- Simple Search Bar (Shown when searching) -->
@@ -58,11 +60,12 @@
             class="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
             <i class="fas fa-refresh"></i>
           </button>
-          <button
-            (click)="showInventoryForm()"
-            class="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-sm">
-            <i class="fas fa-plus mr-2"></i>Add
-          </button>
+           <button
+             *ngIf="!isStockManagementMode"
+             (click)="showInventoryForm()"
+             class="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm">
+             <i class="fas fa-plus mr-2"></i>Add
+           </button>
         </div>
       </div>
     </div>
@@ -104,7 +107,7 @@
               <button (click)="showInventoryForm(item); $event.stopPropagation()" class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors flex items-center justify-center">
                 <i class="fas fa-edit text-xs"></i>
               </button>
-              <button (click)="deleteInventoryItem(item); $event.stopPropagation()" class="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors flex items-center justify-center">
+              <button *ngIf="!isStockManagementMode" (click)="deleteInventoryItem(item); $event.stopPropagation()" class="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors flex items-center justify-center">
                 <i class="fas fa-trash text-xs"></i>
               </button>
             </div>
@@ -142,7 +145,7 @@
             </div>
             <div>
               <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Unit Cost</p>
-              <p class="text-sm font-medium text-gray-700 dark:text-gray-300">â‚¹{{ item.unit_cost }}</p>
+               <p class="text-sm font-medium text-gray-700 dark:text-gray-300">?{{ item.unit_cost }}</p>
             </div>
           </div>
         </div>
@@ -165,7 +168,7 @@
       </div>
       <div class="p-6 text-center">
         <button
-          *ngIf="!hasActiveFilters"
+          *ngIf="!hasActiveFilters && !isStockManagementMode"
           (click)="showInventoryForm()"
           class="px-6 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl">
           <i class="fas fa-plus mr-2"></i>
@@ -244,101 +247,35 @@
           <button (click)="cancelAdd()" class="w-8 h-8 rounded-lg hover:bg-red-100 dark:hover:bg-gray-700 flex items-center justify-center">
             <i class="fas fa-arrow-left text-red-600 dark:text-red-400"></i>
           </button>
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ editingInventoryItem ? 'Edit Inventory Item' : 'Add New Inventory Item' }}</h3>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ isStockManagementMode ? 'Stock Adjustment' : (editingInventoryItem ? 'Edit Inventory Item' : 'Add New Inventory Item') }}</h3>
         </div>
         <button
           (click)="onSubmitForm()"
           [disabled]="isSubmitting"
           class="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed">
-          <i class="fas fa-save mr-2"></i>{{ editingInventoryItem ? 'Update' : 'Save' }}
+          <i class="fas fa-save mr-2"></i>{{ isStockManagementMode ? 'Update Stock' : (editingInventoryItem ? 'Update' : 'Save') }}
         </button>
       </div>
       <!-- Modal Body -->
+      <!-- Modal Body -->
       <div class="flex-1 p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-red-500 scrollbar-track-gray-100 dark:scrollbar-track-gray-700">
         <form class="space-y-4">
-          <!-- Name -->
-          <div>
-            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-signature mr-2 text-green-500"></i>Item Name <span class="text-red-500">*</span></label>
-            <input
-              type="text"
-              [(ngModel)]="inventoryForm.name"
-              name="name"
-              (blur)="validateName()"
-              (input)="validateName(); generateItemId()"
-              class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
-              placeholder="Enter item name">
-            <div *ngIf="fieldErrors['name']" class="mt-1 text-xs text-red-500">{{ fieldErrors['name'] }}</div>
-          </div>
-
-          <!-- Supplier Name -->
-          <div>
-            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-truck mr-2 text-orange-500"></i>Supplier Name</label>
-            <input
-              type="text"
-              [(ngModel)]="inventoryForm.supplier_id"
-              name="supplier_id"
-              class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
-              placeholder="Enter supplier name">
-          </div>
-
-          <!-- Category + Unit of Measure -->
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-tags mr-2 text-purple-500"></i>Category <span class="text-red-500">*</span></label>
-              <select
-                [(ngModel)]="inventoryForm.category"
-                name="category"
-                (change)="validateCategory()"
-                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white">
-                <option value="">Select Category</option>
-                <option *ngFor="let category of categories" [value]="category.key" [disabled]="category.key === 'all'">{{ category.name }}</option>
-              </select>
-              <div *ngIf="fieldErrors['category']" class="mt-1 text-xs text-red-500">{{ fieldErrors['category'] }}</div>
+          <div *ngIf="isStockManagementMode" class="space-y-4">
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+                  <i class="fas fa-boxes text-white text-sm"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h4 class="text-base font-semibold text-gray-900 dark:text-white truncate">{{ inventoryForm.name }}</h4>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">{{ inventoryForm.category }} • {{ inventoryForm.unit_of_measure }}</p>
+                </div>
+              </div>
             </div>
             <div>
-              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-ruler mr-2 text-indigo-500"></i>Unit of Measure <span class="text-red-500">*</span></label>
-              <select
-                [(ngModel)]="inventoryForm.unit_of_measure"
-                name="unit_of_measure"
-                (change)="validateUnitOfMeasure()"
-                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white">
-                <option value="">Select Unit</option>
-                <option *ngFor="let unit of inventoryItemUnits" [value]="unit.key">{{ unit.name }}</option>
-              </select>
-              <div *ngIf="fieldErrors['unit_of_measure']" class="mt-1 text-xs text-red-500">{{ fieldErrors['unit_of_measure'] }}</div>
-            </div>
-          </div>
-
-          <!-- Type -->
-          <div>
-            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-tag mr-2 text-indigo-500"></i>Type <span class="text-red-500">*</span></label>
-              <select
-                [(ngModel)]="inventoryForm.type"
-                name="type"
-                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white">
-                <option value="">Select Type</option>
-                <option *ngFor="let type of inventoryItemTypes" [value]="type.key">{{ type.name }}</option>
-              </select>
-          </div>
-
-          <!-- Description -->
-          <div>
-            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-align-left mr-2 text-blue-500"></i>Description <span class="text-red-500">*</span></label>
-            <textarea
-              [(ngModel)]="inventoryForm.description"
-              name="description"
-              (blur)="validateDescription()"
-              (input)="validateDescription()"
-              rows="3"
-              class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white resize-none"
-              placeholder="Enter description"></textarea>
-            <div *ngIf="fieldErrors['description']" class="mt-1 text-xs text-red-500">{{ fieldErrors['description'] }}</div>
-          </div>
-
-          <!-- Current Stock + Min Stock -->
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-cubes mr-2 text-green-500"></i>Current Stock <span class="text-red-500">*</span></label>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
+                <i class="fas fa-cubes mr-2 text-green-500"></i>Current Stock <span class="text-red-500">*</span>
+              </label>
               <input
                 type="number"
                 step="0.01"
@@ -349,77 +286,161 @@
                 class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
                 placeholder="0.00">
               <div *ngIf="fieldErrors['current_stock']" class="mt-1 text-xs text-red-500">{{ fieldErrors['current_stock'] }}</div>
-            </div>
-            <div>
-              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-arrow-down mr-2 text-red-500"></i>Min Stock <span class="text-red-500">*</span></label>
-              <input
-                type="number"
-                step="0.01"
-                [(ngModel)]="inventoryForm.minimum_stock"
-                name="minimum_stock"
-                (blur)="validateMinimumStock()"
-                (input)="validateMinimumStock()"
-                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
-                placeholder="0.00">
-              <div *ngIf="fieldErrors['minimum_stock']" class="mt-1 text-xs text-red-500">{{ fieldErrors['minimum_stock'] }}</div>
+              <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                Enter the new stock quantity. Use positive value to add stock, or reduce the value to subtract stock.
+              </p>
             </div>
           </div>
-
-          <!-- Max Stock + Unit Cost -->
-          <div class="grid grid-cols-2 gap-4">
+          <div *ngIf="!isStockManagementMode" class="space-y-4">
             <div>
-              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-arrow-up mr-2 text-green-500"></i>Max Stock</label>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-signature mr-2 text-green-500"></i>Item Name <span class="text-red-500">*</span></label>
               <input
-                type="number"
-                step="0.01"
-                [(ngModel)]="inventoryForm.maximum_stock"
-                name="maximum_stock"
-                (blur)="validateMaximumStock()"
-                (input)="validateMaximumStock()"
+                type="text"
+                [(ngModel)]="inventoryForm.name"
+                name="name"
+                (blur)="validateName()"
+                (input)="validateName(); generateItemId()"
                 class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
-                placeholder="0.00">
-              <div *ngIf="fieldErrors['maximum_stock']" class="mt-1 text-xs text-red-500">{{ fieldErrors['maximum_stock'] }}</div>
+                placeholder="Enter item name">
+              <div *ngIf="fieldErrors['name']" class="mt-1 text-xs text-red-500">{{ fieldErrors['name'] }}</div>
             </div>
             <div>
-              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-dollar-sign mr-2 text-green-500"></i>Unit Cost <span class="text-red-500">*</span></label>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-truck mr-2 text-orange-500"></i>Supplier Name</label>
               <input
-                type="number"
-                step="0.01"
-                [(ngModel)]="inventoryForm.unit_cost"
-                name="unit_cost"
-                (blur)="validateUnitCost()"
-                (input)="validateUnitCost()"
+                type="text"
+                [(ngModel)]="inventoryForm.supplier_id"
+                name="supplier_id"
                 class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
-                placeholder="0.00">
-              <div *ngIf="fieldErrors['unit_cost']" class="mt-1 text-xs text-red-500">{{ fieldErrors['unit_cost'] }}</div>
+                placeholder="Enter supplier name">
             </div>
-          </div>
-
-          <!-- Selling Price + Expiry Date -->
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-dollar-sign mr-2 text-blue-500"></i>Selling Price</label>
-              <input
-                type="number"
-                step="0.01"
-                [(ngModel)]="inventoryForm.selling_price"
-                name="selling_price"
-                (blur)="validateSellingPrice()"
-                (input)="validateSellingPrice()"
-                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
-                placeholder="0.00">
-              <div *ngIf="fieldErrors['selling_price']" class="mt-1 text-xs text-red-500">{{ fieldErrors['selling_price'] }}</div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-tags mr-2 text-purple-500"></i>Category <span class="text-red-500">*</span></label>
+                <select
+                  [(ngModel)]="inventoryForm.category"
+                  name="category"
+                  (change)="validateCategory()"
+                  class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white">
+                  <option value="">Select Category</option>
+                  <option *ngFor="let category of categories" [value]="category.key" [disabled]="category.key === 'all'">{{ category.name }}</option>
+                </select>
+                <div *ngIf="fieldErrors['category']" class="mt-1 text-xs text-red-500">{{ fieldErrors['category'] }}</div>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-ruler mr-2 text-indigo-500"></i>Unit of Measure <span class="text-red-500">*</span></label>
+                <select
+                  [(ngModel)]="inventoryForm.unit_of_measure"
+                  name="unit_of_measure"
+                  (change)="validateUnitOfMeasure()"
+                  class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white">
+                  <option value="">Select Unit</option>
+                  <option *ngFor="let unit of inventoryItemUnits" [value]="unit.key">{{ unit.name }}</option>
+                </select>
+                <div *ngIf="fieldErrors['unit_of_measure']" class="mt-1 text-xs text-red-500">{{ fieldErrors['unit_of_measure'] }}</div>
+              </div>
             </div>
             <div>
-              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-calendar-alt mr-2 text-purple-500"></i>Expiry Date</label>
-              <input
-                type="date"
-                [(ngModel)]="inventoryForm.expiry_date"
-                name="expiry_date"
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-tag mr-2 text-indigo-500"></i>Type <span class="text-red-500">*</span></label>
+              <select
+                [(ngModel)]="inventoryForm.type"
+                name="type"
                 class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white">
+                <option value="">Select Type</option>
+                <option *ngFor="let type of inventoryItemTypes" [value]="type.key">{{ type.name }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-align-left mr-2 text-blue-500"></i>Description <span class="text-red-500">*</span></label>
+              <textarea
+                [(ngModel)]="inventoryForm.description"
+                name="description"
+                (blur)="validateDescription()"
+                (input)="validateDescription()"
+                rows="3"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white resize-none"
+                placeholder="Enter description"></textarea>
+              <div *ngIf="fieldErrors['description']" class="mt-1 text-xs text-red-500">{{ fieldErrors['description'] }}</div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-cubes mr-2 text-green-500"></i>Current Stock <span class="text-red-500">*</span></label>
+                <input
+                  type="number"
+                  step="0.01"
+                  [(ngModel)]="inventoryForm.current_stock"
+                  name="current_stock"
+                  (blur)="validateCurrentStock()"
+                  (input)="validateCurrentStock()"
+                  class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
+                  placeholder="0.00">
+                <div *ngIf="fieldErrors['current_stock']" class="mt-1 text-xs text-red-500">{{ fieldErrors['current_stock'] }}</div>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-arrow-down mr-2 text-red-500"></i>Min Stock <span class="text-red-500">*</span></label>
+                <input
+                  type="number"
+                  step="0.01"
+                  [(ngModel)]="inventoryForm.minimum_stock"
+                  name="minimum_stock"
+                  (blur)="validateMinimumStock()"
+                  (input)="validateMinimumStock()"
+                  class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
+                  placeholder="0.00">
+                <div *ngIf="fieldErrors['minimum_stock']" class="mt-1 text-xs text-red-500">{{ fieldErrors['minimum_stock'] }}</div>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-arrow-up mr-2 text-green-500"></i>Max Stock</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  [(ngModel)]="inventoryForm.maximum_stock"
+                  name="maximum_stock"
+                  (blur)="validateMaximumStock()"
+                  (input)="validateMaximumStock()"
+                  class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
+                  placeholder="0.00">
+                <div *ngIf="fieldErrors['maximum_stock']" class="mt-1 text-xs text-red-500">{{ fieldErrors['maximum_stock'] }}</div>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-dollar-sign mr-2 text-green-500"></i>Unit Cost <span class="text-red-500">*</span></label>
+                <input
+                  type="number"
+                  step="0.01"
+                  [(ngModel)]="inventoryForm.unit_cost"
+                  name="unit_cost"
+                  (blur)="validateUnitCost()"
+                  (input)="validateUnitCost()"
+                  class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
+                  placeholder="0.00">
+                <div *ngIf="fieldErrors['unit_cost']" class="mt-1 text-xs text-red-500">{{ fieldErrors['unit_cost'] }}</div>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-dollar-sign mr-2 text-blue-500"></i>Selling Price</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  [(ngModel)]="inventoryForm.selling_price"
+                  name="selling_price"
+                  (blur)="validateSellingPrice()"
+                  (input)="validateSellingPrice()"
+                  class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
+                  placeholder="0.00">
+                <div *ngIf="fieldErrors['selling_price']" class="mt-1 text-xs text-red-500">{{ fieldErrors['selling_price'] }}</div>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-calendar-alt mr-2 text-purple-500"></i>Expiry Date</label>
+                <input
+                  type="date"
+                  [(ngModel)]="inventoryForm.expiry_date"
+                  name="expiry_date"
+                  class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white">
+              </div>
             </div>
           </div>
-
         </form>
       </div>
       <!-- Modal Footer -->
@@ -440,7 +461,7 @@
             type="submit"
             (click)="onSubmitForm()"
             class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium">
-            {{ editingInventoryItem ? 'Update' : 'Save' }}
+            {{ isStockManagementMode ? 'Update Stock' : (editingInventoryItem ? 'Update' : 'Save') }}
           </button>
         </div>
       </div>
@@ -565,11 +586,11 @@
           <i class="fas fa-edit mr-2"></i>Edit
         </button>
         <button
+          *ngIf="!isStockManagementMode"
           (click)="deleteInventoryItem(selectedInventoryItem)"
           class="flex-1 px-4 py-3 rounded-xl font-medium bg-red-500 text-white hover:bg-red-600 transition-colors">
-          <i class="fas fa-trash mr-2"></i>Delete
+            <i class="fas fa-trash mr-2"></i>Delete
         </button>
-      </div>
     </div>
   </div>
 </div>

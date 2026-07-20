@@ -408,6 +408,13 @@ export const routes: Routes = [
   },
 
   {
+    path: 'stock-management',
+    loadComponent: () => import('./components/restaurant/owner-inventory-mobile/owner-inventory-mobile.component').then(m => m.OwnerInventoryMobileComponent),
+    canActivate: [authGuard, roleGuard, subscriptionGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'], allowedSubscriptionPlans: ['Starter'] }
+  },
+
+  {
     path: 'addons-mobile',
     loadComponent: () => import('./components/restaurant/add-ons-mobile/add-ons-mobile.component').then(m => m.AddOnsMobileComponent),
     canActivate: [authGuard, roleGuard],

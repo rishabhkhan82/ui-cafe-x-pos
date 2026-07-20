@@ -496,8 +496,8 @@ New Points Must for Starter Package
 3] system configuration using it in application - pending
 4] edit facility of order to all admin users - pending
 5] order customisation as per the menu_item - pending
-6] stock adjustment new menu - pending
-7] versioning come at home,login and dashboard footer - pending
+6] stock adjustment new menu - Done
+7] versioning come at home,login and dashboard footer - Done
 8] gst at system config, and it's use in the plan purchase - Done
 9] gst at restaurant creation, and it's use in the order purchase, add new field gst_percentage in order - pending
 

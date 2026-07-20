@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { LoadingService } from '../../../services/loading.service';
 import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
 import { AuthService } from '../../../services/auth.service';
@@ -21,6 +21,7 @@ import { InventoryItemCategory, InventoryItemUnit, InventoryItemType } from '../
   styleUrl: './owner-inventory-mobile.component.css'
 })
 export class OwnerInventoryMobileComponent implements OnInit {
+  isStockManagementMode = false;
   inventoryItems: InventoryItem[] = [];
   selectedInventoryItem: InventoryItem | null = null;
   editingInventoryItem: InventoryItem | null = null;
@@ -79,10 +80,15 @@ export class OwnerInventoryMobileComponent implements OnInit {
     private authService: AuthService,
     private notificationService: NotificationService,
     private crudService: CrudService,
-    private validationService: ValidationService
+    private validationService: ValidationService,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
+    this.route.url.subscribe(segments => {
+      this.isStockManagementMode = segments.some(s => s.path === 'stock-management');
+    });
+
     this.loadInventoryItems();
     this.loadInventoryItemCategories();
     this.loadInventoryItemUnits();
@@ -314,6 +320,9 @@ export class OwnerInventoryMobileComponent implements OnInit {
   }
 
   showInventoryForm(inventoryItem?: InventoryItem): void {
+    if (this.isStockManagementMode && !inventoryItem) {
+      return;
+    }
     this.showAddForm = true;
     this.editingInventoryItem = inventoryItem || null;
     if (inventoryItem) {
@@ -380,6 +389,11 @@ export class OwnerInventoryMobileComponent implements OnInit {
   onSubmitForm(): void {
     if (this.isSubmitting) return;
 
+    if (this.isStockManagementMode) {
+      this.adjustStock();
+      return;
+    }
+
     this.isSubmitting = true;
     this.fieldErrors = {};
     this.errorMessage = '';
@@ -405,6 +419,67 @@ export class OwnerInventoryMobileComponent implements OnInit {
       this.createInventoryItem();
     }
 
+  }
+
+  adjustStock(): void {
+    this.fieldErrors = {};
+    this.validateCurrentStock();
+
+    if (this.fieldErrors['current_stock']) {
+      this.isSubmitting = false;
+      return;
+    }
+
+    if (!this.editingInventoryItem) {
+      this.notificationService.error('Error', 'No item selected for stock adjustment');
+      this.isSubmitting = false;
+      return;
+    }
+
+    this.loadingService.show();
+    const currentTime = new Date();
+    const currentUser = this.authService.getCurrentUser();
+    const inventoryRequest = {
+      item_id: this.inventoryForm.item_id,
+      name: this.inventoryForm.name,
+      description: this.inventoryForm.description,
+      category: this.inventoryForm.category,
+      unit_of_measure: this.inventoryForm.unit_of_measure,
+      current_stock: this.inventoryForm.current_stock,
+      minimum_stock: this.inventoryForm.minimum_stock,
+      maximum_stock: this.inventoryForm.maximum_stock,
+      unit_cost: this.inventoryForm.unit_cost,
+      selling_price: this.inventoryForm.selling_price,
+      supplier_id: this.inventoryForm.supplier_id,
+      location_in_store: '',
+      is_active: this.inventoryForm.is_active,
+      expiry_date: this.inventoryForm.expiry_date ? new Date(this.inventoryForm.expiry_date).toISOString() : null,
+      type: this.inventoryForm.type || 'RAW',
+      restaurant_id: this.inventoryForm.restaurant_id,
+      created_at: this.editingInventoryItem!.created_at?.toISOString() || currentTime.toISOString(),
+      updated_at: currentTime.toISOString(),
+      created_by: this.editingInventoryItem!.created_by,
+      updated_by: Number(currentUser?.id) || 1
+    };
+    this.crudService.updateInventoryItem(this.editingInventoryItem!.id, inventoryRequest).subscribe({
+      next: (response) => {
+        this.isSubmitting = false;
+        console.log('Stock adjusted successfully:', response);
+        this.notificationService.success(
+          'Stock Adjusted',
+          `Stock for ${this.inventoryForm.name} has been updated to ${this.inventoryForm.current_stock} ${this.inventoryForm.unit_of_measure}`
+        );
+        this.cancelAdd();
+        this.loadInventoryItems();
+      },
+      error: (error) => {
+        this.isSubmitting = false;
+        const apiMessage = error.error?.message || 'Failed to adjust stock. Please try again.';
+        this.errorMessage = apiMessage;
+        this.loadingService.hide();
+        this.notificationService.error('Adjustment Failed', apiMessage);
+      }
+    });
   }
 
   validateName(): void {
