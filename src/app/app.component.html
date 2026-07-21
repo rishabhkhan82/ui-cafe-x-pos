@@ -25,7 +25,7 @@
 <app-confirmation-dialog></app-confirmation-dialog>
 
 <!-- POS Header - Only show when logged in -->
-<header *ngIf="isLoggedIn" class="fixed top-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700" style="z-index:70">
+<header *ngIf="isLoggedIn" class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700" [ngClass]="currentUser.role === 'platform_owner' ? '' : 'md:z-[70]'">
   <div class="px-4 py-3">
     <div class="flex items-center justify-between">
       <!-- Logo & Brand -->

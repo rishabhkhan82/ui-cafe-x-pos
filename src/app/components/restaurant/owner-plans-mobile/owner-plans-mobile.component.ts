@@ -244,6 +244,9 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     const discountAmount = this.getDiscountAmount(plan);
     const gstAmount = this.getGstAmount(plan);
     const gstPercentage = this.getGstPercentage();
+    const now = new Date();
+    const endDate = new Date();
+    endDate.setMonth(now.getMonth() + selectedMonths);
 
     // FREE PLAN: skip Razorpay entirely and activate directly
     if (finalAmount === 0) {
@@ -269,7 +272,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
           description: `Subscription for ${selectedMonths} months`,
           handler: (rzpResponse: any) => {
             // 3) On success -> save subscription and history via backend
-            this.saveSubscriptionAndHistory(rzpResponse, plan, selectedMonths, finalAmount, discountAmount, gstAmount, gstPercentage);
+            this.saveSubscriptionAndHistory(rzpResponse, plan, selectedMonths, finalAmount, discountAmount, gstAmount, gstPercentage, endDate);
           },
           prefill: {
             name: 'Restaurant Owner',
@@ -293,8 +296,6 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     const restaurantId = currentUser?.restaurantId;
     const currentUserId = currentUser?.id;
     const now = new Date();
-    const endDate = new Date();
-    endDate.setMonth(now.getMonth() + months);
 
     const freeOrderId = `FREE-${Date.now()}`;
     const mockRzpResponse = {
@@ -303,7 +304,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     };
 
     this.loadingService.show();
-    this.saveSubscriptionAndHistory(mockRzpResponse, plan, months, 0, discountAmount, gstAmount, gstPercentage);
+    this.saveSubscriptionAndHistory(mockRzpResponse, plan, months, 0, discountAmount, gstAmount, gstPercentage, null);
   }
 
   // closeSubscriptionSelection(): void {
@@ -398,6 +399,10 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
   }
 
   private launchRazorpay(order: any, plan: SubscriptionPlan, months: number, finalAmount: number, discountAmount: number, gstAmount: number, gstPercentage: string): void {
+    const now = new Date();
+    const endDate = new Date();
+    endDate.setMonth(now.getMonth() + months);
+
     const options = {
       key: order.keyId,
       amount: order.amount * 100, // In paise
@@ -408,7 +413,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
       handler: (response: any) => {
         // Payment successful
         console.log('Payment successful:', response);
-        this.saveSubscriptionAndHistory(response, plan, months, finalAmount, discountAmount, gstAmount, gstPercentage);
+        this.saveSubscriptionAndHistory(response, plan, months, finalAmount, discountAmount, gstAmount, gstPercentage, endDate);
       },
       prefill: {
         name: 'Restaurant Owner',
@@ -487,7 +492,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     restaurantId: string | number,
     planName: string,
     startDate: Date,
-    endDate: Date
+    endDate: Date | null
   ): void {
     this.crudService.updateRestaurantSubscriptionDetails(restaurantId, {
       subscription_plan: planName,
@@ -550,21 +555,18 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     });
   }
 
-  private saveSubscriptionAndHistory(razorpayResponse: any, plan: SubscriptionPlan, months: number, finalAmount: number, discountAmount: number, gstAmount: number, gstPercentage: string): void {
+  private saveSubscriptionAndHistory(razorpayResponse: any, plan: SubscriptionPlan, months: number, finalAmount: number, discountAmount: number, gstAmount: number, gstPercentage: string, endDate: Date | null): void {
     const currentUser = this.authService.getCurrentUser();
     const restaurantId = currentUser?.restaurantId;
     const currentUserId = currentUser?.id;
     const now = new Date();
-    const endDate = new Date();
-    endDate.setMonth(now.getMonth() + months);
 
-    const subscriptionPayload = {
+    const subscriptionPayload: any = {
       subscription_id: razorpayResponse.razorpay_order_id,
       restaurant_id: restaurantId,
       plan_id: plan.id,
       status: 'active',
       start_date: now.toISOString(),
-      end_date: endDate.toISOString(),
       billing_cycle: plan.billing_cycle,
       cancel_at_period_end: false,
       auto_renew: false,
@@ -579,6 +581,10 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
       offer_discount_percentage_at_subscription: plan.offer_discount_percentage || 0,
       plan_name_at_subscription: plan.display_name || plan.name
     };
+
+    if (endDate !== null) {
+      subscriptionPayload.end_date = endDate.toISOString();
+    }
 
     // Save subscription first
     this.crudService.createRestaurantSubscription(subscriptionPayload).subscribe({

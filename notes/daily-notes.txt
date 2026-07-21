@@ -505,3 +505,4 @@ New Points Must for Starter Package
 
 custormer profile image dynamic
 free plan end date blank no dropdown to show.
+then start the testing for the free plan
