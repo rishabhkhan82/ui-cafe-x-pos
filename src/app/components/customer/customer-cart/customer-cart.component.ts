@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { AnimateOnScrollDirective } from '../../../directives/animate-on-scroll.directive';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -9,6 +10,7 @@ import { CrudService } from '../../../services/crud.service';
 import { AuthService } from '../../../services/auth.service';
 import { NotificationService } from '../../../services/notification.service';
 import { PendingBillsService } from '../../../services/pending-bills.service';
+import { RealtimeService } from '../../../services/realtime.service';
 import { environment } from '../../../environments/environment';
 import { OrderType } from '../../../interfaces';
 
@@ -19,7 +21,7 @@ import { OrderType } from '../../../interfaces';
   templateUrl: './customer-cart.component.html',
   styleUrl: './customer-cart.component.css'
 })
-export class CustomerCartComponent implements OnInit {
+export class CustomerCartComponent implements OnInit, OnDestroy {
   cartItems: CartItem[] = [];
   subtotal = 0;
   gst = 0;
@@ -28,6 +30,9 @@ export class CustomerCartComponent implements OnInit {
   orderCount = 0;
   orderType: 'DINE_IN' | 'TAKEAWAY' = 'DINE_IN';
   isPlacingOrder = false;
+  isGst = false;
+  gstPercentage: number | null = null;
+  private subscriptions: Subscription[] = [];
 
   orderTypes: OrderType[] = [];
 
@@ -38,15 +43,37 @@ export class CustomerCartComponent implements OnInit {
     private crudService: CrudService,
     private authService: AuthService,
     private notificationService: NotificationService,
-    private pendingBillsService: PendingBillsService
+    private pendingBillsService: PendingBillsService,
+    private realtimeService: RealtimeService
   ) {}
 
   ngOnInit(): void {
     this.loadOrderTypes();
+    this.loadRestaurantGstSettings();
     this.cartService.cart$.subscribe(items => {
       this.cartItems = items;
       this.computeTotals();
     });
+
+    const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
+    if (restaurantId) {
+      const sub = this.realtimeService.restaurant$.subscribe((restaurant: any) => {
+        if (restaurant && String(restaurant.id) === String(restaurantId)) {
+          this.updateGstFromRealtime(restaurant);
+        }
+      });
+      this.subscriptions.push(sub);
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(s => s.unsubscribe());
+  }
+
+  private updateGstFromRealtime(restaurant: any): void {
+    this.isGst = restaurant.is_gst === true || restaurant.is_gst === 1;
+    this.gstPercentage = restaurant.gst_percentage !== null && restaurant.gst_percentage !== undefined ? Number(restaurant.gst_percentage) : null;
+    this.computeTotals();
   }
 
   loadOrderTypes(): void {
@@ -68,6 +95,26 @@ export class CustomerCartComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading order types:', error);
+      }
+    });
+  }
+
+  private loadRestaurantGstSettings(): void {
+    const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
+    if (!restaurantId) return;
+    this.crudService.getRestaurantById(restaurantId).subscribe({
+      next: (response: any) => {
+        const data = response?.data || response;
+        if (data) {
+          this.isGst = data.is_gst === true || data.is_gst === 1;
+          this.gstPercentage = data.gst_percentage !== null && data.gst_percentage !== undefined ? Number(data.gst_percentage) : null;
+          this.computeTotals();
+        }
+      },
+      error: () => {
+        this.isGst = false;
+        this.gstPercentage = null;
+        this.computeTotals();
       }
     });
   }
@@ -98,6 +145,7 @@ export class CustomerCartComponent implements OnInit {
       status: 'PENDING',
       total_amount: this.total,
       tax_amount: this.gst, 
+      tax_percentage: this.isGst ? this.gstPercentage : null,
       payment_status: 'PENDING',
       order_type: this.orderType,
       priority: 'MEDIUM',
@@ -167,7 +215,12 @@ export class CustomerCartComponent implements OnInit {
       return sum + effectivePrice * cartItem.quantity;
     }, 0);
 
-    this.gst = Math.round(this.subtotal * 0.18);
+    if (this.isGst && this.gstPercentage !== null) {
+      const rate = Number(this.gstPercentage) || 0;
+      this.gst = Math.round(this.subtotal * (rate / 100));
+    } else {
+      this.gst = 0;
+    }
     this.total = this.subtotal + this.deliveryFee + this.gst;
     this.orderCount = this.cartItems.length;
   }

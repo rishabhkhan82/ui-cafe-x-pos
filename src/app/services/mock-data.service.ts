@@ -102,6 +102,7 @@ export interface Order {
   payment_status: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
   special_instructions?: string;
   tax_amount: number;
+  tax_percentage?: number;
   discount_amount?: number;
   loyalty_discount_amount?: number;
   delivered_at?: Date;
@@ -1081,6 +1082,8 @@ export interface Restaurant {
   subscription_end_date: Date | null;
   gst_number: string;
   license_number: string;
+  is_gst?: boolean;
+  gst_percentage?: string;
   status: 'ACTIVE' | 'INACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED';
   is_active: boolean;
   description: string;

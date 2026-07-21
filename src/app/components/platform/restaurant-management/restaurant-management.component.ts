@@ -45,6 +45,13 @@ export class RestaurantManagementComponent implements OnInit {
   restaurantStatuses: RestaurantStatus[] = [];
   states: State[] = [];
   subscriptionPlan : SubscriptionPlan[] = [];
+  gstPercentageOptions: { value: number; label: string }[] = [
+    { value: 0, label: '0% (Nil)' },
+    { value: 5, label: '5%' },
+    { value: 12, label: '12%' },
+    { value: 18, label: '18% (Most Common)' },
+    { value: 28, label: '28%' }
+  ];
 
   restaurantForm: Restaurant = {
     id: 0,
@@ -59,6 +66,8 @@ export class RestaurantManagementComponent implements OnInit {
     subscription_end_date: null,
     gst_number: '',
     license_number: '',
+    is_gst: false,
+    gst_percentage: '',
     status: 'ACTIVE',
     is_active: true,
     description: '',
@@ -235,6 +244,8 @@ export class RestaurantManagementComponent implements OnInit {
       subscription_end_date: null,
       gst_number: '',
       license_number: '',
+      is_gst: false,
+      gst_percentage: '',
       status: 'ACTIVE',
       is_active: true,
       description: '',
@@ -269,6 +280,8 @@ export class RestaurantManagementComponent implements OnInit {
       subscription_end_date: null,
       gst_number: '',
       license_number: '',
+      is_gst: false,
+      gst_percentage: '',
       status: 'ACTIVE',
       is_active: true,
       description: '',
@@ -313,6 +326,7 @@ export class RestaurantManagementComponent implements OnInit {
     this.validateGeolocation();
     this.validateGstNumber();
     this.validateLicenseNumber();
+    this.validateGstPercentage();
 
     // Check if there are any errors
     hasErrors = Object.keys(this.fieldErrors).length > 0;
@@ -429,6 +443,14 @@ export class RestaurantManagementComponent implements OnInit {
       }
     } else {
       delete this.fieldErrors['license_number'];
+    }
+  }
+
+  validateGstPercentage(): void {
+    if (this.restaurantForm.is_gst && !this.restaurantForm.gst_percentage) {
+      this.fieldErrors['gst_percentage'] = 'GST percentage is required when GST is enabled';
+    } else {
+      delete this.fieldErrors['gst_percentage'];
     }
   }
 
@@ -563,9 +585,9 @@ export class RestaurantManagementComponent implements OnInit {
       this.loadingService.show();
       const currentUser = this.authService.getCurrentUser();
       this.restaurantForm.updated_by = Number(currentUser?.id) || 0;
-      this.restaurantForm.subscription_plan = '';
-      this.restaurantForm.subscription_start_date = null;
-      this.restaurantForm.subscription_end_date = null;
+      // this.restaurantForm.subscription_plan = '';
+      // this.restaurantForm.subscription_start_date = null;
+      // this.restaurantForm.subscription_end_date = null;
       this.crudService.updateRestaurant(restaurantId, this.restaurantForm).subscribe({
           next: (response) => {
             this.loadingService.hide();
@@ -613,6 +635,8 @@ export class RestaurantManagementComponent implements OnInit {
       subscription_end_date: null,
       gst_number: '',
       license_number: '',
+      is_gst: false,
+      gst_percentage: '',
       status: 'ACTIVE',
       is_active: true,
       description: '',
@@ -786,6 +810,8 @@ export class RestaurantManagementComponent implements OnInit {
       subscription_end_date: null,
       gst_number: '',
       license_number: '',
+      is_gst: false,
+      gst_percentage: '',
       status: 'ACTIVE',
       is_active: true,
       description: '',

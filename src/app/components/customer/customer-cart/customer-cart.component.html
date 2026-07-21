@@ -91,7 +91,9 @@
         <span class="font-semibold text-gray-900 dark:text-white">₹{{ deliveryFee }}</span>
       </div>
       <div class="flex items-center justify-between">
-        <span class="text-gray-600 dark:text-gray-300">GST (18%)</span>
+        <span class="text-gray-600 dark:text-gray-300">
+          GST {{ isGst && gstPercentage ? '(' + gstPercentage + '%' + ')' : '' }}
+        </span>
         <span class="font-semibold text-gray-900 dark:text-white">₹{{ gst }}</span>
       </div>
       <div class="border-t border-gray-200 dark:border-gray-700 pt-3">
