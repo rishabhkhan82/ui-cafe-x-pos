@@ -10,6 +10,7 @@ import { ConfirmationDialogService } from '../../../services/confirmation-dialog
 import { environment } from '../../../environments/environment';
 import { NotificationService } from '../../../services/notification.service';
 import { ValidationService } from '../../../services/validation.service';
+import { SystemConfigService } from '../../../services/system-config.service';
 
 @Component({
   selector: 'app-admin-user-profile-mobile',
@@ -45,6 +46,7 @@ export class AdminUserProfileMobileComponent implements OnInit {
 
   private notificationService = inject(NotificationService);
   private validationService = inject(ValidationService);
+  private systemConfigService = inject(SystemConfigService);
   public router = inject(Router);
 
   ngOnInit(): void {
@@ -293,14 +295,15 @@ export class AdminUserProfileMobileComponent implements OnInit {
 
   // Helper method to validate file
   private validateFile(file: File, category: string): { isValid: boolean; message?: string } {
-    const maxFileSize = 5 * 1024 * 1024; // 5MB
+    const maxFileSizeMB = this.systemConfigService.fileUploadMaxSizeMB;
+    const maxFileSize = maxFileSizeMB * 1024 * 1024;
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
     // Check file size
     if (file.size > maxFileSize) {
       return {
         isValid: false,
-        message: `File size exceeds maximum allowed size of 5MB`
+        message: `File size exceeds maximum allowed size of ${maxFileSizeMB}MB`
       };
     }
 
@@ -313,6 +316,10 @@ export class AdminUserProfileMobileComponent implements OnInit {
     }
 
     return { isValid: true };
+  }
+
+  get fileUploadMaxSizeMB(): number {
+    return this.systemConfigService.fileUploadMaxSizeMB;
   }
 
   toggleTheme(): void {

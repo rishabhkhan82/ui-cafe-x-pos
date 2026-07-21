@@ -7,6 +7,7 @@ import { AuthService } from '../../../services/auth.service';
 import { User } from '../../../services/mock-data.service';
 import { environment } from '../../../environments/environment';
 import { NotificationService } from '../../../services/notification.service';
+import { SystemConfigService } from '../../../services/system-config.service';
 
 interface Address {
   id: string;
@@ -46,6 +47,7 @@ export class CustomerProfileComponent implements OnInit {
   private authService: AuthService;
 
   private notificationService = inject(NotificationService);
+  private systemConfigService = inject(SystemConfigService);
 
   constructor(
     crudService: CrudService,
@@ -209,14 +211,15 @@ export class CustomerProfileComponent implements OnInit {
   }
 
   private validateFile(file: File): { isValid: boolean; message?: string } {
-    const maxFileSize = 5 * 1024 * 1024; // 5MB
+    const maxFileSizeMB = this.systemConfigService.fileUploadMaxSizeMB;
+    const maxFileSize = maxFileSizeMB * 1024 * 1024;
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
     // Check file size
     if (file.size > maxFileSize) {
       return {
         isValid: false,
-        message: `File size exceeds maximum allowed size of 5MB`
+        message: `File size exceeds maximum allowed size of ${maxFileSizeMB}MB`
       };
     }
 
@@ -229,6 +232,10 @@ export class CustomerProfileComponent implements OnInit {
     }
 
     return { isValid: true };
+  }
+
+  get fileUploadMaxSizeMB(): number {
+    return this.systemConfigService.fileUploadMaxSizeMB;
   }
 
   // Helper method to convert file to base64

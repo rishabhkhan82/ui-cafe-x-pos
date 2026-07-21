@@ -25,7 +25,7 @@
 <app-confirmation-dialog></app-confirmation-dialog>
 
 <!-- POS Header - Only show when logged in -->
-<header *ngIf="isLoggedIn" class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700">
+<header *ngIf="isLoggedIn" class="fixed top-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700" style="z-index:70">
   <div class="px-4 py-3">
     <div class="flex items-center justify-between">
       <!-- Logo & Brand -->
@@ -74,7 +74,7 @@
             <!-- Mobile Profile Menu Backdrop -->
             <div *ngIf="isProfileMenuOpen" class="fixed inset-0 z-40" (click)="isProfileMenuOpen = false"></div>
             <!-- Mobile Profile Menu -->
-            <div *ngIf="isProfileMenuOpen" class="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-50 border border-gray-200 dark:border-gray-700">
+            <div *ngIf="isProfileMenuOpen" class="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-70 border border-gray-200 dark:border-gray-700">
               <ul class="">
                 <!-- <li *ngFor="let menu of actionMenus">
                   <a [routerLink]="menu.path" class="block px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" (click)="isProfileMenuOpen = false">

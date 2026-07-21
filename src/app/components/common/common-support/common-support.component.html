@@ -1,9 +1,13 @@
 <div class="gradient-bg glass-effect p-8 max-w-lg mx-auto shadow-2xl animate-fadeInSlide mb-8">
   <div class="text-center mb-8">
-    <div class="inline-block p-4 bg-white/20 dark:bg-black/30 rounded-full mb-4">
-      <span class="text-4xl">🛠️</span>
+    <div class="flex justify-center">
+      <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-lg mb-4">
+        <div class="relative">
+          <i class="fas fa-coffee text-white text-lg"></i>
+        </div>
+      </div>
     </div>
-    <h2 class="text-3xl font-bold text-white mb-3 drop-shadow-lg">Support Center</h2>
+    <h2 class="text-3xl font-bold text-white mb-3 drop-shadow-lg">{{ supportDetails.siteName || 'Support Center' }}</h2>
     <div class="inline-flex items-center px-4 py-2 bg-red-500/20 rounded-full backdrop-blur-sm border border-red-400/30">
       <span class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
       <p class="text-red-100 font-semibold">{{ supportDetails.availability }} Service</p>

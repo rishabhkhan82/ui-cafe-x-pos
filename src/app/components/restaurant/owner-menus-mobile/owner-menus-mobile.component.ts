@@ -8,6 +8,7 @@ import { AuthService } from '../../../services/auth.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ValidationService } from '../../../services/validation.service';
 import { CrudService } from '../../../services/crud.service';
+import { SystemConfigService } from '../../../services/system-config.service';
 import { MenuItem } from '../../../interfaces';
 import { environment } from '../../../environments/environment';
 import { Subject, Observable, Subscription } from 'rxjs';
@@ -99,7 +100,8 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private crudService: CrudService,
     private validationService: ValidationService,
-    private realtimeService: RealtimeService
+    private realtimeService: RealtimeService,
+    private systemConfigService: SystemConfigService
   ) {}
 
   ngOnInit(): void {
@@ -768,16 +770,21 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
     return environment.api.baseUrl + imagePath;
   }
 
+  get fileUploadMaxSizeMB(): number {
+    return this.systemConfigService.fileUploadMaxSizeMB;
+  }
+
   // Helper method to validate file
   private validateFile(file: File, category: string): { isValid: boolean; message?: string } {
-    const maxFileSize = 5 * 1024 * 1024; // 5MB
+    const maxFileSizeMB = this.systemConfigService.fileUploadMaxSizeMB;
+    const maxFileSize = maxFileSizeMB * 1024 * 1024;
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
     // Check file size
     if (file.size > maxFileSize) {
       return {
         isValid: false,
-        message: `File size exceeds maximum allowed size of 5MB`
+        message: `File size exceeds maximum allowed size of ${maxFileSizeMB}MB`
       };
     }
 

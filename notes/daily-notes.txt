@@ -499,6 +499,9 @@ New Points Must for Starter Package
 6] stock adjustment new menu - Done
 7] versioning come at home,login and dashboard footer - Done
 8] gst at system config, and it's use in the plan purchase - Done
-9] gst at restaurant creation, and it's use in the order purchase, add new field gst_percentage in order - pending
+9] gst at restaurant creation, and it's use in the order purchase, add new field gst_percentage in order - Done
 
-10] retesting for the starter package
+10] retesting for the Free and starter package
+
+custormer profile image dynamic
+free plan end date blank no dropdown to show.

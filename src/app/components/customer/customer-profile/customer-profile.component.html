@@ -175,7 +175,7 @@
                  Choose Image
                </label>
                <input type="file" id="avatar-edit-upload" (change)="onFileSelected($event)" accept="image/*" class="hidden">
-               <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Supported formats: JPEG, PNG, WebP (max 5MB)</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Supported formats: JPEG, PNG, WebP (max {{ fileUploadMaxSizeMB }}MB)</p>
              </div>
            </div>
          </div>
