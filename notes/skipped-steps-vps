@@ -1,0 +1,23 @@
+skipped steps. 
+
+# 4. (Optional) Copy SSH keys if you use them
+mkdir -p /home/cafeadmin/.ssh
+cp ~/.ssh/authorized_keys /home/cafeadmin/.ssh/
+chown -R cafeadmin:cafeadmin /home/cafeadmin/.ssh
+chmod 700 /home/cafeadmin/.ssh
+chmod 600 /home/cafeadmin/.ssh/authorized_keys
+
+# 5. Configure firewall
+ufw allow 22/tcp      # SSH
+ufw allow 80/tcp      # HTTP
+ufw allow 443/tcp     # HTTPS
+ufw enable
+ufw status
+
+# --- Install Git ---
+sudo apt install -y git 
+
+# --- Install Node.js 18 (for Angular build) --- not needed (if only uploading the build)
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt install -y nodejs
+node -v && npm -v
