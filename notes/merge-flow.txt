@@ -1,0 +1,13 @@
+Merge flow for the UI/API side Branches (dev,main)
+
+1] Feature branch from dev
+
+2] Test on feature branch
+
+3] Create branch from main → merge feature into it
+
+4] Upload to prod and test
+
+5] If OK, merge that branch into main
+
+6] Merge main back into dev

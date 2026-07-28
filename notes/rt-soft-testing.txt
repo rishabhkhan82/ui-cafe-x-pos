@@ -426,4 +426,23 @@ stock adjustment - new menu
 default/customization - recipe, menu, inventory 
 edit facility to the waiter
 
-=============================
+=============================================== 
+
+# Dev build (WAR + Tomcat)
+mvn clean package -DskipTests -Pdev
+
+# Prod build (JAR, no Tomcat)
+mvn clean package -DskipTests -Pprod
+
+=============================================== 
+
+# Dev run
+mvn spring-boot:run -Pdev -Dspring-boot.run.profiles=dev
+
+# Prod run
+mvn spring-boot:run -Pprod -Dspring-boot.run.profiles=prod
+
+===============================================  
+
+Testing in local start with different environment and test. 
+Test both on the 

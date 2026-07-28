@@ -513,8 +513,12 @@ to do list tommorrow 23/07/26
 
 prod issue
 
-1] check the ui images issues
-2] create the tables in the api 
-3] initialize the prod db with initial configuration data & platform owner user
-4] create the upload and other folders in the server
-4] make standard for local,uat and prod build, and proper git repo settings for local,uat and production
+1] check the ui images issues - Done
+2] db connection to cafexpos db - Done
+2] create the tables in the api - Done
+2] rename the prod db to cafe_X_pos_prod - Done
+2] take backup of local data before running sequence queries - Done
+4] create the upload and other folders in the server - Pending
+3] initialize the prod db with initial configuration data & platform owner user - Pending
+4] make standard for local,uat and prod build, backup and proper git repo settings for local,uat and production - Pending
+ 
