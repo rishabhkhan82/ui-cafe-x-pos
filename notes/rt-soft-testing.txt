@@ -1,0 +1,448 @@
+1] Home page
+- home component review and testing - Done
+
+2] Privacy policy & Terms & condition page
+- checked, review and testing - Done
+
+3] Login page
+- checked, reveiw and tesing - Done
+
+4] Forgot Password
+- checked, review and testing - Done
+
+5] platform-Dashboard
+- checked, review, changes and testing - Done
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  constructor(private router: Router, private realtimeService: RealtimeService, private crudService: CrudService, private mockDataService: MockDataService) {
+  // Subscribe to the observable stream
+    const navSub = this.mockDataService.navMenuByRole$.subscribe(data => {
+      this.currentPagePermissions = this.setMenuPermissionsFromRoute(data);  // Update permissions when menu data arrives
+      this.pagePerLoader = false;
+    });
+    this.subscriptions.push(navSub);
+  }
+
+    private setMenuPermissionsFromRoute(menus: NavigationMenu[]): MenuAccessPermission | null {
+    const currentUrl = this.router.url;
+    console.log('Current URL:', currentUrl);
+
+    // Normalize the current route - remove leading slash for comparison
+    const normalizedRoute = currentUrl.startsWith('/') ? currentUrl.substring(1) : currentUrl;
+
+    // Recursively find menu by path
+    const findMenu = (menuList: NavigationMenu[]): NavigationMenu | null => {
+      for (const menu of menuList) {
+        // Handle path comparison - menu path may or may not start with /
+        const menuPath = menu.path || '';
+        const normalizedMenuPath = menuPath.startsWith('/') ? menuPath.substring(1) : menuPath;
+        
+        // Exact match or path starts with menu path (for child routes)
+        if (normalizedMenuPath && (normalizedRoute === normalizedMenuPath || normalizedRoute.startsWith(normalizedMenuPath + '/'))) {
+          return menu;
+        }
+        
+        // Check children recursively
+        if (menu.children && menu.children.length > 0) {
+          const found = findMenu(menu.children);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    const matchedMenu = findMenu(menus);
+    
+    if (matchedMenu) {
+      console.log('Matched menu:', matchedMenu);
+      return matchedMenu.permissions || null;
+    }
+
+    console.log('No matching menu found for route:', currentUrl);
+    return null;
+  }
+
+<!-- No Access -->
+  <app-no-view-access *ngIf="currentPagePermissions?.can_view === false"></app-no-view-access>
+
+   <div *ngIf="loading && this.currentPagePermissions?.can_view === true"></div>
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+system configuration dynamic changes needed
+
+1] Platform Name - not done
+3] Platform Logo - not done
+4] Maintenance Mode - not done
+5] Maintenance Mode - not Done
+6] Maintenance Message - not Done
+7] File Upload Max Size (MB) - not Done
+8] Backup Enabled - not Done
+9] Backup Frequency - not Done
+10] Support Email - not done
+11] Support Phone - not done
+12] Terms URL - not done
+13] Privacy URL - not done
+14] Session Timeout (minutes) - not done
+15] Password Min Length - not done
+16] Email Notifications - not done
+17] Webhook Retries - not done
+
+=================================================
+
+Masters Needed in Platform-dashboare with ui,db and api's
+
+1] features-access-control
+ [(ngModel)]="tempSelectedCategory"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Categories</option>
+          <option value="GENERAL">General</option>
+          <option value="POS">POS</option>
+          <option value="INVENTORY">Inventory</option>
+          <option value="ORDERS">Orders</option>
+          <option value="ANALYTICS">Analytics</option>
+          <option value="CUSTOMERS">Customers</option>
+          <option value="STAFF">Staff</option>
+          <option value="INTEGRATION">Integration</option>
+          <option value="SECURITY">Security</option>
+          <option value="BRANDING">Branding</option>
+          <option value="SUPPORT">Support</option>
+          <option value="MENU">Menu</option>
+          <option value="CRM">CRM</option>
+        </select>
+
+2] navigation-management
+
+<div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-list mr-2 text-indigo-500"></i>Menu Type Filter
+        </label>
+        <
+          [(ngModel)]="typeFilter"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Types</option>
+          <option value="ACTION">Action Menu</option>
+          <option value="PARENT">Parent Menu</option>
+        </select>
+      </div>
+
+
+4] app-user-management
+
+<select
+          [(ngModel)]="roleFilter"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Roles</option>
+          <option value="platform_owner">Platform Owner</option>
+          <option value="restaurant_owner">Restaurant Owner</option>
+          <option value="restaurant_manager">Restaurant Manager</option>
+          <option value="cashier">Cashier</option>
+          <option value="kitchen_manager">Kitchen Manager</option>
+          <option value="waiter">Waiter</option>
+          <option value="customer">Customer</option>
+        </select>
+
+        all ready api ready - just use it here. 
+
+    User Type - has hardcoded value
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-user mr-2 text-blue-500"></i>User Type
+        </label>
+        <select
+          [(ngModel)]="userTypeFilter"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All User Types</option>
+          <option *ngFor="let usertype of userTypes" [value]="usertype.value">{{ usertype.name }}</option>
+        </select>
+      </div>
+        userTypes : any = [
+    {name: 'Admin', value: 'admin'},
+    {name: 'Customer', value: 'customer'}
+  ];
+
+
+5] app-feature-management
+
+     <select - allready done above. just use it here. 
+          [(ngModel)]="categoryFilter"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="">All Categories</option>
+          <option value="POS">POS</option>
+          <option value="INVENTORY">Inventory</option>
+          <option value="ORDERS">Orders</option>
+          <option value="ANALYTICS">Analytics</option>
+          <option value="CUSTOMERS">Customers</option>
+          <option value="STAFF">Staff</option>
+          <option value="INTEGRATION">Integration</option>
+          <option value="SECURITY">Security</option>
+          <option value="BRANDING">Branding</option>
+          <option value="SUPPORT">Support</option>
+          <option value="MENU">Menu</option>
+          <option value="CRM">CRM</option>
+        </select> 
+
+        <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-layer-group mr-2 text-green-500"></i>Feature Type
+        </label>
+        <select
+          [(ngModel)]="featureTypeFilter"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Types</option>
+          <option value="BASIC">Basic</option>
+          <option value="PREMIUM">Premium</option>
+          <option value="ENTERPRISE">Enterprise</option>
+        </select>
+      </div>
+
+6] app-plan-management
+
+<!-- Billing Cycle -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-calendar mr-2 text-purple-500"></i>Billing Cycle
+              </label>
+              <select
+                [(ngModel)]="planForm.billing_cycle"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+            </div>
+
+            <!-- Setup Fee -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-money-bill mr-2 text-yellow-500"></i>Setup Fee
+              </label>
+              <select
+                [(ngModel)]="planForm.setup_fee"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                <option [value]="0">Free</option>
+                <option [value]="3000">₹3,000</option>
+                <option [value]="5000">₹5,000</option>
+                <option [value]="10000">₹10,000</option>
+                <option [value]="15000">₹15,000</option>
+                <option [value]="20000">₹20,000</option>
+              </select>
+            </div>
+
+            <!-- Trial Days -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-calendar-check mr-2 text-purple-500"></i>Trial Days
+              </label>
+              <select
+                [(ngModel)]="planForm.trial_days"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                <option [value]="0">No Trial</option>
+                <option [value]="7">7 Days</option>
+                <option [value]="15">15 Days</option>
+                <option [value]="30">30 Days</option>
+                <option [value]="60">60 Days</option>
+                <option [value]="90">90 Days</option>
+              </select>
+            </div>
+
+7] app-restaurant-management
+
+      <div> - allready available you just use it.
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-crown mr-2 text-yellow-500"></i>Subscription Plan Filter
+        </label>
+        <select
+          [(ngModel)]="subscriptionPlanFilter"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Plans</option>
+          <option value="Starter">Starter Plan</option>
+          <option value="Pro">Pro Plan</option>
+          <option value="Enterprise">Enterprise Plan</option>
+        </select>
+      </div>
+
+            <div> restaurant status
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <i class="fas fa-filter mr-2 text-blue-500"></i>Status Filter
+        </label>
+        <select
+          [(ngModel)]="statusFilter"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+          <option value="all">All Status</option>
+          <option value="ACTIVE">Active</option>
+          <option value="INACTIVE">Inactive</option>
+          <option value="SUSPENDED">Suspended</option>
+          <option value="PENDING_VERIFICATION">Pending Verification</option>
+        </select>
+      </div>
+
+      <!-- State --> 
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <i class="fas fa-map mr-2 text-yellow-500"></i>State <span class="text-red-500">*</span>
+              </label>
+              <select
+                [(ngModel)]="restaurantForm.state"
+                name="state"
+                (blur)="validateState()"
+                (change)="validateState()"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                <option value="0">Select State</option>
+                <option *ngFor="let state of states" [value]="state.id">{{ state.name }}</option>
+              </select>
+              <div *ngIf="fieldErrors['state']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ fieldErrors['state'] }}
+              </div>
+            </div>
+
+All masters needed list - all done, db and api remains
+
+1] Feature Category
+2] Navigation Menu Type
+3] Feature Type
+4] User Type
+5] Billing Cycle
+6] Setup Fee
+7] Trial Days
+8] Restaurant Status
+9] States
+
+==============================
+Restaurant owner side Master tables required
+
+1] owner-menus-mobile
+   - menu_categories_master
+       categories = [
+        {code : 'starters', label: 'Starters'},
+        {code : 'main-course', label: 'Main Course'},
+        {code : 'salads', label: 'Salads'},
+        {code : 'desserts', label: 'Desserts'},
+        {code : 'beverages', label: 'Beverages'},
+        {code : 'snacks', label: 'Snacks'}
+      ];
+
+    - menu_items_type_master
+      <select
+        [(ngModel)]="menuForm.type"
+        name="type"
+        class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white">
+        <option value="RAW">RAW (Recipe-based)</option>
+        <option value="FINISHED">FINISHED (Direct Stock)</option>
+      </select>
+      new colums required - colors classes, icon
+
+2] owner-reports-mobile 
+   - report_type_master
+       reportTypes: { value: string; label: string; icon: string }[] = [
+        { value: 'SALES_SUMMARY', label: 'Sales Summary', icon: 'fas fa-chart-bar' },
+        { value: 'INVENTORY_STATUS', label: 'Inventory Status', icon: 'fas fa-boxes' },
+        { value: 'TOP_SELLING_ITEMS', label: 'Top Selling Items', icon: 'fas fa-star' },
+        { value: 'CATEGORY_WISE_SALE', label: 'Category Wise Sale', icon: 'fas fa-th-large' },
+        { value: 'TAX_DISCOUNTS', label: 'Tax & Discounts', icon: 'fas fa-receipt' }
+      ];
+
+3] owner-inventory-mobile
+   - inventory_item_categories_master
+       categories = [
+        {code: 'all', label: 'All'},
+        {code: 'raw-materials', label: 'Raw Materials'},
+        {code: 'packaged-goods', label: 'Packaged Goods'},
+        {code: 'beverages', label: 'Beverages'},
+        {code: 'dairy', label: 'Dairy'},
+        {code: 'spices', label: 'Spices'},
+        {code: 'cleaning', label: 'Cleaning Supplies'}
+      ];
+
+  - inventory_item_units_master
+    <option value="">Select Unit</option>
+    <option value="pcs">Pieces</option>
+    <option value="kg">Kilograms</option>
+    <option value="g">Grams</option>
+    <option value="ltr">Liters</option>
+    <option value="ml">Milliliters</option>
+    <option value="box">Box</option>
+    <option value="dozen">Dozen</option>
+    <option value="pack">Pack</option>
+     
+  - inventory_item_types_master
+    <option value="RAW">RAW (Ingredient)</option>
+    <option value="FINISHED">FINISHED (Product)</option>
+
+4] app-waste-management
+
+   - waste_type_master
+     wasteTypeOptions = [
+      { value: 'INGREDIENT', label: 'Ingredient' },
+      { value: 'DISH', label: 'Dish' },
+      { value: 'OTHER', label: 'Other' }
+    ];
+
+   - waste_reason_type_master
+     <option value="SPOILED">Spoiled</option>
+      <option value="DROPPED">Dropped</option>
+      <option value="EXPIRED">Expired</option>
+      <option value="PREPARATION_WASTE">Preparation Waste</option>
+      <option value="OTHER">Other</option>
+
+5] owner-plans-mobile
+
+   - billing_period_months_master
+    <option value="6">6 Months</option>
+    <option value="12">12 Months</option>
+
+6] app-customer-categories
+   - order_type_master
+
+   ==============================================
+
+   2. Roo Code ⭐⭐⭐⭐⭐ (My Recommendation)
+✅ Open source
+✅ VS Code extension
+✅ Fork of Cline with additional agent modes
+✅ Excellent for large Angular projects
+✅ Can generate and run Playwright tests
+
+{
+    "subscription_plan": "Free",
+    "subscription_start_date": "2026-07-18T17:49:17.981Z",
+    "subscription_end_date": "2027-07-18T17:49:17.981Z"
+}
+
+=============================
+
+stock adjustment - new menu
+default/customization - recipe, menu, inventory 
+edit facility to the waiter
+
+=============================================== 
+
+# Dev build (WAR + Tomcat)
+mvn clean package -DskipTests -Pdev
+
+# Prod build (JAR, no Tomcat)
+mvn clean package -DskipTests -Pprod
+
+=============================================== 
+
+# Dev run
+mvn spring-boot:run -Pdev -Dspring-boot.run.profiles=dev
+
+# Prod run
+mvn spring-boot:run -Pprod -Dspring-boot.run.profiles=prod
+
+===============================================  
+
+Testing in local start with different environment and test. 
+Test both on the 

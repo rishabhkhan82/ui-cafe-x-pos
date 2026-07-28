@@ -9,6 +9,7 @@ import { AuthService } from '../../../services/auth.service';
 import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ValidationService } from '../../../services/validation.service';
+import { FeatureCategory, FeatureType } from '../../../interfaces';
 
 @Component({
   selector: 'app-feature-management',
@@ -38,6 +39,9 @@ export class FeatureManagementComponent implements OnInit {
   // Field validation errors
   fieldErrors: { [key: string]: string } = {};
 
+  featureCategories : FeatureCategory[] = [];
+  featureTypes : FeatureType[] = [];
+
   featureForm: ManagedFeature = {
     id: 0,
     name: '',
@@ -66,6 +70,8 @@ export class FeatureManagementComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadFeatures();
+    this.loadCategories();
+    this.loadFeatureTypes();
   }
 
   onCategoryChange(): void {
@@ -125,8 +131,9 @@ export class FeatureManagementComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading features:', error);
-        this.errorMessage = 'Failed to load features. Please try again.';
-        this.notificationService.error('Error', 'Failed to load features');
+        const apiMessage = error.error?.message || 'Failed to load features. Please try again.';
+        this.errorMessage = apiMessage;
+        this.notificationService.error('Error', apiMessage);
         this.loadingService.hide();
       }
     });
@@ -259,7 +266,7 @@ export class FeatureManagementComponent implements OnInit {
 
   // Real-time validation methods
   validateName(): void {
-    const validation = this.validationService.name(this.featureForm.name, 'Feature Name');
+    const validation = this.validationService.required(this.featureForm.name, 'Feature Name');
     if (!validation.isValid) {
       this.fieldErrors['name'] = validation.message!;
     } else {
@@ -272,13 +279,7 @@ export class FeatureManagementComponent implements OnInit {
     if (!validation.isValid) {
       this.fieldErrors['feature_id'] = validation.message!;
     } else {
-      // Additional validation for feature_id format (alphanumeric and underscores only)
-      const featureIdPattern = /^[a-zA-Z0-9_]+$/;
-      if (!featureIdPattern.test(this.featureForm.feature_id)) {
-        this.fieldErrors['feature_id'] = 'Feature ID must contain only letters, numbers and underscores';
-      } else {
-        delete this.fieldErrors['feature_id'];
-      }
+      delete this.fieldErrors['feature_id'];
     }
   }
 
@@ -327,9 +328,20 @@ export class FeatureManagementComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error creating feature:', error);
-        this.notificationService.error('Creation Failed', 'Failed to create feature. Please try again.');
-        this.errorMessage = 'Failed to create feature. Please try again.';
+        const apiMessage = error.error?.message || 'Failed to create feature. Please try again.';
+        this.errorMessage = apiMessage;
         this.loadingService.hide();
+
+        const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+        if (apiFieldErrors) {
+          Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+            if (messages && messages.length > 0) {
+              this.fieldErrors[field] = messages[0];
+            }
+          });
+        }
+
+        this.notificationService.error('Creation Failed', apiMessage);
       }
     });
   }
@@ -363,9 +375,20 @@ export class FeatureManagementComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error updating feature:', error);
-        this.notificationService.error('Update Failed', 'Failed to update feature. Please try again.');
-        this.errorMessage = 'Failed to update feature. Please try again.';
+        const apiMessage = error.error?.message || 'Failed to update feature. Please try again.';
+        this.errorMessage = apiMessage;
         this.loadingService.hide();
+
+        const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+        if (apiFieldErrors) {
+          Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+            if (messages && messages.length > 0) {
+              this.fieldErrors[field] = messages[0];
+            }
+          });
+        }
+
+        this.notificationService.error('Update Failed', apiMessage);
       }
     });
   }
@@ -412,7 +435,8 @@ export class FeatureManagementComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error deleting feature:', error);
-          this.errorMessage = 'Failed to delete feature. Please try again.';
+          const apiMessage = error.error?.message || 'Failed to delete feature. Please try again.';
+          this.errorMessage = apiMessage;
           this.loadingService.hide();
         }
       });
@@ -431,7 +455,8 @@ export class FeatureManagementComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error updating feature status:', error);
-        this.errorMessage = 'Failed to update feature status. Please try again.';
+        const apiMessage = error.error?.message || 'Failed to update feature status. Please try again.';
+        this.errorMessage = apiMessage;
         this.loadingService.hide();
       }
     });
@@ -503,6 +528,8 @@ export class FeatureManagementComponent implements OnInit {
 
     // Reload data
     this.loadFeatures();
+    this.loadCategories();
+    this.loadFeatureTypes();
   }
 
   // Helper for template Math operations
@@ -512,4 +539,49 @@ export class FeatureManagementComponent implements OnInit {
   get hasActiveFilters(): boolean {
     return !!(this.searchTerm?.trim() || this.categoryFilter?.trim() || this.featureTypeFilter !== 'all' || this.statusFilter !== 'all');
   }
+
+  loadCategories(): void {
+    this.loadingService.show();
+    this.errorMessage = '';
+
+    const params: any = {
+      isActive: true
+    };
+
+    this.crudService.getFeatureCategories(params).subscribe({
+      next: (response: any) => {
+        this.featureCategories = response.data;
+        this.loadingService.hide();
+      },
+      error: (error) => {
+        console.error('Error loading restaurants:', error);
+        this.errorMessage = 'Failed to load restaurants. Please try again.';
+        this.notificationService.error('Error', 'Failed to load restaurants');
+        this.loadingService.hide();
+      }
+    });
+  }
+
+  loadFeatureTypes(): void {
+    this.loadingService.show();
+    this.errorMessage = '';
+
+    const params: any = {
+      isActive: true
+    };
+
+    this.crudService.getFeatureTypes(params).subscribe({
+      next: (response: any) => {
+        this.featureTypes = response.data;
+        this.loadingService.hide();
+      },
+      error: (error) => {
+        console.error('Error loading restaurants:', error);
+        this.errorMessage = 'Failed to load restaurants. Please try again.';
+        this.notificationService.error('Error', 'Failed to load restaurants');
+        this.loadingService.hide();
+      }
+    });
+  }
+
 }

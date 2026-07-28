@@ -1,0 +1,74 @@
+<div class="p-6 pb-14" [ngClass]="{'h-[calc(100vh-149px)] overflow-hidden': currentUser?.role === 'kitchen_manager' || currentUser?.role === 'waiter'}">
+
+  <!-- Restaurant Owner Navigation -->
+  <div *ngIf="currentUser?.role === 'restaurant_owner' || currentUser?.role === 'restaurant_manager'" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 h-full">
+    <a routerLink="/owner-orders-mobile" routerLinkActive="ring-2 ring-primary-500" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 hover:shadow-xl hover:scale-105 hover:bg-gray-50 dark:hover:bg-gray-700 animate-slideInLeft animate-delay-100">
+      <div class="text-4xl mb-3">📋</div>
+      <span class="text-lg font-semibold text-gray-900 dark:text-white text-center">Orders</span>
+    </a>
+    <a routerLink="/owner-menus-mobile" routerLinkActive="ring-2 ring-primary-500" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 hover:shadow-xl hover:scale-105 hover:bg-gray-50 dark:hover:bg-gray-700 animate-slideInRight animate-delay-200">
+      <div class="text-4xl mb-3">🍽️</div>
+      <span class="text-lg font-semibold text-gray-900 dark:text-white text-center">Menu</span>
+    </a>
+    <a routerLink="/owner-staff-mobile" routerLinkActive="ring-2 ring-primary-500" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 hover:shadow-xl hover:scale-105 hover:bg-gray-50 dark:hover:bg-gray-700 animate-slideInLeft animate-delay-300">
+      <div class="text-4xl mb-3">👥</div>
+      <span class="text-lg font-semibold text-gray-900 dark:text-white text-center">Staff</span>
+    </a>
+    <a routerLink="/owner-reports-mobile" routerLinkActive="ring-2 ring-primary-500" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 hover:shadow-xl hover:scale-105 hover:bg-gray-50 dark:hover:bg-gray-700 animate-slideInRight animate-delay-400">
+      <div class="text-4xl mb-3">📊</div>
+      <span class="text-lg font-semibold text-gray-900 dark:text-white text-center">Reports</span>
+    </a>
+    <a routerLink="/owner-offers-mobile" routerLinkActive="ring-2 ring-primary-500" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 hover:shadow-xl hover:scale-105 hover:bg-gray-50 dark:hover:bg-gray-700 animate-slideInLeft animate-delay-500">
+      <div class="text-4xl mb-3">🎁</div>
+      <span class="text-lg font-semibold text-gray-900 dark:text-white text-center">Offer</span>
+    </a>
+    <a routerLink="/owner-inventory-mobile" routerLinkActive="ring-2 ring-primary-500" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 hover:shadow-xl hover:scale-105 hover:bg-gray-50 dark:hover:bg-gray-700 animate-slideInRight animate-delay-600">
+      <div class="text-4xl mb-3">➕</div>
+      <span class="text-lg font-semibold text-gray-900 dark:text-white text-center">Inventory</span>
+    </a>
+    <a routerLink="/stock-management" routerLinkActive="ring-2 ring-primary-500" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 hover:shadow-xl hover:scale-105 hover:bg-gray-50 dark:hover:bg-gray-700 animate-slideInRight animate-delay-600">
+      <div class="text-4xl mb-3">📦</div>
+      <span class="text-lg font-semibold text-gray-900 dark:text-white text-center">Stock Management</span>
+    </a>
+    <a routerLink="/recipe-management" routerLinkActive="ring-2 ring-primary-500" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 hover:shadow-xl hover:scale-105 hover:bg-gray-50 dark:hover:bg-gray-700 animate-slideInLeft animate-delay-700">
+      <div class="text-4xl mb-3">🥘</div>
+      <span class="text-lg font-semibold text-gray-900 dark:text-white text-center">Recipes</span>
+    </a>
+    <a routerLink="/production-batch" routerLinkActive="ring-2 ring-primary-500" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 hover:shadow-xl hover:scale-105 hover:bg-gray-50 dark:hover:bg-gray-700 animate-slideInRight animate-delay-800">
+      <div class="text-4xl mb-3">🧑‍🍳</div>
+      <span class="text-lg font-semibold text-gray-900 dark:text-white text-center">Production</span>
+    </a>
+    <a routerLink="/waste-management" routerLinkActive="ring-2 ring-primary-500" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 hover:shadow-xl hover:scale-105 hover:bg-gray-50 dark:hover:bg-gray-700 animate-slideInLeft animate-delay-900">
+      <div class="text-4xl mb-3">🗑️</div>
+      <span class="text-lg font-semibold text-gray-900 dark:text-white text-center">Waste</span>
+    </a>
+    <a routerLink="/inventory-stock-log" routerLinkActive="ring-2 ring-primary-500" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 hover:shadow-xl hover:scale-105 hover:bg-gray-50 dark:hover:bg-gray-700 animate-slideInRight animate-delay-1000">
+      <div class="text-4xl mb-3">📋</div>
+      <span class="text-lg font-semibold text-gray-900 dark:text-white text-center">Stock Log</span>
+    </a>
+  </div>
+
+  <!-- Kitchen Manager Navigation -->
+  <div *ngIf="currentUser?.role === 'kitchen_manager'" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" style="height: 32%;">
+    <a routerLink="/kitchen-orders" routerLinkActive="ring-2 ring-primary-500" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 hover:shadow-xl hover:scale-105 hover:bg-gray-50 dark:hover:bg-gray-700 animate-slideInLeft animate-delay-100">
+      <div class="text-4xl mb-3">📋</div>
+      <span class="text-lg font-semibold text-gray-900 dark:text-white text-center">Orders</span>
+    </a>
+    <a routerLink="/kitchen-profile-mobile" routerLinkActive="ring-2 ring-primary-500" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 hover:shadow-xl hover:scale-105 hover:bg-gray-50 dark:hover:bg-gray-700 animate-slideInRight animate-delay-200">
+      <div class="text-4xl mb-3">👤</div>
+      <span class="text-lg font-semibold text-gray-900 dark:text-white text-center">Profile</span>
+    </a>
+  </div>
+
+  <!-- Waiter Navigation -->
+  <div *ngIf="currentUser?.role === 'waiter'" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" style="height: 32%;">
+    <a routerLink="/waiter-orders" routerLinkActive="ring-2 ring-primary-500" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 hover:shadow-xl hover:scale-105 hover:bg-gray-50 dark:hover:bg-gray-700 animate-slideInLeft animate-delay-100">
+      <div class="text-4xl mb-3">📋</div>
+      <span class="text-lg font-semibold text-gray-900 dark:text-white text-center">Orders</span>
+    </a>
+    <a routerLink="/waiter-profile-mobile" routerLinkActive="ring-2 ring-primary-500" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 hover:shadow-xl hover:scale-105 hover:bg-gray-50 dark:hover:bg-gray-700 animate-slideInRight animate-delay-200">
+      <div class="text-4xl mb-3">👤</div>
+      <span class="text-lg font-semibold text-gray-900 dark:text-white text-center">Profile</span>
+    </a>
+  </div>
+</div>

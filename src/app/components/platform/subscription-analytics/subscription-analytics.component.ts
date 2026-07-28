@@ -3,17 +3,17 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Chart, registerables } from 'chart.js';
 import { SubscriptionMetrics, PlanAnalytics, RevenueData, MockDataService } from '../../../services/mock-data.service';
-
-Chart.register(...registerables);
+import { UnderConstructionComponent } from '../../common/under-construction/under-construction.component';
 
 @Component({
   selector: 'app-subscription-analytics',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, UnderConstructionComponent],
   templateUrl: './subscription-analytics.component.html',
   styleUrl: './subscription-analytics.component.css'
 })
 export class SubscriptionAnalyticsComponent implements OnInit, AfterViewInit {
+  isUnderConstruction = true;
   metrics: SubscriptionMetrics = {
     totalRevenue: 154195,
     monthlyRecurringRevenue: 44555,

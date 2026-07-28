@@ -1,0 +1,134 @@
+<!-- Section Header -->
+<div class="text-center mb-8">
+  <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Choose Your Plan</h2>
+  <p class="text-slate-600 dark:text-slate-400">Select the perfect plan for your restaurant</p>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="loading" class="text-center py-12">
+  <p class="text-gray-500 dark:text-gray-400">Loading plans...</p>
+</div>
+
+<!-- Error State -->
+<div *ngIf="error && !loading" class="text-center py-12">
+  <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
+  <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Error Loading Plans</h3>
+  <p class="text-gray-500 dark:text-gray-400 mb-4">{{ error }}</p>
+  <button (click)="loadPlans()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+    <i class="fas fa-refresh mr-2"></i>Retry
+  </button>
+</div>
+
+<!-- Plan Cards -->
+<div *ngIf="!loading && !error" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  <div *ngFor="let plan of plans$ | async; let i = index"
+       class="plan-card bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+       [ngClass]="getHoverBorder(i)">
+
+    <!-- Plan Header -->
+    <div class="relative overflow-hidden">
+      <div [class]="'px-6 py-8 relative ' + getTheme(i)">
+        <!-- Decorative Elements -->
+        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+        <div class="absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full -ml-8 -mb-8"></div>
+
+        <!-- Plan Badges -->
+        <div *ngIf="plan.is_popular" class="absolute top-4 right-4 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+          Most Popular
+        </div>
+        <div *ngIf="plan.is_coming_soon" class="absolute top-4 right-4 bg-gray-800 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+          Coming Soon
+        </div>
+
+        <!-- Plan Info -->
+        <div class="relative z-10">
+          <!-- First Line: Icon, Plan Name, and Pricing -->
+          <div class="flex items-center justify-between my-4">
+            <div class="flex items-center space-x-4 flex-1 min-w-0">
+              <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm flex-shrink-0">
+                <i class="fas fa-crown text-white text-lg"></i>
+              </div>
+              <h3 class="text-xl font-bold text-white leading-tight flex-1 min-w-0">{{ plan.display_name || plan.name }}</h3>
+            </div>
+             <div class="text-right flex-shrink-0 ml-4">
+              <div class="flex items-baseline space-x-2 justify-end">
+                <div *ngIf="plan.offer_discount_percentage > 0" class="text-sm text-white/70 line-through">₹{{ plan.price }}</div>
+                <div class="text-3xl font-bold text-white leading-none">₹{{ getDiscountedPrice(plan.price, plan.offer_discount_percentage) }}</div>
+              </div>
+              <div class="text-white/80 text-sm leading-tight">per {{ plan.billing_cycle }}</div>
+              <div *ngIf="plan.offer_name" class="mt-2 inline-flex items-center bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full text-xs font-bold shadow">
+                {{ plan.offer_name }} | {{ plan.offer_discount_percentage }}% OFF
+              </div>
+            </div>
+          </div>
+
+          <!-- Second Line: Description Only -->
+          <div class="mb-4">
+            <p class="text-white/80 text-sm leading-relaxed">{{ plan.description }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Plan Content -->
+    <div class="px-6 py-8">
+      <!-- Features Section -->
+      <div class="mb-8">
+        <h4 class="text-base font-bold text-slate-900 dark:text-white mb-5 flex items-center">
+          <i class="fas fa-sparkles text-violet-500 mr-2"></i>
+          What's Included
+        </h4>
+
+        <div class="grid grid-cols-1 gap-3" *ngIf="getPlanFeatures(plan.id).length > 0; else noFeatures">
+          <div *ngFor="let feature of getPlanFeatures(plan.id).slice(0, isFeaturesExpanded(plan.id) ? getPlanFeatures(plan.id).length : 4)"
+               class="flex items-center space-x-3 py-2">
+            <div class="w-5 h-5 bg-emerald-100 dark:bg-emerald-900 rounded-full flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-check text-emerald-600 dark:text-emerald-400 text-xs"></i>
+            </div>
+            <span class="text-sm text-slate-700 dark:text-slate-300">{{ feature.name }}</span>
+          </div>
+
+          <div *ngIf="getPlanFeatures(plan.id).length > 4" class="text-center mt-2">
+            <button
+              (click)="toggleFeaturesExpansion(plan.id)"
+              class="text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 font-medium transition-colors duration-200">
+              <i class="fas {{ isFeaturesExpanded(plan.id) ? 'fa-chevron-up' : 'fa-chevron-down' }} mr-1"></i>
+              {{ isFeaturesExpanded(plan.id) ? 'Show less' : 'Show ' + (getPlanFeatures(plan.id).length - 4) + ' more features' }}
+            </button>
+          </div>
+        </div>
+
+        <ng-template #noFeatures>
+          <div class="text-center py-6">
+            <div class="w-12 h-12 bg-slate-100 dark:bg-slate-700 rounded-xl flex items-center justify-center mx-auto mb-3">
+              <i class="fas fa-info-circle text-slate-400 text-lg"></i>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400">No features configured</p>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Action Button -->
+      <a *ngIf="!plan.is_coming_soon" href="tel:9511721668" class="mt-6 inline-flex w-full justify-center items-center px-4 py-3 rounded-xl bg-primary-500 text-white font-semibold hover:bg-primary-600 transition-colors">
+        <i class="fas fa-phone mr-2"></i>Buy Now
+      </a>
+      <a *ngIf="plan.is_coming_soon" href="tel:9511721668" class="mt-6 inline-flex w-full justify-center items-center px-4 py-3 rounded-xl bg-primary-500 text-white font-semibold hover:bg-primary-600 transition-colors">
+        <i class="fas fa-user-plus mr-2"></i> {{ plan.name != 'Enterprise' ? 'Pre Register Now' : 'Let\'s Talk' }}
+      </a>
+      <!-- <a *ngIf="!plan.is_coming_soon && plan.name == 'Enterprise'" href="tel:9511721668" class="mt-6 inline-flex w-full justify-center items-center px-4 py-3 rounded-xl bg-primary-500 text-white font-semibold hover:bg-primary-600 transition-colors">
+        <i class="fas fa-phone mr-2"></i>Let's Talk
+      </a> -->
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="(plans$ | async)?.length === 0 && !loading && !error" class="text-center py-16">
+    <div class="w-20 h-20 bg-slate-100 dark:bg-slate-700 rounded-3xl flex items-center justify-center mx-auto mb-6">
+      <i class="fas fa-crown text-slate-400 text-3xl"></i>
+    </div>
+    <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-3">No Plans Available</h3>
+    <p class="text-slate-500 dark:text-slate-400 leading-relaxed">
+      Please contact support to set up subscription plans for your restaurant.
+    </p>
+  </div>
+</div>

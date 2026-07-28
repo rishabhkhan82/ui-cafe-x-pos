@@ -4,15 +4,17 @@ import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { APIKey, APIEndpoint, APIMetrics } from '../../../services/mock-data.service';
 import { MockDataService } from '../../../services/mock-data.service';
+import { UnderConstructionComponent } from '../../common/under-construction/under-construction.component';
 
 @Component({
   selector: 'app-api-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, UnderConstructionComponent],
   templateUrl: './api-management.component.html',
   styleUrl: './api-management.component.css'
 })
 export class ApiManagementComponent implements OnInit, OnDestroy {
+  isUnderConstruction = true;
   apiKeys: APIKey[] = [];
   apiEndpoints: APIEndpoint[] = [];
   metrics: APIMetrics | null = null;

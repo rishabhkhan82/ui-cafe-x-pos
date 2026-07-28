@@ -88,10 +88,10 @@ export class ErrorInterceptor implements HttpInterceptor {
       case 403:
         return 'authorization';
       case 400:
+      case 422:
         return this.isValidationError(error) ? 'validation' : 'business';
       case 404:
       case 409:
-      case 422:
         return 'business';
       case 500:
       case 502:
@@ -99,7 +99,7 @@ export class ErrorInterceptor implements HttpInterceptor {
       case 504:
         return 'system';
       default:
-        return 'system';
+        return this.isValidationError(error) ? 'validation' : 'system';
     }
   }
 

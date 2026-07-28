@@ -1,15 +1,13 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
-import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import {
-  MockDataService,
-  ResOwnerDashboardData,
-  User,
-  OwnerDashboardConfig,
-  SelectOption
-} from '../../../services/mock-data.service';
+import { AuthService } from '../../../services/auth.service';
+import { RealtimeService } from '../../../services/realtime.service';
+import { CrudService } from '../../../services/crud.service';
+import { environment } from '../../../environments/environment';
+import type { User } from '../../../services/mock-data.service';
 
 @Component({
   selector: 'app-owner-dashboard',
@@ -20,113 +18,114 @@ import {
 })
 export class OwnerDashboardComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription = new Subscription();
-  private mockDataService = inject(MockDataService);
+  private authService = inject(AuthService);
+  private realtimeService = inject(RealtimeService);
+  private crudService = inject(CrudService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
-  // Component state
   currentUser: User | null = null;
   currentDate = new Date();
   currentYear = new Date().getFullYear();
   subscriptionDaysLeft = 28;
   notificationCount = 3;
 
-  // Configuration data from service
-  ownerDashboardConfig: OwnerDashboardConfig | null = null;
-  periodFilterOptions: SelectOption[] = [];
+  ownerDashboardConfig: any | null = null;
 
-  // Dashboard data
-  dashboardData: ResOwnerDashboardData | null = null;
+  dashboardData: any | null = null;
+  isLoading = true;
+  lastUpdated: Date | null = null;
 
-  // Filters
-  selectedDate: string = new Date().toISOString().split('T')[0];
-  selectedPeriod: string = 'today';
+  private currentRestaurantId: string | null = null;
 
   ngOnInit(): void {
     this.loadConfigurationData();
     this.initializeData();
     this.loadDashboardData();
+    this.setupRealtimeSubscriptions();
   }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
   }
 
-  loadConfigurationData(): void {
-    // Load owner dashboard configuration
+  private loadConfigurationData(): void {
     this.subscriptions.add(
-      this.mockDataService.getOwnerDashboardConfig().subscribe(config => {
-        this.ownerDashboardConfig = config;
-        if (config) {
-          this.periodFilterOptions = config.periodFilterOptions;
+      this.crudService.getData(`restaurant/config/owner-dashboard`).subscribe({
+        next: (response: any) => {
+          this.ownerDashboardConfig = response;
+        },
+        error: (err) => {
+          console.error('Failed to load owner dashboard config', err);
         }
-      })
-    );
-
-    // Load owner dashboard data
-    this.subscriptions.add(
-      this.mockDataService.getOwnerDashboardData().subscribe(data => {
-        this.dashboardData = data;
       })
     );
   }
 
   private initializeData(): void {
-    this.currentUser = this.mockDataService.getUserByRole('restaurant_owner') || null;
+    this.currentUser = this.authService.getCurrentUser();
+
+    const user = this.authService.getCurrentUser();
+
+    // First priority: get from user data
+    let restaurantId: string | null = user?.restaurantId || user?.restaurant_id || null;
+    
+    // Second priority: get from query param if user data is null/undefined
+    if (!restaurantId) {
+      const queryParamRestaurantId = this.route.snapshot.queryParamMap.get('restaurantId');
+      restaurantId = queryParamRestaurantId || null;
+    }
+    
+    this.currentRestaurantId = restaurantId || null;
   }
 
   loadDashboardData(): void {
-    // In a real app, this would fetch dashboard data based on selected filters
-    // For now, we use the mock data
-    console.log('Loading dashboard data for:', this.selectedDate, this.selectedPeriod);
+    if (!this.currentRestaurantId) {
+      this.isLoading = false;
+      return;
+    }
+
+    this.isLoading = true;
+    const restaurantId = this.currentRestaurantId;
+
+    this.subscriptions.add(
+      this.crudService.getData(`restaurant/${restaurantId}/owner-dashboard`).subscribe({
+        next: (response: any) => {
+          this.dashboardData = response;
+          this.isLoading = false;
+          this.lastUpdated = new Date();
+        },
+        error: (err) => {
+          console.error('Failed to load owner dashboard', err);
+          this.isLoading = false;
+        }
+      })
+    );
   }
 
-  toggleTheme(): void {
-    const html = document.documentElement;
-    html.classList.toggle('dark');
-    const newTheme = html.classList.contains('dark') ? 'dark' : 'light';
-    sessionStorage.setItem('theme', newTheme);
+  private setupRealtimeSubscriptions(): void {
+    const sub = this.realtimeService.ownerDashboard$.subscribe(data => {
+      if (data) {
+        this.dashboardData = data;
+        this.lastUpdated = new Date();
+      }
+    });
+    this.subscriptions.add(sub);
   }
 
   refreshDashboard(): void {
-    // Refresh dashboard data
-    this.initializeData();
+    this.loadDashboardData();
   }
 
-  // Navigation methods
   navigateTo(section: string): void {
-    const route = this.mockDataService.getNavigationRoute(section);
+    const route = this.ownerDashboardConfig?.navigationRoutes?.find((r: any) => r.key === section)?.route;
     if (route) {
       this.router.navigate([route]);
     }
   }
 
-  viewAllItems(): void {
-    this.router.navigate(['/restaurant/menu']);
-  }
-
   viewAllOrders(): void {
     this.router.navigate(['/restaurant/orders']);
-  }
-
-  // Dashboard methods
-  generateReport(): void {
-    alert('Generating comprehensive business report...');
-  }
-
-  viewDetailedAnalytics(): void {
-    alert('Opening detailed analytics view...');
-  }
-
-  printReport(): void {
-    alert('Printing business report...');
-  }
-
-  exportToPDF(): void {
-    alert('Exporting business report to PDF...');
-  }
-
-  emailReport(): void {
-    alert('Sending business report via email...');
   }
 
   viewOrderDetails(orderId: string): void {
@@ -137,65 +136,37 @@ export class OwnerDashboardComponent implements OnInit, OnDestroy {
     alert('Opening staff management details...');
   }
 
-  viewInventoryDetails(): void {
-    alert('Opening inventory management details...');
+  manageInventory(): void {
+    this.router.navigate(['/owner-inventory-mobile']);
   }
 
   manageMenu(): void {
-    this.router.navigate(['/restaurant/menu']);
+    this.router.navigate(['/owner-menus-mobile']);
   }
 
   manageStaff(): void {
-    this.router.navigate(['/restaurant/staff']);
+    this.router.navigate(['/owner-staff-mobile']);
   }
 
   viewAnalytics(): void {
-    this.router.navigate(['/restaurant/analytics']);
-  }
-
-  manageSettings(): void {
-    this.router.navigate(['/restaurant/settings']);
-  }
-
-  // Helper methods
-  getSummaryBadgeClass(status: string): string {
-    return this.mockDataService.getBadgeClass('summary', status.toLowerCase());
-  }
-
-  getPerformanceClass(performance: number): string {
-    return this.mockDataService.getBadgeClass('performance', performance.toString());
-  }
-
-  getTransactionStatusClass(status: string): string {
-    return this.mockDataService.getBadgeClass('transactionStatus', status.toLowerCase());
-  }
-
-  getStaffPerformanceClass(rating: number): string {
-    return this.mockDataService.getBadgeClass('staffPerformance', rating.toString());
+    this.router.navigate(['/owner-reports-mobile']);
   }
 
   getOrderStatusClass(status: string): string {
-    return this.mockDataService.getBadgeClass('orderStatus', status.toLowerCase());
-  }
-
-  getTrendIcon(trend: string): string {
-    return this.mockDataService.getTrendIconClass(trend);
+    if (!this.ownerDashboardConfig?.badgeClasses?.orderStatus) return '';
+    const found = this.ownerDashboardConfig.badgeClasses.orderStatus.find((c: any) => c.value === status.toLowerCase());
+    return found ? found.className : '';
   }
 
   getStaffStatusClass(status: string): string {
-    return this.mockDataService.getBadgeClass('staffStatus', status.toLowerCase());
+    if (!this.ownerDashboardConfig?.badgeClasses?.staffStatus) return '';
+    const found = this.ownerDashboardConfig.badgeClasses.staffStatus.find((c: any) => c.value === status.toLowerCase());
+    return found ? found.className : '';
   }
 
-  // Helper methods
-  getPaymentBadgeClass(payment: string): string {
-    return this.mockDataService.getBadgeClass('paymentStatus', payment.toLowerCase());
-  }
-
-  getStatusBadgeClass(status: string): string {
-    return this.mockDataService.getBadgeClass('status', status.toLowerCase());
-  }
-
-  getMetricBadgeClass(status: string): string {
-    return this.mockDataService.getBadgeClass('metric', status.toLowerCase());
+  getTrendIcon(trend: string): string {
+    if (!this.ownerDashboardConfig?.trendIcons) return 'fas fa-minus text-gray-500';
+    const found = this.ownerDashboardConfig.trendIcons.find((t: any) => t.trend === trend);
+    return found ? found.iconClass : 'fas fa-minus text-gray-500';
   }
 }

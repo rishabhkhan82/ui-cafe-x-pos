@@ -138,12 +138,12 @@ This creates a proper hierarchy: Plan sets the maximum features available, roles
 
 ====================================== Rought Notes ============================================
 
-Plan Managment - plantable (crud)
+Plan Managment - plantable (crud) - Done
 
 Feature access control - 
 planFeatureAccesss (updating the features plan and role wise ) - planfeaturetable, roleFeatureAccess - rolefeature table. 
 
-feature management - featuremanagementtable (crud). 
+feature management - featuremanagementtable (crud). - Done (entries pending)
 
 just tell me one thing is this understanding correct regarding the tables. 
 
@@ -1169,3 +1169,7 @@ Plan Features -
               </div>
             </div>
           </div>
+
+--------------------------------------------------------------
+
+togglePlanFeature

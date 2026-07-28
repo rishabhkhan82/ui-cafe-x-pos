@@ -2,15 +2,17 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SecurityPolicy, SecurityLog, SecurityMetrics, MockDataService } from '../../../services/mock-data.service';
+import { UnderConstructionComponent } from '../../common/under-construction/under-construction.component';
 
 @Component({
   selector: 'app-security-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, UnderConstructionComponent],
   templateUrl: './security-settings.component.html',
   styleUrl: './security-settings.component.css'
 })
 export class SecuritySettingsComponent implements OnInit {
+  isUnderConstruction = true;
   policies: SecurityPolicy[] = [];
   securityLogs: SecurityLog[] = [];
   metrics: SecurityMetrics = {

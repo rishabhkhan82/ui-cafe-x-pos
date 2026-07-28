@@ -1,15 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { CrudService } from '../../../services/crud.service';
 import { LoadingService } from '../../../services/loading.service';
 import { MockDataService, User, Restaurant } from '../../../services/mock-data.service';
 import { AuthService } from '../../../services/auth.service';
 import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
-import { FileUploadService } from '../../../services/file-upload.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ValidationService } from '../../../services/validation.service';
+import { environment } from '../../../environments/environment';
+import { UserType } from '../../../interfaces';
 
 @Component({
   selector: 'app-user-management',
@@ -29,6 +30,7 @@ export class UserManagementComponent implements OnInit {
   userTypeFilter = 'all';
   showAddForm = false;
   restaurants: Restaurant[] = [];
+  userRoles : any = [];
   errorMessage = '';
   selectedFile: File | null = null;
 
@@ -43,10 +45,7 @@ export class UserManagementComponent implements OnInit {
   fieldErrors: { [key: string]: string } = {};
 
   // User Types
-  userTypes : any = [
-    {name: 'Admin', value: 'admin'},
-    {name: 'Customer', value: 'customer'}
-  ];
+  userTypes : UserType[] = [];
 
   userForm: User = {
     id: '',
@@ -78,19 +77,25 @@ export class UserManagementComponent implements OnInit {
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private crudService: CrudService,
     private loadingService: LoadingService,
     private mockDataService: MockDataService,
     private authService: AuthService,
     private confirmationService: ConfirmationDialogService,
-    private fileUploadService: FileUploadService,
     private notificationService: NotificationService,
     private validationService: ValidationService
   ) {}
 
   ngOnInit(): void {
+    const restaurantIdFromUrl = this.route.snapshot.queryParamMap.get('restaurantId');
+    if (restaurantIdFromUrl) {
+      this.restaurantFilter = restaurantIdFromUrl;
+    }
     this.loadUsers();
     this.loadRestaurants();
+    this.loadUserRoles();
+    this.loadUserTypes();
   }
 
   loadUsers(): void {
@@ -154,13 +159,35 @@ export class UserManagementComponent implements OnInit {
       updated_at: apiUser.updated_at ? new Date(apiUser.updated_at) : undefined,
       is_active: apiUser.is_active || 'Y',
       last_login: apiUser.last_login ? new Date(apiUser.last_login) : undefined,
-      created_by: apiUser.created_by?.toString() || ''
-    }));
+      created_by: apiUser.created_by?.toString() || '',
+      // Computed display values for performance
+      restaurantName: this.getRestaurantName(apiUser.restaurant_id || ''),
+      roleDisplayName: this.getRoleDisplayName(apiUser.role || 'customer'),
+      formattedMemberSince: apiUser.member_since ? this.formatDate(new Date(apiUser.member_since)) : '',
+      avatarUrl: this.getFullImageUrl(apiUser.avatar || '')
+    } as any));
   }
 
   loadRestaurants(): void {
-    this.mockDataService.getRestaurants().subscribe(restaurants => {
-      this.restaurants = restaurants;
+    this.loadingService.show();
+    this.errorMessage = '';
+
+    const params: any = {
+      page: 1,
+      size: 9999
+    };
+
+    this.crudService.getRestaurants(params).subscribe({
+      next: (response: any) => {
+        this.restaurants = response.data;
+        this.loadingService.hide();
+      },
+      error: (error) => {
+        console.error('Error loading restaurants:', error);
+        this.errorMessage = 'Failed to load restaurants. Please try again.';
+        this.notificationService.error('Error', 'Failed to load restaurants');
+        this.loadingService.hide();
+      }
     });
   }
 
@@ -235,7 +262,7 @@ export class UserManagementComponent implements OnInit {
         role: 'customer',
         user_type: 'admin',
         avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face',
-        restaurant_id: '',
+      restaurant_id: '',
         member_since: undefined,
         created_at: undefined,
         updated_at: undefined,
@@ -408,53 +435,61 @@ export class UserManagementComponent implements OnInit {
     this.loadingService.show();
 
     try {
-      let avatarUrl = this.userForm.avatar;
+      let avatarBase64: string | undefined;
 
-      // Upload avatar if a file was selected
       if (this.selectedFile) {
-        const uploadResult = await this.fileUploadService.uploadFile(this.selectedFile, 'profile').toPromise();
-        avatarUrl = uploadResult!.fileUrl;
-        this.selectedFile = null; // Clear the selected file after upload
+        avatarBase64 = await this.fileToBase64(this.selectedFile);
+        this.selectedFile = null;
       }
 
       const currentTime = new Date();
       const userRequest = {
         username: this.userForm.username,
-        password: this.userForm.password || undefined, // Only send password if provided
+        password: this.userForm.password || undefined,
         name: this.userForm.name,
         email: this.userForm.email,
         phone: this.userForm.phone,
         role: this.userForm.role,
         user_type: this.userForm.user_type,
-        avatar: avatarUrl,
-        restaurantId: this.userForm.restaurant_id,
+        avatar: avatarBase64 || this.userForm.avatar,
+        restaurant_id: this.userForm.restaurant_id,
         is_active: this.userForm.is_active,
         member_since: currentTime,
         created_at: currentTime,
         updated_at: undefined,
         last_login: undefined,
-        created_by: this.authService.getCurrentUser()?.id // Assuming platform owner ID
+        created_by: this.authService.getCurrentUser()?.id
       };
 
-      // Create new user
       this.crudService.createUser(userRequest).subscribe({
         next: (response) => {
           console.log('User created successfully:', response);
           this.notificationService.success('User Created', 'The user has been successfully created.');
           this.resetForm();
-          this.loadUsers(); // Reload users
+          this.loadUsers();
         },
         error: (error) => {
           console.error('Error creating user:', error);
-          this.notificationService.error('Creation Failed', 'Failed to create user. Please try again.');
-          this.errorMessage = 'Failed to create user. Please try again.';
+          const apiMessage = error.error?.message || 'Failed to create user. Please try again.';
+          this.errorMessage = apiMessage;
           this.loadingService.hide();
+
+          const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+          if (apiFieldErrors) {
+            Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+              if (messages && messages.length > 0) {
+                this.fieldErrors[field] = messages[0];
+              }
+            });
+          }
+
+          this.notificationService.error('Creation Failed', apiMessage);
         }
       });
     } catch (error) {
-      console.error('Error uploading avatar:', error);
-      this.notificationService.error('Upload Failed', 'Failed to upload avatar. Please try again.');
-      this.errorMessage = 'Failed to upload avatar. Please try again.';
+      console.error('Error processing avatar:', error);
+      this.notificationService.error('Processing Failed', 'Failed to process avatar. Please try again.');
+      this.errorMessage = 'Failed to process avatar. Please try again.';
       this.loadingService.hide();
     }
   }
@@ -463,19 +498,24 @@ export class UserManagementComponent implements OnInit {
     this.loadingService.show();
 
     try {
-      let avatarUrl = this.userForm.avatar;
+      let avatarBase64: string | undefined;
+
+      if (this.selectedFile) {
+        avatarBase64 = await this.fileToBase64(this.selectedFile);
+        this.selectedFile = null;
+      }
 
       const currentTime = new Date();
       const userRequest = {
         username: this.userForm.username,
-        password: this.userForm.password || undefined, // Only send password if provided
+        password: this.userForm.password || undefined,
         name: this.userForm.name,
         email: this.userForm.email,
         phone: this.userForm.phone,
         role: this.userForm.role,
         user_type: this.userForm.user_type,
-        avatar: avatarUrl,
-        restaurantId: this.userForm.restaurant_id,
+        avatar: avatarBase64 || this.userForm.avatar,
+        restaurant_id: this.userForm.restaurant_id,
         is_active: this.userForm.is_active,
         member_since: this.editingUser!.member_since,
         created_at: this.editingUser!.created_at,
@@ -484,27 +524,36 @@ export class UserManagementComponent implements OnInit {
         created_by: this.editingUser!.created_by
       };
 
-      console.log('Updating user, userRequest.user_type:', userRequest.user_type);
-
-      // Update existing user
       this.crudService.updateUser(this.editingUser!.id, userRequest).subscribe({
         next: (response) => {
           console.log('User updated successfully:', response);
           this.notificationService.success('User Updated', 'The user has been successfully updated.');
           this.resetForm();
-          this.loadUsers(); // Reload users
+          this.loadUsers();
           this.loadingService.hide();
         },
         error: (error) => {
           console.error('Error updating user:', error);
-          this.notificationService.error('Update Failed', 'Failed to update user. Please try again.');
-          this.errorMessage = 'Failed to update user. Please try again.';
+          const apiMessage = error.error?.message || 'Failed to update user. Please try again.';
+          this.errorMessage = apiMessage;
           this.loadingService.hide();
+
+          const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+          if (apiFieldErrors) {
+            Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+              if (messages && messages.length > 0) {
+                this.fieldErrors[field] = messages[0];
+              }
+            });
+          }
+
+          this.notificationService.error('Update Failed', apiMessage);
         }
       });
     } catch (error) {
-      console.error('Error uploading avatar:', error);
-      this.errorMessage = 'Failed to upload avatar. Please try again.';
+      console.error('Error processing avatar:', error);
+      this.notificationService.error('Processing Failed', 'Failed to process avatar. Please try again.');
+      this.errorMessage = 'Failed to process avatar. Please try again.';
       this.loadingService.hide();
     }
   }
@@ -537,7 +586,7 @@ export class UserManagementComponent implements OnInit {
     const file = event.target.files[0];
     if (file) {
       // Validate file
-      const validation = this.fileUploadService.validateFileForCategory(file, 'profile');
+      const validation = this.validateFile(file, 'avatar');
       if (!validation.isValid) {
         this.notificationService.error('Invalid File', validation.message || 'Invalid file selected');
         this.selectedFile = null;
@@ -573,7 +622,7 @@ export class UserManagementComponent implements OnInit {
       phone: user.phone,
       role: newRole,
       avatar: user.avatar,
-      restaurantId: user.restaurant_id,
+      restaurant_id: user.restaurant_id,
       is_active: user.is_active,
       member_since: user.member_since,
       created_at: user.created_at,
@@ -688,6 +737,8 @@ export class UserManagementComponent implements OnInit {
     // Reload data
     this.loadUsers();
     this.loadRestaurants();
+    this.loadUserRoles();
+    this.loadUserTypes();
   }
 
   // Helper for template Math operations
@@ -698,6 +749,109 @@ export class UserManagementComponent implements OnInit {
     return !!(this.searchTerm?.trim() ||
               this.restaurantFilter !== 'all' ||
               this.roleFilter !== 'all' ||
-              this.statusFilter !== 'all' || this.userTypeFilter !== 'all'); 
+              this.statusFilter !== 'all' || this.userTypeFilter !== 'all');
   }
+
+  // Helper method to convert file to base64
+  private fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        resolve(reader.result as string);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Helper method to get full image URL
+  getFullImageUrl(imagePath: string | undefined): string {
+    if (!imagePath) return '';
+    if (imagePath.startsWith('data:')) {
+      // It's a base64 data URL, return as is
+      return imagePath;
+    }
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      // It's already a full URL, return as is
+      return imagePath;
+    }
+    // It's a relative path, concat with baseImgUrl
+    return environment.api.baseUrl + imagePath;
+  }
+
+  getRestaurantName(id: string): string {
+    const restaurant = this.restaurants.find(r => r.id.toString() === id);
+    return restaurant ? restaurant.name : id;
+  }
+
+  // Helper method to validate file
+  private validateFile(file: File, category: string): { isValid: boolean; message?: string } {
+    const maxFileSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+    // Check file size
+    if (file.size > maxFileSize) {
+      return {
+        isValid: false,
+        message: `File size exceeds maximum allowed size of 5MB`
+      };
+    }
+
+    // Check file type
+    if (!allowedTypes.includes(file.type)) {
+      return {
+        isValid: false,
+        message: `File type ${file.type} is not allowed. Allowed types: JPEG, PNG, WebP`
+      };
+    }
+
+    return { isValid: true };
+  }
+
+  loadUserRoles(): void {
+    this.loadingService.show();
+    this.errorMessage = '';
+
+    const params: any = {
+      page: 1,
+      size: 9999,
+      isActive: true
+    };
+
+    this.crudService.getUserRoles(params).subscribe({
+      next: (response: any) => {
+        this.userRoles = response.data;
+        this.loadingService.hide();
+      },
+      error: (error) => {
+        console.error('Error loading restaurants:', error);
+        this.errorMessage = 'Failed to load restaurants. Please try again.';
+        this.notificationService.error('Error', 'Failed to load restaurants');
+        this.loadingService.hide();
+      }
+    });
+  }
+  
+  loadUserTypes(): void {
+    this.loadingService.show();
+    this.errorMessage = '';
+
+    const params: any = {
+      isActive : true
+    };
+
+    this.crudService.getUserTypes(params).subscribe({
+      next: (response: any) => {
+        this.userTypes = response.data;
+        this.loadingService.hide();
+      },
+      error: (error) => {
+        console.error('Error loading restaurants:', error);
+        this.errorMessage = 'Failed to load restaurants. Please try again.';
+        this.notificationService.error('Error', 'Failed to load restaurants');
+        this.loadingService.hide();
+      }
+    });
+  }
+
 }

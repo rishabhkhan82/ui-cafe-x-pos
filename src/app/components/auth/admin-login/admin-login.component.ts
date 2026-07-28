@@ -6,6 +6,7 @@ import { AuthService } from '../../../services/auth.service';
 import { LoadingService } from '../../../services/loading.service';
 import { LoginRequest } from '../../../services/mock-data.service';
 import { Subscription } from 'rxjs';
+import { APP_VERSION } from '../../../version';
 
 @Component({
   selector: 'app-admin-login',
@@ -19,6 +20,8 @@ export class AdminLoginComponent implements OnInit, OnDestroy {
   password = '';
   errorMessage = '';
   isLoading = false;
+  showPassword = false;
+  appVersion = APP_VERSION;
   private loadingSubscription: Subscription = new Subscription();
 
   constructor(
@@ -44,8 +47,17 @@ export class AdminLoginComponent implements OnInit, OnDestroy {
     this.loadingSubscription.unsubscribe();
   }
 
-  navigateToCustomerLogin() {
-    this.router.navigate(['/customer/login']);
+  navigateToHome() {
+    const baseHref = document.querySelector('base')?.getAttribute('href');
+    window.open(baseHref + '', '_blank');
+  }
+
+  goToForgotPassword() {
+    this.router.navigate(['/forgot-password']);
+  }
+
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
   }
 
   onSubmit() {
@@ -65,15 +77,14 @@ export class AdminLoginComponent implements OnInit, OnDestroy {
 
     this.authService.loginApi(credentials).subscribe({
       next: (response) => {
-        // Store user data and token
-        this.authService.setCurrentUser(response.user);
-        sessionStorage.setItem('currentUser', JSON.stringify(response.user));
         if (response.accessToken) {
           sessionStorage.setItem('accessToken', response.accessToken);
         }
         if (response.refreshToken) {
           sessionStorage.setItem('refreshToken', response.refreshToken);
         }
+        sessionStorage.setItem('currentUser', JSON.stringify(response.user));
+        this.authService.setCurrentUser(response.user);
 
         // Redirect based on user role
         const user = response.user;
@@ -82,19 +93,22 @@ export class AdminLoginComponent implements OnInit, OnDestroy {
             this.router.navigate(['/platform-dashboard']);
             break;
           case 'restaurant_owner':
-            this.router.navigate(['/restaurant-owner-dashboard']);
+            this.router.navigate(['/restaurant-navigation-mobile']); // /restaurant-dashboard
             break;
           case 'restaurant_manager':
-            this.router.navigate(['/restaurant-manager-dashboard']);
+            this.router.navigate(['/restaurant-navigation-mobile']); // /restaurant-dashboard
             break;
           case 'kitchen_manager':
-            this.router.navigate(['/kitchen-manager-display']);
+            this.router.navigate(['/kitchen-navigation-mobile']); // kitchen-navigation mobile
             break;
           case 'cashier':
             this.router.navigate(['/cashier-dashboard']);
             break;
           case 'waiter':
-            this.router.navigate(['/waiter-dashboard']);
+            this.router.navigate(['/waiter-navigation-mobile']);
+            break;
+          case 'customer':
+            this.router.navigate(['customer/dashboard']);
             break;
           default:
             this.errorMessage = 'Invalid user role for admin access';

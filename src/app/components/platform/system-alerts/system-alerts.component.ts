@@ -2,15 +2,17 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MockDataService, Notification, SystemAlert } from '../../../services/mock-data.service';
+import { UnderConstructionComponent } from '../../common/under-construction/under-construction.component';
 
 @Component({
   selector: 'app-system-alerts',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, UnderConstructionComponent],
   templateUrl: './system-alerts.component.html',
   styleUrl: './system-alerts.component.css'
 })
 export class SystemAlertsComponent implements OnInit {
+  isUnderConstruction = true;
   alerts: SystemAlert[] = [];
   filteredAlerts: SystemAlert[] = [];
   selectedAlert: SystemAlert | null = null;

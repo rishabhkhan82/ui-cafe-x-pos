@@ -8,9 +8,10 @@
 export const environment = {
   production: false,
   name: 'local',
+  version: '1.0.1-dev',
   app: {
     name: 'Cafe-X POS',
-    version: '1.0.0',
+    version: '1.0.1',
     environment: 'development',
     debug: true,
     logLevel: 'debug'

@@ -9,7 +9,7 @@ import { environment } from '../environments/environment';
   providedIn: 'root'
 })
 export class AuthService {
-  private currentUserSubject = new BehaviorSubject<User | null>(null);
+  public currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
   private currentUser: User | null = null;
@@ -36,6 +36,10 @@ export class AuthService {
   // API-based login method
   loginApi(credentials: LoginRequest): Observable<LoginResponse> {
     return this.crudService.postData('auth/login', credentials);
+  }
+
+  forgotPassword(identifier: string): Observable<any> {
+    return this.crudService.postData('auth/forgot-password', { identifier });
   }
 
   logout(): void {
@@ -67,6 +71,10 @@ export class AuthService {
     this.currentUser = user;
     sessionStorage.setItem('currentUser', JSON.stringify(user));
     this.currentUserSubject.next(user);
+  }
+
+  setGuestAccessToken(accessToken: string): void {
+    sessionStorage.setItem('accessToken', accessToken);
   }
 
   isLoggedIn(): boolean {

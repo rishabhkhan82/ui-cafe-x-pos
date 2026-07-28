@@ -1,13 +1,14 @@
 <div class="relative inline-block navigation-dropdown">
   <!-- Dropdown Trigger -->
-  <button class="inline-flex items-center px-6 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 hover:from-purple-700 hover:via-pink-700 hover:to-red-700 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-out focus:outline-none focus:ring-4 focus:ring-purple-300 dark:focus:ring-purple-800" type="button" (click)="toggleDropdown()">
-    <i class="fas fa-compass mr-2 animate-pulse"></i>
-    Navigation
+  <button class="inline-flex items-center px-3.5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 hover:from-purple-700 hover:via-pink-700 hover:to-red-700 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-out focus:outline-none focus:ring-4 focus:ring-purple-300 dark:focus:ring-purple-800 md:px-6 py-2" type="button" (click)="toggleDropdown()">
+    <i class="fas fa-compass mr-2 animate-pulse hidden md:flex"></i>
+    <span class="md:hidden">Menu</span>
+    <span class="hidden md:flex">Navigation</span>
     <i class="fas fa-chevron-down ml-2 text-xs transition-transform duration-300 ease-in-out" [class.rotate-180]="isDropdownOpen"></i>
   </button>
 
   <!-- Dropdown Menu -->
-  <div [ngClass]="{'dropdown-menu': true, 'dropdown-open': isDropdownOpen}" class="absolute right-0 z-50 mt-3 w-fit min-w-80 max-w-96 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-xl shadow-2xl border border-white/20 dark:border-gray-700/50 h-[300px] overflow-y-auto">
+   <div [ngClass]="{'dropdown-menu': true, 'dropdown-open': isDropdownOpen}" class="fixed left-4 top-[70px] z-50 w-fit min-w-80 max-w-96 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-xl shadow-2xl border border-white/20 dark:border-gray-700/50 h-[300px] overflow-y-auto md:absolute md:left-0 md:right-0 md:top-auto md:mt-3">
     <!-- Dashboard as first item -->
 
     <!-- <div class="p-2">
@@ -52,7 +53,7 @@
       </ng-container>
       <ng-template #singleMenu>
         <!-- Single menu item -->
-        <button *ngIf="menu.path" [ngClass]="{'bg-gradient-to-r from-red-100 to-pink-100 dark:from-red-900/30 dark:to-pink-900/30 shadow-md ring-2 ring-red-200 dark:ring-red-800': menu.is_active}" (click)="navigateToMenu(menu.path)" class="w-full text-left flex items-center px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 dark:hover:from-green-900/20 dark:hover:to-blue-900/20 rounded-xl transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-lg group" [style.padding-left.px]="level * 16 + 12">
+        <button *ngIf="menu.path" [title]="menu.path" [ngClass]="{'bg-gradient-to-r from-red-100 to-pink-100 dark:from-red-900/30 dark:to-pink-900/30 shadow-md ring-2 ring-red-200 dark:ring-red-800': menu.is_active}" (click)="navigateToMenu(menu.path)" class="w-full text-left flex items-center px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 dark:hover:from-green-900/20 dark:hover:to-blue-900/20 rounded-xl transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-lg group" [style.padding-left.px]="level * 16 + 12">
           <i [class]="menu.icon + ' mr-3 w-5 text-center text-green-600 dark:text-green-400 group-hover:animate-spin'"></i>
           {{ menu.name }}
         </button>

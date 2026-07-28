@@ -790,25 +790,27 @@ export const AuditLogsTable = {
 // ============================================
 // SaaS subscription plans and billing management
 export const SubscriptionPlansTable = {
-  id: "string", // Primary key
-  name: "string", // Internal plan name
-  displayName: "string", // Display name for customers
-  description: "string", // Plan description
-  price: "number", // Monthly/Yearly price
-  currency: "string", // Currency code (INR, USD, etc.)
-  billingCycle: "string", // 'monthly' | 'yearly'
-  maxRestaurants: "number", // Maximum restaurants allowed (-1 for unlimited)
-  maxUsers: "number", // Maximum users allowed (-1 for unlimited)
-  features: "string[]", // Array of feature IDs included
-  isActive: "boolean", // Plan availability status
-  isPopular: "boolean", // Mark as popular plan
-  subscriberCount: "number", // Current subscriber count
-  revenue: "number", // Total revenue generated
-  trialDays: "number", // Free trial period in days
-  setupFee: "number", // One-time setup fee
-  createdBy: "string", // User ID who created the plan
+  id: "string",
+  name: "string",
+  displayName: "string",
+  description: "string",
+  price: "number",
+  currency: "string",
+  billingCycle: "string",
+  maxRestaurants: "number",
+  maxUsers: "number",
+  features: "string[]",
+  isActive: "boolean",
+  isPopular: "boolean",
+  subscriberCount: "number",
+  revenue: "number",
+  trialDays: "number",
+  setupFee: "number",
+  createdBy: "string",
   createdAt: "Date",
-  updatedAt: "Date"
+  updatedAt: "Date",
+  offerName: "string",
+  offerDiscountPercentage: "number"
 };
 
 // 34. Plan Features Table (Available features for plans)

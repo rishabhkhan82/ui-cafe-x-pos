@@ -1,4 +1,6 @@
-<div class="p-6">
+<app-under-construction *ngIf="isUnderConstruction"></app-under-construction>
+
+<div *ngIf="!isUnderConstruction" class="p-6">
   <div class="mb-6">
     <div class="flex justify-between items-center">
       <div>

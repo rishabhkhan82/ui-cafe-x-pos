@@ -1,0 +1,485 @@
+<!-- Main Container -->
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <!-- Premium Fixed Header -->
+  <div class="fixed top-0 md:top-[73px] left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 dark:shadow-lg" style="min-height: 73px;">
+    <div class="px-4 py-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4 flex-1">
+          <button
+            (click)="router.navigate(['/restaurant-navigation-mobile'])"
+            class="p-2 rounded-xl bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-md hover:shadow-lg border border-red-200 dark:border-gray-600">
+            <i class="fas fa-arrow-left text-red-600 dark:text-red-400 text-lg"></i>
+          </button>
+
+          <!-- Header Content (Shown when not searching) -->
+          <div [class.hidden]="showSearchBar" class="flex items-center space-x-3 flex-1 md:!flex">
+            <div class="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg">
+              <i class="fas fa-users text-white text-sm"></i>
+            </div>
+            <div>
+              <h1 class="text-xl font-bold text-gray-900 dark:text-white">
+                Staff
+              </h1>
+              <p class="text-xs text-gray-600 dark:text-gray-400">Manage Your Staff</p>
+            </div>
+          </div>
+
+          <!-- Simple Search Bar (Shown when searching) -->
+          <div *ngIf="showSearchBar" class="flex-1 ml-4 animate-fadeInSlide md:max-w-[200px]">
+            <div class="relative">
+              <input
+                type="text"
+                [(ngModel)]="searchInput"
+                (ngModelChange)="onSearchInputChange($event)"
+                placeholder="Search by name"
+                class="w-full px-4 py-2 pl-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-[2rem] shadow-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                autofocus
+              >
+              <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"></i>
+            </div>
+          </div>
+        </div>
+        <div class="flex space-x-2 ml-4">
+          <button
+            *ngIf="!showSearchBar"
+            (click)="toggleSearchBar()"
+            class="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
+            <i class="fas fa-search"></i>
+          </button>
+          <button
+            *ngIf="showSearchBar"
+            (click)="toggleSearchBar()"
+            class="p-2 bg-red-100 dark:bg-red-900/20 hover:bg-red-200 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
+            <i class="fas fa-times"></i>
+          </button>
+          <button
+            (click)="loadUsers()"
+            class="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
+            <i class="fas fa-refresh"></i>
+          </button>          
+          <button
+            (click)="showUserForm()"
+            class="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-sm">
+            <i class="fas fa-plus mr-2"></i>Add
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="px-6 space-y-6 pt-[25px] pb-[105px] md:pt-[100px] md:pb-[90px]">
+
+    <!-- Results Header -->
+    <div *ngIf="users.length > 0" class="flex items-center justify-between">
+      <div class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+        <i class="fas fa-users mr-2"></i>
+        {{ totalElements }} staff found
+      </div>
+      <div class="text-xs text-gray-500 dark:text-gray-400">
+        Page {{ currentPage }} of {{ totalPages }}
+      </div>
+    </div>
+
+    <!-- Users Grid -->
+    <div class="grid gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div
+        *ngFor="let user of users"
+        class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer group"
+        (click)="selectUser(user)">
+        <div class="p-4 bg-gradient-to-br from-red-50 to-white dark:from-red-900/20 dark:to-gray-800 border-b border-gray-100 dark:border-gray-700">
+          <div class="flex flex-col items-center text-center">
+            <div class="relative">
+              <img
+                [src]="getFullImageUrl(user.avatar) || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face'"
+                [alt]="user.name"
+                class="w-10 h-10 rounded-full object-cover ring-2 ring-white dark:ring-gray-700 shadow-md group-hover:ring-red-200 dark:group-hover:ring-red-800 transition-all duration-300">
+              <div
+                [class]="user.is_active === 'Y' ? 'w-2.5 h-2.5 rounded-full bg-green-500' : 'w-2.5 h-2.5 rounded-full bg-gray-400'"
+                class="absolute -bottom-0.5 -right-0.5 ring-1 ring-white dark:ring-gray-700"></div>
+            </div>
+            <div class="mt-2">
+              <h3 class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ user.name }}</h3>
+              <span
+                [class]="getRoleColor(user.role)"
+                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1">
+                {{ getRoleDisplayName(user.role) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-center">
+          <div class="flex space-x-2">
+            <button
+              (click)="selectUser(user); $event.stopPropagation()"
+              class="px-3 py-2 rounded-md bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors text-xs font-medium">
+              <i class="fas fa-eye"></i>  
+            </button>
+            <button
+              (click)="showUserForm(user); $event.stopPropagation()"
+              class="px-3 py-2 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-xs font-medium">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button
+              (click)="deleteUser(user); $event.stopPropagation()"
+              class="px-3 py-2 rounded-md bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-xs font-medium">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="users.length === 0 && ((this.loadingService.loading$ | async) === false)" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div class="px-6 py-8 bg-gradient-to-r from-red-50 to-red-50 dark:from-red-900/20 dark:to-red-900/10 border-b border-gray-100 dark:border-gray-700">
+        <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-red-500 to-red-600 mx-auto mb-4 flex items-center justify-center">
+          <i class="fas fa-users text-white text-3xl"></i>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-900 dark:text-white text-center">No Staff found</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-300 text-center mt-2" *ngIf="!hasActiveFilters">
+          Get started by creating your first staff account.
+        </p>
+        <p class="text-sm text-gray-600 dark:text-gray-300 text-center mt-2" *ngIf="hasActiveFilters">
+          Try adjusting your search filters or clear them to see all staff.
+        </p>
+      </div>
+      <div class="p-6 text-center">
+        <button
+          *ngIf="!hasActiveFilters"
+          (click)="showUserForm()"
+          class="px-6 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl">
+          <i class="fas fa-plus mr-2"></i>
+          Add First User
+        </button>
+        <button
+          *ngIf="hasActiveFilters"
+          (click)="clearFilters()"
+          class="px-6 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600">
+          <i class="fas fa-times mr-2"></i>
+          Clear Filters
+        </button>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="users.length > 0 && !showAddForm" class="fixed bottom-20 md:bottom-[65px] left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-10 py-2 px-4">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+          <div class="text-sm text-gray-700 dark:text-gray-300">
+            {{ (currentPage - 1) * itemsPerPage + 1 }}-{{ Math.min(currentPage * itemsPerPage, totalElements) }} of {{ totalElements }}
+          </div>
+          <div class="flex items-center space-x-1">
+            <span class="text-xs text-gray-500 dark:text-gray-400">Show:</span>
+            <select
+              [(ngModel)]="itemsPerPage"
+              (change)="onItemsPerPageChange($event)"
+              class="px-2 py-1 text-xs w-14 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-gray-900 dark:text-gray-300">
+              <option *ngFor="let option of itemsPerPageOptions" [value]="option">{{ option }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-1">
+          <button
+            (click)="changePage(1)"
+            [disabled]="currentPage === 1"
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
+            <i class="fas fa-angle-double-left text-xs"></i>
+          </button>
+          <button
+            (click)="changePage(currentPage - 1)"
+            [disabled]="currentPage === 1"
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
+            <i class="fas fa-chevron-left text-xs"></i>
+          </button>
+          <button
+            *ngFor="let page of pageNumbers"
+            (click)="changePage(page)"
+            [class]="page === currentPage ? 'w-7 h-7 rounded bg-red-500 text-white flex items-center justify-center text-xs' : 'w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center text-xs text-gray-900 dark:text-gray-300'">
+            {{ page }}
+          </button>
+          <button
+            (click)="changePage(currentPage + 1)"
+            [disabled]="currentPage === totalPages"
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
+            <i class="fas fa-chevron-right text-xs"></i>
+          </button>
+          <button
+            (click)="changePage(totalPages)"
+            [disabled]="currentPage === totalPages"
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
+            <i class="fas fa-angle-double-right text-xs"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit User Modal -->
+  <div *ngIf="showAddForm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] md:py-10">
+    <div class="h-full flex flex-col bg-white dark:bg-gray-800 z-50 w-full md:w-[672px] md:rounded-2xl md:shadow-lg overflow-hidden">
+      <!-- Modal Header -->
+      <div class="px-6 py-4 bg-white/95 dark:bg-gray-800 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 flex items-center justify-between z-[100]">
+        <div class="flex items-center space-x-4">
+          <button (click)="cancelAdd()" class="w-8 h-8 rounded-lg hover:bg-red-100 dark:hover:bg-gray-700 flex items-center justify-center">
+            <i class="fas fa-arrow-left text-red-600 dark:text-red-400"></i>
+          </button>
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ editingUser ? 'Edit User' : 'Add New User' }}</h3>
+        </div>
+        <button
+          (click)="onSubmitForm()"
+          class="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-sm">
+          <i class="fas fa-save mr-2"></i>{{ editingUser ? 'Update' : 'Save' }}
+        </button>
+      </div>
+      <!-- Modal Body -->
+      <div class="flex-1 p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-red-500 scrollbar-track-gray-100 dark:scrollbar-track-gray-700">
+        <form class="space-y-4">
+          <!-- Avatar Upload Section -->
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-camera mr-2 text-purple-500"></i>Profile Avatar</label>
+            <div class="flex items-center space-x-4">
+              <div class="relative">
+                <img
+                  [src]="getFullImageUrl(userForm.avatar) || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face'"
+                  [alt]="userForm.name || 'Avatar'"
+                  class="w-16 h-16 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600">
+                <div class="absolute inset-0 bg-black bg-opacity-40 rounded-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer">
+                  <i class="fas fa-camera text-white text-lg"></i>
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  (change)="onFileSelected($event)"
+                  class="absolute inset-0 w-full h-full opacity-0 cursor-pointer rounded-full">
+              </div>
+              <div class="flex-1">
+                <p class="text-xs text-gray-500 dark:text-gray-400">Click the avatar to upload a new image</p>
+                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Supported formats: JPEG, PNG, WebP (Max 5MB)</p>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-signature mr-2 text-red-500"></i>Full Name <span class="text-red-500">*</span></label>
+            <input
+              type="text"
+              [(ngModel)]="userForm.name"
+              name="name"
+              (blur)="validateName()"
+              (input)="validateName()"
+              class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
+              placeholder="Enter full name">
+            <div *ngIf="fieldErrors['name']" class="mt-1 text-xs text-red-500">{{ fieldErrors['name'] }}</div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-at mr-2 text-indigo-500"></i>Username <span class="text-red-500">*</span></label>
+              <input
+                type="text"
+                [(ngModel)]="userForm.username"
+                name="username"
+                (blur)="validateUsername()"
+                (input)="validateUsername()"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
+                placeholder="Enter username">
+              <div *ngIf="fieldErrors['username']" class="mt-1 text-xs text-red-500">{{ fieldErrors['username'] }}</div>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-lock mr-2 text-yellow-500"></i>Password <span *ngIf="!editingUser" class="text-red-500">*</span></label>
+              <input
+                type="password"
+                [(ngModel)]="userForm.password"
+                name="password"
+                [disabled]="!!editingUser"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white disabled:bg-gray-100 disabled:dark:bg-gray-800"
+                [placeholder]="editingUser ? '••••••••' : 'Enter password'">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-envelope mr-2 text-blue-500"></i>Email</label>
+              <input
+                type="email"
+                [(ngModel)]="userForm.email"
+                name="email"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
+                placeholder="user@example.com">
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-phone mr-2 text-green-500"></i>Phone</label>
+              <input
+                type="tel"
+                [(ngModel)]="userForm.phone"
+                name="phone"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
+                placeholder="+91 98765 43210">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-shield-alt mr-2 text-purple-500"></i>Role <span class="text-red-500">*</span></label>
+              <select
+                [(ngModel)]="userForm.role"
+                name="role"
+                (change)="validateRole()"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white">
+                <option value="customer">Customer</option>
+                <option value="waiter">Waiter</option>
+                <option value="cashier">Cashier</option>
+                <option value="kitchen_manager">Kitchen Manager</option>
+                <option value="restaurant_manager">Restaurant Manager</option>
+                <option value="restaurant_owner">Restaurant Owner</option>
+                <option value="platform_owner">Platform Owner</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-utensils mr-2 text-orange-500"></i>Restaurant <span *ngIf="userForm.role !== 'platform_owner'" class="text-red-500">*</span></label>
+              <select
+                [(ngModel)]="userForm.restaurant_id"
+                name="restaurant_id"
+                [disabled]="userForm.role === 'platform_owner'"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white disabled:bg-gray-100">
+                <option value="">Select Restaurant</option>
+                <option *ngFor="let restaurant of restaurants" [value]="restaurant.id">{{ restaurant.name }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-id-badge mr-2 text-cyan-500"></i>User Type <span class="text-red-500">*</span></label>
+              <select
+                [(ngModel)]="userForm.user_type"
+                name="user_type"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white">
+                <option value="">Select User Type</option>
+                <option *ngFor="let userType of userTypes" [value]="userType.value">{{ userType.name }}</option>
+              </select>
+            </div>
+            <div class="flex items-center">
+              <label class="flex items-center cursor-pointer">
+                <input type="checkbox" [(ngModel)]="userFormActive" name="is_active" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-500 relative"></div>
+                <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">{{ userFormActive ? 'Active' : 'Inactive' }}</span>
+              </label>
+            </div>
+          </div>
+        </form>
+      </div>
+      <!-- Modal Footer -->
+      <div class="px-6 py-4 bg-white/95 dark:bg-gray-800 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 flex items-center justify-between z-[100]">
+        <div>
+          <button (click)="cancelAdd()" class="flex items-center justify-center border border-gray-300 dark:border-gray-600 px-4 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium">
+              <i class="fas fa-arrow-left text-red-600 dark:text-red-400 mr-2"></i> Go Back
+          </button>
+        </div>
+        <div>
+          <button
+            type="button"
+            (click)="cancelAdd()"
+            class="px-4 py-2 mr-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            (click)="onSubmitForm()"
+            class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium">
+            {{ editingUser ? 'Update' : 'Save' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Details Modal -->
+  <div *ngIf="selectedUser" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden">
+      <div class="px-6 py-4 bg-gradient-to-r from-red-50 to-red-50 dark:from-red-900/20 dark:to-red-900/10 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white">User Details</h3>
+        <button (click)="selectedUser = null" class="w-8 h-8 rounded-lg hover:bg-red-100 dark:hover:bg-gray-700 flex items-center justify-center">
+          <i class="fas fa-times text-red-600 dark:text-red-400"></i>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto max-h-[60vh]">
+        <div class="flex items-center space-x-4 mb-6">
+          <img [src]="getFullImageUrl(selectedUser!.avatar) || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face'" [alt]="selectedUser!.name" class="w-16 h-16 rounded-full object-cover ring-4 ring-red-100 dark:ring-red-900/30">
+          <div>
+            <h4 class="text-lg font-semibold text-gray-900 dark:text-white">{{ selectedUser!.name }}</h4>
+            <p class="text-sm text-gray-600 dark:text-gray-400">{{ selectedUser!.email }}</p>
+            <span [class]="getRoleColor(selectedUser!.role)" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-1">
+              {{ getRoleDisplayName(selectedUser!.role) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div *ngIf="selectedUser!.phone" class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
+                <i class="fas fa-phone text-green-600 dark:text-green-400"></i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Phone</p>
+                <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedUser!.phone }}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-3" *ngIf="selectedUser!.restaurant_id">
+              <div class="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center">
+                <i class="fas fa-utensils text-orange-600 dark:text-orange-400"></i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Restaurant</p>
+                <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedUser!.restaurant_id }}</p>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="selectedUser!.member_since" class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center">
+              <i class="fas fa-calendar text-purple-600 dark:text-purple-400"></i>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Member Since</p>
+              <p class="text-sm text-gray-700 dark:text-gray-300">{{ formatDate(selectedUser!.member_since!) }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">Role</label>
+          <select
+            disabled
+            [value]="selectedUser!.role"
+            (change)="updateUserRole(selectedUser!, $any($event.target).value)"
+            class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 text-gray-900 dark:text-white">
+            <option value="customer">Customer</option>
+            <option value="waiter">Waiter</option>
+            <option value="cashier">Cashier</option>
+            <option value="kitchen_manager">Kitchen Manager</option>
+            <option value="restaurant_manager">Restaurant Manager</option>
+            <option value="restaurant_owner">Restaurant Owner</option>
+            <option value="platform_owner">Platform Owner</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex space-x-3">
+        <button
+          (click)="showUserForm(selectedUser!)"
+          class="flex-1 px-4 py-3 rounded-xl font-medium bg-red-500 text-white hover:bg-red-600 transition-colors">
+          <i class="fas fa-edit mr-2"></i>Edit
+        </button>
+        <button
+          (click)="deleteUser(selectedUser!)"
+          class="flex-1 px-4 py-3 rounded-xl font-medium bg-red-500 text-white hover:bg-red-600 transition-colors">
+          <i class="fas fa-trash mr-2"></i>Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

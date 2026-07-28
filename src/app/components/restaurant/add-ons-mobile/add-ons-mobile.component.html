@@ -1,0 +1,80 @@
+<!-- Main Container -->
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <!-- Premium Fixed Header -->
+  <div class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 dark:shadow-lg" style="min-height: 73px;">
+    <div class="px-4 py-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4 flex-1">
+          <button
+            (click)="goBack()"
+            class="p-2 rounded-xl bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-md hover:shadow-lg border border-red-200 dark:border-gray-600">
+            <i class="fas fa-arrow-left text-red-600 dark:text-red-400 text-lg"></i>
+          </button>
+
+          <!-- Header Content -->
+          <div class="flex items-center space-x-3 flex-1">
+            <div class="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg">
+              <i class="fas fa-puzzle-piece text-white text-sm"></i>
+            </div>
+            <div>
+              <h1 class="text-xl font-bold text-gray-900 dark:text-white">
+                Add-ons
+              </h1>
+              <p class="text-xs text-gray-600 dark:text-gray-400">Coming Soon</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="px-6 py-8 pt-20 space-y-6 pb-24">
+
+  <!-- Coming Soon Section -->
+  <div class="flex flex-col items-center justify-center min-h-[60vh] text-center">
+    <!-- Icon -->
+    <div class="w-24 h-24 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center mb-6 shadow-2xl">
+      <i class="fas fa-puzzle-piece text-white text-3xl"></i>
+    </div>
+
+    <!-- Title -->
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+      Coming Soon
+    </h1>
+
+    <!-- Description -->
+    <p class="text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-md">
+      We're working hard to bring you amazing add-ons and extensions for your POS system. Stay tuned for updates!
+    </p>
+
+    <!-- Features Teaser -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700 max-w-md w-full">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        What to Expect
+      </h3>
+      <div class="space-y-3 text-left">
+        <div class="flex items-center">
+          <i class="fas fa-check-circle text-green-500 mr-3"></i>
+          <span class="text-gray-700 dark:text-gray-300">Token System</span>
+        </div>
+        <div class="flex items-center">
+          <i class="fas fa-check-circle text-green-500 mr-3"></i>
+          <span class="text-gray-700 dark:text-gray-300">Zomato & Swiggy Integration</span>
+        </div>
+        <div class="flex items-center">
+          <i class="fas fa-check-circle text-green-500 mr-3"></i>
+          <span class="text-gray-700 dark:text-gray-300">Recipe Management</span>
+        </div>
+        <div class="flex items-center">
+          <i class="fas fa-check-circle text-green-500 mr-3"></i>
+          <span class="text-gray-700 dark:text-gray-300">Advanced Reporting</span>
+        </div>
+        <div class="flex items-center">
+          <i class="fas fa-check-circle text-green-500 mr-3"></i>
+          <span class="text-gray-700 dark:text-gray-300">And Much More... 🙂</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</div>

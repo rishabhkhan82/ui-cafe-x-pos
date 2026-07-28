@@ -1,14 +1,27 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, AfterViewInit, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, RouterOutlet, Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { RealtimeService } from './services/realtime.service';
 import { AuthService } from './services/auth.service';
+import { GuestAuthService } from './services/guest-auth.service';
+import { SystemConfigService } from './services/system-config.service';
 import { NavigationMenuComponent } from './components/shared/navigation-menu/navigation-menu.component';
 import { LoadingService } from './services/loading.service';
 import { ToastNotifierComponent } from './components/common/toast-notifier/app-toast-notifier';
 import { ConfirmationDialogComponent } from './components/common/confirmation-dialog/confirmation-dialog.component';
-
+import { CommonUserNotificationsComponent } from './components/common/common-user-notifications/common-user-notifications.component';
+import { NavigationMenu } from './services/mock-data.service';
+import { environment } from './environments/environment';
+import { APP_VERSION } from './version';
+import { CartService } from './services/cart.service';
+import { PendingordersService } from './services/pendingorders.service';
+import { PendingBillsService } from './services/pending-bills.service';
+import { NotificationService } from './services/notification.service';
+import { NotificationRoutingService } from './services/notification-routing.service';
+import { GetRestAndPlatformUsersService } from './services/get-rest-and-platform-users.service';
+import { SubscriptionService } from './services/subscription.service';
+import { RestaurantDataService } from './services/restaurant-data.service';
 interface User {
   id: string;
   name: string;
@@ -21,27 +34,51 @@ interface User {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterModule, RouterOutlet, NavigationMenuComponent, ToastNotifierComponent, ConfirmationDialogComponent],
+  imports: [CommonModule, RouterModule, RouterOutlet, NavigationMenuComponent, ToastNotifierComponent, ConfirmationDialogComponent, CommonUserNotificationsComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
   title = 'cafe-x-pos';
+  restaurantName = '';
 
-  currentUser: User | null = null;
+  currentUser: User | any = "";
   notificationPermission: NotificationPermission = 'default';
   showNotificationPrompt = false;
   isLoggedIn: boolean = false;
   isLoading = false;
+  isProfileMenuOpen: boolean = false;
+  pendingOrdersCount: number = 0;
 
-  // Header properties
   currentDateTime: string = '';
   lastBackupTime: string = '2 hours ago';
+  cartItemCount = 0;
+  currentPlan: string | null = null;
+  appVersion = APP_VERSION;
 
   private realtimeService = inject(RealtimeService);
   private authService = inject(AuthService);
+  private guestAuthService = inject(GuestAuthService);
   private router = inject(Router);
   private loadingService = inject(LoadingService);
+  private cartService = inject(CartService);
+  private pendingOrdersService = inject(PendingordersService);
+  private pendingBillsService = inject(PendingBillsService);
+  private systemConfigService = inject(SystemConfigService);
+  private notificationService = inject(NotificationService);
+  private routingService = inject(NotificationRoutingService);
+  private getRestAndPlatformUsersService = inject(GetRestAndPlatformUsersService);
+  protected subscriptionService = inject(SubscriptionService);
+  private restaurantDataService = inject(RestaurantDataService);
+
+  @ViewChild(NavigationMenuComponent) navMenu!: NavigationMenuComponent;
+
+  constructor() {
+    // Keep local copy in sync
+    this.subscriptionService.planName$.subscribe(name => {
+      this.currentPlan = name;
+    });
+  }
 
   ngOnInit() {
     // Load theme preference
@@ -62,14 +99,52 @@ export class AppComponent implements OnInit {
         this.currentUser = {
           id: user.id,
           name: user.name,
-          email: '', // AuthService doesn't have email, so we'll leave it empty
+          email: user.email || '',
           role: user.role as any,
-          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face' // Default avatar
+          restaurantId: user.restaurantId || user.restaurant_id || '',
+          avatar: user.avatar ? (user.avatar.startsWith('data:') || user.avatar.startsWith('http://') || user.avatar.startsWith('https://') ? user.avatar : environment.api.baseUrl + '/' + user.avatar.replace(/^\//, '')) : user.avatar
         };
         this.isLoggedIn = true;
+        console.log('[AppComponent] Current user set:', this.currentUser);
+        const restaurantId = user.role === 'customer'
+          ? sessionStorage.getItem('current_customer_restaurant_id') || ''
+          : (user.role === 'platform_owner' ? null : (this.currentUser.restaurantId || ''));
+        this.realtimeService.connect(user.id, String(restaurantId), user.role);
+
+        if (
+          restaurantId &&
+          user.role !== 'platform_owner'
+        ) {
+          this.restaurantDataService.loadRestaurant().subscribe({
+            error: (err) =>
+              console.error('[AppComponent] Failed to load restaurant on login', err),
+          });
+        }
+        // Subscribe to pending orders and bills if the user is a customer
+        if (this.isLoggedIn && this.currentUser?.role === 'customer') {
+          this.pendingOrdersService.pendingCount$.subscribe(count => {
+            this.pendingOrdersCount = count;
+          });
+          this.pendingOrdersService.refreshCount().subscribe();
+          this.pendingBillsService.refreshPendingBills().subscribe();
+        }
+        // Get notification recipients for the restaurant
+        this.loadNotificationRecipients(restaurantId ?? '');
+        this.subscriptionService.loadActiveSubscription().subscribe();
       } else {
         this.currentUser = null;
         this.isLoggedIn = false;
+        this.realtimeService.disconnect();
+        this.restaurantName = '';
+      }
+    });
+
+    this.restaurantDataService.restaurant$.subscribe((restaurant) => {
+      console.log('[AppComponent] Current restaurant data:', restaurant);
+      if (restaurant && restaurant.name) {
+        this.restaurantName = restaurant.name;
+      } else {
+        this.restaurantName = '';
       }
     });
 
@@ -77,31 +152,17 @@ export class AppComponent implements OnInit {
     this.updateDateTime();
     setInterval(() => this.updateDateTime(), 1000);
 
-    // Initialize authentication state on app start
-    this.initializeAuthState();
 
     // Subscribe to global loading state
     this.loadingService.loading$.subscribe(
       loading => this.isLoading = loading
     );
-  }
 
-  private initializeAuthState(): void {
-    // Check if user is already logged in from sessionStorage
-    const currentUser = this.authService.getCurrentUser();
-    if (currentUser) {
-      this.isLoggedIn = true;
-      this.currentUser = {
-        id: currentUser.id,
-        name: currentUser.name,
-        email: '',
-        role: currentUser.role as any,
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face'
-      };
-    } else {
-      this.isLoggedIn = false;
-      this.currentUser = null;
-    }
+    this.cartService.cart$.subscribe(() => {
+      this.cartItemCount = this.cartService.cartItemCount;
+    });
+
+    this.systemConfigService.getSystemSettings().subscribe();
   }
 
   private updateDateTime(): void {
@@ -133,29 +194,71 @@ export class AppComponent implements OnInit {
   }
 
   private setupRealtimeSubscriptions(): void {
-    // Listen for new orders
     this.realtimeService.newOrder$.subscribe(order => {
-      if (order) {
-        console.log('New order received:', order);
-        // Could show in-app notification or update UI
+      console.log('New order received:', order);
+      console.log('Current user:', this.currentUser);
+      if (order && this.currentUser) {
+        this.processOrderNotification(order);
       }
     });
 
-    // Listen for order updates
     this.realtimeService.orderUpdate$.subscribe(order => {
-      if (order) {
-        console.log('Order updated:', order);
-        // Could show in-app notification or update UI
+      console.log('Order updated:', order);
+      console.log('Current user:', this.currentUser);
+      if (order && this.currentUser) {
+        this.processOrderNotification(order);
       }
     });
 
-    // Listen for new notifications
-    this.realtimeService.newNotification$.subscribe(notification => {
-      if (notification) {
-        console.log('New notification:', notification);
-        // Could show in-app notification or update UI
+    this.realtimeService.customerOrderUpdate$.subscribe(order => {
+      if (order && this.currentUser) {
+        this.processOrderNotification(order);
       }
     });
+
+
+    this.realtimeService.newNotification$.subscribe(notification => {
+      if (notification && this.currentUser) {
+        if (notification.type === 'order') return;
+        const mappedType = this.mapNotificationType(notification.type || 'info');
+        this.notificationService.show({
+          type: mappedType,
+          title: notification.title,
+          message: notification.message,
+          icon: notification.icon || 'fas fa-bell',
+          duration: 5000
+        });
+      }
+    });
+  }
+
+  private processOrderNotification(order: any): void {
+    if (!this.currentUser) {
+      console.log('[AppComponent] processOrderNotification skipped: no currentUser');
+      return;
+    }
+
+    const rule = this.routingService.findRule(this.currentUser.role, order.status);
+    if (!rule) return;
+
+    console.log('[AppComponent] Showing toast + saving notification', { role: this.currentUser.role, status: order.status });
+    this.routingService.showToast(rule, order);
+    this.routingService.createNotification(rule, order, this.currentUser.id, this.currentUser.role).subscribe({
+      next: (res) => console.log('[AppComponent] createNotification success', res),
+      error: (err) => console.error('[AppComponent] createNotification failed', err)
+    });
+  }
+
+  private mapNotificationType(type: string): 'success' | 'error' | 'warning' | 'info' | 'order' | 'payment' | 'inventory' | 'staff' {
+    const validTypes: Record<string, 'success' | 'error' | 'warning' | 'info' | 'order' | 'payment' | 'inventory' | 'staff'> = {
+      'system': 'info',
+      'promotion': 'info',
+      'order': 'order',
+      'payment': 'payment',
+      'inventory': 'inventory',
+      'staff': 'staff',
+    };
+    return validTypes[type] || 'info';
   }
 
   toggleTheme() {
@@ -232,26 +335,54 @@ export class AppComponent implements OnInit {
   //   this.currentUser = users[role] || users['platform_owner'];
   // }
 
-  // Test methods for demo
-  triggerTestOrder(): void {
-    this.realtimeService.triggerTestOrder();
-  }
-
-  triggerTestNotification(): void {
-    this.realtimeService.triggerTestNotification();
-  }
-
-  login(): void {
-    // For demo purposes, simulate login by setting a user
-    this.currentUser = {
-      id: '1',
-      name: 'Demo User',
-      email: 'demo@cafex.com',
-      role: 'platform_owner'
-    };
-  }
-
   logout(): void {
     this.authService.logout();
+    this.cartService.clearCart();
+  }
+
+  private loadNotificationRecipients(restaurantId: string | null): void {
+    const rolesArr = ['platform_owner', 'restaurant_owner', 'restaurant_manager', 'kitchen_manager', 'waiter', 'cashier'];
+    this.getRestAndPlatformUsersService.getNotificationRecipients(restaurantId, rolesArr).subscribe({
+      next: (recipients) => {
+        console.log('[AppComponent] Notification recipients loaded:', recipients);
+      },
+      error: (err) => {
+        console.error('[AppComponent] Failed to load notification recipients:', err);
+      }
+    });
+  }
+
+  viewCart(): void {
+    this.router.navigate(['/customer/cart']);
+  }
+
+  get actionMenus(): NavigationMenu[] {
+    if (!this.navMenu?.hierarchicalMenus) return [];
+
+    const actions: NavigationMenu[] = [];
+
+    const collectActions = (menus: NavigationMenu[]) => {
+      menus.forEach(menu => {
+        if (menu.type === 'ACTION') {
+          actions.push(menu);
+        }
+        if (menu.children) {
+          collectActions(menu.children);
+        }
+      });
+    };
+
+    collectActions(this.navMenu.hierarchicalMenus);
+    return actions;
+  }
+
+  /**
+   * Gets the customer home route with the current restaurant and table number.
+   * Used for the home button navigation in the customer footer.
+   */
+  get customerHomeRoute(): any[] {
+    const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
+    const tableNo = sessionStorage.getItem('current_customer_table_no');
+    return ['/customer/dashboard', restaurantId, tableNo];
   }
 }

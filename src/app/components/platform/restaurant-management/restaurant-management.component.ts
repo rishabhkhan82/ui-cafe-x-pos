@@ -1,19 +1,21 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
+import { environment } from '../../../environments/environment';
 import { CrudService } from '../../../services/crud.service';
 import { LoadingService } from '../../../services/loading.service';
-import { Restaurant } from '../../../services/mock-data.service';
+import { Restaurant, SubscriptionPlan } from '../../../services/mock-data.service';
 import { AuthService } from '../../../services/auth.service';
 import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ValidationService } from '../../../services/validation.service';
+import { RestaurantStatus, State } from '../../../interfaces';
 
 @Component({
   selector: 'app-restaurant-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './restaurant-management.component.html',
   styleUrl: './restaurant-management.component.css'
 })
@@ -39,46 +41,17 @@ export class RestaurantManagementComponent implements OnInit {
   showDetailsModal = false;
   showEditForm = false;
 
-  // States for dropdown
-  states = [
-    { id: '37', name: 'Andhra Pradesh' },
-    { id: '12', name: 'Arunachal Pradesh' },
-    { id: '18', name: 'Assam' },
-    { id: '10', name: 'Bihar' },
-    { id: '22', name: 'Chhattisgarh' },
-    { id: '30', name: 'Goa' },
-    { id: '24', name: 'Gujarat' },
-    { id: '06', name: 'Haryana' },
-    { id: '02', name: 'Himachal Pradesh' },
-    { id: '20', name: 'Jharkhand' },
-    { id: '29', name: 'Karnataka' },
-    { id: '32', name: 'Kerala' },
-    { id: '23', name: 'Madhya Pradesh' },
-    { id: '27', name: 'Maharashtra' },
-    { id: '14', name: 'Manipur' },
-    { id: '17', name: 'Meghalaya' },
-    { id: '15', name: 'Mizoram' },
-    { id: '13', name: 'Nagaland' },
-    { id: '21', name: 'Odisha' },
-    { id: '03', name: 'Punjab' },
-    { id: '08', name: 'Rajasthan' },
-    { id: '11', name: 'Sikkim' },
-    { id: '33', name: 'Tamil Nadu' },
-    { id: '36', name: 'Telangana' },
-    { id: '16', name: 'Tripura' },
-    { id: '09', name: 'Uttar Pradesh' },
-    { id: '05', name: 'Uttarakhand' },
-    { id: '19', name: 'West Bengal' },
-    { id: '35', name: 'Andaman and Nicobar Islands' },
-    { id: '04', name: 'Chandigarh' },
-    { id: '26', name: 'Dadra and Nagar Haveli and Daman and Diu' },
-    { id: '07', name: 'Delhi' },
-    { id: '01', name: 'Jammu and Kashmir' },
-    { id: '38', name: 'Ladakh' },
-    { id: '31', name: 'Lakshadweep' },
-    { id: '34', name: 'Puducherry' }
+  // Dynamic dropdown data
+  restaurantStatuses: RestaurantStatus[] = [];
+  states: State[] = [];
+  subscriptionPlan : SubscriptionPlan[] = [];
+  gstPercentageOptions: { value: number; label: string }[] = [
+    { value: 0, label: '0% (Nil)' },
+    { value: 5, label: '5%' },
+    { value: 12, label: '12%' },
+    { value: 18, label: '18% (Most Common)' },
+    { value: 28, label: '28%' }
   ];
-
 
   restaurantForm: Restaurant = {
     id: 0,
@@ -89,10 +62,12 @@ export class RestaurantManagementComponent implements OnInit {
     owner_email: '',
     owner_phone: '',
     subscription_plan: '',
-    subscription_start_date: new Date(),
-    subscription_end_date: new Date(),
+    subscription_start_date: null,
+    subscription_end_date: null,
     gst_number: '',
     license_number: '',
+    is_gst: false,
+    gst_percentage: '',
     status: 'ACTIVE',
     is_active: true,
     description: '',
@@ -101,12 +76,19 @@ export class RestaurantManagementComponent implements OnInit {
     pincode: 0,
     address: '',
     lat: 0,
-    long: 0,
+    lng: 0,
+    logo_image: '',
+    banner_image: '',
     created_at: new Date(),
     created_by: 0,
     updated_at: null,
     updated_by: 0
   };
+
+  // Subscription data
+  showSubscriptionModal = false;
+  subscriptions: any[] = [];
+  subscriptionLoading = false;
 
   constructor(
     private router: Router,
@@ -120,6 +102,9 @@ export class RestaurantManagementComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadRestaurants();
+    this.loadRestaurantStatuses();
+    this.loadStates();
+    this.loadSubscriptions();
   }
 
   loadRestaurants(): void {
@@ -157,9 +142,56 @@ export class RestaurantManagementComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading restaurants:', error);
-        this.errorMessage = 'Failed to load restaurants. Please try again.';
-        this.notificationService.error('Error', 'Failed to load restaurants');
+        const apiMessage = error.error?.message || 'Failed to load restaurants. Please try again.';
+        this.errorMessage = apiMessage;
+        this.notificationService.error('Error', apiMessage);
         this.loadingService.hide();
+      }
+    });
+  }
+
+  loadRestaurantStatuses(): void {
+    this.crudService.getRestaurantStatuses({ isActive: true, page: 0, size: 0 }).subscribe({
+      next: (response: any) => {
+        const statuses = response.data || response || [];
+        this.restaurantStatuses = statuses.map((status: any) => ({
+          id: status.id,
+          name: status.name,
+          key: status.key,
+          description: status.description,
+          is_active: status.is_active ?? status.isActive ?? true,
+          display_order: status.display_order ?? status.displayOrder ?? 0,
+          created_by: status.created_by ?? status.createdBy ?? '',
+          updated_by: status.updated_by ?? status.updatedBy ?? '',
+          created_at: status.created_at ? new Date(status.created_at) : new Date(),
+          updated_at: status.updated_at ? new Date(status.updated_at) : new Date()
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading restaurant statuses:', error);
+      }
+    });
+  }
+
+  loadStates(): void {
+    this.crudService.getStates({ isActive: true, page: 0, size: 0 }).subscribe({
+      next: (response: any) => {
+        const states = response.data || response || [];
+        this.states = states.map((state: any) => ({
+          id: state.id,
+          name: state.name,
+          key: state.key,
+          description: state.description,
+          is_active: state.is_active ?? state.isActive ?? true,
+          display_order: state.display_order ?? state.displayOrder ?? 0,
+          created_by: state.created_by ?? state.createdBy ?? '',
+          updated_by: state.updated_by ?? state.updatedBy ?? '',
+          created_at: state.created_at ? new Date(state.created_at) : new Date(),
+          updated_at: state.updated_at ? new Date(state.updated_at) : new Date()
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading states:', error);
       }
     });
   }
@@ -207,11 +239,13 @@ export class RestaurantManagementComponent implements OnInit {
       owner_name: '',
       owner_email: '',
       owner_phone: '',
-      subscription_plan: 'Starter',
-      subscription_start_date: new Date(),
-      subscription_end_date: new Date(),
+      subscription_plan: '',
+      subscription_start_date: null,
+      subscription_end_date: null,
       gst_number: '',
       license_number: '',
+      is_gst: false,
+      gst_percentage: '',
       status: 'ACTIVE',
       is_active: true,
       description: '',
@@ -220,7 +254,9 @@ export class RestaurantManagementComponent implements OnInit {
       pincode: 0,
       address: '',
       lat: 0,
-      long: 0,
+      lng: 0,
+      logo_image: '',
+      banner_image: '',
       created_at: new Date(),
       created_by: 0,
       updated_at: new Date(),
@@ -240,10 +276,12 @@ export class RestaurantManagementComponent implements OnInit {
       owner_email: '',
       owner_phone: '',
       subscription_plan: '',
-      subscription_start_date: new Date(),
-      subscription_end_date: new Date(),
+      subscription_start_date: null,
+      subscription_end_date: null,
       gst_number: '',
       license_number: '',
+      is_gst: false,
+      gst_percentage: '',
       status: 'ACTIVE',
       is_active: true,
       description: '',
@@ -252,7 +290,9 @@ export class RestaurantManagementComponent implements OnInit {
       pincode: 0,
       address: '',
       lat: 0,
-      long: 0,
+      lng: 0,
+      logo_image: '',
+      banner_image: '',
       created_at: new Date(),
       created_by: 0,
       updated_at: new Date(),
@@ -277,7 +317,6 @@ export class RestaurantManagementComponent implements OnInit {
     this.validateEmail();
     this.validatePhone();
     this.validateCity();
-    this.validateSubscriptionPlan();
     this.validateOwnerName();
     this.validateOwnerEmail();
     this.validateOwnerPhone();
@@ -287,6 +326,7 @@ export class RestaurantManagementComponent implements OnInit {
     this.validateGeolocation();
     this.validateGstNumber();
     this.validateLicenseNumber();
+    this.validateGstPercentage();
 
     // Check if there are any errors
     hasErrors = Object.keys(this.fieldErrors).length > 0;
@@ -406,6 +446,14 @@ export class RestaurantManagementComponent implements OnInit {
     }
   }
 
+  validateGstPercentage(): void {
+    if (this.restaurantForm.is_gst && !this.restaurantForm.gst_percentage) {
+      this.fieldErrors['gst_percentage'] = 'GST percentage is required when GST is enabled';
+    } else {
+      delete this.fieldErrors['gst_percentage'];
+    }
+  }
+
   validateState(): void {
     if (this.restaurantForm.state === 0) {
       this.fieldErrors['state'] = 'Please select a state';
@@ -437,14 +485,6 @@ export class RestaurantManagementComponent implements OnInit {
     }
   }
 
-  validateSubscriptionPlan(): void {
-    if (!this.restaurantForm.subscription_plan || this.restaurantForm.subscription_plan.trim() === '') {
-      this.fieldErrors['subscription_plan'] = 'Subscription Plan is required';
-    } else {
-      delete this.fieldErrors['subscription_plan'];
-    }
-  }
-
   validateDescription(): void {
     const validation = this.validationService.required(this.restaurantForm.description, 'Description');
     if (!validation.isValid) {
@@ -455,7 +495,7 @@ export class RestaurantManagementComponent implements OnInit {
   }
 
   validateGeolocation(): void {
-    if (this.restaurantForm.lat === 0 || this.restaurantForm.long === 0) {
+    if (this.restaurantForm.lat === 0 || this.restaurantForm.lng === 0) {
       this.fieldErrors['geolocation'] = 'Geolocation is required. Please provide latitude and longitude.';
     } else {
       delete this.fieldErrors['geolocation'];
@@ -467,20 +507,12 @@ export class RestaurantManagementComponent implements OnInit {
     this.restaurantForm.status = target.checked ? 'ACTIVE' : 'INACTIVE';
   }
 
-  onPlanChange(): void {
-    if (this.restaurantForm.subscription_plan) {
-      const now = new Date();
-      this.restaurantForm.subscription_start_date = now;
-      this.restaurantForm.subscription_end_date = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
-    }
-  }
-
   getCurrentLocation(): void {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           this.restaurantForm.lat = position.coords.latitude;
-          this.restaurantForm.long = position.coords.longitude;
+          this.restaurantForm.lng = position.coords.longitude;
         },
         (error) => {
           console.error('Error getting location:', error);
@@ -511,24 +543,14 @@ export class RestaurantManagementComponent implements OnInit {
     }
   }
 
-  get subscriptionStartDateStr(): string {
-    return this.formatDateForInput(this.restaurantForm.subscription_start_date);
-  }
-
-  set subscriptionStartDateStr(value: string) {
-    this.restaurantForm.subscription_start_date = new Date(value);
-  }
-
-  get subscriptionEndDateStr(): string {
-    return this.formatDateForInput(this.restaurantForm.subscription_end_date);
-  }
-
-  set subscriptionEndDateStr(value: string) {
-    this.restaurantForm.subscription_end_date = new Date(value);
-  }
-
   private onSaveForm(): void {
     this.loadingService.show();
+    const currentUser = this.authService.getCurrentUser();
+    this.restaurantForm.created_by = Number(currentUser?.id) || 0;
+    this.restaurantForm.updated_by = 0;
+    this.restaurantForm.subscription_plan = '';
+    this.restaurantForm.subscription_start_date = null;
+    this.restaurantForm.subscription_end_date = null;
     this.crudService.createRestaurant(this.restaurantForm).subscribe({
       next: (response) => {
         this.loadingService.hide();
@@ -540,31 +562,59 @@ export class RestaurantManagementComponent implements OnInit {
       error: (error) => {
         this.loadingService.hide();
         console.error('Error creating restaurant:', error);
-        this.errorMessage = 'Failed to create restaurant. Please try again.';
-        this.notificationService.error('Error', 'Failed to create restaurant');
+        const apiMessage = error.error?.message || 'Failed to create restaurant. Please try again.';
+        this.errorMessage = apiMessage;
+
+        const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+        if (apiFieldErrors) {
+          Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+            if (messages && messages.length > 0) {
+              this.fieldErrors[field] = messages[0];
+            }
+          });
+        }
+
+        this.notificationService.error('Creation Failed', apiMessage);
       }
     });
   }
 
   private onUpdateForm(): void {
     if (this.editingRestaurant) {
+      const restaurantId = this.editingRestaurant.id;
       this.loadingService.show();
-      this.crudService.updateRestaurant(this.editingRestaurant.id, this.restaurantForm).subscribe({
-        next: (response) => {
-          this.loadingService.hide();
-          this.notificationService.success('Success', 'Restaurant updated successfully');
-          this.closeEditForm();
-          this.closeDetailsModal();
-          this.resetForm();
-          this.loadRestaurants();
-        },
-        error: (error) => {
-          this.loadingService.hide();
-          console.error('Error updating restaurant:', error);
-          this.errorMessage = 'Failed to update restaurant. Please try again.';
-          this.notificationService.error('Error', 'Failed to update restaurant');
-        }
-      });
+      const currentUser = this.authService.getCurrentUser();
+      this.restaurantForm.updated_by = Number(currentUser?.id) || 0;
+      // this.restaurantForm.subscription_plan = '';
+      // this.restaurantForm.subscription_start_date = null;
+      // this.restaurantForm.subscription_end_date = null;
+      this.crudService.updateRestaurant(restaurantId, this.restaurantForm).subscribe({
+          next: (response) => {
+            this.loadingService.hide();
+            this.notificationService.success('Success', 'Restaurant updated successfully');
+            this.closeEditForm();
+            this.closeDetailsModal();
+            this.resetForm();
+            this.loadRestaurants();
+          },
+          error: (error) => {
+            this.loadingService.hide();
+            console.error('Error updating restaurant:', error);
+            const apiMessage = error.error?.message || 'Failed to update restaurant. Please try again.';
+            this.errorMessage = apiMessage;
+
+            const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+            if (apiFieldErrors) {
+              Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+                if (messages && messages.length > 0) {
+                  this.fieldErrors[field] = messages[0];
+                }
+              });
+            }
+
+            this.notificationService.error('Update Failed', apiMessage);
+          }
+        });
     }
   }
 
@@ -581,10 +631,12 @@ export class RestaurantManagementComponent implements OnInit {
       owner_email: '',
       owner_phone: '',
       subscription_plan: '',
-      subscription_start_date: new Date(),
-      subscription_end_date: new Date(),
+      subscription_start_date: null,
+      subscription_end_date: null,
       gst_number: '',
       license_number: '',
+      is_gst: false,
+      gst_percentage: '',
       status: 'ACTIVE',
       is_active: true,
       description: '',
@@ -593,7 +645,9 @@ export class RestaurantManagementComponent implements OnInit {
       pincode: 0,
       address: '',
       lat: 0,
-      long: 0,
+      lng: 0,
+      logo_image: '',
+      banner_image: '',
       created_at: new Date(),
       created_by: 0,
       updated_at: new Date(),
@@ -602,9 +656,7 @@ export class RestaurantManagementComponent implements OnInit {
     this.fieldErrors = {};
     this.errorMessage = '';
   }
-
-
-
+  
   updateRestaurantStatus(restaurant: Restaurant, status: Restaurant['status']): void {
     this.loadingService.show();
     const updatedRestaurant = { ...restaurant, status };
@@ -617,7 +669,8 @@ export class RestaurantManagementComponent implements OnInit {
       error: (error) => {
         this.loadingService.hide();
         console.error('Error updating restaurant status:', error);
-        this.notificationService.error('Error', 'Failed to update restaurant status');
+        const apiMessage = error.error?.message || 'Failed to update restaurant status';
+        this.notificationService.error('Error', apiMessage);
       }
     });
   }
@@ -643,7 +696,8 @@ export class RestaurantManagementComponent implements OnInit {
           error: (error) => {
             this.loadingService.hide();
             console.error('Error deleting restaurant:', error);
-            this.notificationService.error('Error', 'Failed to delete restaurant');
+            const apiMessage = error.error?.message || 'Failed to delete restaurant';
+            this.notificationService.error('Error', apiMessage);
           }
         });
       }
@@ -752,10 +806,12 @@ export class RestaurantManagementComponent implements OnInit {
       owner_email: '',
       owner_phone: '',
       subscription_plan: '',
-      subscription_start_date: new Date(),
-      subscription_end_date: new Date(),
+      subscription_start_date: null,
+      subscription_end_date: null,
       gst_number: '',
       license_number: '',
+      is_gst: false,
+      gst_percentage: '',
       status: 'ACTIVE',
       is_active: true,
       description: '',
@@ -764,7 +820,9 @@ export class RestaurantManagementComponent implements OnInit {
       pincode: 0,
       address: '',
       lat: 0,
-      long: 0,
+      lng: 0,
+      logo_image: '',
+      banner_image: '',
       created_at: new Date(),
       created_by: 0,
       updated_at: new Date(),
@@ -773,6 +831,66 @@ export class RestaurantManagementComponent implements OnInit {
 
     // Reload data
     this.loadRestaurants();
+    this.loadRestaurantStatuses();
+    this.loadStates();
+    this.loadSubscriptions();
+  }
+
+  onLogoFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.restaurantForm.logo_image = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  onBannerFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.restaurantForm.banner_image = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  getFullImageUrl(imagePath: string): string {
+    if (!imagePath) return '';
+    if (imagePath.startsWith('data:')) {
+      return imagePath;
+    }
+    return environment.api.baseUrl + imagePath;
+  }
+
+  removeLogo(): void {
+    this.restaurantForm.logo_image = '';
+  }
+
+  removeBanner(): void {
+    this.restaurantForm.banner_image = '';
+  }
+
+  navigateToViewProfile(): void {
+    if (this.selectedRestaurant?.id) {
+      const url = `/restaurant-profile/${this.selectedRestaurant.id}`;
+      window.open(url, '_blank');
+    }
+  }
+
+  navigateToAnalytics(): void {
+    if (this.selectedRestaurant?.id) {
+      this.router.navigate(['/restaurant-dashboard'], { queryParams: { restaurantId: this.selectedRestaurant.id } });
+    }
+  }
+
+  navigateToUserManagement(): void {
+    if (this.selectedRestaurant?.id) {
+      this.router.navigate(['/user-management'], { queryParams: { restaurantId: this.selectedRestaurant.id } });
+    }
   }
 
   // Helper for template Math operations
@@ -784,5 +902,43 @@ export class RestaurantManagementComponent implements OnInit {
               this.subscriptionPlanFilter !== 'all' ||
               this.cityFilter?.trim() ||
               this.statusFilter !== 'all');
+  }
+
+  viewSubscriptions(): void {
+    if (!this.selectedRestaurant?.id) return;
+    this.subscriptionLoading = true;
+    this.crudService.getRestaurantSubscriptions({ restaurantId: this.selectedRestaurant.id }).subscribe({
+      next: (response: any) => {
+        this.subscriptions = response.data || [];
+        this.subscriptionLoading = false;
+        this.showSubscriptionModal = true;
+      },
+      error: (error) => {
+        this.subscriptionLoading = false;
+        console.error('Error loading subscriptions:', error);
+        this.notificationService.error('Error', error.error?.message || 'Failed to load subscription details');
+      }
+    });
+  }
+
+  closeSubscriptionModal(): void {
+    this.showSubscriptionModal = false;
+    this.subscriptions = [];
+  }
+
+  formatSubscriptionDate(date: string | Date | null): string {
+    if (!date) return '-';
+    return this.formatDate(date);
+  }
+
+  loadSubscriptions(): void {
+    this.crudService.getSubscriptionPlans({ isActive: true}).subscribe({
+      next: (response: any) => {
+        this.subscriptionPlan = response?.data;
+      },
+      error: (error) => {
+        console.error('Error loading states:', error);
+      }
+    });
   }
 }

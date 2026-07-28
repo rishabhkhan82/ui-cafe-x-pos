@@ -1,2 +1,1 @@
-// Export all directives from this barrel file
-// Add directive exports here as they are created
+export * from './animate-on-scroll.directive';

@@ -1,0 +1,18 @@
+Total Menus (total - 17, done - 8, pending - 9)
+
+1] Dashboard - Pending
+2] Api Management - Pending
+3] Navigation Management - Done
+4] Role Access Management - Done
+5] Role Management - Done
+6] Security Setting - Pending
+7] System Alerts - Pending
+8] System Configuration - Done
+9] User Management - Done
+10] Feature Management - Done
+11] Broadcast Messages - Pending
+12] Integration - Pending
+13] Plan Management - Done
+14] Restaurant Management - Done
+15] subscription Analytics - Pending
+16] User Notification - Pending

@@ -25,6 +25,21 @@
   to { box-shadow: 0 0 30px rgba(239, 68, 68, 0.55); }
 }
 
+@keyframes fadeInSlide {
+  from {
+    opacity: 0;
+    transform: translateX(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.animate-fadeInSlide {
+  animation: fadeInSlide 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
 .pos-card {
   background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
   box-shadow: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06);
@@ -124,6 +139,7 @@ input[type="checkbox"] {
   position: relative;
   transition: all 0.2s ease;
   outline: none;
+  display: none;
 }
 
 .dark input[type="checkbox"] {
@@ -224,4 +240,22 @@ input[type="radio"]:checked + span {
   color: white;
   box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
   transform: translateY(-1px);
+}
+
+.animate-duration-750 {
+  animation-duration: 750ms !important;
+}
+
+.animate-duration-1000 {
+  animation-duration: 1000ms !important;
+}
+
+/* Active state for profile dropdown menu links */
+.active {
+  color: white !important;
+  background-color: #ef4444 !important;
+}
+
+.animate-duration-1500 {
+  animation-duration: 1500ms !important;
 }

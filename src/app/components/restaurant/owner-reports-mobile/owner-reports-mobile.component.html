@@ -1,0 +1,154 @@
+<!-- Main Container -->
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 mb-7">
+  <!-- Fixed Header -->
+  <div class="fixed top-0 md:top-[73px] left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 dark:shadow-lg" style="min-height: 73px;">
+    <div class="px-4 py-3">
+      <div class="flex items-center">
+        <div class="flex items-center space-x-4 flex-1">
+          <button
+            (click)="router.navigate(['/restaurant-navigation-mobile'])"
+            class="p-2 rounded-xl bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-md hover:shadow-lg border border-red-200 dark:border-gray-600">
+            <i class="fas fa-arrow-left text-red-600 dark:text-red-400 text-lg"></i>
+          </button>
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg">
+              <i class="fas fa-chart-bar text-white text-sm"></i>
+            </div>
+            <div>
+              <h1 class="text-xl font-bold text-gray-900 dark:text-white">{{ displayTitle }}</h1>
+              <p class="text-xs text-gray-600 dark:text-gray-400">View your sales reports</p>
+            </div>
+          </div>
+        </div>
+        <div class="flex space-x-2" style="margin-left: auto;">
+          <button (click)="refreshReport()" class="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
+            <i class="fas fa-refresh"></i>
+          </button>
+          <button (click)="downloadReport()" [disabled]="isLoading" class="p-2 bg-green-100 dark:bg-green-800 hover:bg-green-200 dark:hover:bg-green-700 text-green-700 dark:text-green-300 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+            <i class="fas fa-download"></i>
+          </button>
+          <button (click)="clearReport()" class="px-2 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-sm">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls & Report Display -->
+  <div class="px-6 pt-[25px] pb-[30px] md:pt-[100px] md:pb-[14px] no-print grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Report Type Selection & Date Controls -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-4 px-6 order-1 md:order-2">
+      <div class="flex flex-col sm:flex-row gap-4 mb-4">
+        <div class="flex-1">
+          <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">Report Type</label>
+          <select [(ngModel)]="reportType" (change)="generateReport()"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white bg-white dark:bg-gray-700">
+            <option *ngFor="let type of reportTypes" [value]="type.key">{{ type.name }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Date Selection (for date-based reports) -->
+      <div *ngIf="isDateRequired()" class="space-y-4">
+        <div class="flex flex-wrap gap-2 justify-start">
+          <button *ngFor="let preset of datePresets"
+                  (click)="applyDatePreset(preset.value)"
+                  [ngClass]="selectedPreset === preset.value
+                    ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'"
+                  class="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 shadow-sm">
+            {{ preset.label }}
+          </button>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
+              <i class="fas fa-calendar-alt mr-2 text-blue-500"></i>
+              From Date
+              <span class="text-red-500">*</span>
+            </label>
+            <input type="date" [(ngModel)]="fromDate"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white bg-white dark:bg-gray-700">
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
+              <i class="fas fa-calendar-check mr-2 text-green-500"></i>
+              To Date
+              <span class="text-red-500">*</span>
+            </label>
+            <input type="date" [(ngModel)]="toDate"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white bg-white dark:bg-gray-700">
+          </div>
+        </div>
+      </div>
+      <button (click)="generateReport()" [disabled]="isLoading"
+        class="mt-4 w-full px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl font-medium disabled:cursor-not-allowed">
+        <i *ngIf="isLoading" class="fas fa-spinner fa-spin mr-2"></i>
+        {{ isLoading ? 'Generating Report...' : 'Generate Report' }}
+      </button>
+    </div>
+
+    <!-- Report Display -->
+    <div class="grid grid-cols-1 md:col-span-2 gap-6 order-2 md:order-1">
+      <!-- Report Meta Info -->
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h2 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">{{ reportMeta?.report_type_label || displayTitle }}</h2>
+            <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-0.5">{{ reportPeriod }}</p>
+          </div>
+          <div class="text-left sm:text-right">
+            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ reportMeta?.restaurant_name }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Generated: {{ generatedAt | date:'medium' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistics Cards -->
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div *ngFor="let stat of statisticsList"
+               class="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/20 rounded-xl p-4 text-center border border-red-200/50 dark:border-red-700/30">
+            <div class="text-2xl font-bold text-red-600 dark:text-red-400 mb-1">{{ stat.value }}</div>
+            <div class="text-xs text-gray-600 dark:text-gray-400 font-medium">{{ stat.label }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="md:col-span-3 order-3">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Details</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400">{{ data.length }} records found</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left" *ngIf="data.length > 0">
+            <thead class="bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+              <tr>
+                <th *ngFor="let col of dataColumns; let i = index" class="px-6 py-3 font-medium uppercase tracking-wider">
+                  {{ dataColumnLabels[i] }}
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+              <tr *ngFor="let row of formattedData" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <td *ngFor="let col of dataColumns" class="px-6 py-4 text-gray-900 dark:text-white whitespace-nowrap">
+                  {{ row[col] }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div *ngIf="data.length === 0" class="text-center py-12 text-gray-500 dark:text-gray-400">
+            <i class="fas fa-chart-line text-4xl mb-4"></i>
+            <p>No data available for the selected period</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+

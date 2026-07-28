@@ -1,0 +1,423 @@
+<!-- Main Container -->
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <!-- Premium Fixed Header -->
+  <div class="fixed top-0 md:top-[73px] left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 dark:shadow-lg" style="min-height: 73px;">
+    <div class="px-4 py-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4 flex-1">
+          <button
+            (click)="router.navigate(['/restaurant-navigation-mobile'])"
+            class="p-2 rounded-xl bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-md hover:shadow-lg border border-red-200 dark:border-gray-600">
+            <i class="fas fa-arrow-left text-red-600 dark:text-red-400 text-lg"></i>
+          </button>
+
+          <!-- Header Content (Shown when not searching) -->
+          <div [class.hidden]="showSearchBar" class="flex items-center space-x-3 flex-1 md:!flex">
+            <div class="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg">
+              <i class="fas fa-blender text-white text-sm"></i>
+            </div>
+            <div>
+              <h1 class="text-xl font-bold text-gray-900 dark:text-white">
+                Production
+              </h1>
+              <p class="text-xs text-gray-600 dark:text-gray-400">Produce & manage recipes</p>
+            </div>
+          </div>
+
+          <!-- Simple Search Bar (Shown when searching) -->
+          <div *ngIf="showSearchBar" class="flex-1 ml-4 animate-fadeInSlide md:max-w-[300px]">
+            <div class="relative">
+              <input
+                type="text"
+                [(ngModel)]="searchInput"
+                (ngModelChange)="onSearchInputChange($event)"
+                placeholder="Search by recipe name or note"
+                class="w-full px-4 py-2 pl-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-[2rem] shadow-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                autofocus
+              >
+              <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex space-x-2 ml-4">
+          <button
+            *ngIf="!showSearchBar"
+            (click)="toggleSearchBar()"
+            class="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
+            <i class="fas fa-search"></i>
+          </button>
+          <button
+            *ngIf="showSearchBar"
+            (click)="toggleSearchBar()"
+            class="p-2 bg-red-100 dark:bg-red-900/20 hover:bg-red-200 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
+            <i class="fas fa-times"></i>
+          </button>
+          <button
+            (click)="refresh()"
+            class="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
+            <i class="fas fa-refresh"></i>
+          </button>
+          <button
+            (click)="showProduceFormOverlay()"
+            class="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-sm">
+            <i class="fas fa-plus mr-2"></i> Add
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="px-6 space-y-6 pt-[25px] pb-[105px] md:pt-[100px] md:pb-[90px]">
+
+    <!-- Error Banner -->
+    <div *ngIf="errorMessage" class="mb-4 p-4 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 rounded-xl">
+      <p class="text-sm text-red-700 dark:text-red-300">{{ errorMessage }}</p>
+    </div>
+
+    <!-- Results Header -->
+    <div *ngIf="totalElements > 0" class="flex items-center justify-between px-1">
+      <div class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+        <i class="fas fa-blender mr-2"></i>
+        {{ totalElements }} recipe production{{ totalElements === 1 ? '' : 's' }} found
+      </div>
+      <div class="text-xs text-gray-500 dark:text-gray-400">
+        Page {{ currentPage }} of {{ totalPages }}
+      </div>
+    </div>
+
+    <!-- Recipe Production Cards -->
+    <div *ngIf="totalElements > 0" class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+      <div *ngFor="let production of recipeProductions"
+           class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg overflow-hidden cursor-pointer group"
+           (click)="selectProduction(production)">
+        <div class="p-4">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-start space-x-3 flex-1 min-w-0">
+              <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+                <i class="fas fa-blender text-white text-sm"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white truncate">
+                  {{ getRecipeName(production.recipe_id) }}
+                </h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mt-1">
+                  {{ production.note || 'No additional notes' }}
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-1.5 flex-shrink-0">
+              <button (click)="selectProduction(production); $event.stopPropagation()" class="w-8 h-8 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors flex items-center justify-center">
+                <i class="fas fa-eye text-xs"></i>
+              </button>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 justify-between">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                <i class="fas fa-boxes mr-1"></i>Batch: {{ production.batch_multiplier }}
+              </span>
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                <i class="fas fa-hashtag mr-1"></i>Recipe #{{ production.recipe_id }}
+              </span>
+            </div>
+            <div>
+              <span class="text-xs text-gray-500 dark:text-gray-400">
+                Batch #{{ production.id }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="px-4 py-3 bg-gray-50 dark:bg-gray-900/30 border-t border-gray-200 dark:border-gray-700">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <i class="fas fa-clock text-gray-400 text-xs"></i>
+              <span class="text-xs text-gray-600 dark:text-gray-400">
+                {{ production.created_at | date:'medium' }}
+              </span>
+            </div>
+            <div *ngIf="production.created_by" class="flex items-center space-x-2">
+              <i class="fas fa-user text-gray-400 text-xs"></i>
+              <span class="text-xs text-gray-600 dark:text-gray-400">
+                User #{{ production.created_by }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="totalElements === 0 && ((loadingService.loading$ | async) === false)" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div class="px-6 py-8 bg-gradient-to-r from-red-50 to-red-50 dark:from-red-900/20 dark:to-red-900/10 border-b border-gray-100 dark:border-gray-700">
+        <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-red-500 to-red-600 mx-auto mb-4 flex items-center justify-center">
+          <i class="fas fa-blender text-white text-3xl"></i>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-900 dark:text-white text-center">No recipe productions found</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-300 text-center mt-2" *ngIf="!hasActiveFilters">
+          Get started by producing your first recipe batch.
+        </p>
+        <p class="text-sm text-gray-600 dark:text-gray-300 text-center mt-2" *ngIf="hasActiveFilters">
+          Try adjusting your search filters or clear them to see all recipe productions.
+        </p>
+      </div>
+      <div class="p-6 text-center">
+        <button
+          *ngIf="!hasActiveFilters"
+          (click)="showProduceFormOverlay()"
+          class="px-6 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl">
+          <i class="fas fa-plus mr-2"></i>
+          Produce First Recipe Batch
+        </button>
+        <button
+          *ngIf="hasActiveFilters"
+          (click)="clearFilters()"
+          class="px-6 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600">
+          <i class="fas fa-times mr-2"></i>
+          Clear Filters
+        </button>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="totalElements > 0" class="fixed bottom-20 md:bottom-[65px] left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-10 py-2 px-4">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+          <div class="text-sm text-gray-700 dark:text-gray-300">
+            {{ paginationRange }} of {{ totalElements }}
+          </div>
+          <div class="flex items-center space-x-1">
+            <span class="text-xs text-gray-500 dark:text-gray-400">Show:</span>
+            <select
+              [(ngModel)]="itemsPerPage"
+              (change)="onItemsPerPageChange($event)"
+              class="px-2 py-1 text-xs w-14 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-gray-900 dark:text-gray-300">
+              <option *ngFor="let option of itemsPerPageOptions" [value]="option">{{ option }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-1">
+          <button
+            (click)="changePage(1)"
+            [disabled]="currentPage === 1"
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
+            <i class="fas fa-angle-double-left text-xs"></i>
+          </button>
+          <button
+            (click)="changePage(currentPage - 1)"
+            [disabled]="currentPage === 1"
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
+            <i class="fas fa-chevron-left text-xs"></i>
+          </button>
+          <button
+            *ngFor="let page of pageNumbers"
+            (click)="changePage(page)"
+            [class]="page === currentPage ? 'w-7 h-7 rounded bg-red-500 text-white flex items-center justify-center text-xs' : 'w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center text-xs text-gray-900 dark:text-gray-300'">
+            {{ page }}
+          </button>
+          <button
+            (click)="changePage(currentPage + 1)"
+            [disabled]="currentPage === totalPages"
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
+            <i class="fas fa-chevron-right text-xs"></i>
+          </button>
+          <button
+            (click)="changePage(totalPages)"
+            [disabled]="currentPage === totalPages"
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
+            <i class="fas fa-angle-double-right text-xs"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Produce Form Overlay -->
+  <div *ngIf="showProduceForm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] md:py-10">
+    <div class="h-full flex flex-col bg-white dark:bg-gray-800 z-50 w-full md:w-[672px] md:rounded-2xl md:shadow-lg overflow-hidden">
+      <!-- Modal Header -->
+      <div class="px-6 py-4 bg-white/95 dark:bg-gray-800 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 flex items-center justify-between z-[100]">
+        <div class="flex items-center space-x-3">
+          <button (click)="cancelProduce()" class="w-8 h-8 rounded-lg hover:bg-red-100 dark:hover:bg-gray-700 flex items-center justify-center">
+            <i class="fas fa-arrow-left text-red-600 dark:text-red-400"></i>
+          </button>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white">Produce Recipe</h3>
+        </div>
+        <button
+          (click)="onSubmitForm()"
+          [disabled]="isSubmitting"
+          class="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+          <i class="fas fa-play mr-2"></i>{{ isSubmitting ? 'Producing...' : 'Produce' }}
+        </button>
+      </div>
+      <!-- Modal Body -->
+      <div class="flex-1 p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-red-500 scrollbar-track-gray-100 dark:scrollbar-track-gray-700">
+        <form class="space-y-4">
+          <!-- Menu Item -->
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
+              <i class="fas fa-boxes mr-2 text-red-500"></i>Select Recipe to Make in Batch <span class="text-red-500">*</span>
+            </label>
+            <select
+              [(ngModel)]="selectedRecipe"
+              (change)="onRecipeChange()"
+              name="menu_item_id"
+              class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white">
+              <option value="">-- Select Recipe --</option>
+              <option *ngFor="let recipe of recipes" [ngValue]="recipe">{{ recipe.name }}</option>
+            </select>
+            <div *ngIf="fieldErrors['menu_item_id']" class="mt-1 text-xs text-red-500">{{ fieldErrors['menu_item_id'] }}</div>
+          </div>
+
+          <!-- Batch Quantity -->
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
+              <i class="fas fa-sort-numeric-up mr-2 text-orange-500"></i>Recipe Batch Quantity <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              [(ngModel)]="produceForm.batch_multiplier"
+              name="batch_multiplier"
+              min="1"
+              (input)="validateBatchQuantity()"
+              class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white"
+              placeholder="Enter batch multiplier">
+            <div *ngIf="fieldErrors['batch_multiplier']" class="mt-1 text-xs text-red-500">{{ fieldErrors['batch_multiplier'] }}</div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2" *ngIf="selectedRecipe">
+              Producing {{ produceForm.batch_multiplier }} batch(es) of "{{ selectedRecipe.name }}"
+            </p>
+          </div>
+
+          <!-- Note -->
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
+              <i class="fas fa-sticky-note mr-2 text-blue-500"></i>Note
+            </label>
+            <textarea
+              [(ngModel)]="produceForm.note"
+              name="note"
+              rows="3"
+              class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white resize-none"
+              placeholder="Add a note for this production batch"></textarea>
+          </div>
+        </form>
+      </div>
+      <!-- Modal Footer -->
+      <div class="px-6 py-4 bg-white/95 dark:bg-gray-800 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 flex items-center justify-between z-[100]">
+        <div>
+          <button (click)="cancelProduce()" class="flex items-center justify-center border border-gray-300 dark:border-gray-600 px-4 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium">
+              <i class="fas fa-arrow-left text-red-600 dark:text-red-400 mr-2"></i> Go Back
+          </button>
+        </div>
+        <div>
+          <button
+            type="button"
+            (click)="cancelProduce()"
+            class="px-4 py-2 mr-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            (click)="onSubmitForm()"
+            class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium">
+            {{ isSubmitting ? 'Producing...' : 'Produce' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recipe Production Details Modal -->
+  <div *ngIf="selectedProduction" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden">
+      <div class="px-6 py-4 bg-gradient-to-r from-red-50 to-red-50 dark:from-red-900/20 dark:to-red-900/10 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white">Recipe Production Details</h3>
+        <button (click)="closeDetails()" class="w-8 h-8 rounded-lg hover:bg-red-100 dark:hover:bg-gray-700 flex items-center justify-center">
+          <i class="fas fa-times text-red-600 dark:text-red-400"></i>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto max-h-[60vh]">
+        <div class="flex items-center space-x-4 mb-6">
+          <div class="w-20 h-20 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg">
+            <i class="fas fa-blender text-white text-3xl"></i>
+          </div>
+          <div class="flex-1">
+            <h4 class="text-xl font-semibold text-gray-900 dark:text-white">
+              {{ getRecipeName(selectedProduction.recipe_id) }}
+            </h4>
+            <div class="flex items-center space-x-2 mt-1">
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                Batch: {{ selectedProduction.batch_multiplier }}
+              </span>
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300">
+                Batch #{{ selectedProduction.id }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div class="flex items-start space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center">
+              <i class="fas fa-align-left text-orange-600 dark:text-orange-400"></i>
+            </div>
+            <div class="flex-1">
+              <p class="text-xs text-gray-500 dark:text-gray-400">Note</p>
+              <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedProduction.note || 'No note provided' }}</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center">
+                <i class="fas fa-calendar-alt text-purple-600 dark:text-purple-400"></i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Created At</p>
+                <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedProduction.created_at | date:'medium' }}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
+                <i class="fas fa-info-circle text-gray-600 dark:text-gray-400"></i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Recipe ID</p>
+                <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedProduction.recipe_id }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Deducted Inventory Items -->
+          <div *ngIf="productionBatchDetails.length > 0" class="mt-4">
+            <h5 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Deducted Inventory Items</h5>
+            <div class="space-y-2">
+              <div *ngFor="let detail of productionBatchDetails" class="bg-gray-50 dark:bg-gray-900/30 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                  <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{ detail.inventory_item_name }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                      Qty: {{ detail.quantity_change }} | Balance: {{ detail.balance_after }}
+                    </p>
+                  </div>
+                  <span class="text-xs text-gray-500 dark:text-gray-400">
+                    #{{ detail.id }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+        <button
+          (click)="closeDetails()"
+          class="w-full px-4 py-3 rounded-xl font-medium bg-red-500 text-white hover:bg-red-600 transition-colors">
+          <i class="fas fa-times mr-2"></i>Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

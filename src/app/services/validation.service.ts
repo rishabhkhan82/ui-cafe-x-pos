@@ -226,6 +226,26 @@ export class ValidationService {
   }
 
   /**
+   * Multi-character name validation allowing letters, numbers, spaces, hyphens, and apostrophes
+   */
+  multiCharName(name: string, fieldName: string = 'Name'): ValidationResult {
+    if (!name || name.trim().length === 0) {
+      return { isValid: false, message: `${fieldName} is required`, code: 'REQUIRED' };
+    }
+    if (name.length < 2) {
+      return { isValid: false, message: `${fieldName} must be at least 2 characters`, code: 'NAME_TOO_SHORT' };
+    }
+    if (name.length > 100) {
+      return { isValid: false, message: `${fieldName} cannot exceed 100 characters`, code: 'NAME_TOO_LONG' };
+    }
+    const nameRegex = /^[a-zA-Z0-9\s\-']+$/;
+    if (!nameRegex.test(name)) {
+      return { isValid: false, message: `${fieldName} contains invalid characters`, code: 'INVALID_NAME' };
+    }
+    return { isValid: true };
+  }
+
+  /**
    * PIN code validation (Indian)
    */
   pincode(pincode: string): ValidationResult {
@@ -311,7 +331,7 @@ export class ValidationService {
     const requiredCheck = this.required(category, 'Category');
     if (!requiredCheck.isValid) return requiredCheck;
 
-    const validCategories = ['Appetizers', 'Main Course', 'Desserts', 'Beverages', 'Snacks', 'Salads'];
+    const validCategories = ['starters', 'main-course', 'desserts', 'beverages', 'snacks', 'salads'];
     if (!validCategories.includes(category)) {
       return { isValid: false, message: 'Please select a valid category', code: 'INVALID_CATEGORY' };
     }

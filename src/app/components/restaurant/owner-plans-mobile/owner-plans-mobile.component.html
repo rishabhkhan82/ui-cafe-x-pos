@@ -1,0 +1,693 @@
+<!-- Premium Mobile App Design -->
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+  <!-- Premium Fixed Header -->
+  <div class="fixed top-0 md:top-[73px] left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 dark:shadow-lg" style="min-height: 73px;">
+    <div class="px-4 py-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4 flex-1">
+          <button
+            (click)="handleBackNavigation()"
+            class="p-2 rounded-xl bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-md hover:shadow-lg border border-red-200 dark:border-gray-600">
+            <i class="fas fa-arrow-left text-red-600 dark:text-red-400 text-lg"></i>
+          </button>
+
+          <!-- Header Content -->
+          <div class="flex items-center space-x-3 flex-1">
+            <div class="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg">
+              <i class="fas fa-crown text-white text-sm"></i>
+            </div>
+            <div>
+              <h1 class="text-xl font-bold text-gray-900 dark:text-white">
+                {{ (selectedPlanForDetails?.display_name || selectedPlanForDetails?.name) || 'Premium Plans' }}
+              </h1>
+              <p class="text-xs text-gray-600 dark:text-gray-400">
+                {{ selectedPlanForDetails ? 'Plan Details' : (showPlan ? 'Choose your plan' : 'Current subscription') }}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="flex space-x-2 ml-4">
+          <button
+            (click)="reloadData()"
+            class="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
+            <i class="fas fa-sync-alt"></i>
+          </button>
+          <button
+            (click)="toggleView()"
+            class="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg font-medium text-sm shadow-md hover:shadow-lg transition-all duration-200">
+            <i class="fas {{ showPlan ? 'fa-info-circle' : 'fa-crown' }} mr-2"></i>
+            {{ showPlan ? 'Info' : 'Plans' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="px-6 space-y-6 pt-[25px] md:pt-[100px] pb-16 max-w-7xl mx-auto">
+    <!-- Main Content Container -->
+    <div class="">
+  
+      <!-- Status Cards -->
+      <div class="space-y-4 mb-8" *ngIf="isOnTrial || (!isSubscribed && !isOnTrial && !isTrialEligible && ((this.loadingService.loading$ | async) === false))">
+  
+        <!-- Trial Active Card -->
+        <div *ngIf="isOnTrial" class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+          <!-- Background Pattern -->
+          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12"></div>
+  
+          <div class="relative z-10">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                  <i class="fas fa-clock text-white"></i>
+                </div>
+                <div>
+                  <h3 class="font-bold text-lg">Trial Active</h3>
+                  <p class="text-blue-100 text-sm">Enjoy premium features</p>
+                </div>
+              </div>
+              <div *ngIf="trialDaysRemaining <= 3" class="bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold">
+                {{ trialDaysRemaining }} days left
+              </div>
+            </div>
+  
+            <div class="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-blue-100 text-sm">Expires on</p>
+                  <p class="font-semibold">{{ trialEndDate | date:'MMM d, yyyy' }}</p>
+                </div>
+                <div class="text-right">
+                  <div class="text-2xl font-bold">{{ trialDaysRemaining }}</div>
+                  <p class="text-blue-100 text-xs">days remaining</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Trial Expired Card -->
+        <div *ngIf="!isSubscribed && !isOnTrial && !isTrialEligible && ((this.loadingService.loading$ | async) === false)"
+            class="bg-gradient-to-r from-red-500 to-pink-600 rounded-2xl p-6 text-white shadow-xl">
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+              <i class="fas fa-exclamation-triangle text-white text-xl"></i>
+            </div>
+            <div class="flex-1">
+              <h3 class="font-bold text-lg mb-1">Trial Expired</h3>
+              <p class="text-red-100 text-sm leading-relaxed">
+                Your 15-day trial has ended. Subscribe now to continue using premium features.
+              </p>
+            </div>
+          </div>
+        </div>
+  
+      </div>
+  
+      <!-- Onboarding Section -->
+      <div *ngIf="!showPlan && !(currentSubscription$ | async) && ((this.loadingService.loading$ | async) === false)" class="space-y-6">
+  
+        <!-- Hero Card -->
+        <div class="bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden">
+          <!-- Background Elements -->
+          <div class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20"></div>
+          <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full -ml-16 -mb-16"></div>
+          <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-white/5 rounded-full"></div>
+  
+          <div class="relative z-10 text-center">
+            <!-- Icon -->
+            <div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">
+              <i class="fas fa-rocket text-3xl text-white"></i>
+            </div>
+  
+            <!-- Title -->
+            <h2 class="text-2xl font-bold mb-3">
+              {{ isTrialEligible ? 'Start Your Free Trial' : 'Unlock Premium Features' }}
+            </h2>
+  
+            <!-- Subtitle -->
+            <p class="text-white/90 text-base leading-relaxed mb-8">
+              {{ isTrialEligible ?
+                'Experience all premium features with a 15-day free trial. No credit card required.' :
+                'Choose a subscription plan that fits your restaurant\'s needs and scale your business.' }}
+            </p>
+  
+            <!-- CTA Button -->
+            <button
+              (click)="toggleView()"
+              class="bg-white text-purple-600 px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 active:scale-95 flex items-center justify-center mx-auto space-x-2">
+              <i class="fas fa-sparkles"></i>
+              <span>{{ isTrialEligible ? 'Start Free Trial' : 'Explore Plans' }}</span>
+            </button>
+          </div>
+        </div>
+  
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-3 gap-4">
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 text-center shadow-lg border border-slate-200 dark:border-slate-700">
+            <div class="w-8 h-8 bg-emerald-100 dark:bg-emerald-900 rounded-lg flex items-center justify-center mx-auto mb-2">
+              <i class="fas fa-users text-emerald-600 dark:text-emerald-400"></i>
+            </div>
+            <div class="text-lg font-bold text-slate-900 dark:text-white">Unlimited Users</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">No Max limit</div>
+          </div>
+  
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 text-center shadow-lg border border-slate-200 dark:border-slate-700">
+            <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center mx-auto mb-2">
+              <i class="fas fa-store text-blue-600 dark:text-blue-400"></i>
+            </div>
+            <div class="text-lg font-bold text-slate-900 dark:text-white">1 Outlet</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">Per license</div>
+          </div>
+  
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 text-center shadow-lg border border-slate-200 dark:border-slate-700">
+            <div class="w-8 h-8 bg-amber-100 dark:bg-amber-900 rounded-lg flex items-center justify-center mx-auto mb-2">
+              <i class="fas fa-clock text-amber-600 dark:text-amber-400"></i>
+            </div>
+            <div class="text-lg font-bold text-slate-900 dark:text-white">15 Days</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">Free trial</div>
+          </div>
+        </div>
+  
+      </div>
+  
+      <!-- Active Subscription Dashboard -->
+      <div *ngIf="!showPlan && (currentSubscription$ | async)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  
+        <!-- Subscription Overview Card -->
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <!-- Header -->
+          <div class="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-5 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+            <div class="relative z-10" *ngIf="currentSubscription$ | async as sub">
+              <div class="flex items-center space-x-3 mb-2">
+                <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                  <i class="fas fa-check-circle text-white"></i>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-white">Active Subscription</h3>
+                  <p class="text-emerald-100 text-sm">{{ sub.plan_name_at_subscription || 'Premium Plan' }}</p>
+                  <div *ngIf="sub.offer_discount_percentage_at_subscription > 0" class="mt-2">
+                    <span class="inline-flex items-center bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full text-xs font-bold">
+                      Applied : {{ sub.offer_name_at_subscription }} - {{ sub.offer_discount_percentage_at_subscription }}% OFF
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="text-white/90">
+                  <p class="text-sm">Status</p>
+                  <p class="font-semibold">{{ sub.status | titlecase }}</p>
+                </div>
+                <div class="text-right text-white">
+                  <p class="text-sm text-white/90">₹{{ sub.plan_price_at_subscription || '0' }}</p>
+                  <p class="text-xs text-white/70">per {{ sub.billing_cycle || 'month' }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+  
+          <!-- Details -->
+          <div class="px-6 py-6">
+            <div class="grid grid-cols-2 gap-4 mb-6">
+              <div class="bg-slate-50 dark:bg-slate-700 rounded-xl p-4">
+                <div class="flex items-center space-x-2 mb-2">
+                  <i class="fas fa-calendar text-slate-500 text-sm"></i>
+                  <span class="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wide">Valid From</span>
+                </div>
+                <p class="font-semibold text-slate-900 dark:text-white" *ngIf="currentSubscription$ | async as sub">
+                  {{ sub.start_date | date:'MMM d, yyyy' }}
+                </p>
+              </div>
+  
+              <div class="bg-slate-50 dark:bg-slate-700 rounded-xl p-4">
+                <div class="flex items-center space-x-2 mb-2">
+                  <i class="fas fa-clock text-slate-500 text-sm"></i>
+                  <span class="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wide">Valid Until</span>
+                </div>
+                <p class="font-semibold text-slate-900 dark:text-white" *ngIf="currentSubscription$ | async as sub">
+                  {{ sub.end_date | date:'MMM d, yyyy' }}
+                </p>
+              </div>
+            </div>
+  
+            <!-- Payment Info -->
+            <div class="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-600 rounded-xl p-4 mb-6">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                  <div class="w-8 h-8 bg-slate-200 dark:bg-slate-500 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-credit-card text-slate-600 dark:text-slate-300"></i>
+                  </div>
+                  <div>
+                    <p class="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wide">Payment Method</p>
+                    <p class="font-semibold text-slate-900 dark:text-white" *ngIf="currentSubscription$ | async as sub">
+                      **** **** **** {{ sub.payment_method_id?.slice(-4) || '1234' }}
+                    </p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <p class="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wide">Last Payment</p>
+                  <p class="font-semibold text-slate-900 dark:text-white" *ngIf="currentSubscription$ | async as sub">
+                    ₹{{ sub.final_amount }}
+                  </p>
+                </div>
+              </div>
+            </div>
+  
+            <!-- Action Button -->
+            <button
+              (click)="toggleView()"
+              class="w-full bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white py-4 rounded-2xl font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 flex items-center justify-center space-x-2">
+              <i class="fas fa-eye"></i>
+              <span>View Plan Details</span>
+            </button>
+          </div>
+        </div>
+  
+        <!-- Premium Features Showcase -->
+        <div class="bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 dark:from-violet-900/20 dark:via-purple-900/20 dark:to-indigo-900/20 rounded-3xl p-6 shadow-xl border border-violet-200/50 dark:border-violet-700/50 scrollbar-thin scrollbar-thumb-red-500 scrollbar-track-gray-100 dark:scrollbar-track-gray-700 lg:col-span-2">
+          <!-- Header -->
+          <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center space-x-3">
+              <div class="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <i class="fas fa-star text-white text-lg"></i>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white">Premium Features</h3>
+                <p class="text-sm text-slate-600 dark:text-slate-300">Your plan includes these amazing features</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-2xl font-bold text-violet-600 dark:text-violet-400">{{ currentPlanFeatures.length }}</div>
+              <div class="text-xs text-slate-500 dark:text-slate-400">features</div>
+            </div>
+          </div>
+  
+          <!-- Features Horizontal Scroll -->
+          <div class="overflow-x-auto pb-2" *ngIf="currentPlanFeatures.length > 0; else noFeatures">
+            <div class="flex space-x-4" style="min-width: max-content;">
+              <div *ngFor="let feature of currentPlanFeatures; let i = index"
+                  class="flex-shrink-0 w-32 bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-lg border border-slate-200 dark:border-slate-600 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                <!-- Feature Icon -->
+                <div class="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-md">
+                  <i class="{{ feature.category_icon || 'fas fa-check' }} text-white text-sm"></i>
+                </div>
+                <!-- Feature Name -->
+                <div class="text-center">
+                  <span class="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-tight block">{{ feature.name }}</span>
+                </div>
+                <!-- Subtle Index Indicator -->
+                <div class="w-full h-1 bg-gradient-to-r from-violet-400 to-purple-500 rounded-full mt-3 opacity-60"></div>
+              </div>
+            </div>
+          </div>
+  
+          <!-- Empty State -->
+          <ng-template #noFeatures>
+            <div class="text-center py-12">
+              <div class="w-20 h-20 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-info-circle text-slate-400 dark:text-slate-500 text-3xl"></i>
+              </div>
+              <h4 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">No Features Yet</h4>
+              <p class="text-slate-500 dark:text-slate-400 text-sm">Features will appear here once configured</p>
+            </div>
+          </ng-template>
+  
+          <!-- Bottom CTA -->
+          <div class="mt-6 pt-4 border-t border-violet-200/50 dark:border-violet-700/50">
+            <button
+              (click)="toggleView()"
+              class="w-full bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white py-3 rounded-2xl font-semibold text-sm shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 flex items-center justify-center space-x-2">
+              <i class="fas fa-eye"></i>
+              <span>View All Features</span>
+            </button>
+          </div>
+        </div>
+  
+      </div>
+  
+      <!-- Error State -->
+      <div *ngIf="showPlan && errorMessage" class="text-center py-12">
+        <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Error Loading Plans</h3>
+        <p class="text-gray-500 dark:text-gray-400 mb-4">{{ errorMessage }}</p>
+        <button
+          (click)="loadData()"
+          class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+          <i class="fas fa-refresh mr-2"></i>Retry
+        </button>
+      </div>
+
+    </div>
+  
+    <!-- Premium Plan Selection -->
+    <div *ngIf="showPlan && !selectedPlanForDetails && !errorMessage && ((this.loadingService.loading$ | async) === false)" class="space-y-6">
+  
+      <!-- Section Header -->
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Choose Your Plan</h2>
+        <p class="text-slate-600 dark:text-slate-400">Select the perfect plan for your restaurant</p>
+      </div>
+  
+      <!-- Plan Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div *ngFor="let plan of plans$ | async; let i = index"
+          class="plan-card bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+          [ngClass]="getHoverBorder(i)">
+          <!-- Plan Header -->
+          <div class="relative overflow-hidden">
+            <!-- Background Gradient -->
+             <div [class]="'px-6 py-8 relative ' + getTheme(i)">
+              <!-- Decorative Elements -->
+              <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+              <div class="absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full -ml-8 -mb-8"></div>
+  
+              <!-- Plan Badge -->
+              <div *ngIf="plan.is_popular" class="absolute top-4 right-4 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                Most Popular
+              </div>
+
+              <!-- Plan Info -->
+              <div class="relative z-10">
+                <!-- First Line: Icon, Plan Name, and Pricing -->
+                <div class="flex items-center justify-between my-4">
+                  <div class="flex items-center space-x-4 flex-1 min-w-0">
+                    <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm flex-shrink-0">
+                      <i class="fas fa-crown text-white text-lg"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white leading-tight flex-1 min-w-0">{{ plan.display_name || plan.name }}</h3>
+                  </div>
+                   <div class="text-right flex-shrink-0 ml-4">
+                     <div class="flex items-baseline space-x-2 justify-end">
+                       <div *ngIf="plan.offer_discount_percentage > 0" class="text-sm text-white/70 line-through">₹{{ plan.price }}</div>
+                       <div class="text-3xl font-bold text-white leading-none">₹{{ (plan.price * (1 - (plan.offer_discount_percentage || 0) / 100)) }}</div>
+                     </div>
+                     <div class="text-white/80 text-sm leading-tight">per {{ plan.billing_cycle }}</div>
+                     <div *ngIf="plan.offer_name" class="mt-2 inline-flex items-center bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full text-xs font-bold shadow">
+                       {{ plan.offer_name }} | {{ plan.offer_discount_percentage }}% OFF
+                     </div>
+                   </div>
+                </div>
+
+                <!-- Second Line: Description Only -->
+                <div class="mb-4">
+                  <p class="text-white/80 text-sm leading-relaxed">{{ plan.description || 'Perfect for your restaurant' }}</p>
+                </div>
+
+                <!-- Trial Badge -->
+                <div *ngIf="plan.trial_days > 0 && isTrialEligible" class="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
+                  <i class="fas fa-gift text-yellow-300"></i>
+                  <span class="text-white font-medium text-sm">{{ plan.trial_days }} days free trial</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Plan Content -->
+          <div class="px-6 py-8">
+  
+            <!-- Features Section -->
+            <div class="mb-8">
+              <h4 class="text-base font-bold text-slate-900 dark:text-white mb-5 flex items-center">
+                <i class="fas fa-sparkles text-violet-500 mr-2"></i>
+                What's Included
+              </h4>
+  
+              <div class="grid grid-cols-1 gap-3" *ngIf="getPlanFeatures(plan.id).length > 0; else noFeatures">
+                <div *ngFor="let feature of getPlanFeatures(plan.id).slice(0, isFeaturesExpanded(plan.id) ? getPlanFeatures(plan.id).length : 4)"
+                     class="flex items-center space-x-3 py-2">
+                  <div class="w-5 h-5 bg-emerald-100 dark:bg-emerald-900 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-check text-emerald-600 dark:text-emerald-400 text-xs"></i>
+                  </div>
+                  <span class="text-sm text-slate-700 dark:text-slate-300">{{ feature.name }}</span>
+                </div>
+
+                <div *ngIf="getPlanFeatures(plan.id).length > 4" class="text-center mt-2">
+                  <button
+                    (click)="toggleFeaturesExpansion(plan.id)"
+                    class="text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 font-medium transition-colors duration-200">
+                    <i class="fas {{ isFeaturesExpanded(plan.id) ? 'fa-chevron-up' : 'fa-chevron-down' }} mr-1"></i>
+                    {{ isFeaturesExpanded(plan.id) ? 'Show less' : 'Show ' + (getPlanFeatures(plan.id).length - 4) + ' more features' }}
+                  </button>
+                </div>
+              </div>
+  
+              <ng-template #noFeatures>
+                <div class="text-center py-6">
+                  <div class="w-12 h-12 bg-slate-100 dark:bg-slate-700 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-info-circle text-slate-400 text-lg"></i>
+                  </div>
+                  <p class="text-sm text-slate-500 dark:text-slate-400">No features configured</p>
+                </div>
+              </ng-template>
+            </div>
+  
+            <!-- Action Section -->
+            <div *ngIf="!isSubscribed" class="space-y-4">
+  
+              <!-- Trial CTA -->
+              <div *ngIf="isTrialEligible && plan.trial_days > 0"
+                    class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-700 rounded-2xl p-5">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+                      <i class="fas fa-gift text-blue-600 dark:text-blue-400"></i>
+                    </div>
+                    <div>
+                      <h5 class="font-semibold text-blue-900 dark:text-blue-100">Free Trial</h5>
+                      <p class="text-xs text-blue-700 dark:text-blue-300">{{ plan.trial_days }} days included</p>
+                    </div>
+                  </div>
+                  <button
+                    (click)="startTrial(plan)"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95">
+                    Start Trial
+                  </button>
+                </div>
+              </div>
+  
+               <!-- Billing Period Selector -->
+               <div *ngIf="plan.price > 0" class="bg-slate-50 dark:bg-slate-700 rounded-2xl p-5">
+                 <h5 class="font-semibold text-slate-900 dark:text-white mb-3 flex items-center">
+                   <i class="fas fa-calendar text-slate-500 mr-2"></i>
+                   Choose Billing Period
+                 </h5>
+   
+                 <select [value]="getSelectedMonths(plan.id)"
+                         (change)="onMonthsChange(plan.id, $event)"
+                         class="w-full px-4 py-3 bg-white dark:bg-slate-600 border border-slate-200 dark:border-slate-500 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all duration-200">
+                   <option *ngFor="let month of billingPeriodMonths" [value]="month.key">{{ month.name }}</option>
+                 </select>
+   
+                  <!-- Pricing Breakdown -->
+                  <div class="mt-4 space-y-2">
+                    <div class="flex justify-between items-center text-sm">
+                      <span class="text-slate-600 dark:text-slate-400">Base Price</span>
+                       <span class="font-medium text-slate-900 dark:text-white">₹{{ (plan.price * getSelectedMonths(plan.id)) | number:'1.2-2' }}</span>
+                    </div>
+    
+                    <div *ngIf="getDiscountAmount(plan) > 0" class="flex justify-between items-center text-sm">
+                      <span class="text-emerald-600 dark:text-emerald-400 text-xs">Discount ({{ plan.offer_name }} - {{ plan.offer_discount_percentage }}% OFF)</span>
+                       <span class="font-medium text-emerald-600">-₹{{ getDiscountAmount(plan) | number:'1.2-2' }}</span>
+                    </div>
+    
+                    <div *ngIf="getGstPercentage() !== '0'" class="flex justify-between items-center text-sm">
+                      <span class="text-slate-600 dark:text-slate-400">GST ({{ getGstPercentage() }}%)</span>
+                       <span class="font-medium text-slate-900 dark:text-white">₹{{ getGstAmount(plan) | number:'1.2-2' }}</span>
+                    </div>
+    
+                    <div class="border-t border-slate-200 dark:border-slate-600 pt-2 mt-3">
+                      <div class="flex justify-between items-center">
+                        <span class="font-bold text-slate-900 dark:text-white">Total</span>
+                         <span class="font-bold text-slate-900 dark:text-white text-md">₹{{ getFinalAmount(plan) | number:'1.2-2' }}</span>
+                      </div>
+                    </div>
+                  </div>
+               </div>
+
+               <!-- Free Plan Notice -->
+               <div *ngIf="plan.price === 0" class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700 rounded-2xl p-4 text-center">
+                 <div class="flex items-center justify-center space-x-2">
+                   <i class="fas fa-check-circle text-emerald-600 dark:text-emerald-400"></i>
+                   <span class="text-emerald-800 dark:text-emerald-200 font-medium">Free Plan — No billing period required</span>
+                 </div>
+               </div>
+  
+              <!-- Subscribe Button -->
+              <button
+                *ngIf="plan.id !== currentPlan?.id"
+                (click)="openSubscriptionForPlan(plan)"
+                [class]="'w-full text-white py-4 rounded-2xl font-bold text-base shadow-xl hover:shadow-2xl transition-all duration-300 active:scale-95 flex items-center justify-center space-x-2 ' + getTheme(i)">
+                <i class="fas fa-rocket"></i>
+                <span>Subscribe Now</span>
+              </button>
+  
+              <!-- View Details Button -->
+              <button
+                *ngIf="plan.id === currentPlan?.id"
+                (click)="viewPlanDetails(plan)"
+                class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-4 rounded-2xl font-bold text-base shadow-xl hover:shadow-2xl transition-all duration-300 active:scale-95 flex items-center justify-center space-x-2">
+                <i class="fas fa-eye"></i>
+                <span>View Plan Details</span>
+              </button>
+  
+            </div>
+  
+          </div>
+        </div>
+      </div>
+  
+      <!-- Floating Action Button -->
+      <div class="fixed bottom-6 right-6 z-50">
+        <button
+          (click)="toggleView()"
+          class="w-14 h-14 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 active:scale-95 flex items-center justify-center group">
+          <i class="fas {{ showPlan ? 'fa-times' : 'fa-plus' }} text-white text-lg group-hover:rotate-90 transition-transform duration-300"></i>
+        </button>
+      </div>
+  
+    <!-- Plan Details Modal -->
+    <ng-container *ngIf="selectedPlanForDetails">
+      <div class="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" (click)="closePlanDetails()"></div>
+      <div class="fixed inset-x-4 top-20 bottom-6 z-50 bg-white dark:bg-slate-800 rounded-3xl shadow-2xl overflow-hidden">
+  
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-6 relative">
+          <button
+            (click)="closePlanDetails()"
+            class="absolute top-4 right-4 w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all duration-200 active:scale-95">
+            <i class="fas fa-times text-white"></i>
+          </button>
+  
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <div class="flex items-center space-x-3 mb-3">
+                <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                  <i class="fas fa-crown text-white text-lg"></i>
+                </div>
+                <div>
+                  <h2 class="text-2xl font-bold text-white">{{ selectedPlanForDetails!.display_name || selectedPlanForDetails!.name }}</h2>
+                  <p class="text-emerald-100 text-base">{{ currentPlan?.id === selectedPlanForDetails!.id ? 'Your Current Plan' : 'Premium Plan' }}</p>
+                </div>
+              </div>
+              <p class="text-white/90 text-sm leading-relaxed">{{ selectedPlanForDetails!.description }}</p>
+            </div>
+  
+            <div class="text-right ml-6">
+              <div class="flex items-baseline space-x-2">
+                <div *ngIf="selectedPlanForDetails!.offer_discount_percentage > 0" class="text-sm text-white/70 line-through">₹{{ selectedPlanForDetails!.price }}</div>
+                <div class="text-3xl font-bold text-white">₹{{ (selectedPlanForDetails!.price * (1 - (selectedPlanForDetails!.offer_discount_percentage || 0) / 100)) }}</div>
+              </div>
+              <div class="text-white/80 text-sm">per {{ selectedPlanForDetails!.billing_cycle }}</div>
+              <div *ngIf="selectedPlanForDetails!.offer_name" class="mt-2 inline-flex items-center bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full text-xs font-bold shadow">
+                {{ selectedPlanForDetails!.offer_name }} | {{ selectedPlanForDetails!.offer_discount_percentage }}% OFF
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Modal Content -->
+        <div class="flex-1 overflow-y-auto p-6">
+  
+          <!-- Plan Stats -->
+          <div class="grid grid-cols-2 gap-4 mb-8">
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-2xl p-4 text-center">
+              <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-store text-blue-600 dark:text-blue-400"></i>
+              </div>
+              <div class="text-2xl font-bold text-blue-900 dark:text-blue-100">{{ selectedPlanForDetails!.max_restaurants }}</div>
+              <div class="text-xs font-medium text-blue-700 dark:text-blue-300 uppercase tracking-wide">Max Restaurants</div>
+            </div>
+  
+            <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-2xl p-4 text-center">
+              <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-users text-emerald-600 dark:text-emerald-400"></i>
+              </div>
+              <div class="text-2xl font-bold text-emerald-900 dark:text-emerald-100">{{ selectedPlanForDetails!.max_users }}</div>
+              <div class="text-xs font-medium text-emerald-700 dark:text-emerald-300 uppercase tracking-wide">Max Users</div>
+            </div>
+  
+            <div class="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 rounded-2xl p-4 text-center">
+              <div class="w-10 h-10 bg-amber-100 dark:bg-amber-900 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-clock text-amber-600 dark:text-amber-400"></i>
+              </div>
+              <div class="text-2xl font-bold text-amber-900 dark:text-amber-100">{{ selectedPlanForDetails!.trial_days }}</div>
+              <div class="text-xs font-medium text-amber-700 dark:text-amber-300 uppercase tracking-wide">Trial Days</div>
+            </div>
+  
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-2xl p-4 text-center">
+              <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-money-bill text-purple-600 dark:text-purple-400"></i>
+              </div>
+              <div class="text-2xl font-bold text-purple-900 dark:text-purple-100">₹{{ selectedPlanForDetails!.setup_fee }}</div>
+              <div class="text-xs font-medium text-purple-700 dark:text-purple-300 uppercase tracking-wide">Setup Fee</div>
+            </div>
+          </div>
+  
+          <!-- Features Section -->
+          <div class="mb-8">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center">
+              <i class="fas fa-star text-violet-500 mr-2"></i>
+              Plan Features
+            </h3>
+  
+            <div class="space-y-3" *ngIf="getPlanFeatures(selectedPlanForDetails!.id).length > 0; else noFeaturesDetails">
+              <div *ngFor="let feature of getPlanFeatures(selectedPlanForDetails!.id)"
+                    class="flex items-center space-x-4 p-4 bg-slate-50 dark:bg-slate-700 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-600 transition-all duration-200">
+                <div class="w-8 h-8 bg-emerald-100 dark:bg-emerald-900 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-check text-emerald-600 dark:text-emerald-400"></i>
+                </div>
+                <span class="font-medium text-slate-900 dark:text-white">{{ feature.name }}</span>
+              </div>
+            </div>
+  
+            <ng-template #noFeaturesDetails>
+              <div class="text-center py-8">
+                <div class="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <i class="fas fa-info-circle text-slate-400 text-2xl"></i>
+                </div>
+                <p class="text-slate-500 dark:text-slate-400">No features configured for this plan</p>
+              </div>
+            </ng-template>
+          </div>
+  
+          <!-- Action Buttons -->
+          <div class="space-y-3 pb-6">
+            <button *ngIf="currentPlan?.id !== selectedPlanForDetails!.id"
+                    class="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white py-4 rounded-2xl font-bold text-base shadow-xl hover:shadow-2xl transition-all duration-300 active:scale-95 flex items-center justify-center space-x-2">
+              <i class="fas fa-rocket"></i>
+              <span>Upgrade to This Plan</span>
+            </button>
+  
+            <button *ngIf="currentPlan?.id === selectedPlanForDetails!.id"
+                    class="w-full bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white py-4 rounded-2xl font-bold text-base shadow-xl hover:shadow-2xl transition-all duration-300 active:scale-95 flex items-center justify-center space-x-2">
+              <i class="fas fa-cog"></i>
+              <span>Manage Subscription</span>
+            </button>
+  
+            <button class="w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 py-4 rounded-2xl font-semibold text-base transition-all duration-200 active:scale-95 flex items-center justify-center space-x-2">
+              <i class="fas fa-download"></i>
+              <span>Download Invoice</span>
+            </button>
+          </div>
+  
+        </div>
+      </div>
+    </ng-container>
+  
+      <!-- Empty State -->
+      <div *ngIf="(plans$ | async)?.length === 0 && ((this.loadingService.loading$ | async) === false)" class="text-center py-16">
+        <div class="w-20 h-20 bg-slate-100 dark:bg-slate-700 rounded-3xl flex items-center justify-center mx-auto mb-6">
+          <i class="fas fa-crown text-slate-400 text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-3">No Plans Available</h3>
+        <p class="text-slate-500 dark:text-slate-400 leading-relaxed">
+          Please contact support to set up subscription plans for your restaurant.
+        </p>
+      </div>
+  
+    </div>
+  </div>
+
+
+</div>

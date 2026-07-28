@@ -197,3 +197,328 @@ tomorrow's task
 4] navigation menu component - actual filtering
 
 ========================================================
+
+tomorrow task. 
+
+customer-menu component
+1] make the menu image comes with concat link
+2] add the description for items in db
+3] edit and upload the acutal image for menu items using rowner menu crud
+4] make cart service. increase and decresea and add and order. 
+
+tomorrow's plan
+1] double gst issue in cart and order. - done 
+2] owner side billing_requested to completed grouped by invoice and funtionality. - done
+3] owner side loyalty program on marked as the completed.
+4] pending orders not showing in home - session storage
+
+customer orders offer-redemptions api. 
+api - http://localhost:8080/api/offer-redemptions
+payload - {
+    "offerId": "2",
+    "customerId": 69,
+    "orderId": 22,
+    "restaurantId": 1,
+    "redemptionCode": "WELCOME10",
+    "discountAmount": 12,
+    "originalAmount": 142,
+    "finalAmount": 130,
+    "redemptionMethod": "BILLING_REQUESTED",
+    "appliedBy": "CUSTOMER",
+    "deviceType": "MOBILE",
+    "platform": "WEB",
+    "appliedAt": "2026-06-14T19:13:35.225Z"
+}
+status Code
+403 Forbidden
+response = nothing.
+
+---------------------
+
+pending points
+1] customer offers - offer history below active offers, loylaty points bar. - Done
+2] cusotmer orders - loyalty point discount below and also in owner invoice - Done
+3] admin side - restaurant id specific
+3] customer side - restaurant id specific
+3] notifications - real time notification services for all.
+4] powner dashboard - dynamic
+5] powner customized menu - keeping only menu that is needed
+6] testing
+7] buying server - 1 month
+8] connect with the domain
+9] deploy and test.
+10] empty the tables and final redeploy.
+
+Relatime Data (websocket)
+1] subscibe to the services at the login success.
+
+java websocket setup
+
+Yes — exactly 2–3 global backend changes first, then work locally at controller/service level.
+
+Global changes (do once)
+Add WebSocket dependency in pom.xml (global)
+Create WebSocketConfig.java in config/ package (global)
+Permit WebSocket endpoint in SecurityConfig.java — add /ws/** to requestMatchers (global)
+
+Real time data flow
+- apply websocket at global
+- then apply websocket at local controller/services individually
+- Proper way to manage realtime subscriptions
+Core principle
+Subscribe in one place only — AppComponent — and tie it to auth state, not routes.
+
+Step 1: AuthService exposes login state
+// auth.service.ts (already exists, just ensure this exists)
+private loggedIn = new BehaviorSubject<boolean>(false);
+isLoggedIn$ = this.loggedIn.asObservable();
+
+// Called after successful JWT storage
+setLoggedIn(user: User): void {
+  localStorage.setItem('user', JSON.stringify(user));
+  this.loggedIn.next(true);
+}
+
+logout(): void {
+  localStorage.removeItem('user');
+  this.loggedIn.next(false);
+}
+
+getCurrentUser(): User | null {
+  return localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null;
+}
+Step 2: AppComponent auto-connects on auth state change
+// app.component.ts
+export class AppComponent {
+  constructor(
+    private auth: AuthService,
+    private realtime: RealtimeService
+  ) {
+    // Handle fresh login OR page refresh with existing session
+    this.auth.isLoggedIn$.pipe(
+      filter(isLoggedIn => isLoggedIn),
+      take(1)  // only trigger once per login session
+    ).subscribe(() => {
+      const user = this.auth.getCurrentUser();
+      if (user) {
+        this.realtime.connect(user.id, user.restaurantId);
+      }
+    });
+
+    // Optional: auto-disconnect on logout
+    this.auth.isLoggedIn$.pipe(
+      filter(isLoggedIn => !isLoggedIn),
+      take(1)
+    ).subscribe(() => {
+      this.realtime.disconnect();
+    });
+  }
+}
+Step 3: AppComponent also handles page refresh recovery
+On page refresh, AppComponent runs first. Check if session exists and auto-connect:
+
+// In AppComponent constructor, BEFORE the isLoggedIn$ subscription
+ngOnInit(): void {
+  const existingUser = this.auth.getCurrentUser();
+  if (existingUser) {
+    // User refreshed page, session valid — reconnect immediately
+    this.realtime.connect(existingUser.id, existingUser.restaurantId);
+  }
+  
+  // Then listen for future logins
+  this.auth.isLoggedIn$...
+}
+Step 4: RealtimeService connection guard
+// realtime.service.ts
+private isConnected = false;
+
+connect(userId: string, restaurantId: string): void {
+  if (this.isConnected) {
+    this.disconnect();  // clean old connection first
+  }
+  
+  this.socket = io(environment.apiUrl);
+  this.socket.emit('authenticate', { userId, restaurantId });
+  
+  this.isConnected = true;
+}
+
+disconnect(): void {
+  this.socket?.disconnect();
+  this.isConnected = false;
+}
+Result
+Scenario	What happens
+First login	setLoggedIn() → isLoggedIn$ emits → AppComponent calls connect()
+Page refresh	AppComponent ngOnInit sees localStorage user → auto connect()
+Navigate to any page	Connection already live in singleton service — all pages work
+Logout	isLoggedIn$ emits false → disconnect()
+Close tab	Browser kills socket automatically
+Where NOT to subscribe
+Never in feature components (orders-mobile, customer-orders)
+Never in navbar or notification bell
+Those just read from the BehaviorSubject streams that AppComponent already populated
+The complete ownership map
+AppComponent
+   ├── OnInit: checks localStorage → connect() if user exists
+   ├── auth.isLoggedIn$ → connect() on login
+   └── auth.isLoggedIn$ (false) → disconnect() on logout
+
+RealtimeService (singleton)
+   ├── socket.on('newOrder')      → newOrderSubject.next()
+   ├── socket.on('newNotification') → newNotificationSubject.next()
+   └── expose observables for whole app
+
+Feature components (orders-mobile, customer-orders, bell)
+   └── just subscribe to realtimeService.newOrder$
+      or realtimeService.newNotification$
+      (no connect/disconnect logic)
+One subscription, all pages, auto-heals on refresh.
+
+==================================================================
+
+customer-cart
+   │  POST /orders  (createOrder API)
+   ▼
+Backend OrderService.saveOrder()
+   │  saves to DB
+   │  emitOrderUpdate() → emits to:
+   │     /topic/orders/1       (Restaurant 1 staff)
+   │     /topic/users/cust-1/orders  (that customer only)
+   ▼
+orders-mobile (Rest 1)  → new order appears in list
+customer-orders (customer 1)  → order appears in activeOrders
+
+==================================================================
+
+What's NOT done (optional next steps)
+Item	Priority
+AppComponent shows in-app toast on newNotification$	Low
+Navbar bell component using newNotification$	Low
+Connection status indicator (connected/disconnected)	Low
+Notification page showing historical list	Medium
+The real-time engine itself is fully functional. Those are just UI consumers that can be added later.
+
+==================================================================
+
+=======================================================================
+
+GUEST FLOW
+
+initializeGuest()
+  ├─ isGuestAvailable = true  →  loadExistingGuest()
+  │     └─ validateCustomer() succeeds
+  │           → setCurrentUserFromGuest()  ← establishes auth state via setCurrentUser()
+  │           → setTimeout(() => initializeUser(), 100ms)
+  │                 └─ loadMenuData()  ← menu loads fine
+  │
+  └─ isGuestAvailable = false  →  createNewGuest()
+        └─ ensureGuestExists() succeeds
+              → setCurrentUserFromGuest()  ← establishes auth state via setCurrentUser()
+              → setTimeout(() => initializeUser(), 100ms)
+                    └─ loadMenuData()  ← menu loads fine
+
+=======================================================================
+
+task to complete today.  (make both userid wise)
+check where sessionstorage is getting clear.
+ws url from environment - Done
+http://localhost:8080/api/orders/customer/active - done
+http://localhost:8080/api/orders?status=COMPLETED&page=1&size=10 - done
+
+========================================================================
+
+powner - pages required.
+
+1] Real Time Dashboard - keep not dynamic
+2] system configuration
+3] restaurant Manangement
+4] plan management
+5] role management
+6] navigation management
+7] feature access control
+8] feature management
+9] user management
+10 role access management
+11] subscriptions Analytics - keep not dynamic
+12] Integrations - keep not dynamic
+13] user notifications - keep not dynamic
+
+real time operations needed on actions
+1] 
+
+system-configuration api call at the app.component.ts load
+
+create one getRestAndPlatformUsers service - resta and user of type platform_owner 
+create above api and then subscribe to service after auth sucess.
+
+things for creating restaurant manager user. 
+- restaurant manager routing - done
+- restaurant manager footer - done
+- orders mobile working like the restaurant_owner - done
+- orders notifications - done
+- inventory management - Pending
+
+To day today 30/06/26
+
+1] check restaruang manager login again - done
+2] remove ui-cafe-x-pos from base url - done
+3] home page - super easy pos plan details changing - done
+6] restaurant profile page with the info and the menus - done 
+5] inventory management - done
+4] platform owner real time dashboard - done
+6] restaurant real time needed - done
+7] role gurard for authentication - done
+8] subscription guard. - done
+9] subscription plans dynamice in home page - done
+10] restaurant management images upload - done
+11] restaurant profile edits only in the mobile view - done
+14] restaurants subscription things - done
+14] restaurant real time dashboard - done
+15] dashboard and restaurant profile link to all user except platform owner - done
+13] 5 to 6 important real world reports with export to excel - done
+16] live chat - done
+17] plans additional but deactivate offer Display - done
+18] real life restaurant's names and images - done
+20] tomcat local server setup - done
+12] menu items real time needed - done
+19] api's global errors in response instead of 400 - done
+
+new points 
+1] forgot password - done
+2] daily db backup email at platform_owner with download link and db_backup saved in uploads in server - done
+3] advance iventory with recipe managment and menu_items for low stock alerts - done
+
+New Points Must for Starter Package
+
+1] check no of table in db used with the name, so unused can be deleted. - pending
+2] broadcast notification - pending
+3] system configuration using it in application - pending
+4] edit facility of order to all admin users - pending
+5] order customisation as per the menu_item - pending
+6] stock adjustment new menu - Done
+7] versioning come at home,login and dashboard footer - Done
+8] gst at system config, and it's use in the plan purchase - Done
+9] gst at restaurant creation, and it's use in the order purchase, add new field gst_percentage in order - Done
+
+10] retesting for the Free and starter package
+
+custormer profile image dynamic
+free plan end date blank no dropdown to show.
+then start the testing for the free plan
+
+=============================
+
+to do list tommorrow 23/07/26
+
+prod issue
+
+1] check the ui images issues - Done
+2] db connection to cafexpos db - Done
+2] create the tables in the api - Done
+2] rename the prod db to cafe_X_pos_prod - Done
+2] take backup of local data before running sequence queries - Done
+4] create the upload and other folders in the server - Pending
+3] initialize the prod db with initial configuration data & platform owner user - Pending
+4] make standard for local,uat and prod build, backup and proper git repo settings for local,uat and production - Pending
+ 

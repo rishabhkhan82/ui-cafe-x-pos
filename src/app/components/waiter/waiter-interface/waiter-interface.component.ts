@@ -85,11 +85,11 @@ export class WaiterInterfaceComponent implements OnInit, OnDestroy {
       };
     });
 
-    // Assign some orders to occupied tables
-    this.mockDataService.getOrders().subscribe(orders => {
-      const activeOrders = orders.filter(order =>
-        ['confirmed', 'preparing', 'ready', 'on_the_way', 'served'].includes(order.status)
-      );
+      // Assign some orders to occupied tables
+      this.mockDataService.getOrders().subscribe(orders => {
+        const activeOrders = orders.filter(order =>
+          ['CONFIRMED', 'PREPARING', 'READY', 'ON_THE_WAY', 'SERVED'].includes(order.status)
+        );
 
       // Only assign orders to tables that are already marked as occupied
       const occupiedTables = this.tables.filter(table => table.status === 'occupied');
@@ -114,8 +114,8 @@ export class WaiterInterfaceComponent implements OnInit, OnDestroy {
 
   private loadOrders(): void {
     this.mockDataService.getOrders().subscribe(orders => {
-      this.readyOrders = orders.filter(order => order.status === 'ready');
-      this.onTheWayOrders = orders.filter(order => order.status === 'on_the_way');
+      this.readyOrders = orders.filter(order => order.status === 'READY');
+      this.onTheWayOrders = orders.filter(order => order.status === 'ON_THE_WAY');
       this.updateStats();
     });
   }
@@ -141,17 +141,17 @@ export class WaiterInterfaceComponent implements OnInit, OnDestroy {
   private updateOrderInLists(order: Order): void {
     // Update ready orders
     const readyIndex = this.readyOrders.findIndex(o => o.id === order.id);
-    if (order.status === 'ready' && readyIndex === -1) {
+    if (order.status === 'READY' && readyIndex === -1) {
       this.readyOrders.push(order);
-    } else if (order.status !== 'ready' && readyIndex !== -1) {
+    } else if (order.status !== 'READY' && readyIndex !== -1) {
       this.readyOrders.splice(readyIndex, 1);
     }
 
     // Update on the way orders
     const onTheWayIndex = this.onTheWayOrders.findIndex(o => o.id === order.id);
-    if (order.status === 'on_the_way' && onTheWayIndex === -1) {
+    if (order.status === 'ON_THE_WAY' && onTheWayIndex === -1) {
       this.onTheWayOrders.push(order);
-    } else if (order.status !== 'on_the_way' && onTheWayIndex !== -1) {
+    } else if (order.status !== 'ON_THE_WAY' && onTheWayIndex !== -1) {
       this.onTheWayOrders.splice(onTheWayIndex, 1);
     }
   }
@@ -159,7 +159,7 @@ export class WaiterInterfaceComponent implements OnInit, OnDestroy {
   private updateTableStatus(order: Order): void {
     const table = this.tables.find(t => t.currentOrder?.id === order.id);
     if (table) {
-      if (order.status === 'completed') {
+      if (order.status === 'COMPLETED') {
         table.status = 'needs_cleaning';
         table.currentOrder = undefined;
       }
@@ -171,8 +171,8 @@ export class WaiterInterfaceComponent implements OnInit, OnDestroy {
     this.readyOrdersCount = this.readyOrders.length;
     this.onTheWayCount = this.onTheWayOrders.length;
     this.deliveredToday = this.onTheWayOrders.filter(order =>
-      order.status === 'served' &&
-      new Date(order.createdAt).toDateString() === new Date().toDateString()
+      order.status === 'SERVED' &&
+      new Date(order.created_at).toDateString() === new Date().toDateString()
     ).length;
   }
 
@@ -227,26 +227,26 @@ export class WaiterInterfaceComponent implements OnInit, OnDestroy {
   }
 
   markAsOnTheWay(order: Order): void {
-    order.status = 'on_the_way';
-    order.deliveredAt = new Date();
+    order.status = 'ON_THE_WAY';
+    order.delivered_at = new Date();
     this.realtimeService.updateOrder(order);
     this.closeOrderDetails();
   }
 
   markAsDelivered(order: Order): void {
-    order.status = 'served';
+    order.status = 'SERVED';
     this.realtimeService.updateOrder(order);
     this.closeOrderDetails();
   }
 
   callForHelp(order: Order): void {
     // In a real app, this would send a notification to managers
-    alert(`Help requested for Order #${order.id.split('-').pop()} at Table ${order.tableNumber}`);
+    alert(`Help requested for Order #${order.order_id.split('-').pop()} at Table ${order.table_number}`);
   }
 
   requestBill(table: Table): void {
     if (table.currentOrder) {
-      table.currentOrder.status = 'billing_requested';
+      table.currentOrder.status = 'BILLING_REQUESTED';
       this.realtimeService.updateOrder(table.currentOrder);
       alert(`Bill requested for Table ${table.number}`);
     }
@@ -258,16 +258,16 @@ export class WaiterInterfaceComponent implements OnInit, OnDestroy {
   }
 
   addToCart(menuItem: MenuItem): void {
-    const existingItem = this.cart.find(item => item.menuItem.id === menuItem.id);
+    const existingItem = this.cart.find(item => item.menu_item.id === menuItem.id);
     if (existingItem) {
       existingItem.quantity++;
-      existingItem.totalPrice = existingItem.quantity * menuItem.price;
+      existingItem.total_price = existingItem.quantity * menuItem.price;
     } else {
-      this.cart.push({
-        menuItem,
-        quantity: 1,
-        totalPrice: menuItem.price
-      });
+      // this.cart.push({
+      //   menuItem,
+      //   quantity: 1,
+      //   total_price: menuItem.price
+      // });
     }
   }
 
@@ -276,7 +276,7 @@ export class WaiterInterfaceComponent implements OnInit, OnDestroy {
       this.removeFromCart(cartItem);
     } else {
       cartItem.quantity = quantity;
-      cartItem.totalPrice = cartItem.quantity * cartItem.menuItem.price;
+      cartItem.total_price = cartItem.quantity * cartItem.menu_item.price;
     }
   }
 
@@ -288,7 +288,7 @@ export class WaiterInterfaceComponent implements OnInit, OnDestroy {
   }
 
   getCartTotal(): number {
-    return this.cart.reduce((total, item) => total + item.totalPrice, 0);
+    return this.cart.reduce((total, item) => total + item.total_price, 0);
   }
 
   getCartItemCount(): number {
@@ -350,34 +350,42 @@ export class WaiterInterfaceComponent implements OnInit, OnDestroy {
     }
 
     const orderItems = this.cart.map(cartItem => ({
-      menuItemId: cartItem.menuItem.id,
-      menuItemName: cartItem.menuItem.name,
+      menuItemId: cartItem.menu_item.id,
+      menuItemName: cartItem.menu_item.name,
       quantity: cartItem.quantity,
-      unitPrice: cartItem.menuItem.price,
-      totalPrice: cartItem.totalPrice,
-      specialInstructions: cartItem.specialInstructions
+      unitPrice: cartItem.menu_item.price,
+      totalPrice: cartItem.total_price,
+      specialInstructions: cartItem.special_instructions
     }));
 
     const order: Order = {
-      id: `ORD-${Date.now()}`,
-      tableNumber: this.selectedTable.number.toString(),
-      customerName: this.currentCustomer.isGuest ? 'Guest' : (this.currentCustomer.name || 'Customer'),
-      customerId: this.currentCustomer.id || '',
+      id: Date.now(),
+      order_id: `ORD-${Date.now()}`,
+      table_number: this.selectedTable.number.toString(),
+      customer_name: this.currentCustomer.isGuest ? 'Guest' : (this.currentCustomer.name || 'Customer'),
+      customer_id: this.currentCustomer.id ? parseInt(this.currentCustomer.id) : 0,
+      restaurant_id: 1,
       items: orderItems.map(item => ({
         id: item.menuItemId,
-        menuItemId: item.menuItemId,
-        menuItemName: item.menuItemName,
+        order_id: order.id,
+        menu_item_id: item.menuItemId,
+        menu_item_name: item.menuItemName,
         quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        totalPrice: item.totalPrice,
-        specialInstructions: item.specialInstructions
+        unit_price: item.unitPrice,
+        total_price: item.totalPrice,
+        special_instructions: item.specialInstructions,
+        category: 'Main Course',
+        status: 'active'
       })),
-      totalAmount: this.getFinalTotal(),
-      status: 'confirmed',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      paymentStatus: 'pending',
-      specialInstructions: ''
+      total_amount: this.getFinalTotal(),
+      status: 'CONFIRMED',
+      created_at: new Date(),
+      updated_at: new Date(),
+      payment_status: 'PENDING',
+      special_instructions: '',
+      tax_amount: 0,
+      order_type: 'DINE_IN',
+      priority: 'MEDIUM'
     };
 
     // Update table status
@@ -394,19 +402,19 @@ export class WaiterInterfaceComponent implements OnInit, OnDestroy {
     this.selectedTable = null;
     this.setView('tables');
 
-    alert(`Order #${order.id.split('-').pop()} created successfully for Table ${order.tableNumber}`);
+    alert(`Order #${order.order_id.split('-').pop()} created successfully for Table ${order.table_number}`);
   }
 
   canRequestBill(order: Order): boolean {
-    return ['ready', 'served'].includes(order.status);
+    return ['READY', 'SERVED'].includes(order.status);
   }
 
   canMarkAsOnTheWay(order: Order): boolean {
-    return order.status === 'ready';
+    return order.status === 'READY';
   }
 
   canMarkAsDelivered(order: Order): boolean {
-    return order.status === 'on_the_way';
+    return order.status === 'ON_THE_WAY';
   }
 
   // Helper methods
@@ -465,26 +473,26 @@ export class WaiterInterfaceComponent implements OnInit, OnDestroy {
 
   getOrderStatusBadgeClass(order: Order): string {
     switch (order.status) {
-      case 'ready': return 'bg-green-100 dark:bg-green-900/30 text-green-600';
-      case 'on_the_way': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-600';
-      case 'served': return 'bg-purple-100 dark:bg-purple-900/30 text-purple-600';
+      case 'READY': return 'bg-green-100 dark:bg-green-900/30 text-green-600';
+      case 'ON_THE_WAY': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-600';
+      case 'SERVED': return 'bg-purple-100 dark:bg-purple-900/30 text-purple-600';
       default: return 'bg-gray-100 dark:bg-gray-700 text-gray-600';
     }
   }
 
   getOrderStatusText(order: Order): string {
     switch (order.status) {
-      case 'ready': return 'Ready';
-      case 'on_the_way': return 'On the Way';
-      case 'served': return 'Served';
-      case 'completed': return 'Completed';
+      case 'READY': return 'Ready';
+      case 'ON_THE_WAY': return 'On the Way';
+      case 'SERVED': return 'Served';
+      case 'COMPLETED': return 'Completed';
       default: return order.status;
     }
   }
 
-  formatOrderTime(createdAt: Date | string): string {
+  formatOrderTime(created_at: Date | string): string {
     const now = new Date();
-    const created = new Date(createdAt);
+    const created = new Date(created_at);
     const diffMinutes = Math.floor((now.getTime() - created.getTime()) / (1000 * 60));
 
     if (diffMinutes < 1) return 'Just now';
@@ -494,10 +502,10 @@ export class WaiterInterfaceComponent implements OnInit, OnDestroy {
     return `${diffHours}h ago`;
   }
 
-  formatTimeAgo(deliveredAt?: Date): string {
-    if (!deliveredAt) return '';
+  formatTimeAgo(delivered_at?: Date): string {
+    if (!delivered_at) return '';
     const now = new Date();
-    const delivered = new Date(deliveredAt);
+    const delivered = new Date(delivered_at);
     const diffMinutes = Math.floor((now.getTime() - delivered.getTime()) / (1000 * 60));
 
     if (diffMinutes < 1) return 'just now';

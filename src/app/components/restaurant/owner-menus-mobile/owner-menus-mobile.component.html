@@ -1,0 +1,667 @@
+<!-- Main Container -->
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <!-- Premium Fixed Header -->
+  <div class="fixed top-0 md:top-[73px] left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 dark:shadow-lg" style="min-height: 73px;">
+    <div class="px-4 py-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4 flex-1">
+          <button
+            (click)="router.navigate(['/restaurant-navigation-mobile'])"
+            class="p-2 rounded-xl bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-md hover:shadow-lg border border-red-200 dark:border-gray-600">
+            <i class="fas fa-arrow-left text-red-600 dark:text-red-400 text-lg"></i>
+          </button>
+
+          <!-- Header Content (always visible on md+, hidden on mobile when searching) -->
+          <div [class.hidden]="showSearchBar" class="flex items-center space-x-3 flex-1 md:!flex">
+            <div class="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg">
+              <i class="fas fa-utensils text-white text-sm"></i>
+            </div>
+            <div>
+              <h1 class="text-xl font-bold text-gray-900 dark:text-white">
+                Menu Items
+              </h1>
+              <p class="text-xs text-gray-600 dark:text-gray-400">Manage Your Menu</p>
+            </div>
+          </div>
+
+          <div class="hidden md:flex items-center space-x-2 flex-1 justify-end">
+            <!-- Category Filter (md+ only) -->
+            <select
+              [(ngModel)]="categoryFilter"
+              (change)="filterMenus()"
+              class="hidden min-w-[200px] md:block px-3 py-2.5 text-sm bg-gray-50 dark:bg-transparent border border-gray-200 dark:border-gray-600 rounded-[2rem] text-gray-900 dark:text-gray-300 focus:ring-2 focus:ring-red-500 focus:border-red-500">
+              <option class="bg-gray-50 dark:bg-gray-700" value="all">All Categories</option>
+              <option class="bg-gray-50 dark:bg-gray-700" *ngFor="let category of categories" [value]="category.key" [disabled]="category.key === 'all'">{{ category.name }}</option>
+            </select>
+
+            <!-- Type Filter (md+ only) -->
+            <select
+              [(ngModel)]="typeFilter"
+              (change)="filterMenus()"
+              class="hidden min-w-[200px] md:block px-3 py-2.5 text-sm bg-gray-50 dark:bg-transparent border border-gray-200 dark:border-gray-600 rounded-[2rem] text-gray-900 dark:text-gray-300 focus:ring-2 focus:ring-red-500 focus:border-red-500">
+              <option class="bg-gray-50 dark:bg-gray-700" value="all">All Types</option>
+              <option class="bg-gray-50 dark:bg-gray-700" *ngFor="let type of typeOptions" [value]="type.key">{{ type.name }}</option>
+            </select>
+          </div>
+
+          <!-- Simple Search Bar (Shown when searching) -->
+          <div *ngIf="showSearchBar" class="flex-1 ml-4 animate-fadeInSlide md:max-w-[200px]">
+            <div class="relative">
+              <input
+                type="text"
+                [(ngModel)]="searchInput"
+                (ngModelChange)="onSearchInputChange($event)"
+                placeholder="Search by name"
+                class="w-full px-4 py-2 pl-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-[2rem] shadow-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                autofocus
+              >
+              <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2 ml-4">
+          <button
+            *ngIf="!showSearchBar"
+            (click)="toggleSearchBar()"
+            class="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
+            <i class="fas fa-search"></i>
+          </button>
+          <button
+            *ngIf="showSearchBar"
+            (click)="toggleSearchBar()"
+            class="p-2 bg-red-100 dark:bg-red-900/20 hover:bg-red-200 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
+            <i class="fas fa-times"></i>
+          </button>
+          <button
+            (click)="loadMenus()"
+            class="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
+            <i class="fas fa-refresh"></i>
+          </button>
+          <button
+            (click)="showMenuForm()"
+            class="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-sm">
+            <i class="fas fa-plus mr-2"></i>Add
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="px-6 space-y-6 pt-[25px] pb-[105px] md:pt-[100px] md:pb-[90px]">
+
+    <!-- Results Header -->
+    <div *ngIf="totalElements > 0" class="flex items-center justify-between">
+      <div class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+        <i class="fas fa-utensils mr-2"></i>
+        {{ totalElements }} menu items found
+      </div>
+      <div class="text-xs text-gray-500 dark:text-gray-400">
+        Page {{ currentPage }} of {{ totalPages }}
+      </div>
+    </div>
+
+    <!-- Menu Items Grid -->
+    <div class="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div
+        *ngFor="let menu of menus"
+        class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer group"
+        (click)="selectMenu(menu)">
+        <div class="relative">
+          <img
+            [src]="getFullImageUrl(menu.image)"
+            [alt]="menu.name"
+            class="w-full h-32 object-cover">
+          <div class="absolute top-2 right-2">
+            <div
+              [class]="menu.is_available ? 'w-3 h-3 rounded-full bg-green-500' : 'w-3 h-3 rounded-full bg-gray-400'"
+              class="ring-2 ring-white dark:ring-gray-700"></div>
+          </div>
+        </div>
+        <div class="p-4">
+          <div class="flex items-start justify-between mb-2">
+            <div class="flex-1 min-w-0">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white truncate">{{ menu.name }}</h3>
+              <div class="flex items-center space-x-2 mt-1">
+                <span
+                  [class]="categoryColorMap[menu.category] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300'"
+                  class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium">
+                  {{ menu.category }}
+                </span>
+                <span *ngIf="menu.discount" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                  <i class="fas fa-percent mr-1"></i>{{ menu.discount }}
+                </span>
+                <span *ngIf="menu.is_popular" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                  <i class="fas fa-star mr-1"></i>Popular
+                </span>
+                <span *ngIf="menu.is_featured" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                  <i class="fas fa-certificate mr-1"></i>Featured
+                </span>
+                <span *ngIf="menu.is_recommended" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                  <i class="fas fa-thumbs-up mr-1"></i>Recommended
+                </span>
+                <span *ngIf="menu.is_spicy" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                  <i class="fas fa-fire mr-1"></i>Spicy
+                </span>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-xl font-bold text-red-600 dark:text-red-400">${{ menu.price.toFixed(2) }}</p>
+               <p *ngIf="menu.discount" class="text-sm text-gray-500 line-through">${{ menu.original_price?.toFixed(2) }}</p>
+            </div>
+          </div>
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 flex-1">{{ menu.description }}</p>
+            <div class="flex items-center text-xs text-gray-500 dark:text-gray-400 ml-2">
+              <i class="fas fa-clock mr-1"></i>{{ menu.preparation_time }}min
+            </div>
+          </div>
+          <div class="flex space-x-1">
+            <button
+              (click)="selectMenu(menu); $event.stopPropagation()"
+              class="flex-1 px-2 py-2 rounded-md bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors text-xs font-medium text-center">
+              <i class="fas fa-eye mr-1"></i>View
+            </button>
+            <button
+              (click)="showMenuForm(menu); $event.stopPropagation()"
+              class="flex-1 px-2 py-2 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-xs font-medium text-center">
+              <i class="fas fa-edit mr-1"></i>Edit
+            </button>
+            <button
+              (click)="deleteMenu(menu); $event.stopPropagation()"
+              class="flex-1 px-2 py-2 rounded-md bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-xs font-medium text-center">
+              <i class="fas fa-trash mr-1"></i>Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="totalElements === 0 && ((this.loadingService.loading$ | async) === false)" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div class="px-6 py-8 bg-gradient-to-r from-red-50 to-red-50 dark:from-red-900/20 dark:to-red-900/10 border-b border-gray-100 dark:border-gray-700">
+        <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-red-500 to-red-600 mx-auto mb-4 flex items-center justify-center">
+          <i class="fas fa-utensils text-white text-3xl"></i>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-900 dark:text-white text-center">No menu items found</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-300 text-center mt-2" *ngIf="!hasActiveFilters">
+          Get started by creating your first menu item.
+        </p>
+        <p class="text-sm text-gray-600 dark:text-gray-300 text-center mt-2" *ngIf="hasActiveFilters">
+          Try adjusting your search filters or clear them to see all menu items.
+        </p>
+      </div>
+      <div class="p-6 text-center">
+        <button
+          *ngIf="!hasActiveFilters"
+          (click)="showMenuForm()"
+          class="px-6 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl">
+          <i class="fas fa-plus mr-2"></i>
+          Add First Item
+        </button>
+        <button
+          *ngIf="hasActiveFilters"
+          (click)="clearFilters()"
+          class="px-6 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600">
+          <i class="fas fa-times mr-2"></i>
+          Clear Filters
+        </button>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="totalElements > 0 && !showAddForm" class="fixed bottom-20 md:bottom-[65px] left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-10 py-2 px-4">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+          <div class="text-sm text-gray-700 dark:text-gray-300">
+            {{ paginationRange }} of {{ totalElements }}
+          </div>
+          <div class="flex items-center space-x-1">
+            <span class="text-xs text-gray-500 dark:text-gray-400">Show:</span>
+            <select
+              [(ngModel)]="itemsPerPage"
+              (change)="onItemsPerPageChange($event)"
+              class="px-2 py-1 text-xs w-14 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-gray-900 dark:text-gray-300">
+              <option *ngFor="let option of itemsPerPageOptions" [value]="option">{{ option }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-1">
+          <button
+            (click)="changePage(1)"
+            [disabled]="currentPage === 1"
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
+            <i class="fas fa-angle-double-left text-xs"></i>
+          </button>
+          <button
+            (click)="changePage(currentPage - 1)"
+            [disabled]="currentPage === 1"
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
+            <i class="fas fa-chevron-left text-xs"></i>
+          </button>
+          <button
+            *ngFor="let page of pageNumbers"
+            (click)="changePage(page)"
+            [class]="page === currentPage ? 'w-7 h-7 rounded bg-red-500 text-white flex items-center justify-center text-xs' : 'w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center text-xs text-gray-900 dark:text-gray-300'">
+            {{ page }}
+          </button>
+          <button
+            (click)="changePage(currentPage + 1)"
+            [disabled]="currentPage === totalPages"
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
+            <i class="fas fa-chevron-right text-xs"></i>
+          </button>
+          <button
+            (click)="changePage(totalPages)"
+            [disabled]="currentPage === totalPages"
+            class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gray-900 dark:text-gray-300">
+            <i class="fas fa-angle-double-right text-xs"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Menu Modal -->
+  <div *ngIf="showAddForm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] md:py-10">
+    <div class="h-full flex flex-col bg-white dark:bg-gray-800 z-50 w-full md:w-[672px] md:rounded-2xl md:shadow-lg overflow-hidden">
+      <!-- Modal Header -->
+      <div class="px-6 py-4 bg-white/95 dark:bg-gray-800 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 flex items-center justify-between z-[100]">
+        <div class="flex items-center space-x-4">
+          <button (click)="cancelAdd()" class="w-8 h-8 rounded-lg hover:bg-red-100 dark:hover:bg-gray-700 flex items-center justify-center">
+            <i class="fas fa-arrow-left text-red-600 dark:text-red-400"></i>
+          </button>
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ editingMenu ? 'Edit Menu Item' : 'Add New Menu Item' }}</h3>
+        </div>
+        <button
+          (click)="onSubmitForm()"
+          class="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-sm">
+          <i class="fas fa-save mr-2"></i>{{ editingMenu ? 'Update' : 'Save' }}
+        </button>
+      </div>
+      <!-- Modal Body -->
+      <div class="flex-1 p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-red-500 scrollbar-track-gray-100 dark:scrollbar-track-gray-700">
+        <form class="space-y-4">
+          <!-- Image Upload Section -->
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-image mr-2 text-indigo-500"></i>Menu Item Image <span class="text-red-500">*</span></label>
+            <div class="space-y-3">
+              <!-- Image Previews -->
+              <div *ngIf="menuForm.image" class="relative flex space-x-4">
+                <!-- Square Preview -->
+                <div class="relative">
+                  <img [src]="getFullImageUrl(menuForm.image)" alt="Menu item preview - square" class="w-32 h-32 object-cover rounded-xl border-2 border-gray-200 dark:border-gray-600">
+                  <div class="absolute -bottom-2 -right-2 bg-white dark:bg-gray-800 rounded-md px-2 py-1 shadow-md border border-gray-200 dark:border-gray-600">
+                    <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Square</span>
+                  </div>
+                </div>
+
+                <!-- Rectangular Preview -->
+                <div class="relative flex-1">
+                  <img [src]="getFullImageUrl(menuForm.image)" alt="Menu item preview - rectangular" class="w-full h-32 object-cover rounded-xl border-2 border-gray-200 dark:border-gray-600">
+                  <div class="absolute -bottom-2 -right-2 bg-white dark:bg-gray-800 rounded-md px-2 py-1 shadow-md border border-gray-200 dark:border-gray-600">
+                    <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Rectangle</span>
+                  </div>
+                </div>
+
+                <!-- Remove Button -->
+                <button
+                  type="button"
+                  (click)="menuForm.image = ''; selectedFile = null; validateImage()"
+                  class="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 transition-colors shadow-md z-10">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+
+              <!-- File Input -->
+              <div class="relative">
+                <input
+                  type="file"
+                  accept="image/*"
+                  (change)="onFileSelected($event)"
+                  class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                <div class="flex items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl hover:border-red-400 dark:hover:border-red-500 transition-colors p-6">
+                  <div class="text-center">
+                    <i class="fas fa-cloud-upload-alt text-gray-400 text-2xl mb-2"></i>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      <span class="text-red-500 font-medium">Click to upload</span> or drag and drop
+                    </p>
+                    <p class="text-xs text-gray-500 dark:text-gray-500">JPEG, PNG, WebP up to {{ fileUploadMaxSizeMB }}MB</p>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="fieldErrors['image']" class="mt-1 text-xs text-red-500">{{ fieldErrors['image'] }}</div>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-signature mr-2 text-red-500"></i>Name <span class="text-red-500">*</span></label>
+              <input
+                type="text"
+                [(ngModel)]="menuForm.name"
+                name="name"
+                (blur)="validateName()"
+                (input)="validateName(); generateItemId()"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
+                placeholder="Enter menu item name">
+            <div *ngIf="fieldErrors['name']" class="mt-1 text-xs text-red-500">{{ fieldErrors['name'] }}</div>
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-align-left mr-2 text-blue-500"></i>Description <span class="text-red-500">*</span></label>
+            <textarea
+              [(ngModel)]="menuForm.description"
+              name="description"
+              (blur)="validateDescription()"
+              (input)="validateDescription()"
+              rows="3"
+              class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white resize-none"
+              placeholder="Enter description"></textarea>
+            <div *ngIf="fieldErrors['description']" class="mt-1 text-xs text-red-500">{{ fieldErrors['description'] }}</div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-dollar-sign mr-2 text-green-500"></i>Price <span class="text-red-500">*</span></label>
+              <input
+                type="number"
+                step="0.01"
+                [(ngModel)]="menuForm.price"
+                name="price"
+                (blur)="validatePrice()"
+                (input)="validatePrice()"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
+                placeholder="0.00">
+              <div *ngIf="fieldErrors['price']" class="mt-1 text-xs text-red-500">{{ fieldErrors['price'] }}</div>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-dollar-sign mr-2 text-blue-500"></i>Original Price</label>
+              <input
+                type="number"
+                step="0.01"
+                [(ngModel)]="menuForm.original_price"
+                name="original_price"
+                (input)="recalculateDiscount()"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
+                placeholder="0.00">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-tags mr-2 text-purple-500"></i>Category <span class="text-red-500">*</span></label>
+              <select
+                [(ngModel)]="menuForm.category"
+                name="category"
+                (change)="validateCategory()"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white">
+                <option value="">Select Category</option>
+                <option *ngFor="let category of categories" [value]="category.key" [disabled]="category.key === 'all'">{{ category.name }}</option>
+              </select>
+              <div *ngIf="fieldErrors['category']" class="mt-1 text-xs text-red-500">{{ fieldErrors['category'] }}</div>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-clock mr-2 text-orange-500"></i>Preparation Time (min)</label>
+              <input
+                type="number"
+                [(ngModel)]="menuForm.preparation_time"
+                name="preparation_time"
+                (blur)="validatePreparationTime()"
+                (input)="validatePreparationTime()"
+                min="0"
+                max="120"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
+                placeholder="15">
+              <div *ngIf="fieldErrors['preparation_time']" class="mt-1 text-xs text-red-500">{{ fieldErrors['preparation_time'] }}</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-hashtag mr-2 text-indigo-500"></i>Item ID <span class="text-red-500">*</span></label>
+              <input
+                type="text"
+                [(ngModel)]="menuForm.item_id"
+                name="item_id"
+                disabled
+                class="w-full px-4 py-3 bg-gray-100 dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-xl text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                placeholder="Auto-generated">
+              <div *ngIf="fieldErrors['item_id']" class="mt-1 text-xs text-red-500">{{ fieldErrors['item_id'] }}</div>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-percent mr-2 text-yellow-500"></i>Discount</label>
+              <input
+                type="text"
+                [(ngModel)]="menuForm.discount"
+                name="discount"
+                (input)="recalculatePriceFromDiscount()"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
+                placeholder="10%">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4">
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-tag mr-2 text-indigo-500"></i>Type <span class="text-red-500">*</span></label>
+              <select
+                [(ngModel)]="menuForm.type"
+                name="type"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white">
+                <option *ngFor="let type of typeOptions" [value]="type.key">{{ type.name }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex items-center">
+              <label class="flex items-center cursor-pointer">
+                <input type="checkbox" [(ngModel)]="menuForm.is_active" name="is_active" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-500 relative"></div>
+                <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">{{ menuForm.is_active ? 'Active' : 'Inactive' }}</span>
+              </label>
+            </div>
+            <div class="flex items-center">
+              <label class="flex items-center cursor-pointer">
+                <input type="checkbox" [(ngModel)]="menuForm.is_available" name="is_available" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-500 relative"></div>
+                <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">{{ menuForm.is_available ? 'Available' : 'Unavailable' }}</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex items-center">
+              <label class="flex items-center cursor-pointer">
+                <input type="checkbox" [(ngModel)]="menuForm.is_popular" name="is_popular" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-500 relative"></div>
+                <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">Popular</span>
+              </label>
+            </div>
+            <div class="flex items-center">
+              <label class="flex items-center cursor-pointer">
+                <input type="checkbox" [(ngModel)]="menuForm.is_spicy" name="is_spicy" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-500 relative"></div>
+                <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">Spicy</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex items-center">
+              <label class="flex items-center cursor-pointer">
+                <input type="checkbox" [(ngModel)]="menuForm.is_veg" name="is_veg" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-500 relative"></div>
+                <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">{{ menuForm.is_veg ? 'Vegetarian' : 'Non-Veg' }}</span>
+              </label>
+            </div>
+            <div class="flex items-center">
+              <label class="flex items-center cursor-pointer">
+                <input type="checkbox" [(ngModel)]="menuForm.is_vegetarian" name="is_vegetarian" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-500 relative"></div>
+                <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">{{ menuForm.is_vegetarian ? 'Veg Option' : 'No Veg Option' }}</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex items-center">
+              <label class="flex items-center cursor-pointer">
+                <input type="checkbox" [(ngModel)]="menuForm.is_featured" name="is_featured" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-500 relative"></div>
+                <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">Featured</span>
+              </label>
+            </div>
+            <div class="flex items-center">
+              <label class="flex items-center cursor-pointer">
+                <input type="checkbox" [(ngModel)]="menuForm.is_recommended" name="is_recommended" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-500 relative"></div>
+                <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">Recommended</span>
+              </label>
+            </div>
+          </div>
+        </form>
+      </div>
+      <!-- Modal Footer -->
+      <div class="px-6 py-4 bg-white/95 dark:bg-gray-800 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 flex items-center justify-between z-[100]">
+        <div>
+          <button (click)="cancelAdd()" class="flex items-center justify-center border border-gray-300 dark:border-gray-600 px-4 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium">
+              <i class="fas fa-arrow-left text-red-600 dark:text-red-400 mr-2"></i> Go Back
+          </button>
+        </div>
+        <div>
+          <button
+            type="button"
+            (click)="cancelAdd()"
+            class="px-4 py-2 mr-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            (click)="onSubmitForm()"
+            class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium">
+            {{ editingMenu ? 'Update' : 'Save' }}
+          </button>
+        </div>
+      </div>
+  </div>
+
+  <!-- Menu Details Modal -->
+  <div *ngIf="selectedMenu" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden">
+      <div class="px-6 py-4 bg-gradient-to-r from-red-50 to-red-50 dark:from-red-900/20 dark:to-red-900/10 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white">Menu Item Details</h3>
+        <button (click)="selectedMenu = null" class="w-8 h-8 rounded-lg hover:bg-red-100 dark:hover:bg-gray-700 flex items-center justify-center">
+          <i class="fas fa-times text-red-600 dark:text-red-400"></i>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto max-h-[60vh]">
+        <div class="flex items-center space-x-4 mb-6">
+          <img [src]="getFullImageUrl(selectedMenu.image)" [alt]="selectedMenu!.name" class="w-20 h-20 rounded-xl object-cover ring-4 ring-red-100 dark:ring-red-900/30">
+          <div class="flex-1">
+            <h4 class="text-xl font-semibold text-gray-900 dark:text-white">{{ selectedMenu!.name }}</h4>
+            <div class="flex items-center space-x-2 mt-1">
+              <span [class]="categoryColorMap[selectedMenu!.category] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300'" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium">
+                {{ selectedMenu!.category }}
+              </span>
+              <span *ngIf="selectedMenu!.is_popular" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                <i class="fas fa-star mr-1"></i>Popular
+              </span>
+              <span *ngIf="selectedMenu!.is_spicy" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                <i class="fas fa-fire mr-1"></i>Spicy
+              </span>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ selectedMenu!.is_available ? 'Available' : 'Unavailable' }} • {{ selectedMenu!.is_active ? 'Active' : 'Inactive' }}</p>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
+                <i class="fas fa-dollar-sign text-green-600 dark:text-green-400"></i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Price</p>
+                <p class="text-lg font-bold text-red-600 dark:text-red-400">${{ selectedMenu!.price.toFixed(2) }}</p>
+                <p *ngIf="selectedMenu!.discount" class="text-sm text-gray-500 line-through">${{ selectedMenu!.original_price?.toFixed(2) }}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center">
+                <i class="fas fa-clock text-orange-600 dark:text-orange-400"></i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Prep Time</p>
+                <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedMenu!.preparation_time }} minutes</p>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+              <i class="fas fa-align-left text-blue-600 dark:text-blue-400"></i>
+            </div>
+            <div class="flex-1">
+              <p class="text-xs text-gray-500 dark:text-gray-400">Description</p>
+              <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedMenu!.description }}</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">
+                <i class="fas fa-hashtag text-indigo-600 dark:text-indigo-400"></i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Item ID</p>
+                <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedMenu!.item_id }}</p>
+              </div>
+            </div>
+            <div *ngIf="selectedMenu!.discount" class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
+                <i class="fas fa-percent text-green-600 dark:text-green-400"></i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Discount</p>
+                <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedMenu!.discount }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center">
+                <i [class]="selectedMenu!.is_veg ? 'fas fa-leaf text-green-600 dark:text-green-400' : 'fas fa-drumstick-bite text-red-600 dark:text-red-400'"></i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Type</p>
+                <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedMenu!.is_veg ? 'Vegetarian' : 'Non-Vegetarian' }}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-cyan-50 dark:bg-cyan-900/20 flex items-center justify-center">
+                <i class="fas fa-utensils text-cyan-600 dark:text-cyan-400"></i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Veg Option</p>
+                <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedMenu!.is_vegetarian ? 'Available' : 'Not Available' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex space-x-3">
+        <button
+          (click)="editFromDetails(selectedMenu!)"
+          class="flex-1 px-4 py-3 rounded-xl font-medium bg-red-500 text-white hover:bg-red-600 transition-colors">
+          <i class="fas fa-edit mr-2"></i>Edit
+        </button>
+        <button
+          (click)="deleteMenu(selectedMenu!)"
+          class="flex-1 px-4 py-3 rounded-xl font-medium bg-red-500 text-white hover:bg-red-600 transition-colors">
+          <i class="fas fa-trash mr-2"></i>Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -398,6 +398,7 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">Default timezone for the platform</p>
           <select
             [(ngModel)]="settings.timezone"
+            disabled
             (input)="hasUnsavedChanges = true"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
             <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
@@ -423,6 +424,7 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">Default currency for the platform</p>
           <select
             [(ngModel)]="settings.currency"
+            disabled
             (input)="hasUnsavedChanges = true"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
             <option value="INR">INR (₹)</option>
@@ -434,6 +436,59 @@
             <span>Default: INR</span>
             <button
               (click)="resetSetting('currency')"
+              class="text-primary-600 dark:text-primary-400 hover:underline">
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <!-- Enable GST -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Enable GST
+          </label>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Enable Goods and Services Tax (GST) on the platform</p>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              [(ngModel)]="settings.is_gst"
+              (input)="hasUnsavedChanges = true"
+              class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+            <span class="ml-3 text-sm font-medium text-gray-900 dark:text-white">
+              {{ settings.is_gst ? 'Enabled' : 'Disabled' }}
+            </span>
+          </label>
+          <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+            <span>Default: false</span>
+            <button
+              (click)="resetSetting('is_gst')"
+              class="text-primary-600 dark:text-primary-400 hover:underline">
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <!-- GST Percentage -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            GST Percentage
+          </label>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Applicable GST percentage</p>
+          <select
+            [(ngModel)]="settings.gst_percentage"
+            (input)="hasUnsavedChanges = true"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+            <option value="0">0%</option>
+            <option value="5">5%</option>
+            <option value="12">12%</option>
+            <option value="18">18%</option>
+            <option value="28">28%</option>
+          </select>
+          <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+            <span>Default: 0%</span>
+            <button
+              (click)="resetSetting('gst_percentage')"
               class="text-primary-600 dark:text-primary-400 hover:underline">
               Reset
             </button>
@@ -463,6 +518,7 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">Maximum number of users that can be logged in simultaneously</p>
           <input
             type="number"
+            disabled
             [(ngModel)]="settings.max_concurrent_users"
             (input)="hasUnsavedChanges = true"
             min="1"
@@ -487,6 +543,7 @@
           <label class="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
+              disabled
               [(ngModel)]="settings.cache_enabled"
               (input)="hasUnsavedChanges = true"
               class="sr-only peer">
@@ -513,6 +570,7 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">Time to live for cached data in seconds</p>
           <input
             type="number"
+            disabled
             [(ngModel)]="settings.cache_ttl"
             (input)="hasUnsavedChanges = true"
             min="60"
@@ -598,6 +656,7 @@
           <label class="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
+              disabled
               [(ngModel)]="settings.two_factor_required"
               (input)="hasUnsavedChanges = true"two_factor_required
               class="sr-only peer">
@@ -667,6 +726,7 @@
           <label class="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
+              disabled
               [(ngModel)]="settings.sms_notifications"
               (input)="hasUnsavedChanges = true"sms_notifications
               class="sr-only peer">
@@ -693,6 +753,7 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">Number of notifications to process in each batch</p>
           <input
             type="number"
+            disabled
             [(ngModel)]="settings.notification_batch_size"
             (input)="hasUnsavedChanges = true"notification_batch_size
             min="10"
@@ -731,6 +792,7 @@
           <p class="text-xs text-gray-500 dark:text-gray-400">Maximum API requests per minute</p>
           <input
             type="number"
+            disabled
             [(ngModel)]="settings.api_rate_limit"
             (input)="hasUnsavedChanges = true"api_rate_limit
             min="10"

@@ -1,0 +1,227 @@
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { AnimateOnScrollDirective } from '../../../directives/animate-on-scroll.directive';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Location } from '@angular/common';
+import { Router } from '@angular/router';
+import { CartService, CartItem } from '../../../services/cart.service';
+import { CrudService } from '../../../services/crud.service';
+import { AuthService } from '../../../services/auth.service';
+import { NotificationService } from '../../../services/notification.service';
+import { PendingBillsService } from '../../../services/pending-bills.service';
+import { RealtimeService } from '../../../services/realtime.service';
+import { environment } from '../../../environments/environment';
+import { OrderType } from '../../../interfaces';
+
+@Component({
+  selector: 'app-customer-cart',
+  standalone: true,
+  imports: [CommonModule, FormsModule, AnimateOnScrollDirective],
+  templateUrl: './customer-cart.component.html',
+  styleUrl: './customer-cart.component.css'
+})
+export class CustomerCartComponent implements OnInit, OnDestroy {
+  cartItems: CartItem[] = [];
+  subtotal = 0;
+  gst = 0;
+  deliveryFee = 0;
+  total = 0;
+  orderCount = 0;
+  orderType: 'DINE_IN' | 'TAKEAWAY' = 'DINE_IN';
+  isPlacingOrder = false;
+  isGst = false;
+  gstPercentage: number | null = null;
+  private subscriptions: Subscription[] = [];
+
+  orderTypes: OrderType[] = [];
+
+  constructor(
+    private location: Location,
+    private router: Router,
+    public cartService: CartService,
+    private crudService: CrudService,
+    private authService: AuthService,
+    private notificationService: NotificationService,
+    private pendingBillsService: PendingBillsService,
+    private realtimeService: RealtimeService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadOrderTypes();
+    this.loadRestaurantGstSettings();
+    this.cartService.cart$.subscribe(items => {
+      this.cartItems = items;
+      this.computeTotals();
+    });
+
+    const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
+    if (restaurantId) {
+      const sub = this.realtimeService.restaurant$.subscribe((restaurant: any) => {
+        if (restaurant && String(restaurant.id) === String(restaurantId)) {
+          this.updateGstFromRealtime(restaurant);
+        }
+      });
+      this.subscriptions.push(sub);
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(s => s.unsubscribe());
+  }
+
+  private updateGstFromRealtime(restaurant: any): void {
+    this.isGst = restaurant.is_gst === true || restaurant.is_gst === 1;
+    this.gstPercentage = restaurant.gst_percentage !== null && restaurant.gst_percentage !== undefined ? Number(restaurant.gst_percentage) : null;
+    this.computeTotals();
+  }
+
+  loadOrderTypes(): void {
+    this.crudService.getOrderTypes({ isActive: true, page: 0, size: 0 }).subscribe({
+      next: (response: any) => {
+        const types = response.data || response || [];
+        this.orderTypes = types.map((type: any) => ({
+          id: type.id,
+          name: type.name,
+          key: type.key,
+          description: type.description,
+          is_active: type.is_active ?? type.isActive ?? true,
+          display_order: type.display_order ?? type.displayOrder ?? 0,
+          created_by: type.created_by ?? type.createdBy ?? '',
+          updated_by: type.updated_by ?? type.updatedBy ?? '',
+          created_at: type.created_at ? new Date(type.created_at) : new Date(),
+          updated_at: type.updated_at ? new Date(type.updated_at) : new Date()
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading order types:', error);
+      }
+    });
+  }
+
+  private loadRestaurantGstSettings(): void {
+    const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
+    if (!restaurantId) return;
+    this.crudService.getRestaurantById(restaurantId).subscribe({
+      next: (response: any) => {
+        const data = response?.data || response;
+        if (data) {
+          this.isGst = data.is_gst === true || data.is_gst === 1;
+          this.gstPercentage = data.gst_percentage !== null && data.gst_percentage !== undefined ? Number(data.gst_percentage) : null;
+          this.computeTotals();
+        }
+      },
+      error: () => {
+        this.isGst = false;
+        this.gstPercentage = null;
+        this.computeTotals();
+      }
+    });
+  }
+
+  proceedToOrder(): void {
+    if (this.cartItems.length === 0 || this.isPlacingOrder) return;
+
+    if (this.pendingBillsService.hasPendingBilling) {
+      this.notificationService.error(
+        'Bill Pending',
+        `You have a pending bill. Please pay at the counter before placing a new order.`
+      );
+      return;
+    }
+
+    this.isPlacingOrder = true;
+
+    const currentUser = this.authService.getCurrentUser();
+    const customerId = currentUser?.id;
+    const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
+    const tableNumber = sessionStorage.getItem('current_customer_table_no');
+
+    const orderPayload: any = {
+      customer_id: customerId !== undefined && customerId !== null ? Number(customerId) : null,
+      customer_name: currentUser?.name || 'Guest',
+      table_number: tableNumber,
+      restaurant_id: restaurantId !== null ? Number(restaurantId) : null,
+      status: 'PENDING',
+      total_amount: this.total,
+      tax_amount: this.gst, 
+      tax_percentage: this.isGst ? this.gstPercentage : null,
+      payment_status: 'PENDING',
+      order_type: this.orderType,
+      priority: 'MEDIUM',
+      special_instructions: '',
+      // new fields added to match order interface
+      created_at : new Date().toISOString(),
+      delivered_at : null,
+      estimated_ready_time : null,
+      updated_at : null,
+      order_id : null,
+    payment_method : null,
+      order_items: this.cartItems.map(cartItem => ({
+        menu_item_id: cartItem.menuItem.id,
+        menu_item_name: cartItem.menuItem.name,
+        quantity: cartItem.quantity,
+        unit_price: cartItem.menuItem.price,
+        total_price: cartItem.menuItem.price * cartItem.quantity,
+        category: cartItem.menuItem.category || '',
+        special_instructions: '',
+        status: 'PENDING'
+      }))
+    };
+
+    this.crudService.createOrder(orderPayload).subscribe({
+      next: (response: any) => {
+        const orderId = response?.data?.order_id || response?.id || 'placed';
+        this.cartService.clearCart();
+        this.notificationService.success('Order Placed', `Order #${orderId} has been sent to the kitchen`);
+        this.router.navigate(['/customer/orders']);
+      },
+      error: (error: any) => {
+        console.error('Failed to place order:', error);
+        this.notificationService.error('Order Failed', 'Could not place your order. Please try again.');
+        this.isPlacingOrder = false;
+      }
+    });
+  }
+
+  getFullImageUrl(imagePath: string): string {
+    if (!imagePath) return '';
+    if (imagePath.startsWith('data:')) {
+      return imagePath;
+    }
+    return environment.api.baseUrl + imagePath;
+  }
+
+  increaseQuantity(item: CartItem): void {
+    this.cartService.increaseQuantity(item.menuItem);
+  }
+
+  decreaseQuantity(item: CartItem): void {
+    this.cartService.decreaseQuantity(item.menuItem);
+  }
+
+  addMoreItems(): void {
+    this.router.navigate(['/customer/menu']);
+  }
+
+  goBack(): void {
+    this.location.back();
+  }
+
+  private computeTotals(): void {
+    this.subtotal = this.cartItems.reduce((sum, cartItem) => {
+      const menuItem = cartItem.menuItem;
+      const effectivePrice = menuItem.price;
+      return sum + effectivePrice * cartItem.quantity;
+    }, 0);
+
+    if (this.isGst && this.gstPercentage !== null) {
+      const rate = Number(this.gstPercentage) || 0;
+      this.gst = Math.round(this.subtotal * (rate / 100));
+    } else {
+      this.gst = 0;
+    }
+    this.total = this.subtotal + this.deliveryFee + this.gst;
+    this.orderCount = this.cartItems.length;
+  }
+}
