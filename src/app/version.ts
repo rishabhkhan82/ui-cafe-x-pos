@@ -1,2 +1,2 @@
-// Auto-generated at build time. Do not edit manually.
-export const APP_VERSION = '1.0.1';
+import { environment } from './environments/environment';
+export const APP_VERSION = environment.version;
