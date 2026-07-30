@@ -4,6 +4,7 @@ import { MockDataService, Order } from './mock-data.service';
 import type { Notification } from './mock-data.service';
 import { environment } from '../environments/environment';
 import { Client } from '@stomp/stompjs';
+import { NotificationService } from './notification.service';
 
 @Injectable({
   providedIn: 'root'
@@ -15,6 +16,7 @@ export class RealtimeService {
   private isConnected = false;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
+  private reconnectExhaustedNotified = false;
 
   private connectParams: { userId: string; restaurantId: string; role: string } | null = null;
   private connectSequence = 0;
@@ -64,7 +66,7 @@ export class RealtimeService {
   private systemSettingsUpdateSubject = new BehaviorSubject<boolean>(false);
   public systemSettingsUpdate$ = this.systemSettingsUpdateSubject.asObservable();
 
-  constructor(private mockDataService: MockDataService) {
+  constructor(private mockDataService: MockDataService, private notificationService: NotificationService) {
     this.requestNotificationPermission();
   }
 
@@ -115,6 +117,7 @@ export class RealtimeService {
   public disconnect(): void {
     console.log('[Realtime] Disconnecting...');
     this.reconnectAttempts = this.maxReconnectAttempts;
+    this.reconnectExhaustedNotified = true;
     this.connectParams = null;
     if (this.stompClient) {
       this.stompClient.deactivate();
@@ -154,6 +157,7 @@ export class RealtimeService {
     }
 
     this.reconnectAttempts = 0;
+    this.reconnectExhaustedNotified = false;
     this.connectParams = { userId, restaurantId, role };
     const mySequence = ++this.connectSequence;
 
@@ -320,6 +324,14 @@ export class RealtimeService {
       const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
       console.log(`[Realtime] Reconnect attempt ${this.reconnectAttempts} in ${delay}ms`);
       setTimeout(() => this.connect(userId, restaurantId, role), delay);
+    } else {
+      if (!this.reconnectExhaustedNotified) {
+        this.reconnectExhaustedNotified = true;
+        this.notificationService.error(
+          'Connection Lost',
+          'Real-time connection failed. Please refresh the page.'
+        );
+      }
     }
   }
 }
