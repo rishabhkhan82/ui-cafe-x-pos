@@ -5,10 +5,10 @@
 export const environment = {
   production: true,
   name: 'production',
-  version: '1.0.6',
+  version: '1.0.0',
   app: {
     name: 'Cafe-X POS',
-    version: '1.0.6',
+    version: '1.0.0',
     environment: 'production',
     debug: false,
     logLevel: 'error'
