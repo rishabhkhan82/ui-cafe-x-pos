@@ -41,10 +41,10 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
 
   // Pagination
   currentPage = 1;
-  itemsPerPage = 10;
+  itemsPerPage = 50;
   totalPages = 1;
   totalElements = 0;
-  itemsPerPageOptions = [5, 10, 15, 20, 25, 50];
+  itemsPerPageOptions = [5, 10, 15, 20, 25, 50, 100];
 
   // Field validation errors
   fieldErrors: { [key: string]: string } = {};

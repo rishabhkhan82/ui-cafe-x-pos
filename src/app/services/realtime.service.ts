@@ -20,6 +20,8 @@ export class RealtimeService {
 
   private connectParams: { userId: string; restaurantId: string; role: string } | null = null;
   private connectSequence = 0;
+  private disconnectPromise: Promise<void> | null = null;
+  private isDisconnecting = false;
 
   private newOrderSubject = new BehaviorSubject<Order | null>(null);
   public newOrder$ = this.newOrderSubject.asObservable();
@@ -114,16 +116,34 @@ export class RealtimeService {
     return this.notificationPermission;
   }
 
-  public disconnect(): void {
+  public async disconnect(): Promise<void> {
+    if (this.isDisconnecting) {
+      console.log('[Realtime] Already disconnecting, skipping duplicate call');
+      return;
+    }
+
     console.log('[Realtime] Disconnecting...');
+    this.isDisconnecting = true;
     this.reconnectAttempts = this.maxReconnectAttempts;
     this.reconnectExhaustedNotified = true;
     this.connectParams = null;
+    this.connectSequence++;
+
     if (this.stompClient) {
-      this.stompClient.deactivate();
+      const client = this.stompClient;
       this.stompClient = null;
+      this.isConnected = false;
+      try {
+        await client.deactivate();
+      } catch (e) {
+        console.warn('[Realtime] Deactivate error (ignored):', e);
+      }
+    } else {
+      this.isConnected = false;
     }
-    this.isConnected = false;
+
+    this.isDisconnecting = false;
+    this.disconnectPromise = null;
     console.log('[Realtime] Disconnected');
   }
 
@@ -136,6 +156,12 @@ export class RealtimeService {
   }
 
   public connect(userId: string, restaurantId: string, role: string): void {
+    if (this.isDisconnecting && this.disconnectPromise) {
+      console.log('[Realtime] Waiting for pending disconnect before connecting');
+      this.disconnectPromise.then(() => this.connect(userId, restaurantId, role));
+      return;
+    }
+
     const paramsMatch = this.connectParams &&
       this.connectParams.userId === userId &&
       this.connectParams.restaurantId === restaurantId &&
@@ -149,6 +175,8 @@ export class RealtimeService {
     if (this.isConnected) {
       console.log('[Realtime] Already connected with different params, disconnecting first');
       this.disconnect();
+      setTimeout(() => this.connect(userId, restaurantId, role), 300);
+      return;
     }
 
     if (paramsMatch) {

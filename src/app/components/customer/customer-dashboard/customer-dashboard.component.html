@@ -58,9 +58,9 @@
               <div>
                 <h4 class="font-semibold text-gray-900 dark:text-white mb-1">{{ item.name }}</h4>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ item.description }}</p>
-                <div class="flex items-center space-x-2 flex-wrap">
+                <div class="flex items-center gap-2 flex-wrap">
                   <span class="text-lg font-bold text-primary-500">₹{{ item.price }}</span>
-                  <span *ngIf="item.original_price" class="text-sm text-gray-500 dark:text-gray-400 line-through">₹{{ item.original_price }}</span>
+                  <span *ngIf="item.original_price && item.discount" class="text-sm text-gray-500 dark:text-gray-400 line-through">₹{{ item.original_price }}</span>
                   <span *ngIf="item.discount" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">{{ item.discount }}%</span>
                   <span *ngIf="item.is_veg" class="text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-1 rounded-full">Veg</span>
                   <span *ngIf="!item.is_veg" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">Non-Veg</span>
@@ -106,12 +106,12 @@
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ item.description }}</p>
         <div class="flex flex-col flex-start justify-between gap-3">
           <div class="flex flex-col">
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <span class="text-lg font-bold text-primary-500">₹{{ item.price }}</span>
-              <span *ngIf="item.original_price" class="text-sm text-gray-500 dark:text-gray-400 line-through">₹{{ item.original_price }}</span>
+              <span *ngIf="item.original_price && item.discount" class="text-sm text-gray-500 dark:text-gray-400 line-through">₹{{ item.original_price }}</span>
               <span *ngIf="item.discount" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">{{ item.discount }}%</span>
             </div>
-            <div class="flex items-center gap-1 mt-1">
+            <div class="flex items-center gap-2 flex-wrap mt-2">
               <span *ngIf="item.is_veg" class="text-[10px] bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-1.5 py-0.5 rounded-full">Veg</span>
               <span *ngIf="!item.is_veg" class="text-[10px] bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded-full">Non-Veg</span>
               <span *ngIf="item.is_spicy" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">Spicy</span>
