@@ -18,9 +18,9 @@
             </div>
             <div>
               <h1 class="text-xl font-bold text-gray-900 dark:text-white">
-                Menu Items
+                Menu
               </h1>
-              <p class="text-xs text-gray-600 dark:text-gray-400">Manage Your Menu</p>
+              <p class="text-xs text-gray-600 dark:text-gray-400">Manage Menus</p>
             </div>
           </div>
 
@@ -122,14 +122,14 @@
           <div class="flex items-start justify-between mb-2">
             <div class="flex-1 min-w-0">
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white truncate">{{ menu.name }}</h3>
-              <div class="flex items-center space-x-2 mt-1">
+              <div class="flex flex-wrap items-center gap-2 mt-1">
                 <span
                   [class]="categoryColorMap[menu.category] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300'"
                   class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium">
                   {{ menu.category }}
                 </span>
                 <span *ngIf="menu.discount" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                  <i class="fas fa-percent mr-1"></i>{{ menu.discount }}
+                  {{ menu.discount }} <i class="fas fa-percent ml-1"></i>
                 </span>
                 <span *ngIf="menu.is_popular" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
                   <i class="fas fa-star mr-1"></i>Popular
@@ -146,8 +146,8 @@
               </div>
             </div>
             <div class="text-right">
-              <p class="text-xl font-bold text-red-600 dark:text-red-400">${{ menu.price.toFixed(2) }}</p>
-               <p *ngIf="menu.discount" class="text-sm text-gray-500 line-through">${{ menu.original_price?.toFixed(2) }}</p>
+              <p class="text-xl font-bold text-red-600 dark:text-red-400">₹{{ menu.price.toFixed(2) }}</p>
+               <p *ngIf="menu.discount" class="text-sm text-gray-500 line-through">₹{{ menu.original_price?.toFixed(2) }}</p>
             </div>
           </div>
           <div class="flex items-center justify-between mb-3">
@@ -363,7 +363,7 @@
 
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-dollar-sign mr-2 text-green-500"></i>Price <span class="text-red-500">*</span></label>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-rupee-sign mr-2 text-green-500"></i>Price <span class="text-red-500">*</span></label>
               <input
                 type="number"
                 step="0.01"
@@ -376,7 +376,7 @@
               <div *ngIf="fieldErrors['price']" class="mt-1 text-xs text-red-500">{{ fieldErrors['price'] }}</div>
             </div>
             <div>
-              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-dollar-sign mr-2 text-blue-500"></i>Original Price</label>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-rupee-sign mr-2 text-blue-500"></i>Original Price</label>
               <input
                 type="number"
                 step="0.01"
@@ -544,6 +544,7 @@
           </button>
         </div>
       </div>
+    </div>
   </div>
 
   <!-- Menu Details Modal -->
@@ -580,12 +581,12 @@
           <div class="grid grid-cols-2 gap-4">
             <div class="flex items-center space-x-3">
               <div class="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
-                <i class="fas fa-dollar-sign text-green-600 dark:text-green-400"></i>
+                <i class="fas fa-rupee-sign text-green-600 dark:text-green-400"></i>
               </div>
               <div>
                 <p class="text-xs text-gray-500 dark:text-gray-400">Price</p>
-                <p class="text-lg font-bold text-red-600 dark:text-red-400">${{ selectedMenu!.price.toFixed(2) }}</p>
-                <p *ngIf="selectedMenu!.discount" class="text-sm text-gray-500 line-through">${{ selectedMenu!.original_price?.toFixed(2) }}</p>
+                <p class="text-lg font-bold text-red-600 dark:text-red-400">₹{{ selectedMenu!.price.toFixed(2) }}</p>
+                <p *ngIf="selectedMenu!.discount" class="text-sm text-gray-500 line-through">₹{{ selectedMenu!.original_price?.toFixed(2) }}</p>
               </div>
             </div>
             <div class="flex items-center space-x-3">

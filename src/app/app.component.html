@@ -55,7 +55,7 @@
         </div>
 
         <!-- Theme Toggle -->
-        <button (click)="toggleTheme()" class="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 ml-0">
+        <button (click)="toggleTheme()" class="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 ml-0 hidden md:inline-block">
           <i class="fas fa-moon dark:hidden text-sm"></i>
           <i class="fas fa-sun hidden dark:inline text-sm"></i>
         </button>
@@ -69,7 +69,7 @@
             <p class="text-xs text-gray-500 dark:text-gray-400">{{ currentUser?.role?.replace('_', ' ') || 'Role' }}</p>
           </div>
           <div class="relative" style="margin-left: 8px !important;">
-            <img (click)="isProfileMenuOpen = !isProfileMenuOpen" [src]="currentUser.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face'" alt="Profile" class="w-10 h-10 rounded-full border-2 border-primary-500 shadow-md hover:shadow-lg transition-shadow cursor-pointer object-cover" alt="Profile">
+            <img (click)="isProfileMenuOpen = !isProfileMenuOpen" [src]="currentUser.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face'" alt="Profile" class="w-10 h-10 rounded-full border-2 border-primary-500 shadow-md hover:shadow-lg transition-shadow cursor-pointer object-cover flex-shrink-0" alt="Profile">
             <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full"></div>
             <!-- Mobile Profile Menu Backdrop -->
             <div *ngIf="isProfileMenuOpen" class="fixed inset-0 z-40" (click)="isProfileMenuOpen = false"></div>

@@ -532,7 +532,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
         const currentUser = this.authService.getCurrentUser();
         const restaurantId = currentUser?.restaurantId;
         const planFromList = this.plans$.value.find(p => p.id === parseInt(subData?.plan_id));
-        const planName = planFromList?.display_name || planFromList?.name || 'Trial';
+        const planName = planFromList?.name || 'Trial';
 
         if (restaurantId && subData) {
           this.updateRestaurantSubscriptionFields(
@@ -579,7 +579,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
       plan_price_at_subscription: plan.price,
       offer_name_at_subscription: plan.offer_name || null,
       offer_discount_percentage_at_subscription: plan.offer_discount_percentage || 0,
-      plan_name_at_subscription: plan.display_name || plan.name
+      plan_name_at_subscription: plan.name
     };
 
     if (endDate !== null) {
@@ -597,7 +597,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
         if (restaurantId) {
           this.updateRestaurantSubscriptionFields(
             restaurantId,
-            plan.display_name || plan.name,
+            plan.name,
             now,
             endDate
           );
@@ -627,7 +627,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
           plan_price_at_subscription: plan.price,
           offer_name_at_subscription: plan.offer_name || null,
           offer_discount_percentage_at_subscription: plan.offer_discount_percentage || 0,
-          plan_name_at_subscription: plan.display_name || plan.name
+          plan_name_at_subscription: plan.name
         };
 
         this.crudService.createSubscriptionHistory(historyPayload).subscribe({
