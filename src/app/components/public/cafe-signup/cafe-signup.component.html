@@ -1,0 +1,456 @@
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+      <!-- Left Panel: How It Works -->
+      <div class="lg:col-span-4 xl:col-span-4">
+        <div class="lg:sticky lg:top-8">
+
+          <!-- Hero Image -->
+          <div class="mb-8 rounded-2xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-700">
+            <img
+              src="/images/brand/sign-up.png"
+              alt="Cafe interior"
+              class="object-cover"
+              onerror="this.src='https://images.unsplash.com/photo-1509042239860-f5502b9005d7?auto=format&fit=crop&w=800&q=80'">
+          </div>
+
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">How to Get Started</h2>
+          <p class="text-gray-600 dark:text-gray-300 mb-8">Follow these 5 simple steps to launch your cafe/restaurant on Cafe-X POS.</p>
+
+          <div class="space-y-6">
+            <div *ngFor="let step of steps; let i = index" class="flex space-x-4">
+              <div class="flex-shrink-0">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-md">
+                  <i [class]="step.icon + ' text-white'"></i>
+                </div>
+              </div>
+              <div class="flex-1 pb-6" [class.border-b]="i < steps.length - 1" [class.border-gray-200]="i < steps.length - 1" [class.dark:border-gray-700]="i < steps.length - 1">
+                <div class="flex items-center space-x-2 mb-1">
+                  <span class="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wider">Step {{ i + 1 }}</span>
+                </div>
+                <h3 class="text-base font-bold text-gray-900 dark:text-white mb-1">{{ step.title }}</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{{ step.description }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel: Signup Form -->
+      <div class="lg:col-span-8 xl:col-span-8">
+        <div class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+          <div class="flex items-start space-x-3">
+            <i class="fas fa-info-circle text-blue-600 dark:text-blue-400 mt-0.5"></i>
+            <div>
+              <p class="text-sm text-blue-800 dark:text-blue-300 font-medium">Need help?</p>
+              <p class="text-sm text-blue-700 dark:text-blue-400 mt-1">Contact our support team at <a href="tel:9511721668" class="underline font-semibold">95117 21668</a> or email <a href="mailto:cafexpos@gmail.com" class="underline font-semibold">cafexpos&#64;gmail.com</a> or communicate with us on live chat.</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <!-- Form Header -->
+          <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center">
+                <i class="fas fa-utensils text-white"></i>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Cafe/Restaurant Sign Up</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Create your cafe/restaurant profile and get started</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Form -->
+          <div class="p-6">
+            <form (ngSubmit)="onSubmit()" class="space-y-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Logo Upload -->
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-image mr-2 text-indigo-500"></i>Restaurant Logo <span class="text-gray-400 font-normal">(Optional)</span>
+                  </label>
+                  <div class="space-y-3">
+                    <div *ngIf="signupForm.logo_image" class="relative inline-block">
+                      <img [src]="signupForm.logo_image" alt="Logo preview" class="h-20 object-contain rounded-xl border-2 border-gray-200 dark:border-gray-600">
+                      <button type="button" (click)="removeLogo()" class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 shadow-md">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                    <div class="relative">
+                      <input type="file" accept="image/*" (change)="onLogoFileSelected($event)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                      <div class="flex items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl hover:border-red-400 dark:hover:border-red-500 transition-colors">
+                        <div class="text-center">
+                          <i class="fas fa-cloud-upload-alt text-gray-400 text-2xl mb-2"></i>
+                          <p class="text-sm text-gray-600 dark:text-gray-400"><span class="text-red-500 font-medium">Click to upload logo</span> or drag and drop</p>
+                          <p class="text-xs text-gray-500 dark:text-gray-500">PNG, JPG, WebP up to 5MB</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Banner Upload -->
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-panorama mr-2 text-pink-500"></i>Restaurant Banner <span class="text-gray-400 font-normal">(Optional)</span>
+                  </label>
+                  <div class="space-y-3">
+                    <div *ngIf="signupForm.banner_image" class="relative">
+                      <img [src]="signupForm.banner_image" alt="Banner preview" class="w-full h-40 object-cover rounded-xl border-2 border-gray-200 dark:border-gray-600">
+                      <button type="button" (click)="removeBanner()" class="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 shadow-md">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                    <div class="relative">
+                      <input type="file" accept="image/*" (change)="onBannerFileSelected($event)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                      <div class="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl hover:border-red-400 dark:hover:border-red-500 transition-colors">
+                        <div class="text-center">
+                          <i class="fas fa-cloud-upload-alt text-gray-400 text-2xl mb-2"></i>
+                          <p class="text-sm text-gray-600 dark:text-gray-400"><span class="text-red-500 font-medium">Click to upload banner</span> or drag and drop</p>
+                          <p class="text-xs text-gray-500 dark:text-gray-500">PNG, JPG, WebP up to 5MB</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Cafe/Restaurant Name -->
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-store mr-2 text-red-500"></i>Cafe/Restaurant Name <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    [(ngModel)]="signupForm.name"
+                    name="name"
+                    (blur)="validateName()"
+                    (input)="validateName()"
+                    required
+                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                    placeholder="Enter cafe/restaurant name">
+                  <div *ngIf="fieldErrors['name']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {{ fieldErrors['name'] }}
+                  </div>
+                </div>
+
+                <!-- Cafe/Restaurant Email -->
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-envelope mr-2 text-blue-500"></i>Cafe/Restaurant Email <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    [(ngModel)]="signupForm.email"
+                    name="email"
+                    (blur)="validateEmail()"
+                    (input)="validateEmail()"
+                    required
+                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                    placeholder="restaurant@example.com">
+                  <div *ngIf="fieldErrors['email']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {{ fieldErrors['email'] }}
+                  </div>
+                </div>
+
+                <!-- Restaurant Phone -->
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-phone mr-2 text-green-500"></i>Cafe/Restaurant Phone <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    [(ngModel)]="signupForm.phone"
+                    name="phone"
+                    (blur)="validatePhone()"
+                    (input)="validatePhone()"
+                    required
+                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                    placeholder="+91 98765 43210">
+                  <div *ngIf="fieldErrors['phone']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {{ fieldErrors['phone'] }}
+                  </div>
+                </div>
+
+                <!-- Owner Name -->
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-user mr-2 text-purple-500"></i>Owner Name <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    [(ngModel)]="signupForm.owner_name"
+                    name="ownerName"
+                    (blur)="validateOwnerName()"
+                    (input)="validateOwnerName()"
+                    required
+                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                    placeholder="Enter owner name">
+                  <div *ngIf="fieldErrors['owner_name']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {{ fieldErrors['owner_name'] }}
+                  </div>
+                </div>
+
+                <!-- Owner Email -->
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-envelope mr-2 text-blue-500"></i>Owner Email <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    [(ngModel)]="signupForm.owner_email"
+                    name="ownerEmail"
+                    (blur)="validateOwnerEmail()"
+                    (input)="validateOwnerEmail()"
+                    required
+                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                    placeholder="owner@example.com">
+                  <div *ngIf="fieldErrors['owner_email']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {{ fieldErrors['owner_email'] }}
+                  </div>
+                </div>
+
+                <!-- Owner Phone -->
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-phone mr-2 text-green-500"></i>Owner Phone <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    [(ngModel)]="signupForm.owner_phone"
+                    name="ownerPhone"
+                    (blur)="validateOwnerPhone()"
+                    (input)="validateOwnerPhone()"
+                    required
+                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                    placeholder="+91 98765 43210">
+                  <div *ngIf="fieldErrors['owner_phone']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {{ fieldErrors['owner_phone'] }}
+                  </div>
+                </div>
+
+                <!-- City -->
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-city mr-2 text-purple-500"></i>City <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    [(ngModel)]="signupForm.city"
+                    name="city"
+                    (blur)="validateCity()"
+                    (input)="validateCity()"
+                    required
+                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                    placeholder="Enter city">
+                  <div *ngIf="fieldErrors['city']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {{ fieldErrors['city'] }}
+                  </div>
+                </div>
+
+                <!-- State -->
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-map mr-2 text-yellow-500"></i>State <span class="text-red-500">*</span>
+                  </label>
+                  <select
+                    [(ngModel)]="signupForm.state"
+                    name="state"
+                    (blur)="validateState()"
+                    (change)="validateState()"
+                    required
+                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                    <option value="0">Select State</option>
+                    <option *ngFor="let state of states" [value]="state.id">{{ state.name }}</option>
+                  </select>
+                  <div *ngIf="fieldErrors['state']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {{ fieldErrors['state'] }}
+                  </div>
+                </div>
+
+                <!-- Pincode -->
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-mailbox mr-2 text-rose-500"></i>Pincode <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    [(ngModel)]="signupForm.pincode"
+                    name="pincode"
+                    (blur)="validatePincode()"
+                    (input)="validatePincode()"
+                    required
+                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                    placeholder="400001">
+                  <div *ngIf="fieldErrors['pincode']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {{ fieldErrors['pincode'] }}
+                  </div>
+                </div>
+
+                <!-- Address -->
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-map-marker-alt mr-2 text-red-500"></i>Full Address <span class="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    [(ngModel)]="signupForm.address"
+                    name="address"
+                    (blur)="validateAddress()"
+                    (input)="validateAddress()"
+                    rows="3"
+                    required
+                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 resize-none"
+                    placeholder="Enter complete address with landmark"></textarea>
+                  <div *ngIf="fieldErrors['address']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {{ fieldErrors['address'] }}
+                  </div>
+                </div>
+
+                <!-- Description -->
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-align-left mr-2 text-pink-500"></i>Description <span class="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    [(ngModel)]="signupForm.description"
+                    name="description"
+                    (blur)="validateDescription()"
+                    (input)="validateDescription()"
+                    rows="3"
+                    required
+                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200 resize-none"
+                    placeholder="Tell us about your cafe/restaurant (cuisine, seating capacity, etc.)"></textarea>
+                  <div *ngIf="fieldErrors['description']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {{ fieldErrors['description'] }}
+                  </div>
+                </div>
+
+                <!-- GST Number -->
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-file-invoice mr-2 text-indigo-500"></i>GST Number <span class="text-gray-400 font-normal">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    [(ngModel)]="signupForm.gst_number"
+                    name="gstNumber"
+                    (blur)="validateGstNumber()"
+                    (input)="validateGstNumber()"
+                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                    placeholder="22AAAAA0000A1Z5">
+                  <div *ngIf="fieldErrors['gst_number']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {{ fieldErrors['gst_number'] }}
+                  </div>
+                </div>
+
+                <!-- License Number -->
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-id-card mr-2 text-teal-500"></i>License Number <span class="text-gray-400 font-normal">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    [(ngModel)]="signupForm.license_number"
+                    name="licenseNumber"
+                    (blur)="validateLicenseNumber()"
+                    (input)="validateLicenseNumber()"
+                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                    placeholder="Enter license number">
+                  <div *ngIf="fieldErrors['license_number']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {{ fieldErrors['license_number'] }}
+                  </div>
+                </div>
+
+                <!-- GST Settings -->
+                <div class="md:col-span-2">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <i class="fas fa-file-invoice mr-2 text-indigo-500"></i>GST Settings
+                      </label>
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          [(ngModel)]="signupForm.is_gst"
+                          name="isGst"
+                          class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+                        <span class="ml-3 text-sm font-medium text-gray-900 dark:text-white">
+                          {{ signupForm.is_gst ? 'Enabled' : 'Disabled' }}
+                        </span>
+                      </label>
+                    </div>
+
+                    <div *ngIf="signupForm.is_gst">
+                      <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <i class="fas fa-percentage mr-2 text-green-500"></i>GST Percentage <span class="text-red-500">*</span>
+                      </label>
+                      <select
+                        [(ngModel)]="signupForm.gst_percentage"
+                        name="gstPercentage"
+                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200">
+                        <option value="">Select GST %</option>
+                        <option *ngFor="let gst of gstPercentageOptions" [value]="gst.value">{{ gst.label }}</option>
+                      </select>
+                      <div *ngIf="fieldErrors['gst_percentage']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {{ fieldErrors['gst_percentage'] }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Latitude and Longitude -->
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-location-arrow mr-2 text-emerald-500"></i>Geolocation <span class="text-red-500">*</span>
+                  </label>
+                  <div class="flex flex-col md:flex-row gap-4">
+                    <input
+                      type="number"
+                      [(ngModel)]="signupForm.lat"
+                      name="latitude"
+                      step="any"
+                      class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                      placeholder="Latitude">
+                    <input
+                      type="number"
+                      [(ngModel)]="signupForm.lng"
+                      name="longitude"
+                      step="any"
+                      class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all duration-200"
+                      placeholder="Longitude">
+                      <button
+                        type="button"
+                        (click)="getCurrentLocation()"
+                        class="px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-crosshairs"></i> <span class="ml-2">Use Current Location</span>
+                      </button>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Submit -->
+              <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  type="submit"
+                  [disabled]="loading"
+                  class="w-full py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-200 font-semibold text-base shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2">
+                  <i *ngIf="loading" class="fas fa-spinner fa-spin"></i>
+                  <i *ngIf="!loading" class="fas fa-paper-plane"></i>
+                  <span>{{ loading ? 'Submitting...' : 'Submit Application' }}</span>
+                </button>
+                <p class="text-center text-xs text-gray-500 dark:text-gray-400 mt-3">
+                  By submitting, you agree to our <a href="/terms-and-conditions" class="text-red-600 hover:underline">Terms & Conditions</a> and <a href="/privacy-policy" class="text-red-600 hover:underline">Privacy Policy</a>.
+                </p>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

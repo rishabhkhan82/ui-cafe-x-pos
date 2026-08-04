@@ -29,10 +29,13 @@
                 <i class="fas fa-moon dark:hidden text-xs"></i>
                 <i class="fas fa-sun hidden dark:inline text-xs"></i>
             </button>
+            <a routerLink="/cafe-signup" class="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <i class="fas fa-user-plus text-xs"></i>
+            </a>
             <button id="login-btn" class="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                 <i class="fas fa-user text-xs"></i>
             </button>
-            <a href="tel:9511721668" class="hidden md:inline-flex px-4 py-2 rounded-xl bg-primary-500 text-white text-sm hover:bg-primary-600 transition-colors">
+                <a href="tel:9511721668" class="hidden md:inline-flex px-4 py-2 rounded-xl bg-primary-500 text-white text-sm hover:bg-primary-600 transition-colors">
                     Book a live demo
                 </a>
                 <!-- Mobile Menu Button -->
@@ -74,7 +77,7 @@
                         Give your customers the dining experience they deserve while Cafe-X POS takes care of the rest. From ordering to billing, everything works together—so you can focus on growing your business, not managing problems.
                     </p>
                     <div class="mt-6 flex items-center space-x-3">
-                        <a href="tel:9511721668" class="px-5 py-3 rounded-xl bg-white text-primary-600 font-semibold hover:shadow-lg transition-shadow">Book Your Free Demo</a>
+                        <a routerLink="/cafe-signup" class="px-5 py-3 rounded-xl bg-white text-primary-600 font-semibold hover:shadow-lg transition-shadow">Sign Up for Free</a>
                         <a href="#features" class="px-5 py-3 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors">Explore features</a>
                     </div>
                     <div class="mt-6 flex items-center space-x-5 text-white/90 text-sm">
@@ -440,6 +443,10 @@
                     <a href="tel:9511721668" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-gray-900 font-semibold hover:bg-gray-100 transition-colors shadow-lg">
                         <i class="fas fa-phone-alt"></i>
                         Book a live demo
+                    </a>
+                    <a routerLink="/cafe-signup" class="ml-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors shadow-lg">
+                        <i class="fas fa-user-plus"></i>
+                        Sign Up for Free
                     </a>
                 </div>
             </div>

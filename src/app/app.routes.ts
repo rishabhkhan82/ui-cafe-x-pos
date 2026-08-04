@@ -56,6 +56,11 @@ export const routes: Routes = [
   },
 
   {
+  path: 'cafe-signup',
+  loadComponent: () => import('./components/public/cafe-signup/cafe-signup.component').then(m => m.CafeSignupComponent)
+  },
+
+  {
     path: 'platform-dashboard',
     loadComponent: () => import('./components/platform/platform-dashboard/platform-dashboard.component').then(m => m.PlatformDashboardComponent),
     canActivate: [authGuard, roleGuard],
