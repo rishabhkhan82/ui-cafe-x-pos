@@ -1194,4 +1194,24 @@ export class CrudService {
   deletePromotionalBanner(id: string | number): Observable<any> {
     return this.deleteData('promotional-banners', {}, id);
   }
+
+  getTodaysOffers(params?: CrudParams): Observable<any> {
+    return this.getData('todays-offers', params);
+  }
+
+  getTodaysOfferById(id: string | number): Observable<any> {
+    return this.getData(`todays-offers/${id}`);
+  }
+
+  createTodaysOffer(payload: any): Observable<any> {
+    return this.postData('todays-offers', payload);
+  }
+
+  updateTodaysOffer(id: string | number, payload: any): Observable<any> {
+    return this.putData('todays-offers', payload, {}, id);
+  }
+
+  deleteTodaysOffer(id: string | number): Observable<any> {
+    return this.deleteData('todays-offers', {}, id);
+  }
 }

@@ -440,6 +440,13 @@ export const routes: Routes = [
     data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
   },
 
+  {
+    path: 'todays-offers',
+    loadComponent: () => import('./components/restaurant/todays-offers/todays-offers.component').then(m => m.TodaysOffersComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
+  },
+
   // Kitchen Manager Specific Routings
 
   // {

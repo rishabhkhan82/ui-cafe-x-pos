@@ -451,4 +451,17 @@ export interface PromotionalBanner {
   updatedAt?: Date;
 }
 
+export interface TodaysOffer {
+  id: number;
+  restaurantId: number;
+  title: string;
+  imageUrl: string;
+  displayOrder: number;
+  isActive: boolean;
+  createdBy?: number;
+  updatedBy?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 // Master interfaces starts here

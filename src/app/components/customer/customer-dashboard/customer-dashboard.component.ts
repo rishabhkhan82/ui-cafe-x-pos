@@ -8,7 +8,7 @@ import { GuestAuthService, GuestCustomer } from '../../../services/guest-auth.se
 import { AuthService } from '../../../services/auth.service';
 import { CrudService } from '../../../services/crud.service';
 import { User } from '../../../services/mock-data.service';
-import { MenuItem, PromotionalBanner } from '../../../interfaces';
+import { MenuItem, PromotionalBanner, TodaysOffer } from '../../../interfaces';
 import { CartService } from '../../../services/cart.service';
 import { environment } from '../../../environments/environment';
 import { AnimateOnScrollDirective } from '../../../directives/animate-on-scroll.directive';
@@ -67,6 +67,12 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   isDashboardReady = false;
   private dashboardDataLoadCount = 0;
 
+  showTodayOffers = false;
+  todayOffers: TodaysOffer[] = [];
+  currentOfferIndex = 0;
+  private offerAutoSlideInterval: any;
+  isLoadingTodayOffers = false;
+
   constructor() {
     // Keep local copy in sync
     this.subscriptionService.planName$.subscribe(name => {
@@ -117,6 +123,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.stopBannerAutoSlide();
+    this.stopOfferAutoSlide();
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
@@ -437,6 +444,104 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   get currentBanner(): PromotionalBanner | null {
     if (this.promotionalBanners.length === 0) return null;
     return this.promotionalBanners[this.currentBannerIndex] || null;
+  }
+
+  openTodayOffers(): void {
+    this.showTodayOffers = true;
+    this.currentOfferIndex = 0;
+    this.todayOffers = [];
+    this.loadTodayOffers();
+  }
+
+  closeTodayOffers(): void {
+    this.showTodayOffers = false;
+    this.stopOfferAutoSlide();
+    this.todayOffers = [];
+    this.isLoadingTodayOffers = false;
+  }
+
+  private loadTodayOffers(): void {
+    const restaurantIdParam = this.restaurantId || this.guestAuthService.getCurrentRestaurantId();
+    if (!restaurantIdParam) return;
+
+    this.isLoadingTodayOffers = true;
+
+    const params: any = {
+      page: 1,
+      size: 10,
+      restaurantId: restaurantIdParam,
+      isActive: 'true'
+    };
+
+    this.crudService.getTodaysOffers(params).subscribe({
+      next: (response: any) => {
+        const raw = response.data || [];
+        this.todayOffers = raw.map((offer: any) => ({
+          id: offer.id,
+          restaurantId: offer.restaurant_id || offer.restaurantId || 0,
+          title: offer.title || '',
+          imageUrl: offer.image_url || offer.imageUrl || '',
+          displayOrder: offer.display_order ?? offer.displayOrder ?? 0,
+          isActive: offer.is_active ?? offer.isActive ?? true,
+          createdBy: offer.created_by ?? offer.createdBy,
+          updatedBy: offer.updated_by ?? offer.updatedBy,
+          createdAt: offer.created_at ? new Date(offer.created_at) : undefined,
+          updatedAt: offer.updated_at ? new Date(offer.updated_at) : undefined
+        })).sort((a: any, b: any) => a.displayOrder - b.displayOrder);
+
+        this.currentOfferIndex = 0;
+        this.isLoadingTodayOffers = false;
+        this.startOfferAutoSlide();
+      },
+      error: (error) => {
+        console.error('Failed to load today\'s offers:', error);
+        this.todayOffers = [];
+        this.isLoadingTodayOffers = false;
+      }
+    });
+  }
+
+  private startOfferAutoSlide(): void {
+    this.stopOfferAutoSlide();
+    if (this.todayOffers.length > 1) {
+      this.offerAutoSlideInterval = setInterval(() => {
+        this.nextOffer();
+      }, 4000);
+    }
+  }
+
+  private stopOfferAutoSlide(): void {
+    if (this.offerAutoSlideInterval) {
+      clearInterval(this.offerAutoSlideInterval);
+      this.offerAutoSlideInterval = null;
+    }
+  }
+
+  nextOffer(): void {
+    if (this.todayOffers.length === 0) return;
+    this.currentOfferIndex = (this.currentOfferIndex + 1) % this.todayOffers.length;
+  }
+
+  prevOffer(): void {
+    if (this.todayOffers.length === 0) return;
+    this.currentOfferIndex = (this.currentOfferIndex - 1 + this.todayOffers.length) % this.todayOffers.length;
+  }
+
+  goToOffer(index: number): void {
+    this.currentOfferIndex = index;
+  }
+
+  pauseOfferAutoSlide(): void {
+    this.stopOfferAutoSlide();
+  }
+
+  resumeOfferAutoSlide(): void {
+    this.startOfferAutoSlide();
+  }
+
+  get currentOffer(): TodaysOffer | null {
+    if (this.todayOffers.length === 0) return null;
+    return this.todayOffers[this.currentOfferIndex] || null;
   }
 
   shareProfile(): void {
