@@ -24,15 +24,32 @@
   <div class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="100">
     <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Browse By Category</h3>
     <div class="grid grid-cols-2 gap-4">
-      <div *ngFor="let category of menuCategories"
-           (click)="setActiveCategory(category.key)"
-           class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer menu-item-hover">
-        <div class="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3" [class]="category.colorClass">
-          <i [class]="category.icon" class="text-xl"></i>
+      <div (click)="router.navigate(['/customer/menu'])" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer menu-item-hover">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 bg-green-100 dark:bg-green-900/30 text-green-500">
+          <i class="fa-utensils fas text-xl"></i>
         </div>
-        <h4 class="font-semibold text-gray-900 dark:text-white text-center">{{ category.name }}</h4>
-        <p class="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">{{ category.itemCount }} items</p>
+        <h4 class="font-semibold text-gray-900 dark:text-white text-center">View Menus</h4>
       </div>
+      <div *ngIf="false" (click)="router.navigate(['/customer/todays-offers'])" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer menu-item-hover">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 bg-pink-100 dark:bg-pink-900/30 text-pink-500">
+          <i class="fa-tag fas text-xl"></i>
+        </div>
+        <h4 class="font-semibold text-gray-900 dark:text-white text-center">Today's Offers</h4>
+      </div>
+      <div *ngIf="false" (click)="router.navigate(['/customer/reviews-ratings'])" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer menu-item-hover">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 bg-purple-100 dark:bg-purple-900/30 text-purple-500">
+          <i class="fa-star fas text-xl"></i>
+        </div>
+        <h4 class="font-semibold text-gray-900 dark:text-white text-center">Reviews & Ratings</h4>
+      </div>
+      <div (click)="shareProfile()"
+          class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer menu-item-hover">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 bg-orange-100 dark:bg-orange-900/30 text-orange-500">
+          <i class="fa-share fas text-xl"></i>
+        </div>
+        <h4 class="font-semibold text-gray-900 dark:text-white text-center">Share Profile</h4>
+      </div>
+
     </div>
   </div>
 

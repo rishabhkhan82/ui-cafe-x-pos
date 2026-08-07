@@ -14,6 +14,7 @@ import { environment } from '../../../environments/environment';
 import { AnimateOnScrollDirective } from '../../../directives/animate-on-scroll.directive';
 import { RealtimeService } from '../../../services/realtime.service';
 import { SubscriptionService } from '../../../services/subscription.service';
+import { RestaurantDataService } from '../../../services/restaurant-data.service';
 
 @Component({
   selector: 'app-customer-dashboard',
@@ -23,7 +24,7 @@ import { SubscriptionService } from '../../../services/subscription.service';
   styleUrls: ['./customer-dashboard.component.css']
 })
 export class CustomerDashboardComponent implements OnInit, OnDestroy {
-  private router = inject(Router);
+  public router = inject(Router);
   private route = inject(ActivatedRoute);
   private guestAuthService = inject(GuestAuthService);
   private authService = inject(AuthService);
@@ -31,6 +32,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   private cartService = inject(CartService);
   private realtimeService = inject(RealtimeService);
   public subscriptionService = inject(SubscriptionService);
+  private restaurantDataService = inject(RestaurantDataService);
   private subscriptions: Subscription[] = [];
 
   currentUser: User | any = null;
@@ -43,6 +45,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   activeCategory: string = 'all';
   cartItemCount: number = 0;
   currentPlan: string | null = null;
+  restaurantName: string = '';
 
   menuCategories = [
     { key: 'starters', name: 'Starters', icon: 'fas fa-pepper-hot', colorClass: 'bg-red-100 dark:bg-red-900/30 text-red-500', itemCount: 0 },
@@ -92,6 +95,16 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
         }
       }
     });
+    
+    this.restaurantDataService.restaurant$.subscribe((restaurant: any) => {
+      console.log('[CustomerDashboard] Current restaurant data:', restaurant);
+      if (restaurant && restaurant.name) {
+        this.restaurantName = restaurant.name;
+      } else {
+        this.restaurantName = '';
+      }
+    });
+
     this.subscriptions.push(sub);
   }
 
@@ -322,5 +335,36 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
       return imagePath;
     }
     return environment.api.baseUrl + imagePath;
+  }
+
+  shareProfile(): void {
+    const currentUser = this.authService.getCurrentUser();
+    const restaurantId = currentUser?.restaurant_id || currentUser?.restaurantId;
+    if (!restaurantId) return;
+
+    const shareUrl = `${window.location.origin}/restaurant-profile/${restaurantId}`;
+    const shareData = {
+      title: this.restaurantName ? `${this.restaurantName} - Restaurant Profile` : 'Restaurant Profile',
+      text: this.restaurantName
+        ? `Check out ${this.restaurantName}'s profile!`
+        : 'Check out this restaurant profile!',
+      url: shareUrl
+    };
+
+    if (navigator.share) {
+      navigator.share(shareData).catch(() => {
+        this.copyToClipboard(shareUrl);
+      });
+    } else {
+      this.copyToClipboard(shareUrl);
+    }
+  }
+
+  private copyToClipboard(text: string): void {
+    navigator.clipboard.writeText(text).then(() => {
+      console.log('Profile link copied to clipboard:', text);
+    }).catch(() => {
+      console.error('Failed to copy profile link:', text);
+    });
   }
 }

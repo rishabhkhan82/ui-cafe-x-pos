@@ -65,6 +65,9 @@ export class RealtimeService {
   private menuUpdateSubject = new BehaviorSubject<any | null>(null);
   public menuUpdate$ = this.menuUpdateSubject.asObservable();
 
+  private menuCategoryUpdateSubject = new BehaviorSubject<any | null>(null);
+  public menuCategoryUpdate$ = this.menuCategoryUpdateSubject.asObservable();
+
   private systemSettingsUpdateSubject = new BehaviorSubject<boolean>(false);
   public systemSettingsUpdate$ = this.systemSettingsUpdateSubject.asObservable();
 
@@ -256,6 +259,12 @@ export class RealtimeService {
             const data = JSON.parse(msg.body);
             this.menuUpdateSubject.next(data);
           });
+
+          this.stompClient!.subscribe(`/topic/restaurant/${restaurantId}/menu-categories`, (msg) => {
+            console.log('[Realtime] Received menu category update for restaurant', restaurantId);
+            const data = JSON.parse(msg.body);
+            this.menuCategoryUpdateSubject.next(data);
+          });
         }
 
         // Customer-specific subscriptions
@@ -276,6 +285,12 @@ export class RealtimeService {
             console.log('[Realtime] Received menu item update for restaurant', restaurantId);
             const data = JSON.parse(msg.body);
             this.menuUpdateSubject.next(data);
+          });
+
+          this.stompClient!.subscribe(`/topic/restaurant/${restaurantId}/menu-categories`, (msg) => {
+            console.log('[Realtime] Received menu category update for restaurant', restaurantId);
+            const data = JSON.parse(msg.body);
+            this.menuCategoryUpdateSubject.next(data);
           });
         }
 

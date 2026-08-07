@@ -1142,4 +1142,32 @@ export class CrudService {
   deleteWasteType(id: string | number): Observable<any> {
     return this.deleteData('waste-types', {}, id);
   }
+
+  // ===============================
+  // RESTAURANT MENU CATEGORIES OPERATIONS
+  // ===============================
+
+  getRestaurantMenuCategories(params?: CrudParams): Observable<any> {
+    return this.getData('restaurant-menu-categories', params);
+  }
+
+  getRestaurantMenuCategoryById(restaurantId: string | number, id: string | number): Observable<any> {
+    return this.getData(`restaurant-menu-categories/${restaurantId}/${id}`);
+  }
+
+  getActiveRestaurantMenuCategories(restaurantId: string | number): Observable<any> {
+    return this.getData(`restaurant-menu-categories/active/${restaurantId}`);
+  }
+
+  createRestaurantMenuCategory(payload: any): Observable<any> {
+    return this.postData('restaurant-menu-categories', payload);
+  }
+
+  updateRestaurantMenuCategory(restaurantId: string | number, id: string | number, payload: any): Observable<any> {
+    return this.putData(`restaurant-menu-categories/${restaurantId}`, payload, {}, id);
+  }
+
+  deleteRestaurantMenuCategory(restaurantId: string | number, id: string | number): Observable<any> {
+    return this.deleteData(`restaurant-menu-categories/${restaurantId}`, {}, id);
+  }
 }

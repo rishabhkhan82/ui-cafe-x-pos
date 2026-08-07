@@ -348,6 +348,29 @@ export interface MenuCategory {
   updated_at: Date;
 }
 
+export interface RestaurantMenuCategory {
+  id: number;
+  category_id: string;
+  name: string;
+  key: string;
+  description: string;
+  icon?: string;
+  color?: string;
+  display_order: number;
+  is_active: boolean;
+  is_default: boolean;
+  parent_category_id?: string;
+  restaurant_id: number;
+  item_count: number;
+  total_value?: number;
+  popularity_score?: number;
+  last_ordered?: Date;
+  created_by?: string;
+  updated_by?: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
 export interface MenuItemsType {
   id: number;
   name: string;

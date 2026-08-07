@@ -70,7 +70,7 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
     name: '',
     description: '',
     price: 0,
-    category: 'Starters',
+    category: '',
     image: environment.api.baseUrl + '/uploads/images/default/menu-default.png',
     item_id: '',
     discount: '',
@@ -142,7 +142,10 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
   }
 
   loadMenuCategories(): void {
-    this.crudService.getMenuCategories({ isActive: true }).subscribe({
+    const currentUser = this.authService.getCurrentUser();
+    const restaurantId = Number(currentUser?.restaurantId || currentUser?.restaurant_id || 0);
+
+    this.crudService.getRestaurantMenuCategories({ restaurantId, isActive: true }).subscribe({
       next: (response: any) => {
         const categories = response.data || response || [];
         this.categories = categories.map((category: any) => ({
@@ -159,7 +162,7 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
         }));
       },
       error: (error) => {
-        console.error('Error loading menu categories:', error);
+        console.error('Error loading restaurant menu categories:', error);
       }
     });
   }
@@ -341,7 +344,7 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
         name: '',
         description: '',
         price: 0,
-        category: 'starters',
+        category: '',
         image: '/uploads/images/default/menu-default.png',
         item_id: '',
         discount: '',
@@ -372,7 +375,7 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
       name: '',
       description: '',
       price: 0,
-      category: 'Starters',
+      category: '',
       image: environment.api.baseUrl + '/uploads/images/default/menu-default.png',
       item_id: '',
       discount: '',
@@ -511,7 +514,7 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
   }
 
   validateCategory(): void {
-    const validation = this.validationService.menuCategory(this.menuForm.category);
+    const validation = this.validationService.required(this.menuForm.category, 'Category');
     if (!validation.isValid) {
       this.fieldErrors['category'] = validation.message!;
     } else {

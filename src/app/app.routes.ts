@@ -426,6 +426,13 @@ export const routes: Routes = [
     data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
   },
 
+  {
+    path: 'restaurant-menu-categories',
+    loadComponent: () => import('./components/restaurant/restaurant-menu-categories/restaurant-menu-categories.component').then(m => m.RestaurantMenuCategoriesComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
+  },
+
   // Kitchen Manager Specific Routings
 
   // {
