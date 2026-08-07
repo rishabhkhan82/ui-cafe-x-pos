@@ -68,6 +68,12 @@ export class RealtimeService {
   private menuCategoryUpdateSubject = new BehaviorSubject<any | null>(null);
   public menuCategoryUpdate$ = this.menuCategoryUpdateSubject.asObservable();
 
+  private promotionalBannerUpdateSubject = new BehaviorSubject<any | null>(null);
+  public promotionalBannerUpdate$ = this.promotionalBannerUpdateSubject.asObservable();
+
+  private todayOffersUpdateSubject = new BehaviorSubject<any | null>(null);
+  public todayOffersUpdate$ = this.todayOffersUpdateSubject.asObservable();
+
   private systemSettingsUpdateSubject = new BehaviorSubject<boolean>(false);
   public systemSettingsUpdate$ = this.systemSettingsUpdateSubject.asObservable();
 
@@ -265,6 +271,18 @@ export class RealtimeService {
             const data = JSON.parse(msg.body);
             this.menuCategoryUpdateSubject.next(data);
           });
+
+          this.stompClient!.subscribe(`/topic/restaurant/${restaurantId}/promotional-banners`, (msg) => {
+            console.log('[Realtime] Received promotional banner update for restaurant', restaurantId);
+            const data = JSON.parse(msg.body);
+            this.promotionalBannerUpdateSubject.next(data);
+          });
+
+          this.stompClient!.subscribe(`/topic/restaurant/${restaurantId}/todays-offers`, (msg) => {
+            console.log('[Realtime] Received today\'s offers update for restaurant', restaurantId);
+            const data = JSON.parse(msg.body);
+            this.todayOffersUpdateSubject.next(data);
+          });
         }
 
         // Customer-specific subscriptions
@@ -291,6 +309,18 @@ export class RealtimeService {
             console.log('[Realtime] Received menu category update for restaurant', restaurantId);
             const data = JSON.parse(msg.body);
             this.menuCategoryUpdateSubject.next(data);
+          });
+
+          this.stompClient!.subscribe(`/topic/restaurant/${restaurantId}/promotional-banners`, (msg) => {
+            console.log('[Realtime] Received promotional banner update for restaurant', restaurantId);
+            const data = JSON.parse(msg.body);
+            this.promotionalBannerUpdateSubject.next(data);
+          });
+
+          this.stompClient!.subscribe(`/topic/restaurant/${restaurantId}/todays-offers`, (msg) => {
+            console.log('[Realtime] Received today\'s offers update for restaurant', restaurantId);
+            const data = JSON.parse(msg.body);
+            this.todayOffersUpdateSubject.next(data);
           });
         }
 
