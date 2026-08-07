@@ -438,4 +438,17 @@ export interface WasteType {
   updated_at: Date;
 }
 
+export interface PromotionalBanner {
+  id: number;
+  restaurantId: number;
+  title: string;
+  imageUrl: string;
+  displayOrder: number;
+  isActive: boolean;
+  createdBy?: number;
+  updatedBy?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 // Master interfaces starts here

@@ -8,7 +8,7 @@ import { GuestAuthService, GuestCustomer } from '../../../services/guest-auth.se
 import { AuthService } from '../../../services/auth.service';
 import { CrudService } from '../../../services/crud.service';
 import { User } from '../../../services/mock-data.service';
-import { MenuItem } from '../../../interfaces';
+import { MenuItem, PromotionalBanner } from '../../../interfaces';
 import { CartService } from '../../../services/cart.service';
 import { environment } from '../../../environments/environment';
 import { AnimateOnScrollDirective } from '../../../directives/animate-on-scroll.directive';
@@ -60,6 +60,13 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   popularItems: MenuItem[] = [];
   private allMenuItems: MenuItem[] = [];
 
+  promotionalBanners: PromotionalBanner[] = [];
+  currentBannerIndex = 0;
+  private bannerAutoSlideInterval: any;
+
+  isDashboardReady = false;
+  private dashboardDataLoadCount = 0;
+
   constructor() {
     // Keep local copy in sync
     this.subscriptionService.planName$.subscribe(name => {
@@ -109,11 +116,22 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.stopBannerAutoSlide();
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   private initializeComponent(): void {
+    this.isDashboardReady = false;
+    this.dashboardDataLoadCount = 0;
     this.loadMenuData();
+    this.loadPromotionalBanners();
+  }
+
+  private onDashboardDataLoaded(): void {
+    this.dashboardDataLoadCount++;
+    if (this.dashboardDataLoadCount >= 2) {
+      this.isDashboardReady = true;
+    }
   }
 
   private initializeGuest(): void {
@@ -274,11 +292,13 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
           ...cat,
           itemCount: raw.filter((item: any) => item.category === cat.key).length
         }));
+        this.onDashboardDataLoaded();
       },
       error: (error) => {
         console.error('Failed to load menu data:', error);
         this.featuredItems = [];
         this.popularItems = [];
+        this.onDashboardDataLoaded();
       }
     });
     this.subscriptions.push(sub);
@@ -335,6 +355,88 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
       return imagePath;
     }
     return environment.api.baseUrl + imagePath;
+  }
+
+  private loadPromotionalBanners(): void {
+    const restaurantIdParam = this.restaurantId || this.guestAuthService.getCurrentRestaurantId();
+    if (!restaurantIdParam) return;
+
+    const params: any = {
+      page: 1,
+      size: 10,
+      restaurantId: restaurantIdParam,
+      isActive: 'true'
+    };
+
+    this.crudService.getPromotionalBanners(params).subscribe({
+      next: (response: any) => {
+        const raw = response.data || [];
+        this.promotionalBanners = raw.map((banner: any) => ({
+          id: banner.id,
+          restaurantId: banner.restaurant_id || banner.restaurantId || 0,
+          title: banner.title || '',
+          imageUrl: banner.image_url || banner.imageUrl || '',
+          displayOrder: banner.display_order ?? banner.displayOrder ?? 0,
+          isActive: banner.is_active ?? banner.isActive ?? true,
+          createdBy: banner.created_by ?? banner.createdBy,
+          updatedBy: banner.updated_by ?? banner.updatedBy,
+          createdAt: banner.created_at ? new Date(banner.created_at) : undefined,
+          updatedAt: banner.updated_at ? new Date(banner.updated_at) : undefined
+        })).sort((a: any, b: any) => a.displayOrder - b.displayOrder);
+
+        this.currentBannerIndex = 0;
+        this.startBannerAutoSlide();
+        this.onDashboardDataLoaded();
+      },
+      error: (error) => {
+        console.error('Failed to load promotional banners:', error);
+        this.promotionalBanners = [];
+        this.onDashboardDataLoaded();
+      }
+    });
+  }
+
+  private startBannerAutoSlide(): void {
+    this.stopBannerAutoSlide();
+    if (this.promotionalBanners.length > 1) {
+      this.bannerAutoSlideInterval = setInterval(() => {
+        this.nextBanner();
+      }, 4000);
+    }
+  }
+
+  private stopBannerAutoSlide(): void {
+    if (this.bannerAutoSlideInterval) {
+      clearInterval(this.bannerAutoSlideInterval);
+      this.bannerAutoSlideInterval = null;
+    }
+  }
+
+  nextBanner(): void {
+    if (this.promotionalBanners.length === 0) return;
+    this.currentBannerIndex = (this.currentBannerIndex + 1) % this.promotionalBanners.length;
+  }
+
+  prevBanner(): void {
+    if (this.promotionalBanners.length === 0) return;
+    this.currentBannerIndex = (this.currentBannerIndex - 1 + this.promotionalBanners.length) % this.promotionalBanners.length;
+  }
+
+  goToBanner(index: number): void {
+    this.currentBannerIndex = index;
+  }
+
+  pauseBannerAutoSlide(): void {
+    this.stopBannerAutoSlide();
+  }
+
+  resumeBannerAutoSlide(): void {
+    this.startBannerAutoSlide();
+  }
+
+  get currentBanner(): PromotionalBanner | null {
+    if (this.promotionalBanners.length === 0) return null;
+    return this.promotionalBanners[this.currentBannerIndex] || null;
   }
 
   shareProfile(): void {

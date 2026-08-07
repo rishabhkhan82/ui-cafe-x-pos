@@ -1170,4 +1170,28 @@ export class CrudService {
   deleteRestaurantMenuCategory(restaurantId: string | number, id: string | number): Observable<any> {
     return this.deleteData(`restaurant-menu-categories/${restaurantId}`, {}, id);
   }
+
+  // ===============================
+  // PROMOTIONAL BANNERS OPERATIONS
+  // ===============================
+
+  getPromotionalBanners(params?: CrudParams): Observable<any> {
+    return this.getData('promotional-banners', params);
+  }
+
+  getPromotionalBannerById(id: string | number): Observable<any> {
+    return this.getData(`promotional-banners/${id}`);
+  }
+
+  createPromotionalBanner(payload: any): Observable<any> {
+    return this.postData('promotional-banners', payload);
+  }
+
+  updatePromotionalBanner(id: string | number, payload: any): Observable<any> {
+    return this.putData('promotional-banners', payload, {}, id);
+  }
+
+  deletePromotionalBanner(id: string | number): Observable<any> {
+    return this.deleteData('promotional-banners', {}, id);
+  }
 }

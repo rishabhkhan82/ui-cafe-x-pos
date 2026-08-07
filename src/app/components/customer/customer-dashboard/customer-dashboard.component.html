@@ -1,154 +1,201 @@
 
+
 <main *ngIf="!isLoadingGuest && !guestError" class="px-4 py-4 pb-24 pt-5">
-  <div class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="0">
-    <div class="gradient-bg rounded-2xl p-6 text-white relative overflow-hidden">
-      <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-      <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
-      <div class="relative z-10">
-        <h2 class="text-2xl font-bold mb-2">Welcome back! 👋</h2>
-        <p class="text-white/90 mb-4">What delicious food are you craving today?</p>
-        <div class="flex items-center space-x-4">
-          <div class="flex items-center space-x-2">
-            <i class="fas fa-clock text-sm"></i>
-            <span class="text-sm">{{ estimatedDeliveryTime }} mins</span>
-          </div>
-          <div class="flex items-center space-x-2">
-            <i class="fas fa-mug-hot text-sm"></i>
-            <span class="text-sm">Scan, order, relax & enjoy</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="100">
-    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Browse By Category</h3>
-    <div class="grid grid-cols-2 gap-4">
-      <div (click)="router.navigate(['/customer/menu'])" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer menu-item-hover">
-        <div class="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 bg-green-100 dark:bg-green-900/30 text-green-500">
-          <i class="fa-utensils fas text-xl"></i>
-        </div>
-        <h4 class="font-semibold text-gray-900 dark:text-white text-center">View Menus</h4>
-      </div>
-      <div *ngIf="false" (click)="router.navigate(['/customer/todays-offers'])" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer menu-item-hover">
-        <div class="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 bg-pink-100 dark:bg-pink-900/30 text-pink-500">
-          <i class="fa-tag fas text-xl"></i>
-        </div>
-        <h4 class="font-semibold text-gray-900 dark:text-white text-center">Today's Offers</h4>
-      </div>
-      <div *ngIf="false" (click)="router.navigate(['/customer/reviews-ratings'])" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer menu-item-hover">
-        <div class="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 bg-purple-100 dark:bg-purple-900/30 text-purple-500">
-          <i class="fa-star fas text-xl"></i>
-        </div>
-        <h4 class="font-semibold text-gray-900 dark:text-white text-center">Reviews & Ratings</h4>
-      </div>
-      <div (click)="shareProfile()"
-          class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer menu-item-hover">
-        <div class="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 bg-orange-100 dark:bg-orange-900/30 text-orange-500">
-          <i class="fa-share fas text-xl"></i>
-        </div>
-        <h4 class="font-semibold text-gray-900 dark:text-white text-center">Share Profile</h4>
-      </div>
-
-    </div>
-  </div>
-
-  <div class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="100">
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Featured Items</h3>
-      <button (click)="viewFeaturedAll()" class="text-primary-500 text-sm font-medium">View All</button>
-    </div>
-
-    <div *ngIf="featuredItems.length === 0" class="bg-white dark:bg-gray-800 rounded-2xl p-6 text-start text-gray-500 dark:text-gray-400">
-      No featured items available right now.
-    </div>
-
+  <ng-container *ngIf="!isDashboardReady; else dashboardContent">
     <div class="space-y-4">
-      <div *ngFor="let item of featuredItems"
-           class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 menu-item-hover">
-        <div class="flex items-center space-x-4">
-          <div class="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
-            <img [src]="getFullImageUrl(item.image)" [alt]="item.name" class="w-full h-full object-cover" (error)="item.image=''">
+      <div class="w-full max-w-[1080px] mx-auto aspect-square bg-gray-200 dark:bg-gray-700 rounded-2xl animate-pulse"></div>
+      <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 animate-pulse">
+        <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-40 mb-4"></div>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-gray-100 dark:bg-gray-700 rounded-xl p-4 h-24"></div>
+          <div class="bg-gray-100 dark:bg-gray-700 rounded-xl p-4 h-24"></div>
+          <div class="bg-gray-100 dark:bg-gray-700 rounded-xl p-4 h-24"></div>
+          <div class="bg-gray-100 dark:bg-gray-700 rounded-xl p-4 h-24"></div>
+        </div>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 animate-pulse">
+        <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-4"></div>
+        <div class="space-y-4">
+          <div class="flex items-center space-x-4">
+            <div class="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+            <div class="flex-1 space-y-2">
+              <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+              <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+            </div>
           </div>
-          <div class="flex-1">
-            <div class="flex items-start justify-between">
-              <div>
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-1">{{ item.name }}</h4>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ item.description }}</p>
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-lg font-bold text-primary-500">₹{{ item.price }}</span>
-                  <span *ngIf="item.original_price && item.discount" class="text-sm text-gray-500 dark:text-gray-400 line-through">₹{{ item.original_price }}</span>
-                  <span *ngIf="item.discount" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">{{ item.discount }}%</span>
-                  <span *ngIf="item.is_veg" class="text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-1 rounded-full">Veg</span>
-                  <span *ngIf="!item.is_veg" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">Non-Veg</span>
-                  <span *ngIf="item.is_spicy" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">Spicy</span>
-                  <span *ngIf="item.is_popular" class="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2 py-1 rounded-full">Popular</span>
-                  <span *ngIf="item.is_featured" class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-full">Featured</span>
+          <div class="flex items-center space-x-4">
+            <div class="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+            <div class="flex-1 space-y-2">
+              <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+              <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-template #dashboardContent>
+    <div *ngIf="promotionalBanners.length > 0" class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="0">
+      <div class="relative w-full max-w-[1080px] mx-auto aspect-square bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm"
+          (mouseenter)="pauseBannerAutoSlide()"
+          (mouseleave)="resumeBannerAutoSlide()">
+        <ng-container *ngFor="let banner of promotionalBanners; let i = index">
+          <div *ngIf="i === currentBannerIndex" class="absolute inset-0 promotional-banner-slide">
+            <img [src]="getFullImageUrl(banner.imageUrl)" [alt]="banner.title || 'Promotional Banner'" class="w-full h-full object-cover">
+          </div>
+        </ng-container>
+
+        <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+
+        <div class="absolute bottom-0 left-0 right-0 p-4">
+          <div *ngIf="currentBanner" class="promotional-banner-text">
+            <h3 class="text-white font-semibold text-lg">{{ currentBanner.title }}</h3>
+          </div>
+        </div>
+
+        <button *ngIf="promotionalBanners.length > 1" (click)="prevBanner()" class="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 dark:bg-gray-800/80 rounded-full flex items-center justify-center text-gray-800 dark:text-white hover:bg-white dark:hover:bg-gray-800 transition-colors">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <button *ngIf="promotionalBanners.length > 1" (click)="nextBanner()" class="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 dark:bg-gray-800/80 rounded-full flex items-center justify-center text-gray-800 dark:text-white hover:bg-white dark:hover:bg-gray-800 transition-colors">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+
+      <div *ngIf="promotionalBanners.length > 1" class="flex items-center justify-center space-x-2 mt-3">
+        <button *ngFor="let banner of promotionalBanners; let i = index" (click)="goToBanner(i)" [class]="'promotional-banner-dot ' + (currentBannerIndex === i ? 'promotional-banner-dot-active w-6 h-2 bg-primary-500 rounded-full' : 'w-2 h-2 bg-gray-300 dark:bg-gray-600 rounded-full hover:bg-gray-400 dark:hover:bg-gray-500')"></button>
+      </div>
+    </div>
+
+    <div class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="100">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Browse By Category</h3>
+      <div class="grid grid-cols-2 gap-4">
+        <div (click)="router.navigate(['/customer/menu'])" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer menu-item-hover">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 bg-green-100 dark:bg-green-900/30 text-green-500">
+            <i class="fa-utensils fas text-xl"></i>
+          </div>
+          <h4 class="font-semibold text-gray-900 dark:text-white text-center">View Menus</h4>
+        </div>
+        <div *ngIf="false" (click)="router.navigate(['/customer/todays-offers'])" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer menu-item-hover">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 bg-pink-100 dark:bg-pink-900/30 text-pink-500">
+            <i class="fa-tag fas text-xl"></i>
+          </div>
+          <h4 class="font-semibold text-gray-900 dark:text-white text-center">Today's Offers</h4>
+        </div>
+        <div *ngIf="false" (click)="router.navigate(['/customer/reviews-ratings'])" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer menu-item-hover">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 bg-purple-100 dark:bg-purple-900/30 text-purple-500">
+            <i class="fa-star fas text-xl"></i>
+          </div>
+          <h4 class="font-semibold text-gray-900 dark:text-white text-center">Reviews & Ratings</h4>
+        </div>
+        <div (click)="shareProfile()"
+            class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer menu-item-hover">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 bg-orange-100 dark:bg-orange-900/30 text-orange-500">
+            <i class="fa-share fas text-xl"></i>
+          </div>
+          <h4 class="font-semibold text-gray-900 dark:text-white text-center">Share Profile</h4>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="100">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Featured Items</h3>
+        <button (click)="viewFeaturedAll()" class="text-primary-500 text-sm font-medium">View All</button>
+      </div>
+
+      <div *ngIf="featuredItems.length === 0" class="bg-white dark:bg-gray-800 rounded-2xl p-6 text-start text-gray-500 dark:text-gray-400">
+        No featured items available right now.
+      </div>
+
+      <div class="space-y-4">
+        <div *ngFor="let item of featuredItems"
+            class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 menu-item-hover">
+          <div class="flex items-center space-x-4">
+            <div class="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
+              <img [src]="getFullImageUrl(item.image)" [alt]="item.name" class="w-full h-full object-cover" (error)="item.image=''">
+            </div>
+            <div class="flex-1">
+              <div class="flex items-start justify-between">
+                <div>
+                  <h4 class="font-semibold text-gray-900 dark:text-white mb-1">{{ item.name }}</h4>
+                  <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ item.description }}</p>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-lg font-bold text-primary-500">₹{{ item.price }}</span>
+                    <span *ngIf="item.original_price && item.discount" class="text-sm text-gray-500 dark:text-gray-400 line-through">₹{{ item.original_price }}</span>
+                    <span *ngIf="item.discount" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">{{ item.discount }}%</span>
+                    <span *ngIf="item.is_veg" class="text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-1 rounded-full">Veg</span>
+                    <span *ngIf="!item.is_veg" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">Non-Veg</span>
+                    <span *ngIf="item.is_spicy" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">Spicy</span>
+                    <span *ngIf="item.is_popular" class="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2 py-1 rounded-full">Popular</span>
+                    <span *ngIf="item.is_featured" class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-full">Featured</span>
+                  </div>
+                </div>
+
+                <div *ngIf="currentPlan === 'Starter'" class="flex flex-col items-center space-y-2 pl-2">
+                  <button (click)="increaseQuantity(item)" class="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors">
+                    <i class="fas fa-plus text-sm"></i>
+                  </button>
+                  <span *ngIf="getItemQuantity(item) > 0" class="text-sm font-bold text-gray-700 dark:text-gray-200 leading-none">{{ getItemQuantity(item) }}</span>
+                  <button *ngIf="getItemQuantity(item) > 0" (click)="decreaseQuantity(item)" class="w-8 h-8 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full border border-gray-200 dark:border-gray-600 flex items-center justify-center hover:text-primary-500 transition-colors">
+                    <i class="fas fa-minus text-sm"></i>
+                  </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-              <div *ngIf="currentPlan === 'Starter'" class="flex flex-col items-center space-y-2 pl-2">
-                <button (click)="increaseQuantity(item)" class="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors">
-                  <i class="fas fa-plus text-sm"></i>
-                </button>
-                <span *ngIf="getItemQuantity(item) > 0" class="text-sm font-bold text-gray-700 dark:text-gray-200 leading-none">{{ getItemQuantity(item) }}</span>
-                <button *ngIf="getItemQuantity(item) > 0" (click)="decreaseQuantity(item)" class="w-8 h-8 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full border border-gray-200 dark:border-gray-600 flex items-center justify-center hover:text-primary-500 transition-colors">
-                  <i class="fas fa-minus text-sm"></i>
-                </button>
+    <div class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="100">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Popular This Week</h3>
+        <button (click)="viewPopularAll()" class="text-primary-500 text-sm font-medium">View All</button>
+      </div>
+
+      <div *ngIf="popularItems.length === 0" class="bg-white dark:bg-gray-800 rounded-2xl p-6 text-start text-gray-500 dark:text-gray-400">
+        No popular items available right now.
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div *ngFor="let item of popularItems"
+            class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 menu-item-hover">
+          <div class="w-full h-32 rounded-xl overflow-hidden mb-3">
+            <img [src]="getFullImageUrl(item.image)" [alt]="item.name" class="w-full h-full object-cover" (error)="item.image=''">
+          </div>
+          <h4 class="font-semibold text-gray-900 dark:text-white mb-1">{{ item.name }}</h4>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ item.description }}</p>
+          <div class="flex flex-col flex-start justify-between gap-3">
+            <div class="flex flex-col">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-lg font-bold text-primary-500">₹{{ item.price }}</span>
+                <span *ngIf="item.original_price && item.discount" class="text-sm text-gray-500 dark:text-gray-400 line-through">₹{{ item.original_price }}</span>
+                <span *ngIf="item.discount" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">{{ item.discount }}%</span>
+              </div>
+              <div class="flex items-center gap-2 flex-wrap mt-2">
+                <span *ngIf="item.is_veg" class="text-[10px] bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-1.5 py-0.5 rounded-full">Veg</span>
+                <span *ngIf="!item.is_veg" class="text-[10px] bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded-full">Non-Veg</span>
+                <span *ngIf="item.is_spicy" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">Spicy</span>
+                <span *ngIf="item.is_popular" class="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2 py-1 rounded-full">Popular</span>
+                <span *ngIf="item.is_featured" class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-full">Featured</span>
               </div>
             </div>
+            <div *ngIf="currentPlan === 'Starter'" class="flex items-center justify-end space-x-2">
+              <button *ngIf="getItemQuantity(item) > 0" (click)="decreaseQuantity(item)" class="w-7 h-7 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full border border-gray-200 dark:border-gray-600 flex items-center justify-center hover:text-primary-500 transition-colors">
+                <i class="fas fa-minus text-[10px]"></i>
+              </button>
+              <span *ngIf="getItemQuantity(item) > 0" class="text-xs font-bold text-gray-700 dark:text-gray-200">{{ getItemQuantity(item) }}</span>
+              <button (click)="increaseQuantity(item)" class="w-7 h-7 bg-primary-500 text-white rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors">
+                <i class="fas fa-plus text-[10px]"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-
-  <div class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="100">
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Popular This Week</h3>
-      <button (click)="viewPopularAll()" class="text-primary-500 text-sm font-medium">View All</button>
-    </div>
-
-    <div *ngIf="popularItems.length === 0" class="bg-white dark:bg-gray-800 rounded-2xl p-6 text-start text-gray-500 dark:text-gray-400">
-      No popular items available right now.
-    </div>
-
-    <div class="grid grid-cols-2 gap-4">
-      <div *ngFor="let item of popularItems"
-           class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 menu-item-hover">
-        <div class="w-full h-32 rounded-xl overflow-hidden mb-3">
-          <img [src]="getFullImageUrl(item.image)" [alt]="item.name" class="w-full h-full object-cover" (error)="item.image=''">
-        </div>
-        <h4 class="font-semibold text-gray-900 dark:text-white mb-1">{{ item.name }}</h4>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ item.description }}</p>
-        <div class="flex flex-col flex-start justify-between gap-3">
-          <div class="flex flex-col">
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="text-lg font-bold text-primary-500">₹{{ item.price }}</span>
-              <span *ngIf="item.original_price && item.discount" class="text-sm text-gray-500 dark:text-gray-400 line-through">₹{{ item.original_price }}</span>
-              <span *ngIf="item.discount" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">{{ item.discount }}%</span>
-            </div>
-            <div class="flex items-center gap-2 flex-wrap mt-2">
-              <span *ngIf="item.is_veg" class="text-[10px] bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-1.5 py-0.5 rounded-full">Veg</span>
-              <span *ngIf="!item.is_veg" class="text-[10px] bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded-full">Non-Veg</span>
-              <span *ngIf="item.is_spicy" class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-full">Spicy</span>
-              <span *ngIf="item.is_popular" class="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2 py-1 rounded-full">Popular</span>
-              <span *ngIf="item.is_featured" class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-full">Featured</span>
-            </div>
-          </div>
-          <div *ngIf="currentPlan === 'Starter'" class="flex items-center justify-end space-x-2">
-            <button *ngIf="getItemQuantity(item) > 0" (click)="decreaseQuantity(item)" class="w-7 h-7 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full border border-gray-200 dark:border-gray-600 flex items-center justify-center hover:text-primary-500 transition-colors">
-              <i class="fas fa-minus text-[10px]"></i>
-            </button>
-            <span *ngIf="getItemQuantity(item) > 0" class="text-xs font-bold text-gray-700 dark:text-gray-200">{{ getItemQuantity(item) }}</span>
-            <button (click)="increaseQuantity(item)" class="w-7 h-7 bg-primary-500 text-white rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors">
-              <i class="fas fa-plus text-[10px]"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  </ng-template>
 </main>
 
 <!-- <div *ngIf="!isLoadingGuest && !guestError" class="fixed bottom-24 right-4 z-40">

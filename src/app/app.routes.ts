@@ -433,6 +433,13 @@ export const routes: Routes = [
     data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
   },
 
+  {
+    path: 'promotional-banners',
+    loadComponent: () => import('./components/restaurant/promotional-banners/promotional-banners.component').then(m => m.PromotionalBannersComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
+  },
+
   // Kitchen Manager Specific Routings
 
   // {
