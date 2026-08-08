@@ -312,6 +312,12 @@ export const routes: Routes = [
     data: { allowedRoles: ['platform_owner'] }
   },
 
+  {
+    path: 'reviews-ratings',
+    loadComponent: () => import('./components/common/common-ratings-reviews/common-ratings-reviews.component').then(m => m.CommonRatingsReviewsComponent), 
+    canActivate: [authGuard, subscriptionGuard], data: { allowedSubscriptionPlans: ['Starter', 'Engage'] }
+  },
+
   // Restaurant Owner & Manager Specific Routings
 
   {
@@ -332,7 +338,7 @@ export const routes: Routes = [
     path: 'owner-menus-mobile',
     loadComponent: () => import('./components/restaurant/owner-menus-mobile/owner-menus-mobile.component').then(m => m.OwnerMenusMobileComponent),
     canActivate: [authGuard, roleGuard, subscriptionGuard],
-    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'], allowedSubscriptionPlans: ['Free', 'Starter'] }
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'], allowedSubscriptionPlans: ['Free', 'Starter', 'Engage'] }
   },
 
   {
@@ -424,6 +430,27 @@ export const routes: Routes = [
     loadComponent: () => import('./components/restaurant/add-ons-mobile/add-ons-mobile.component').then(m => m.AddOnsMobileComponent),
     canActivate: [authGuard, roleGuard],
     data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'] }
+  },
+
+  {
+    path: 'restaurant-menu-categories',
+    loadComponent: () => import('./components/restaurant/restaurant-menu-categories/restaurant-menu-categories.component').then(m => m.RestaurantMenuCategoriesComponent),
+    canActivate: [authGuard, roleGuard, subscriptionGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'], allowedSubscriptionPlans: ['Free', 'Starter', 'Engage'] }
+  },
+
+  {
+    path: 'promotional-banners',
+    loadComponent: () => import('./components/restaurant/promotional-banners/promotional-banners.component').then(m => m.PromotionalBannersComponent),
+    canActivate: [authGuard, roleGuard, subscriptionGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'], allowedSubscriptionPlans: ['Starter', 'Engage'] }
+  },
+
+  {
+    path: 'todays-offers',
+    loadComponent: () => import('./components/restaurant/todays-offers/todays-offers.component').then(m => m.TodaysOffersComponent),
+    canActivate: [authGuard, roleGuard, subscriptionGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'], allowedSubscriptionPlans: ['Starter', 'Engage'] }
   },
 
   // Kitchen Manager Specific Routings

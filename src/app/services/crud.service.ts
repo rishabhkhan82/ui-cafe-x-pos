@@ -1142,4 +1142,96 @@ export class CrudService {
   deleteWasteType(id: string | number): Observable<any> {
     return this.deleteData('waste-types', {}, id);
   }
+
+  // ===============================
+  // RESTAURANT MENU CATEGORIES OPERATIONS
+  // ===============================
+
+  getRestaurantMenuCategories(params?: CrudParams): Observable<any> {
+    return this.getData('restaurant-menu-categories', params);
+  }
+
+  getRestaurantMenuCategoryById(restaurantId: string | number, id: string | number): Observable<any> {
+    return this.getData(`restaurant-menu-categories/${restaurantId}/${id}`);
+  }
+
+  getActiveRestaurantMenuCategories(restaurantId: string | number): Observable<any> {
+    return this.getData(`restaurant-menu-categories/active/${restaurantId}`);
+  }
+
+  createRestaurantMenuCategory(payload: any): Observable<any> {
+    return this.postData('restaurant-menu-categories', payload);
+  }
+
+  updateRestaurantMenuCategory(restaurantId: string | number, id: string | number, payload: any): Observable<any> {
+    return this.putData(`restaurant-menu-categories/${restaurantId}`, payload, {}, id);
+  }
+
+  deleteRestaurantMenuCategory(restaurantId: string | number, id: string | number): Observable<any> {
+    return this.deleteData(`restaurant-menu-categories/${restaurantId}`, {}, id);
+  }
+
+  // ===============================
+  // PROMOTIONAL BANNERS OPERATIONS
+  // ===============================
+
+  getPromotionalBanners(params?: CrudParams): Observable<any> {
+    return this.getData('promotional-banners', params);
+  }
+
+  getPromotionalBannerById(id: string | number): Observable<any> {
+    return this.getData(`promotional-banners/${id}`);
+  }
+
+  createPromotionalBanner(payload: any): Observable<any> {
+    return this.postData('promotional-banners', payload);
+  }
+
+  updatePromotionalBanner(id: string | number, payload: any): Observable<any> {
+    return this.putData('promotional-banners', payload, {}, id);
+  }
+
+  deletePromotionalBanner(id: string | number): Observable<any> {
+    return this.deleteData('promotional-banners', {}, id);
+  }
+
+  getTodaysOffers(params?: CrudParams): Observable<any> {
+    return this.getData('todays-offers', params);
+  }
+
+  getTodaysOfferById(id: string | number): Observable<any> {
+    return this.getData(`todays-offers/${id}`);
+  }
+
+  createTodaysOffer(payload: any): Observable<any> {
+    return this.postData('todays-offers', payload);
+  }
+
+  updateTodaysOffer(id: string | number, payload: any): Observable<any> {
+    return this.putData('todays-offers', payload, {}, id);
+  }
+
+  deleteTodaysOffer(id: string | number): Observable<any> {
+    return this.deleteData('todays-offers', {}, id);
+  }
+
+  getReviews(params?: CrudParams): Observable<any> {
+    return this.getData('reviews', params);
+  }
+
+  getReviewById(id: string | number): Observable<any> {
+    return this.getData(`reviews/${id}`);
+  }
+
+  createReview(payload: any): Observable<any> {
+    return this.postData('reviews', payload);
+  }
+
+  updateReview(id: string | number, payload: any): Observable<any> {
+    return this.putData('reviews', payload, {}, id);
+  }
+
+  deleteReview(id: string | number): Observable<any> {
+    return this.deleteData('reviews', {}, id);
+  }
 }

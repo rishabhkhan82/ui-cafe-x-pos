@@ -1,9 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { CrudService } from './crud.service';
 import { AuthService } from './auth.service';
 import { CommonUserNotificationsTemplatesService, NotificationTemplate } from './common-user-notifications-templates.service';
+import { RealtimeService } from './realtime.service';
 
 export interface Notification {
   id: string;
@@ -43,8 +44,32 @@ export class CommonUserNotificationsService {
   constructor(
     private crudService: CrudService,
     private authService: AuthService,
-    private templatesService: CommonUserNotificationsTemplatesService
-  ) {}
+    private templatesService: CommonUserNotificationsTemplatesService,
+    private realtimeService: RealtimeService,
+    private ngZone: NgZone
+  ) {
+    this.setupRealtimeListener();
+  }
+
+  private setupRealtimeListener(): void {
+    this.realtimeService.newNotification$.subscribe((raw: any) => {
+      if (!raw) return;
+
+      this.ngZone.run(() => {
+        const mapped = this.mapSingleNotification(raw);
+        const current = this.notificationsSubject.value;
+        const newId = mapped.id || mapped.notification_id;
+        const exists = current.some(n => (n.id || n.notification_id) === newId);
+
+        if (!exists) {
+          this.notificationsSubject.next([mapped, ...current]);
+          if (mapped.status === 'unread') {
+            this.unreadCountSubject.next(this.unreadCountSubject.value + 1);
+          }
+        }
+      });
+    });
+  }
 
   // ===============================
   // PUBLIC API
@@ -62,7 +87,12 @@ export class CommonUserNotificationsService {
       map((response: any) => {
         const data = Array.isArray(response) ? response : (response?.data ?? []);
         const total = response?.totalRowCount ?? (Array.isArray(response) ? response.length : data.length);
-        return { notifications: this.mapToNotifications(data), total };
+        const notifications = this.mapToNotifications(data).sort((a, b) => {
+          const aTime = a.created_at instanceof Date ? a.created_at.getTime() : new Date(a.created_at).getTime();
+          const bTime = b.created_at instanceof Date ? b.created_at.getTime() : new Date(b.created_at).getTime();
+          return bTime - aTime;
+        });
+        return { notifications, total };
       }),
       tap(({ notifications, total }) => {
         this.notificationsSubject.next(notifications);

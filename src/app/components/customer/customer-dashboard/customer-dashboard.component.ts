@@ -8,12 +8,13 @@ import { GuestAuthService, GuestCustomer } from '../../../services/guest-auth.se
 import { AuthService } from '../../../services/auth.service';
 import { CrudService } from '../../../services/crud.service';
 import { User } from '../../../services/mock-data.service';
-import { MenuItem } from '../../../interfaces';
+import { MenuItem, PromotionalBanner, TodaysOffer } from '../../../interfaces';
 import { CartService } from '../../../services/cart.service';
 import { environment } from '../../../environments/environment';
 import { AnimateOnScrollDirective } from '../../../directives/animate-on-scroll.directive';
 import { RealtimeService } from '../../../services/realtime.service';
 import { SubscriptionService } from '../../../services/subscription.service';
+import { RestaurantDataService } from '../../../services/restaurant-data.service';
 
 @Component({
   selector: 'app-customer-dashboard',
@@ -23,7 +24,7 @@ import { SubscriptionService } from '../../../services/subscription.service';
   styleUrls: ['./customer-dashboard.component.css']
 })
 export class CustomerDashboardComponent implements OnInit, OnDestroy {
-  private router = inject(Router);
+  public router = inject(Router);
   private route = inject(ActivatedRoute);
   private guestAuthService = inject(GuestAuthService);
   private authService = inject(AuthService);
@@ -31,6 +32,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   private cartService = inject(CartService);
   private realtimeService = inject(RealtimeService);
   public subscriptionService = inject(SubscriptionService);
+  private restaurantDataService = inject(RestaurantDataService);
   private subscriptions: Subscription[] = [];
 
   currentUser: User | any = null;
@@ -43,6 +45,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   activeCategory: string = 'all';
   cartItemCount: number = 0;
   currentPlan: string | null = null;
+  restaurantName: string = '';
 
   menuCategories = [
     { key: 'starters', name: 'Starters', icon: 'fas fa-pepper-hot', colorClass: 'bg-red-100 dark:bg-red-900/30 text-red-500', itemCount: 0 },
@@ -57,10 +60,28 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   popularItems: MenuItem[] = [];
   private allMenuItems: MenuItem[] = [];
 
+  promotionalBanners: PromotionalBanner[] = [];
+  currentBannerIndex = 0;
+  private bannerAutoSlideInterval: any;
+
+  isDashboardReady = false;
+  private dashboardDataLoadCount = 0;
+
+  showTodayOffers = false;
+  todayOffers: TodaysOffer[] = [];
+  currentOfferIndex = 0;
+  private offerAutoSlideInterval: any;
+  isLoadingTodayOffers = false;
+
   constructor() {
     // Keep local copy in sync
     this.subscriptionService.planName$.subscribe(name => {
       this.currentPlan = name;
+      setTimeout(() => {
+        if (this.subscriptionService.hasActiveSubscription() === false) {
+          this.router.navigate(['/unauthrized-access'], { queryParams: { reason: 'subscription_inactive' } });
+        }
+      }, 7000);
     });
   }
 
@@ -92,15 +113,74 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
         }
       }
     });
+
+    const bannerSub = this.realtimeService.promotionalBannerUpdate$.subscribe((update: any) => {
+      if (update) {
+        const currentRestaurantId = this.restaurantId || this.guestAuthService.getCurrentRestaurantId();
+        const updateRestaurantId = update.restaurantId || update.restaurant_id;
+        if (currentRestaurantId && String(updateRestaurantId) === String(currentRestaurantId)) {
+          console.log('Promotional banner updated, reloading...');
+          this.loadPromotionalBanners();
+        }
+      }
+    });
+
+    const offerSub = this.realtimeService.todayOffersUpdate$.subscribe((update: any) => {
+      if (update) {
+        const currentRestaurantId = this.restaurantId || this.guestAuthService.getCurrentRestaurantId();
+        const updateRestaurantId = update.restaurantId || update.restaurant_id;
+        if (currentRestaurantId && String(updateRestaurantId) === String(currentRestaurantId)) {
+          console.log('Today\'s offers updated, reloading...');
+          if (this.showTodayOffers) {
+            this.loadTodayOffers();
+          }
+        }
+      }
+    });
+
+    const reviewSub = this.realtimeService.reviewUpdate$.subscribe((update: any) => {
+      if (update) {
+        const currentRestaurantId = this.restaurantId || this.guestAuthService.getCurrentRestaurantId();
+        const updateRestaurantId = update.restaurantId || update.restaurant_id;
+        if (currentRestaurantId && String(updateRestaurantId) === String(currentRestaurantId)) {
+          console.log('Review updated, reloading...');
+        }
+      }
+    });
+    
+    this.restaurantDataService.restaurant$.subscribe((restaurant: any) => {
+      console.log('[CustomerDashboard] Current restaurant data:', restaurant);
+      if (restaurant && restaurant.name) {
+        this.restaurantName = restaurant.name;
+      } else {
+        this.restaurantName = '';
+      }
+    });
+
     this.subscriptions.push(sub);
+    this.subscriptions.push(bannerSub);
+    this.subscriptions.push(offerSub);
+    this.subscriptions.push(reviewSub);
   }
 
   ngOnDestroy(): void {
+    this.stopBannerAutoSlide();
+    this.stopOfferAutoSlide();
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   private initializeComponent(): void {
+    this.isDashboardReady = false;
+    this.dashboardDataLoadCount = 0;
     this.loadMenuData();
+    this.loadPromotionalBanners();
+  }
+
+  private onDashboardDataLoaded(): void {
+    this.dashboardDataLoadCount++;
+    if (this.dashboardDataLoadCount >= 2) {
+      this.isDashboardReady = true;
+    }
   }
 
   private initializeGuest(): void {
@@ -261,11 +341,13 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
           ...cat,
           itemCount: raw.filter((item: any) => item.category === cat.key).length
         }));
+        this.onDashboardDataLoaded();
       },
       error: (error) => {
         console.error('Failed to load menu data:', error);
         this.featuredItems = [];
         this.popularItems = [];
+        this.onDashboardDataLoaded();
       }
     });
     this.subscriptions.push(sub);
@@ -322,5 +404,223 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
       return imagePath;
     }
     return environment.api.baseUrl + imagePath;
+  }
+
+  onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (img && !img.src.includes('placeholder.png')) {
+      img.src = 'assets/images/placeholder.png';
+    }
+  }
+
+  private loadPromotionalBanners(): void {
+    const restaurantIdParam = this.restaurantId || this.guestAuthService.getCurrentRestaurantId();
+    if (!restaurantIdParam) return;
+
+    const params: any = {
+      page: 1,
+      size: 10,
+      restaurantId: restaurantIdParam,
+      isActive: 'true'
+    };
+
+    this.crudService.getPromotionalBanners(params).subscribe({
+      next: (response: any) => {
+        const raw = response.data || [];
+        this.promotionalBanners = raw.map((banner: any) => ({
+          id: banner.id,
+          restaurantId: banner.restaurant_id || banner.restaurantId || 0,
+          title: banner.title || '',
+          imageUrl: banner.image_url || banner.imageUrl || '',
+          displayOrder: banner.display_order ?? banner.displayOrder ?? 0,
+          isActive: banner.is_active ?? banner.isActive ?? true,
+          createdBy: banner.created_by ?? banner.createdBy,
+          updatedBy: banner.updated_by ?? banner.updatedBy,
+          createdAt: banner.created_at ? new Date(banner.created_at) : undefined,
+          updatedAt: banner.updated_at ? new Date(banner.updated_at) : undefined
+        })).sort((a: any, b: any) => a.displayOrder - b.displayOrder);
+
+        this.currentBannerIndex = 0;
+        this.startBannerAutoSlide();
+        this.onDashboardDataLoaded();
+      },
+      error: (error) => {
+        console.error('Failed to load promotional banners:', error);
+        this.promotionalBanners = [];
+        this.onDashboardDataLoaded();
+      }
+    });
+  }
+
+  private startBannerAutoSlide(): void {
+    this.stopBannerAutoSlide();
+    if (this.promotionalBanners.length > 1) {
+      this.bannerAutoSlideInterval = setInterval(() => {
+        this.nextBanner();
+      }, 4000);
+    }
+  }
+
+  private stopBannerAutoSlide(): void {
+    if (this.bannerAutoSlideInterval) {
+      clearInterval(this.bannerAutoSlideInterval);
+      this.bannerAutoSlideInterval = null;
+    }
+  }
+
+  nextBanner(): void {
+    if (this.promotionalBanners.length === 0) return;
+    this.currentBannerIndex = (this.currentBannerIndex + 1) % this.promotionalBanners.length;
+  }
+
+  prevBanner(): void {
+    if (this.promotionalBanners.length === 0) return;
+    this.currentBannerIndex = (this.currentBannerIndex - 1 + this.promotionalBanners.length) % this.promotionalBanners.length;
+  }
+
+  goToBanner(index: number): void {
+    this.currentBannerIndex = index;
+  }
+
+  pauseBannerAutoSlide(): void {
+    this.stopBannerAutoSlide();
+  }
+
+  resumeBannerAutoSlide(): void {
+    this.startBannerAutoSlide();
+  }
+
+  get currentBanner(): PromotionalBanner | null {
+    if (this.promotionalBanners.length === 0) return null;
+    return this.promotionalBanners[this.currentBannerIndex] || null;
+  }
+
+  openTodayOffers(): void {
+    this.showTodayOffers = true;
+    this.currentOfferIndex = 0;
+    this.todayOffers = [];
+    this.loadTodayOffers();
+  }
+
+  closeTodayOffers(): void {
+    this.showTodayOffers = false;
+    this.stopOfferAutoSlide();
+    this.todayOffers = [];
+    this.isLoadingTodayOffers = false;
+  }
+
+  private loadTodayOffers(): void {
+    const restaurantIdParam = this.restaurantId || this.guestAuthService.getCurrentRestaurantId();
+    if (!restaurantIdParam) return;
+
+    this.isLoadingTodayOffers = true;
+
+    const params: any = {
+      page: 1,
+      size: 10,
+      restaurantId: restaurantIdParam,
+      isActive: 'true'
+    };
+
+    this.crudService.getTodaysOffers(params).subscribe({
+      next: (response: any) => {
+        const raw = response.data || [];
+        this.todayOffers = raw.map((offer: any) => ({
+          id: offer.id,
+          restaurantId: offer.restaurant_id || offer.restaurantId || 0,
+          title: offer.title || '',
+          imageUrl: offer.image_url || offer.imageUrl || '',
+          displayOrder: offer.display_order ?? offer.displayOrder ?? 0,
+          isActive: offer.is_active ?? offer.isActive ?? true,
+          createdBy: offer.created_by ?? offer.createdBy,
+          updatedBy: offer.updated_by ?? offer.updatedBy,
+          createdAt: offer.created_at ? new Date(offer.created_at) : undefined,
+          updatedAt: offer.updated_at ? new Date(offer.updated_at) : undefined
+        })).sort((a: any, b: any) => a.displayOrder - b.displayOrder);
+
+        this.currentOfferIndex = 0;
+        this.isLoadingTodayOffers = false;
+        this.startOfferAutoSlide();
+      },
+      error: (error) => {
+        console.error('Failed to load today\'s offers:', error);
+        this.todayOffers = [];
+        this.isLoadingTodayOffers = false;
+      }
+    });
+  }
+
+  private startOfferAutoSlide(): void {
+    this.stopOfferAutoSlide();
+    if (this.todayOffers.length > 1) {
+      this.offerAutoSlideInterval = setInterval(() => {
+        this.nextOffer();
+      }, 4000);
+    }
+  }
+
+  private stopOfferAutoSlide(): void {
+    if (this.offerAutoSlideInterval) {
+      clearInterval(this.offerAutoSlideInterval);
+      this.offerAutoSlideInterval = null;
+    }
+  }
+
+  nextOffer(): void {
+    if (this.todayOffers.length === 0) return;
+    this.currentOfferIndex = (this.currentOfferIndex + 1) % this.todayOffers.length;
+  }
+
+  prevOffer(): void {
+    if (this.todayOffers.length === 0) return;
+    this.currentOfferIndex = (this.currentOfferIndex - 1 + this.todayOffers.length) % this.todayOffers.length;
+  }
+
+  goToOffer(index: number): void {
+    this.currentOfferIndex = index;
+  }
+
+  pauseOfferAutoSlide(): void {
+    this.stopOfferAutoSlide();
+  }
+
+  resumeOfferAutoSlide(): void {
+    this.startOfferAutoSlide();
+  }
+
+  get currentOffer(): TodaysOffer | null {
+    if (this.todayOffers.length === 0) return null;
+    return this.todayOffers[this.currentOfferIndex] || null;
+  }
+
+  shareProfile(): void {
+    const currentUser = this.authService.getCurrentUser();
+    const restaurantId = currentUser?.restaurant_id || currentUser?.restaurantId;
+    if (!restaurantId) return;
+
+    const shareUrl = `${window.location.origin}/restaurant-profile/${restaurantId}`;
+    const shareData = {
+      title: this.restaurantName ? `${this.restaurantName} - Restaurant Profile` : 'Restaurant Profile',
+      text: this.restaurantName
+        ? `Check out ${this.restaurantName}'s profile!`
+        : 'Check out this restaurant profile!',
+      url: shareUrl
+    };
+
+    if (navigator.share) {
+      navigator.share(shareData).catch(() => {
+        this.copyToClipboard(shareUrl);
+      });
+    } else {
+      this.copyToClipboard(shareUrl);
+    }
+  }
+
+  private copyToClipboard(text: string): void {
+    navigator.clipboard.writeText(text).then(() => {
+      console.log('Profile link copied to clipboard:', text);
+    }).catch(() => {
+      console.error('Failed to copy profile link:', text);
+    });
   }
 }

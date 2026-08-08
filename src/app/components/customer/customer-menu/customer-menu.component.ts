@@ -53,14 +53,10 @@ export class CustomerMenuComponent implements OnInit, OnDestroy {
   pendingOrdersCount = 2;
 
   categories: MenuCategory[] = [
-    { key: 'all', label: 'All', icon: 'fas fa-th' },
-    { key: 'starters', label: 'Starters', icon: 'fas fa-leaf' },
-    { key: 'main-course', label: 'Main Course', icon: 'fas fa-utensils' },
-    { key: 'salads', label: 'Salads', icon: 'fas fa-leaf' },
-    { key: 'desserts', label: 'Desserts', icon: 'fas fa-birthday-cake' },
-    { key: 'beverages', label: 'Beverages', icon: 'fas fa-coffee' },
-    { key: 'snacks', label: 'Snacks', icon: 'fas fa-cookie' }
+    { key: 'all', label: 'All', icon: 'fas fa-th' }
   ];
+
+  private restaurantId: string | null = null;
 
   constructor() {
     // Keep local copy in sync
@@ -71,6 +67,8 @@ export class CustomerMenuComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
+    this.restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
+    this.loadRestaurantMenuCategories();
     this.cartService.cart$.subscribe(() => {
       this.cartItemCount = this.cartService.cartItemCount;
     });
@@ -79,8 +77,7 @@ export class CustomerMenuComponent implements OnInit, OnDestroy {
 
     const sub = this.realtimeService.menuUpdate$.subscribe((update: any) => {
       if (update) {
-        const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
-        const currentRestaurantId = this.currentUser?.restaurant_id || restaurantId;
+        const currentRestaurantId = this.currentUser?.restaurant_id || this.restaurantId;
         if (currentRestaurantId && String(update.restaurantId) === String(currentRestaurantId)) {
           console.log('Menu item updated successfully: ', update);
           this.loadMenuItems(
@@ -91,6 +88,42 @@ export class CustomerMenuComponent implements OnInit, OnDestroy {
       }
     });
     this.subscriptions.push(sub);
+
+    const categorySub = this.realtimeService.menuCategoryUpdate$.subscribe((update: any) => {
+      if (update) {
+        const currentRestaurantId = this.currentUser?.restaurant_id || this.restaurantId;
+        if (currentRestaurantId && String(update.restaurant_id ?? update.restaurantId) === String(currentRestaurantId)) {
+          console.log('Menu category updated successfully: ', update);
+          this.loadRestaurantMenuCategories();
+        }
+      }
+    });
+    this.subscriptions.push(categorySub);
+  }
+
+  private loadRestaurantMenuCategories(): void {
+    const restaurantId = Number(this.restaurantId || this.currentUser?.restaurant_id || 0);
+    if (!restaurantId) return;
+
+    this.crudService.getRestaurantMenuCategories({ restaurantId, isActive: true }).subscribe({
+      next: (response: any) => {
+        const categories = response.data || response || [];
+        this.categories = [
+          { key: 'all', label: 'All', icon: 'fas fa-th' },
+          ...categories.map((category: any) => ({
+            key: category.key,
+            label: category.name,
+            icon: category.icon || 'fas fa-layer-group'
+          }))
+        ];
+      },
+      error: (error) => {
+        console.error('Error loading restaurant menu categories:', error);
+        this.categories = [
+          { key: 'all', label: 'All', icon: 'fas fa-th' }
+        ];
+      }
+    });
   }
 
   private readQueryParams(): void {

@@ -31,6 +31,9 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
   // selectedPlan: SubscriptionPlan | null = null;
   expandedFeaturesMap: Map<number, boolean> = new Map();
   private subscriptions: Subscription[] = [];
+  isSubmittingPlan: Set<number> = new Set();
+  private focusCleanupMap: Map<number, () => void> = new Map();
+  lastSubscriptionStatus: string | null = null;
 
   // Dynamic subscription data
   currentSubscription$ = new BehaviorSubject<RestaurantSubscription | null>(null);
@@ -48,6 +51,10 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
   trialDaysRemaining: number = 0;
   trialEndDate: Date | null = null;
   isTrialEligible: boolean = false;
+
+  // Trial confirmation state
+  showTrialConfirmation: boolean = false;
+  trialConfirmationPlan: SubscriptionPlan | null = null;
 
   constructor(
     public router: Router,
@@ -130,10 +137,24 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
         const subscriptionResponse = currentSubResponse.data || currentSubResponse || { data: [] };
         const allSubscriptions = Array.isArray(subscriptionResponse) ? subscriptionResponse : (subscriptionResponse.data || []);
 
-        // Find the most recent active or trial subscription
-        const subscriptions = allSubscriptions.filter((sub: RestaurantSubscription) =>
-          sub.status === 'active' || sub.status === 'trial'
-        ).sort((a: RestaurantSubscription, b: RestaurantSubscription) =>
+        const sortedForStatus = [...allSubscriptions].sort((a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        this.lastSubscriptionStatus = sortedForStatus.length > 0 ? sortedForStatus[0].status : null;
+
+        const now = new Date();
+        const subscriptions = allSubscriptions.filter((sub: RestaurantSubscription) => {
+          if (sub.status === 'active') {
+            if (sub.end_date) {
+              return new Date(sub.end_date).getTime() > now.getTime();
+            }
+            return true; // no end_date means perpetual/free plan
+          }
+          if (sub.status === 'trial' && sub.trial_end_date) {
+            return new Date(sub.trial_end_date).getTime() > now.getTime();
+          }
+          return false;
+        }).sort((a: RestaurantSubscription, b: RestaurantSubscription) =>
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
         this.currentSubscription$.next(subscriptions.length > 0 ? subscriptions[0] : null);
@@ -231,10 +252,14 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
 
   // Handle subscribe button click
   openSubscriptionForPlan(plan: SubscriptionPlan): void {
+    if (this.isSubmittingPlan.has(plan.id)) return;
+    this.isSubmittingPlan.add(plan.id);
+
     const currentUser = this.authService.getCurrentUser();
     const restaurantId = currentUser?.restaurantId;
 
     if (!restaurantId) {
+      this.resetSubmittingPlan(plan.id);
       this.notificationService.error('Authentication Required', 'Unable to process subscription. Please login again.');
       return;
     }
@@ -254,7 +279,7 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // 1) Tell backend to create a Razorpay order
+    // Tell backend to create a Razorpay order
     this.crudService.postData('payments/create-order', {
       planId: plan.id,
       months: selectedMonths,
@@ -262,7 +287,15 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
       restaurantId: restaurantId
     }).subscribe({
       next: (order: any) => {
-        // 2) Launch Razorpay Checkout
+        // Detect when user returns from Razorpay modal without completing payment
+        const onFocus = () => {
+          this.resetSubmittingPlan(plan.id);
+          window.removeEventListener('focus', onFocus);
+        };
+        this.focusCleanupMap.set(plan.id, onFocus);
+        window.addEventListener('focus', onFocus);
+
+        // Launch Razorpay Checkout
         const options = {
           key: order.keyId,
           amount: order.amount * 100,
@@ -271,7 +304,8 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
           name: 'Cafe-X POS Subscription',
           description: `Subscription for ${selectedMonths} months`,
           handler: (rzpResponse: any) => {
-            // 3) On success -> save subscription and history via backend
+            window.removeEventListener('focus', onFocus);
+            this.focusCleanupMap.delete(plan.id);
             this.saveSubscriptionAndHistory(rzpResponse, plan, selectedMonths, finalAmount, discountAmount, gstAmount, gstPercentage, endDate);
           },
           prefill: {
@@ -286,9 +320,19 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Failed to create Razorpay order', err);
+        this.resetSubmittingPlan(plan.id);
         this.notificationService.error('Payment Failed', 'Could not start payment. Please try again.');
       }
     });
+  }
+
+  private resetSubmittingPlan(planId: number): void {
+    this.isSubmittingPlan.delete(planId);
+    const cleanup = this.focusCleanupMap.get(planId);
+    if (cleanup) {
+      window.removeEventListener('focus', cleanup);
+      this.focusCleanupMap.delete(planId);
+    }
   }
 
   private activateFreePlan(plan: SubscriptionPlan, months: number, discountAmount: number, gstAmount: number, gstPercentage: string): void {
@@ -508,6 +552,23 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     });
   }
 
+  openTrialConfirmation(plan: SubscriptionPlan): void {
+    this.trialConfirmationPlan = plan;
+    this.showTrialConfirmation = true;
+  }
+
+  closeTrialConfirmation(): void {
+    this.showTrialConfirmation = false;
+    this.trialConfirmationPlan = null;
+  }
+
+  confirmStartTrial(): void {
+    if (this.trialConfirmationPlan) {
+      this.startTrial(this.trialConfirmationPlan);
+    }
+    this.closeTrialConfirmation();
+  }
+
   startTrial(plan: SubscriptionPlan): void {
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser?.restaurantId || !currentUser?.id) {
@@ -556,6 +617,8 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
   }
 
   private saveSubscriptionAndHistory(razorpayResponse: any, plan: SubscriptionPlan, months: number, finalAmount: number, discountAmount: number, gstAmount: number, gstPercentage: string, endDate: Date | null): void {
+    this.loadingService.show();
+
     const currentUser = this.authService.getCurrentUser();
     const restaurantId = currentUser?.restaurantId;
     const currentUserId = currentUser?.id;
@@ -636,17 +699,21 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
             this.notificationService.success('Subscription Activated', 'Your subscription has been activated successfully!');
             this.subscriptionService.refreshAfterPayment().subscribe();
             this.loadData(); // Refresh data
+            this.resetSubmittingPlan(plan.id);
           },
           error: (historyError) => {
             console.error('Error saving subscription history:', historyError);
             this.notificationService.warning('Partial Success', 'Subscription saved but failed to save history. Contact support.');
             this.loadData(); // Still refresh data
+            this.resetSubmittingPlan(plan.id);
           }
         });
       },
       error: (error) => {
         console.error('Error saving subscription:', error);
         this.notificationService.error('Subscription Error', 'Payment successful but failed to save subscription. Contact support.');
+        this.loadingService.hide();
+        this.resetSubmittingPlan(plan.id);
       }
     });
   }

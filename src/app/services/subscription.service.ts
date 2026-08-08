@@ -1,8 +1,9 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, of, timer } from 'rxjs';
 import { switchMap, shareReplay } from 'rxjs/operators';
 import { CrudService } from './crud.service';
 import { AuthService } from './auth.service';
+import { NotificationService } from './notification.service';
 
 @Injectable({
   providedIn: 'root'
@@ -18,16 +19,54 @@ export class SubscriptionService {
   private planNameSubject = new BehaviorSubject<string | null>(null);
   public planName$ = this.planNameSubject.asObservable();
 
+  public notificationService = inject(NotificationService);
+
   constructor(
     private crudService: CrudService,
     private authService: AuthService
   ) {}
 
+  // hasActiveSubscription(): boolean {
+  //   const sub = this.activeSubscriptionSubject.value;
+  //   if (!sub) return false;
+  //   const status = (sub.status || '').toLowerCase();
+  //   return status === 'active' || status === 'trial';
+  // }
+
   hasActiveSubscription(): boolean {
     const sub = this.activeSubscriptionSubject.value;
     if (!sub) return false;
+
     const status = (sub.status || '').toLowerCase();
-    return status === 'active' || status === 'trial';
+    const now = new Date();
+    const planName = sub.plan_name_at_subscription || 'your plan';
+
+    if (status === 'active') {
+      if (sub.end_date) {
+        if (new Date(sub.end_date).getTime() > now.getTime()) {
+          return true;
+        }
+        this.notificationService.warning(
+          'Plan Expired',
+          `Your current plan "${planName}" has expired. Please renew to continue.`
+        );
+        return false;
+      }
+      return true; // active plan with no end_date is always valid
+    }
+
+    if (status === 'trial' && sub.trial_end_date) {
+      if (new Date(sub.trial_end_date).getTime() > now.getTime()) {
+        return true;
+      }
+      this.notificationService.warning(
+        'Trial Expired',
+        `Your current trial plan "${planName}" has expired. Please subscribe to continue.`
+      );
+      return false;
+    }
+
+    return false;
   }
 
   isLoading(): boolean {
@@ -67,8 +106,20 @@ export class SubscriptionService {
           ? subscriptionResponse
           : (subscriptionResponse.data || []);
 
+        const now = new Date();
         const activeSub = allSubscriptions
-          .filter((sub: any) => sub.status === 'active' || sub.status === 'trial')
+          .filter((sub: any) => {
+            if (sub.status === 'active') {
+              if (sub.end_date) {
+                return new Date(sub.end_date).getTime() > now.getTime();
+              }
+              return true; // no end_date means perpetual/free plan
+            }
+            if (sub.status === 'trial' && sub.trial_end_date) {
+              return new Date(sub.trial_end_date).getTime() > now.getTime();
+            }
+            return false;
+          })
           .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0] || null;
 
         this.activeSubscriptionSubject.next(activeSub);

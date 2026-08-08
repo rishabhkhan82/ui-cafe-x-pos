@@ -1,0 +1,203 @@
+<div class="p-4 mb-8">
+  <div class="mb-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Promotional Banners</h2>
+      <button (click)="showBannerForm()"
+              [disabled]="banners.length >= 3"
+              [class]="banners.length >= 3 ? 'bg-gray-400 text-white px-4 py-2 rounded-lg cursor-not-allowed' : 'bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition-colors flex items-center space-x-2'">
+        <i class="fas fa-plus"></i>
+        <span class="ml-2">Add Banner</span>
+      </button>
+    </div>
+    <div *ngIf="banners.length >= 3" class="text-xs text-gray-500 dark:text-gray-400">
+      Maximum of 3 banners allowed. Delete an existing banner to add a new one.
+    </div>
+  </div>
+
+  <div class="flex items-center space-x-4 mb-4">
+    <div class="flex-1">
+      <div class="relative">
+        <input [(ngModel)]="searchInput"
+               (input)="onSearchInputChange(searchInput)"
+               type="text"
+               placeholder="Search banners by title..."
+               class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <i class="fas fa-search text-gray-400"></i>
+        </div>
+      </div>
+    </div>
+    <div class="flex items-center space-x-2">
+      <select [(ngModel)]="statusFilter" (change)="filterBanners()"
+              class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white">
+        <option value="all">All Status</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage" class="mb-4 p-4 bg-red-100 dark:bg-red-900/30 border border-red-400 text-red-700 dark:text-red-400 rounded-lg">
+    {{ errorMessage }}
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div *ngFor="let banner of banners"
+         class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300">
+      <div class="flex items-center">
+        <div class="w-40 h-40 flex-shrink-0 bg-gray-100 dark:bg-gray-700">
+          <img [src]="getFullImageUrl(banner.imageUrl)"
+               [alt]="'Banner ' + banner.id"
+               class="w-full h-full object-cover">
+        </div>
+        <div class="flex-1 px-3 py-2">
+          <div class="flex items-center justify-between mb-1">
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ banner.title || ('Banner #' + banner.id) }}</h3>
+            <span [class]="'px-2 py-0.5 rounded-full text-xs font-medium ' + getStatusBadgeClass(banner.isActive)">
+              {{ getStatusText(banner.isActive) }}
+            </span>
+          </div>
+          <div class="text-xs text-gray-500 dark:text-gray-400 mb-2 space-y-0.5">
+            <p *ngIf="banner.title">Title: {{ banner.title }}</p>
+            <p>Display Order: {{ banner.displayOrder }}</p>
+            <p *ngIf="banner.createdAt">Created: {{ formatDate(banner.createdAt) }}</p>
+          </div>
+          <div class="flex items-center justify-end space-x-1.5">
+            <button (click)="showBannerForm(banner)"
+                    class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-xs">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button (click)="updateBannerStatus(banner, !banner.isActive)"
+                    [class]="banner.isActive ? 'px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs' : 'px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs'">
+              <i class="fas" [class]="banner.isActive ? 'fa-pause' : 'fa-play'"></i>
+            </button>
+            <button (click)="deleteBanner(banner)"
+                    class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-xs">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="banners.length === 0 && !errorMessage" class="text-center py-12">
+    <i class="fas fa-image text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
+    <p class="text-gray-500 dark:text-gray-400 text-lg">No promotional banners found</p>
+    <button (click)="showBannerForm()"
+            [disabled]="banners.length >= 3"
+            [class]="banners.length >= 3 ? 'mt-4 bg-gray-400 text-white px-6 py-2 rounded-lg cursor-not-allowed' : 'mt-4 bg-primary-500 text-white px-6 py-2 rounded-lg hover:bg-primary-600 transition-colors'">
+      {{ banners.length >= 3 ? 'Limit Reached (3/3)' : 'Create Your First Banner' }}
+    </button>
+  </div>
+
+  <ng-container *ngIf="totalPages > 1">
+    <div class="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+      <div class="text-sm text-gray-600 dark:text-gray-400">
+        Showing {{ paginationRange }} of {{ totalElements }} banners
+      </div>
+      <div class="flex items-center space-x-2">
+        <button (click)="changePage(currentPage - 1)"
+                [disabled]="currentPage === 1"
+                class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+          Previous
+        </button>
+        <button *ngFor="let page of pageNumbers"
+                (click)="changePage(page)"
+                [class]="currentPage === page ? 'px-3 py-1 bg-primary-500 text-white rounded' : 'px-3 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700'">
+          {{ page }}
+        </button>
+        <button (click)="changePage(currentPage + 1)"
+                [disabled]="currentPage === totalPages"
+                class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+          Next
+        </button>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<div *ngIf="showAddForm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[71] p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+          {{ editingBanner ? 'Edit Promotional Banner' : 'Add Promotional Banner' }}
+        </h3>
+        <button (click)="cancelAdd()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+
+      <form (ngSubmit)="onSubmitForm()">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Title</label>
+            <input type="text"
+                   [(ngModel)]="bannerForm.title"
+                   name="title"
+                   placeholder="Enter banner title"
+                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white">
+            <div *ngIf="fieldErrors['title']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+              {{ fieldErrors['title'] }}
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Banner Image</label>
+            <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
+              <div *ngIf="bannerForm.imageUrl" class="mb-4">
+                <img [src]="getFullImageUrl(bannerForm.imageUrl)"
+                     [alt]="'Banner preview'"
+                     class="w-full aspect-square object-cover rounded-lg">
+              </div>
+              <input type="file"
+                     (change)="onFileSelected($event)"
+                     accept="image/jpeg,image/png,image/webp"
+                     class="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100">
+              <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">PNG, JPG, WebP up to 5MB</p>
+              <p class="mt-1 text-xs text-primary-600 dark:text-primary-400 font-medium">Recommended size: 1080 x 1080px (square)</p>
+            </div>
+            <div *ngIf="fieldErrors['imageUrl']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+              {{ fieldErrors['imageUrl'] }}
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Display Order</label>
+            <input type="number"
+                   [(ngModel)]="bannerForm.displayOrder"
+                   name="displayOrder"
+                   min="0"
+                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white">
+            <div *ngIf="fieldErrors['displayOrder']" class="mt-1 text-sm text-red-600 dark:text-red-400">
+              {{ fieldErrors['displayOrder'] }}
+            </div>
+          </div>
+
+          <div class="flex items-center">
+            <input type="checkbox"
+                   [(ngModel)]="bannerForm.isActive"
+                   name="isActive"
+                   id="isActive"
+                   class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+            <label for="isActive" class="ml-2 block text-sm text-gray-900 dark:text-gray-300">
+              Active
+            </label>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end space-x-3 mt-6">
+          <button type="button" (click)="cancelAdd()"
+                  class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            Cancel
+          </button>
+          <button type="submit"
+                  class="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors">
+            {{ editingBanner ? 'Update' : 'Create' }} Banner
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
