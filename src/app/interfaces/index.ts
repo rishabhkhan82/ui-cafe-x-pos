@@ -464,4 +464,19 @@ export interface TodaysOffer {
   updatedAt?: Date;
 }
 
+export interface Review {
+  id: number;
+  restaurantId: number;
+  customerId: number;
+  rating: number;
+  reviewText?: string;
+  parentReviewId?: number;
+  isActive: boolean;
+  isVisible: boolean;
+  createdBy?: number;
+  updatedBy?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 // Master interfaces starts here

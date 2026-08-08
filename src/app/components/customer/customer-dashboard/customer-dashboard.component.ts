@@ -132,6 +132,16 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
         }
       }
     });
+
+    const reviewSub = this.realtimeService.reviewUpdate$.subscribe((update: any) => {
+      if (update) {
+        const currentRestaurantId = this.restaurantId || this.guestAuthService.getCurrentRestaurantId();
+        const updateRestaurantId = update.restaurantId || update.restaurant_id;
+        if (currentRestaurantId && String(updateRestaurantId) === String(currentRestaurantId)) {
+          console.log('Review updated, reloading...');
+        }
+      }
+    });
     
     this.restaurantDataService.restaurant$.subscribe((restaurant: any) => {
       console.log('[CustomerDashboard] Current restaurant data:', restaurant);
@@ -145,6 +155,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
     this.subscriptions.push(sub);
     this.subscriptions.push(bannerSub);
     this.subscriptions.push(offerSub);
+    this.subscriptions.push(reviewSub);
   }
 
   ngOnDestroy(): void {

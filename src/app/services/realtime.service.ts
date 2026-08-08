@@ -74,6 +74,9 @@ export class RealtimeService {
   private todayOffersUpdateSubject = new BehaviorSubject<any | null>(null);
   public todayOffersUpdate$ = this.todayOffersUpdateSubject.asObservable();
 
+  private reviewUpdateSubject = new BehaviorSubject<any | null>(null);
+  public reviewUpdate$ = this.reviewUpdateSubject.asObservable();
+
   private systemSettingsUpdateSubject = new BehaviorSubject<boolean>(false);
   public systemSettingsUpdate$ = this.systemSettingsUpdateSubject.asObservable();
 
@@ -283,6 +286,12 @@ export class RealtimeService {
             const data = JSON.parse(msg.body);
             this.todayOffersUpdateSubject.next(data);
           });
+
+          this.stompClient!.subscribe(`/topic/restaurant/${restaurantId}/reviews`, (msg) => {
+            console.log('[Realtime] Received review update for restaurant', restaurantId);
+            const data = JSON.parse(msg.body);
+            this.reviewUpdateSubject.next(data);
+          });
         }
 
         // Customer-specific subscriptions
@@ -321,6 +330,18 @@ export class RealtimeService {
             console.log('[Realtime] Received today\'s offers update for restaurant', restaurantId);
             const data = JSON.parse(msg.body);
             this.todayOffersUpdateSubject.next(data);
+          });
+
+          this.stompClient!.subscribe(`/topic/restaurant/${restaurantId}/reviews`, (msg) => {
+            console.log('[Realtime] Received review update for restaurant', restaurantId);
+            const data = JSON.parse(msg.body);
+            this.reviewUpdateSubject.next(data);
+          });
+
+          this.stompClient!.subscribe(`/topic/users/${userId}/reviews`, (msg) => {
+            console.log('[Realtime] Received customer review notification for user', userId);
+            const data = JSON.parse(msg.body);
+            this.reviewUpdateSubject.next(data);
           });
         }
 

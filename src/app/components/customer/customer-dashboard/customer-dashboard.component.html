@@ -98,13 +98,13 @@
           </div>
           <h4 class="font-semibold text-gray-900 dark:text-white text-center">View Menus</h4>
         </div>
-        <div *ngIf="false" (click)="openTodayOffers()" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer menu-item-hover">
+        <div (click)="openTodayOffers()" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer menu-item-hover">
           <div class="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 bg-pink-100 dark:bg-pink-900/30 text-pink-500">
             <i class="fa-tag fas text-xl"></i>
           </div>
           <h4 class="font-semibold text-gray-900 dark:text-white text-center">Today's Offers</h4>
         </div>
-        <div *ngIf="false" (click)="router.navigate(['/customer/reviews-ratings'])" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer menu-item-hover">
+        <div (click)="router.navigate(['/reviews-ratings'])" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer menu-item-hover">
           <div class="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 bg-purple-100 dark:bg-purple-900/30 text-purple-500">
             <i class="fa-star fas text-xl"></i>
           </div>

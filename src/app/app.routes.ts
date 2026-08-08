@@ -312,6 +312,12 @@ export const routes: Routes = [
     data: { allowedRoles: ['platform_owner'] }
   },
 
+  {
+    path: 'reviews-ratings',
+    loadComponent: () => import('./components/common/common-ratings-reviews/common-ratings-reviews.component').then(m => m.CommonRatingsReviewsComponent), 
+    canActivate: [authGuard]
+  },
+
   // Restaurant Owner & Manager Specific Routings
 
   {

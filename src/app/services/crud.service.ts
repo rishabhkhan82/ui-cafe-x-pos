@@ -1214,4 +1214,24 @@ export class CrudService {
   deleteTodaysOffer(id: string | number): Observable<any> {
     return this.deleteData('todays-offers', {}, id);
   }
+
+  getReviews(params?: CrudParams): Observable<any> {
+    return this.getData('reviews', params);
+  }
+
+  getReviewById(id: string | number): Observable<any> {
+    return this.getData(`reviews/${id}`);
+  }
+
+  createReview(payload: any): Observable<any> {
+    return this.postData('reviews', payload);
+  }
+
+  updateReview(id: string | number, payload: any): Observable<any> {
+    return this.putData('reviews', payload, {}, id);
+  }
+
+  deleteReview(id: string | number): Observable<any> {
+    return this.deleteData('reviews', {}, id);
+  }
 }
