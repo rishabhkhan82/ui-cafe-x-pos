@@ -39,7 +39,7 @@
 
   <ng-template #dashboardContent>
 
-    <div *ngIf="false" class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="0">
+    <div *ngIf="currentPlan === 'Free'" class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="0">
       <div class="gradient-bg rounded-2xl p-6 text-white relative overflow-hidden">
         <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
         <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
@@ -59,37 +59,39 @@
         </div>
       </div>
     </div>
-
-    <div *ngIf="promotionalBanners.length > 0" class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="0">
-      <div class="relative w-full max-w-[1080px] mx-auto aspect-square bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm"
-          (mouseenter)="pauseBannerAutoSlide()"
-          (mouseleave)="resumeBannerAutoSlide()">
-        <ng-container *ngFor="let banner of promotionalBanners; let i = index">
-          <div *ngIf="i === currentBannerIndex" class="absolute inset-0 promotional-banner-slide">
-            <img [src]="getFullImageUrl(banner.imageUrl)" [alt]="banner.title || 'Promotional Banner'" class="w-full h-full object-cover">
+    
+    <ng-container *ngIf="currentPlan === 'Engage' || currentPlan === 'Starter'">
+      <div *ngIf="promotionalBanners.length > 0" class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="0">
+        <div class="relative w-full max-w-[1080px] mx-auto aspect-square bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm"
+            (mouseenter)="pauseBannerAutoSlide()"
+            (mouseleave)="resumeBannerAutoSlide()">
+          <ng-container *ngFor="let banner of promotionalBanners; let i = index">
+            <div *ngIf="i === currentBannerIndex" class="absolute inset-0 promotional-banner-slide">
+              <img [src]="getFullImageUrl(banner.imageUrl)" [alt]="banner.title || 'Promotional Banner'" class="w-full h-full object-cover">
+            </div>
+          </ng-container>
+  
+          <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+  
+          <div class="absolute bottom-0 left-0 right-0 p-4">
+            <div *ngIf="currentBanner" class="promotional-banner-text">
+              <h3 class="text-white font-semibold text-lg">{{ currentBanner.title }}</h3>
+            </div>
           </div>
-        </ng-container>
-
-        <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-
-        <div class="absolute bottom-0 left-0 right-0 p-4">
-          <div *ngIf="currentBanner" class="promotional-banner-text">
-            <h3 class="text-white font-semibold text-lg">{{ currentBanner.title }}</h3>
-          </div>
+  
+          <button *ngIf="promotionalBanners.length > 1" (click)="prevBanner()" class="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 dark:bg-gray-800/80 rounded-full flex items-center justify-center text-gray-800 dark:text-white hover:bg-white dark:hover:bg-gray-800 transition-colors">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button *ngIf="promotionalBanners.length > 1" (click)="nextBanner()" class="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 dark:bg-gray-800/80 rounded-full flex items-center justify-center text-gray-800 dark:text-white hover:bg-white dark:hover:bg-gray-800 transition-colors">
+            <i class="fas fa-chevron-right"></i>
+          </button>
         </div>
-
-        <button *ngIf="promotionalBanners.length > 1" (click)="prevBanner()" class="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 dark:bg-gray-800/80 rounded-full flex items-center justify-center text-gray-800 dark:text-white hover:bg-white dark:hover:bg-gray-800 transition-colors">
-          <i class="fas fa-chevron-left"></i>
-        </button>
-        <button *ngIf="promotionalBanners.length > 1" (click)="nextBanner()" class="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 dark:bg-gray-800/80 rounded-full flex items-center justify-center text-gray-800 dark:text-white hover:bg-white dark:hover:bg-gray-800 transition-colors">
-          <i class="fas fa-chevron-right"></i>
-        </button>
+  
+        <div *ngIf="promotionalBanners.length > 1" class="flex items-center justify-center space-x-2 mt-3">
+          <button *ngFor="let banner of promotionalBanners; let i = index" (click)="goToBanner(i)" [class]="'promotional-banner-dot ' + (currentBannerIndex === i ? 'promotional-banner-dot-active w-6 h-2 bg-primary-500 rounded-full' : 'w-2 h-2 bg-gray-300 dark:bg-gray-600 rounded-full hover:bg-gray-400 dark:hover:bg-gray-500')"></button>
+        </div>
       </div>
-
-      <div *ngIf="promotionalBanners.length > 1" class="flex items-center justify-center space-x-2 mt-3">
-        <button *ngFor="let banner of promotionalBanners; let i = index" (click)="goToBanner(i)" [class]="'promotional-banner-dot ' + (currentBannerIndex === i ? 'promotional-banner-dot-active w-6 h-2 bg-primary-500 rounded-full' : 'w-2 h-2 bg-gray-300 dark:bg-gray-600 rounded-full hover:bg-gray-400 dark:hover:bg-gray-500')"></button>
-      </div>
-    </div>
+    </ng-container>
 
     <div class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="200">
       <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Browse By Category</h3>
@@ -105,7 +107,7 @@
             <h4 class="font-bold text-white text-base drop-shadow-md">View Menus</h4>
           </div>
         </div>
-        <div (click)="openTodayOffers()" class="relative h-36 rounded-2xl overflow-hidden cursor-pointer group hover:shadow-xl transition-all duration-300">
+        <div *ngIf="currentPlan === 'Engage' || currentPlan === 'Starter'" (click)="openTodayOffers()" class="relative h-36 rounded-2xl overflow-hidden cursor-pointer group hover:shadow-xl transition-all duration-300">
           <img src="https://img.magnific.com/free-vector/3d-style-50-percent-discount-off-orange-background-design_1017-61400.jpg?semt=ais_test_b&w=740&q=80?w=400&h=300&fit=crop" 
                alt="Today's Offers" 
                class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
@@ -116,7 +118,7 @@
             <h4 class="font-bold text-white text-base drop-shadow-md">Today's Offers</h4>
           </div>
         </div>
-        <div (click)="router.navigate(['/reviews-ratings'])" class="relative h-36 rounded-2xl overflow-hidden cursor-pointer group hover:shadow-xl transition-all duration-300">
+        <div *ngIf="currentPlan === 'Engage' || currentPlan === 'Starter'" (click)="router.navigate(['/reviews-ratings'])" class="relative h-36 rounded-2xl overflow-hidden cursor-pointer group hover:shadow-xl transition-all duration-300">
           <img src="https://static.vecteezy.com/system/resources/previews/002/169/750/non_2x/online-feedback-reputation-quality-customer-review-concept-flat-style-businessman-hand-finger-pointing-five-gold-star-rating-on-green-background-eps-illustration-vector.jpg?w=400&h=300&fit=crop" 
                alt="Reviews & Ratings" 
                class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
