@@ -401,6 +401,13 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
     return environment.api.baseUrl + imagePath;
   }
 
+  onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (img && !img.src.includes('placeholder.png')) {
+      img.src = 'assets/images/placeholder.png';
+    }
+  }
+
   private loadPromotionalBanners(): void {
     const restaurantIdParam = this.restaurantId || this.guestAuthService.getCurrentRestaurantId();
     if (!restaurantIdParam) return;
