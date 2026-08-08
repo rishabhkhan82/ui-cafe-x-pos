@@ -77,6 +77,11 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
     // Keep local copy in sync
     this.subscriptionService.planName$.subscribe(name => {
       this.currentPlan = name;
+      setTimeout(() => {
+        if (this.subscriptionService.hasActiveSubscription() === false) {
+          this.router.navigate(['/unauthrized-access'], { queryParams: { reason: 'subscription_inactive' } });
+        }
+      }, 7000);
     });
   }
 
