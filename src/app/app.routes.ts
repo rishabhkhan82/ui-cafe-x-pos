@@ -528,7 +528,7 @@ export const routes: Routes = [
         path: 'menu',
         loadComponent: () => import('./components/customer/customer-menu/customer-menu.component').then(m => m.CustomerMenuComponent),
         canActivate: [CustomerGuestGuard, subscriptionGuard],
-        data: { allowedSubscriptionPlans: ['Free', 'Starter'] }
+        data: { allowedSubscriptionPlans: ['Free', 'Starter', 'Engage'] }
       },
       {
         path: 'orders',
