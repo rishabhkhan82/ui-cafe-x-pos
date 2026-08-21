@@ -271,7 +271,11 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
     const gstPercentage = this.getGstPercentage();
     const now = new Date();
     const endDate = new Date();
-    endDate.setMonth(now.getMonth() + selectedMonths);
+    if (plan.billing_cycle === 'yearly') {
+      endDate.setFullYear(now.getFullYear() + selectedMonths);
+    } else {
+      endDate.setMonth(now.getMonth() + selectedMonths);
+    }
 
     // FREE PLAN: skip Razorpay entirely and activate directly
     if (finalAmount === 0) {
@@ -372,7 +376,18 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
   }
 
   getSelectedMonths(planId: number): number {
-    return this.selectedMonthsMap.get(planId) || 6;
+    const stored = this.selectedMonthsMap.get(planId);
+    if (stored) return stored;
+
+    const plan = this.plans$.value.find(p => p.id === planId);
+    return plan?.billing_cycle === 'yearly' ? 1 : 6;
+  }
+
+  getPlanMonthsOptions(plan: SubscriptionPlan): { key: string; name: string }[] {
+    if (plan.billing_cycle === 'yearly') {
+      return [{ key: '1', name: '1 Year' }];
+    }
+    return this.billingPeriodMonths;
   }
 
   setSelectedMonths(planId: number, months: number): void {
@@ -445,7 +460,11 @@ export class OwnerPlansMobileComponent implements OnInit, OnDestroy {
   private launchRazorpay(order: any, plan: SubscriptionPlan, months: number, finalAmount: number, discountAmount: number, gstAmount: number, gstPercentage: string): void {
     const now = new Date();
     const endDate = new Date();
-    endDate.setMonth(now.getMonth() + months);
+    if (plan.billing_cycle === 'yearly') {
+      endDate.setFullYear(now.getFullYear() + months);
+    } else {
+      endDate.setMonth(now.getMonth() + months);
+    }
 
     const options = {
       key: order.keyId,
