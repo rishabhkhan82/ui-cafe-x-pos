@@ -14,12 +14,32 @@ export class CustomerGuestGuard implements CanActivate {
     private subscriptionService: SubscriptionService
   ) {}
 
-  canActivate(route: ActivatedRouteSnapshot): boolean {
+  async canActivate(route: ActivatedRouteSnapshot): Promise<boolean> {
     const currentUser = this.authService.getCurrentUser();
 
     if (!currentUser || currentUser.role !== 'customer') {
       this.router.navigate(['/customer/scan-qr']);
       return false;
+    }
+
+    const sub = this.subscriptionService.getActiveSubscription();
+
+    // Data not loaded yet — trigger load and wait for it
+    if (sub === null) {
+      if (!this.subscriptionService.isLoading()) {
+        this.subscriptionService.loadActiveSubscription().subscribe();
+      }
+
+      // Wait until either data arrives or 5 seconds pass
+      await new Promise<void>(resolve => {
+        const timeout = setTimeout(() => resolve(), 5000);
+
+        const subscription = this.subscriptionService.activeSubscription$.subscribe(() => {
+          clearTimeout(timeout);
+          subscription.unsubscribe();
+          resolve();
+        });
+      });
     }
 
     if (!this.subscriptionService.hasActiveSubscription()) {
@@ -28,5 +48,15 @@ export class CustomerGuestGuard implements CanActivate {
     }
 
     return true;
+  }
+
+  getActiveSubscription() {
+    return new Promise((resolve, reject) => {
+      this.subscriptionService.activeSubscription$.subscribe(
+        (subscription) => {
+          resolve(subscription);
+        }
+      );
+    });
   }
 }

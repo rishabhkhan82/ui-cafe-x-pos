@@ -8,6 +8,7 @@ import { User } from '../../../services/mock-data.service';
 import { environment } from '../../../environments/environment';
 import { NotificationService } from '../../../services/notification.service';
 import { SystemConfigService } from '../../../services/system-config.service';
+import { AnimateOnScrollDirective } from '../../../directives/animate-on-scroll.directive';
 
 interface Address {
   id: string;
@@ -37,7 +38,7 @@ interface PaymentCard {
 @Component({
   selector: 'app-customer-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AnimateOnScrollDirective],
   templateUrl: './customer-profile.component.html',
   styleUrl: './customer-profile.component.css'
 })

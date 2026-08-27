@@ -1,6 +1,6 @@
 <main class="px-4 py-4 pb-20 pt-5">
   <!-- Welcome Banner -->
-  <div class="mb-6 animate__animated animate__fadeInUp">
+  <div class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="0">
     <div class="gradient-bg rounded-2xl p-6 text-white relative overflow-hidden">
       <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
       <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
@@ -12,7 +12,7 @@
   </div>
 
   <!-- Account Section -->
-  <section class="mb-6 animate__animated animate__fadeInUp animate__delay-1s">
+  <section class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="100">
     <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Account</h3>
     <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
         <div class="flex items-center">
@@ -91,7 +91,7 @@
   </section> -->
 
   <!-- Preferences & Security -->
-  <section class="mb-8 animate__animated animate__fadeInUp animate__delay-2s">
+  <section class="mb-8" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="200">
     <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Preferences & Security</h3>
     <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm space-y-4">
       <div class="flex items-center justify-between">
@@ -122,7 +122,7 @@
   </section>
 
   <!-- Help & Logout -->
-  <section class="mb-12 animate__animated animate__fadeInUp animate__delay-3s">
+  <section class="mb-12" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="100">
     <div class="grid grid-cols-2 gap-4">
       <a (click)="contactSupport()" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm flex items-center justify-center space-x-2 cursor-pointer">
         <i class="fas fa-headset text-primary-500"></i><span class="font-medium text-gray-900 dark:text-white">Support</span>
