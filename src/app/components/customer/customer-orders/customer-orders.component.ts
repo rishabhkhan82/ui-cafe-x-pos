@@ -107,10 +107,13 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
       if (order) {
         order.items = order.items || [];
         if (order.status === 'COMPLETED' || order.status === 'CANCELLED') {
-          this.loadActiveOrders();
+          this.activeOrders = this.activeOrders.filter(o => o.id !== order.id);
+          this.calculateInvoice();
+          this.pendingOrdersService.updateCount(this.activeOrders.length);
+          this.pendingBillsService.setPendingBilling(false);
+          this.loadOrderHistory();
           this.loadLoyaltyProgram();
           this.loadEligibleOffers();
-          this.loadOrderHistory();
         } else {
           const index = this.activeOrders.findIndex(o => o.id === order.id);
           if (index !== -1) {
@@ -123,6 +126,35 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
       }
     });
     this.subscriptions.push(realtimeSub);
+
+    const orderUpdateSub = this.realtimeService.orderUpdate$.subscribe(order => {
+      console.log('[customer-orders] orderUpdate$ received:', order);
+      if (order && order.customer_id === this.currentUser?.id) {
+        order.items = order.items || [];
+        if (order.status === 'COMPLETED' || order.status === 'CANCELLED') {
+          this.activeOrders = this.activeOrders.filter(o => o.id !== order.id);
+          this.calculateInvoice();
+          this.pendingOrdersService.updateCount(this.activeOrders.length);
+          this.pendingBillsService.setPendingBilling(false);
+          const existsInHistory = this.orderHistory.some((o: Order) => o.id === order.id);
+          if (!existsInHistory) {
+            this.orderHistory = [order, ...this.orderHistory];
+          }
+          this.loadOrderHistory();
+          this.loadLoyaltyProgram();
+          this.loadEligibleOffers();
+        } else {
+          const index = this.activeOrders.findIndex(o => o.id === order.id);
+          if (index !== -1) {
+            this.activeOrders[index] = order;
+          } else {
+            this.activeOrders.unshift(order);
+          }
+          this.calculateInvoice();
+        }
+      }
+    });
+    this.subscriptions.push(orderUpdateSub);
   }
 
   ngOnDestroy(): void {
@@ -264,7 +296,9 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
 
   private loadOrderHistory(): void {
     this.isOrderHistoryLoading = true;
-    this.crudService.getOrders({ customerId: this.authService.getCurrentUser()!.id, status: 'COMPLETED', page: 1, size: 10 }).subscribe({
+    // debugger;
+    const customerId: any = this.authService.getCurrentUser();
+    this.crudService.getOrders({ customerId: customerId.id, status: 'COMPLETED', page: 1, size: 10 }).subscribe({
       next: (response: any) => {
         this.orderHistory = response?.data || [];
         this.isOrderHistoryLoading = false;

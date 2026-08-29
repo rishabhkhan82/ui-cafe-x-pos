@@ -190,43 +190,35 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     });
   }
 
-   private setupRealtimeSubscriptions(): void {
-    const newOrderSub = this.realtimeService.newOrder$.subscribe(order => {
-      console.log('[orders-mobile] newOrder$ received:', order);
-      if (order) {
-        order.items = order.items || [];
-        const exists = this.allOrders.some(o => o.id === order.id);
-        if (!exists) {
-          this.allOrders.unshift(order);
-        }
-        if (order.status === 'COMPLETED' || order.status === 'CANCELLED') {
-          this.loadOrders();
-        } else {
-          this.filterOrders();
-        }
-      }
-    });
-    this.subscriptions.push(newOrderSub);
+    private setupRealtimeSubscriptions(): void {
+     const newOrderSub = this.realtimeService.newOrder$.subscribe(order => {
+       console.log('[orders-mobile] newOrder$ received:', order);
+       if (order) {
+         order.items = order.items || [];
+         const exists = this.allOrders.some(o => o.id === order.id);
+         if (!exists) {
+           this.allOrders.unshift(order);
+         }
+         this.filterOrders();
+       }
+     });
+     this.subscriptions.push(newOrderSub);
 
-    const orderUpdateSub = this.realtimeService.orderUpdate$.subscribe(order => {
-      console.log('[orders-mobile] orderUpdate$ received:', order);
-      if (order) {
-        order.items = order.items || [];
-        const index = this.allOrders.findIndex(o => o.id === order.id);
-        if (index !== -1) {
-          this.allOrders[index] = order;
-        } else {
-          this.allOrders.unshift(order);
-        }
-        if (order.status === 'COMPLETED' || order.status === 'CANCELLED') {
-          this.loadOrders();
-        } else {
-          this.filterOrders();
-        }
-      }
-    });
-    this.subscriptions.push(orderUpdateSub);
-  }
+     const orderUpdateSub = this.realtimeService.orderUpdate$.subscribe(order => {
+       console.log('[orders-mobile] orderUpdate$ received:', order);
+       if (order) {
+         order.items = order.items || [];
+         const index = this.allOrders.findIndex(o => o.id === order.id);
+         if (index !== -1) {
+           this.allOrders[index] = order;
+         } else {
+           this.allOrders.unshift(order);
+         }
+         this.filterOrders();
+       }
+     });
+     this.subscriptions.push(orderUpdateSub);
+   }
 
   setActiveStatus(status: string): void {
     this.activeStatus = status;
