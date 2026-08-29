@@ -15,6 +15,8 @@ import { ConfirmationDialogComponent } from '../../common/confirmation-dialog/co
 import { ElapsedTimePipe } from './elapsed-time.pipe';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonUserNotificationsService } from '../../../services/common-user-notifications.service';
+import { RestaurantDataService } from '../../../services/restaurant-data.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-orders-mobile',
@@ -39,6 +41,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   private changeDetectorRef = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
   private commonUserNotificationsService = inject(CommonUserNotificationsService);
+  private restaurantDataService = inject(RestaurantDataService);
 
   currentTime: string = '';
   activeStatus: string = 'all';
@@ -719,8 +722,104 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   printOrder(order: Order): void {
-    console.log('Printing order:', order);
-    alert(`Printing order ${order.id}...`);
+    const subtotal = (order.items || []).reduce((sum, item) => sum + (item.total_price || 0), 0);
+    const taxAmount = order.tax_amount || 0;
+    const discountAmount = order.discount_amount || 0;
+    const loyaltyDiscountAmount = order.loyalty_discount_amount || 0;
+    const totalAmount = order.total_amount || 0;
+    const createdAt = new Date(order.created_at).toLocaleString('en-IN');
+
+    const restaurant = this.restaurantDataService.getCurrentRestaurant();
+    const restaurantName = restaurant?.name || sessionStorage.getItem('current_customer_restaurant_name') || 'Cafe-X POS';
+    let restaurantLogo = '';
+    if (restaurant?.logo_image) {
+      if (restaurant.logo_image.startsWith('http://') || restaurant.logo_image.startsWith('https://')) {
+        restaurantLogo = restaurant.logo_image;
+      } else {
+        restaurantLogo = environment.api.baseUrl + restaurant.logo_image;
+      }
+    }
+
+    const printWindow = window.open('', '_blank', 'width=480,height=600');
+    if (!printWindow) {
+      return;
+    }
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Receipt - ${order.order_id}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: 'Courier New', monospace; font-size: 12px; color: #000; padding: 10px; }
+          .receipt { max-width: 320px; margin: 0 auto; }
+          .center { text-align: center; }
+          .bold { font-weight: bold; }
+          .line { border-top: 1px dashed #000; margin: 8px 0; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { text-align: left; padding: 4px 2px; }
+          th { border-bottom: 1px solid #000; }
+          .text-right { text-align: right; }
+          .mt-2 { margin-top: 8px; }
+          .mt-1 { margin-top: 4px; }
+          .fs-sm { font-size: 11px; }
+          .logo { max-height: 60px; margin-bottom: 8px; }
+        </style>
+      </head>
+      <body>
+        <div class="receipt">
+          ${restaurantLogo ? `<div class="center"><img src="${restaurantLogo}" class="logo" /></div>` : ''}
+          <div class="center bold" style="font-size: 14px;">${restaurantName}</div>
+          <div class="center fs-sm">Order Receipt</div>
+          <div class="center fs-sm">${createdAt}</div>
+          <div class="line"></div>
+          <div><span class="bold">Order ID:</span> ${order.order_id}</div>
+          <div><span class="bold">Table:</span> ${order.table_number || 'Takeaway'}</div>
+          <div><span class="bold">Customer:</span> ${order.customer_name || 'Guest'}</div>
+          <div class="line"></div>
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th class="text-right">Qty</th>
+                <th class="text-right">Amt</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(order.items || []).map(item => `
+                <tr>
+                  <td>${item.menu_item_name}</td>
+                  <td class="text-right">${item.quantity}</td>
+                  <td class="text-right">₹${item.total_price}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <div class="line"></div>
+          <div class="mt-1" style="display:flex;justify-content:space-between;">
+            <span>Subtotal</span><span>₹${subtotal.toFixed(2)}</span>
+          </div>
+          ${taxAmount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Tax (${order.tax_percentage || 0}%)</span><span>₹${taxAmount.toFixed(2)}</span></div>` : ''}
+          ${discountAmount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Discount</span><span>-₹${discountAmount.toFixed(2)}</span></div>` : ''}
+          ${loyaltyDiscountAmount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Loyalty Discount</span><span>-₹${loyaltyDiscountAmount.toFixed(2)}</span></div>` : ''}
+          <div class="line"></div>
+          <div class="mt-1 bold" style="display:flex;justify-content:space-between;font-size:14px;">
+            <span>Total</span><span>₹${totalAmount.toFixed(2)}</span>
+          </div>
+          <div class="line"></div>
+          <div class="center fs-sm mt-1">Thank you for your order!</div>
+          <div class="center fs-sm mt-1">powered by cafexpos.in</div>
+        </div>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+    }, 300);
   }
 
   getStatusBadgeClass(status: string): string {
@@ -752,6 +851,10 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
       case 'CANCELLED': return 'bg-red-100 dark:bg-red-900/30 text-red-600';
       default: return 'bg-gray-100 dark:bg-gray-700 text-gray-600';
     }
+  }
+
+  getOrderSubtotal(order: Order): number {
+    return (order.items || []).reduce((sum, item) => sum + (item.total_price || 0), 0);
   }
 
   trackByOrderId(index: number, order: Order): string {
