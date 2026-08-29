@@ -766,6 +766,10 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     return order.order_id;
   }
 
+  trackByInvoiceId(index: number, invoice: { invoiceId: string; orders: Order[] }): string {
+    return invoice.invoiceId;
+  }
+
   // Swipe handling methods
   onTouchStart(event: TouchEvent): void {
     this.touchStartX = event.touches[0].clientX;
