@@ -342,6 +342,13 @@ export const routes: Routes = [
   },
 
   {
+    path: 'owner-menus-add-ons',
+    loadComponent: () => import('./components/restaurant/menus-add-ons/menus-add-ons.component').then(m => m.MenusAddOnsComponent),
+    canActivate: [authGuard, roleGuard, subscriptionGuard],
+    data: { allowedRoles: ['platform_owner', 'restaurant_owner', 'restaurant_manager'], allowedSubscriptionPlans: ['Free', 'Starter', 'Engage'] }
+  },
+
+  {
     path: 'recipe-management',
     loadComponent: () => import('./components/restaurant/recipe-management/recipe-management.component').then(m => m.RecipeManagementComponent),
     canActivate: [authGuard, roleGuard, subscriptionGuard],

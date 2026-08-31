@@ -11,10 +11,23 @@ import { CrudService } from '../../../services/crud.service';
 import { SystemConfigService } from '../../../services/system-config.service';
 import { MenuItem } from '../../../interfaces';
 import { environment } from '../../../environments/environment';
-import { Subject, Observable, Subscription } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { Subject, Observable, Subscription, of, forkJoin } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
 import { RealtimeService } from '../../../services/realtime.service';
 import { MenuCategory, MenuItemsType } from '../../../interfaces';
+
+interface MenuItemAddonLink {
+  id: number;
+  menu_item_id: number;
+  addon_id: number;
+  is_required: boolean;
+  min_quantity: number;
+  max_quantity: number;
+  display_order: number;
+  addon_name?: string;
+  addon_price?: number;
+  addon_image?: string;
+}
 
 @Component({
   selector: 'app-owner-menus-mobile',
@@ -55,6 +68,10 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
   // Menu Types
   typeOptions: MenuItemsType[] = [];
 
+  // Menu Item Add-ons
+  availableAddons: any[] = [];
+  menuItemAddons: MenuItemAddonLink[] = [];
+
   // Category color mapping to avoid function calls in templates
   categoryColorMap: { [key: string]: string } = {
     'Starters': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
@@ -75,6 +92,7 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
     item_id: '',
     discount: '',
     original_price: 0,
+    half_price: 0,
     preparation_time: 0,
     is_active: true,
     is_available: true,
@@ -259,6 +277,7 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
       item_id: apiMenuItem.item_id || '',
       discount: apiMenuItem.discount || '',
       original_price: apiMenuItem.original_price || apiMenuItem.price || 0,
+      half_price: apiMenuItem.half_price || 0,
       preparation_time: apiMenuItem.preparation_time || 0,
       is_active: apiMenuItem.is_active ?? true,
       is_available: apiMenuItem.is_available ?? true,
@@ -336,8 +355,11 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
   showMenuForm(menu?: MenuItem): void {
     this.showAddForm = true;
     this.editingMenu = menu || null;
+    this.availableAddons = [];
+    this.menuItemAddons = [];
     if (menu) {
       this.menuForm = { ...menu };
+      this.loadMenuItemAddons(menu.id);
     } else {
       this.menuForm = {
         id: Date.now(),
@@ -349,6 +371,7 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
         item_id: '',
         discount: '',
         original_price: 0,
+        half_price: 0,
         preparation_time: 0,
         is_active: true,
         is_available: true,
@@ -366,6 +389,7 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
         updated_by: undefined
       };
     }
+    this.loadAvailableAddons();
   }
 
   cancelAdd(): void {
@@ -380,6 +404,7 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
       item_id: '',
       discount: '',
       original_price: 0,
+      half_price: 0,
       preparation_time: 0,
       is_active: true,
       is_available: true,
@@ -400,6 +425,8 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
     this.selectedFile = null;
     this.fieldErrors = {};
     this.errorMessage = '';
+    this.availableAddons = [];
+    this.menuItemAddons = [];
   }
 
   onFileSelected(event: any): void {
@@ -437,6 +464,7 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
     this.validateName();
     this.validateDescription();
     this.validatePrice();
+    this.validateOriginalPrice();
     this.validateCategory();
     this.validateItemId();
     this.validatePreparationTime();
@@ -540,6 +568,15 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
     }
   }
 
+  validateOriginalPrice(): void {
+    const value = Number(this.menuForm.original_price);
+    if (isNaN(value) || value <= 0) {
+      this.fieldErrors['original_price'] = 'Original Price is required';
+    } else {
+      delete this.fieldErrors['original_price'];
+    }
+  }
+
   validateImage(): void {
     const defaultImage = environment.api.baseUrl + '/uploads/images/default/menu-default.png';
     if (!this.menuForm.image || this.menuForm.image === defaultImage) {
@@ -563,58 +600,69 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
 
       const currentTime = new Date();
       const currentUser = this.authService.getCurrentUser();
-      const menuRequest = {
-        name: this.menuForm.name,
-        description: this.menuForm.description,
-        price: this.menuForm.price,
-        category: this.menuForm.category,
-        image: imageBase64 || this.menuForm.image, // Use base64 if available, else keep existing
-        item_id: this.menuForm.item_id,
-        discount: this.menuForm.discount,
-        original_price: this.menuForm.original_price,
-        preparation_time: this.menuForm.preparation_time,
-        is_active: this.menuForm.is_active,
-        is_available: this.menuForm.is_available,
-        is_popular: this.menuForm.is_popular,
-        is_featured: this.menuForm.is_featured,
-        is_recommended: this.menuForm.is_recommended,
-         is_spicy: this.menuForm.is_spicy,
-         is_veg: this.menuForm.is_veg,
-         is_vegetarian: this.menuForm.is_vegetarian,
-         type: this.menuForm.type || 'RAW',
-         restaurant_id: currentUser?.restaurantId || 1,
-         created_at: currentTime.toISOString(),
-         updated_at: currentTime.toISOString(),
-         created_by: Number(currentUser?.id) || 1,
-         updated_by: Number(currentUser?.id) || 1
-       };
+        const menuRequest = {
+          name: this.menuForm.name,
+          description: this.menuForm.description,
+          price: this.menuForm.price,
+          category: this.menuForm.category,
+          image: imageBase64 || this.menuForm.image, // Use base64 if available, else keep existing
+          item_id: this.menuForm.item_id,
+          discount: this.menuForm.discount,
+          original_price: this.menuForm.original_price,
+          half_price: this.menuForm.half_price,
+          preparation_time: this.menuForm.preparation_time,
+          is_active: this.menuForm.is_active,
+          is_available: this.menuForm.is_available,
+          is_popular: this.menuForm.is_popular,
+          is_featured: this.menuForm.is_featured,
+          is_recommended: this.menuForm.is_recommended,
+           is_spicy: this.menuForm.is_spicy,
+           is_veg: this.menuForm.is_veg,
+           is_vegetarian: this.menuForm.is_vegetarian,
+           type: this.menuForm.type || 'RAW',
+           restaurant_id: currentUser?.restaurantId || 1,
+           created_at: currentTime.toISOString(),
+           updated_at: currentTime.toISOString(),
+           created_by: Number(currentUser?.id) || 1,
+           updated_by: Number(currentUser?.id) || 1
+        };
 
-       // Create new menu item
-       this.crudService.createMenuItem(menuRequest).subscribe({
-         next: (response) => {
-           console.log('Menu item created successfully:', response);
-           this.notificationService.success('Menu Item Created', 'The menu item has been successfully created.');
-           this.cancelAdd();
-           this.loadMenus(); // Reload menu items
-         },
-        error: (error) => {
-          console.error('Error creating menu item:', error);
-          const apiMessage = error.error?.message || 'Failed to create menu item. Please try again.';
-          this.errorMessage = apiMessage;
-          this.loadingService.hide();
+        // Create new menu item
+        this.crudService.createMenuItem(menuRequest).pipe(
+          switchMap((response: any) => {
+            console.log('Menu item created successfully:', response);
+            this.notificationService.success('Menu Item Created', 'The menu item has been successfully created.');
+            return this.saveAddonLinks(response.id).pipe(
+              catchError((linkError) => {
+                console.error('Error saving add-on links after menu creation:', linkError);
+                return of(null);
+              })
+            );
+          }),
+          catchError((error) => {
+            console.error('Error creating menu item:', error);
+            const apiMessage = error.error?.message || 'Failed to create menu item. Please try again.';
+            this.errorMessage = apiMessage;
+            this.loadingService.hide();
 
-          const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
-          if (apiFieldErrors) {
-            Object.entries(apiFieldErrors).forEach(([field, messages]) => {
-              if (messages && messages.length > 0) {
-                this.fieldErrors[field] = messages[0];
-              }
-            });
+            const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+            if (apiFieldErrors) {
+              Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+                if (messages && messages.length > 0) {
+                  this.fieldErrors[field] = messages[0];
+                }
+              });
+            }
+
+            this.notificationService.error('Creation Failed', apiMessage);
+            return [];
+          })
+        ).subscribe({
+          next: () => {
+            this.cancelAdd();
+            this.loadMenus();
           }
-
-          this.notificationService.error('Creation Failed', apiMessage);
-        }
-      });
+        });
     } catch (error) {
       console.error('Error processing image:', error);
       this.notificationService.error('Processing Failed', 'Failed to process image. Please try again.');
@@ -646,6 +694,7 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
         item_id: this.menuForm.item_id,
         discount: this.menuForm.discount,
         original_price: this.menuForm.original_price,
+        half_price: this.menuForm.half_price,
         preparation_time: this.menuForm.preparation_time,
         is_active: this.menuForm.is_active,
         is_available: this.menuForm.is_available,
@@ -665,32 +714,42 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
 
        console.log('Updating menu item, menuRequest:', menuRequest);
 
-      // Update existing menu item
-      this.crudService.updateMenuItem(this.editingMenu!.id, menuRequest).subscribe({
-        next: (response) => {
-          console.log('Menu item updated successfully:', response);
-          this.notificationService.success('Menu Item Updated', 'The menu item has been successfully updated.');
-          this.cancelAdd();
-          this.loadMenus(); // Reload menu items
-        },
-        error: (error) => {
-          console.error('Error updating menu item:', error);
-          const apiMessage = error.error?.message || 'Failed to update menu item. Please try again.';
-          this.errorMessage = apiMessage;
-          this.loadingService.hide();
+        // Update existing menu item
+        this.crudService.updateMenuItem(this.editingMenu!.id, menuRequest).pipe(
+          switchMap((response: any) => {
+            console.log('Menu item updated successfully:', response);
+            this.notificationService.success('Menu Item Updated', 'The menu item has been successfully updated.');
+            return this.saveAddonLinks(this.editingMenu!.id).pipe(
+              catchError((linkError) => {
+                console.error('Error saving add-on links after menu update:', linkError);
+                return of(null);
+              })
+            );
+          }),
+          catchError((error) => {
+            console.error('Error updating menu item:', error);
+            const apiMessage = error.error?.message || 'Failed to update menu item. Please try again.';
+            this.errorMessage = apiMessage;
+            this.loadingService.hide();
 
-          const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
-          if (apiFieldErrors) {
-            Object.entries(apiFieldErrors).forEach(([field, messages]) => {
-              if (messages && messages.length > 0) {
-                this.fieldErrors[field] = messages[0];
-              }
-            });
+            const apiFieldErrors = error.error?.fieldErrors as Record<string, string[]> | undefined;
+            if (apiFieldErrors) {
+              Object.entries(apiFieldErrors).forEach(([field, messages]) => {
+                if (messages && messages.length > 0) {
+                  this.fieldErrors[field] = messages[0];
+                }
+              });
+            }
+
+            this.notificationService.error('Update Failed', apiMessage);
+            return [];
+          })
+        ).subscribe({
+          next: () => {
+            this.cancelAdd();
+            this.loadMenus();
           }
-
-          this.notificationService.error('Update Failed', apiMessage);
-        }
-      });
+        });
     } catch (error) {
       console.error('Error processing image:', error);
       this.notificationService.error('Processing Failed', 'Failed to process image. Please try again.');
@@ -730,10 +789,149 @@ export class OwnerMenusMobileComponent implements OnInit, OnDestroy {
     }
   }
 
+  loadAvailableAddons(): void {
+    const currentUser = this.authService.getCurrentUser();
+    const params: any = {
+      restaurant_id: currentUser?.restaurantId,
+      is_active: true,
+      page: 1,
+      size: 100
+    };
 
+    this.crudService.getData('menu-addons', params).subscribe({
+      next: (response: any) => {
+        const data = response.data || response || [];
+        this.availableAddons = data.map((addon: any) => ({
+          id: addon.id,
+          name: addon.name,
+          description: addon.description,
+          price: addon.price,
+          image: addon.image,
+          is_active: addon.is_active,
+          display_order: addon.display_order
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading available add-ons:', error);
+      }
+    });
+  }
+
+  loadMenuItemAddons(menuItemId: number): void {
+    this.crudService.getData(`menu-item-addons/menu-item/${menuItemId}`).subscribe({
+      next: (response: any) => {
+        const data = response || [];
+        this.menuItemAddons = data.map((item: any) => ({
+          id: item.id,
+          menu_item_id: item.menu_item_id,
+          addon_id: item.addon_id,
+          is_required: item.is_required,
+          min_quantity: item.min_quantity,
+          max_quantity: item.max_quantity,
+          display_order: item.display_order,
+          addon_name: item.addon_name,
+          addon_price: item.addon_price,
+          addon_image: item.addon_image
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading menu item add-ons:', error);
+      }
+    });
+  }
+
+  isAddonSelected(addonId: number): boolean {
+    return this.menuItemAddons.some(link => link.addon_id === addonId);
+  }
+
+  getAddonLink(addonId: number): MenuItemAddonLink | undefined {
+    return this.menuItemAddons.find(link => link.addon_id === addonId);
+  }
+
+  toggleAddon(addon: any): void {
+    const existingIndex = this.menuItemAddons.findIndex(link => link.addon_id === addon.id);
+    if (existingIndex >= 0) {
+      this.menuItemAddons.splice(existingIndex, 1);
+    } else {
+      this.menuItemAddons.push({
+        id: 0,
+        menu_item_id: this.editingMenu ? this.editingMenu.id : this.menuForm.id as number,
+        addon_id: addon.id,
+        is_required: false,
+        min_quantity: 0,
+        max_quantity: 10,
+        display_order: this.menuItemAddons.length,
+        addon_name: addon.name,
+        addon_price: addon.price,
+        addon_image: addon.image
+      });
+    }
+  }
+
+  updateAddonConfig(addonId: number, field: string, value: any): void {
+    const link = this.menuItemAddons.find(l => l.addon_id === addonId);
+    if (link) {
+      (link as any)[field] = value;
+    }
+  }
+
+  removeAddonLink(linkId: number): void {
+    this.menuItemAddons = this.menuItemAddons.filter(link => link.id !== linkId);
+  }
+
+  saveAddonLinks(menuItemId: number): Observable<any> {
+    const currentUser = this.authService.getCurrentUser();
+
+    return this.crudService.deleteData('menu-item-addons/menu-item/' + menuItemId).pipe(
+      switchMap(() => {
+        if (this.menuItemAddons.length === 0) {
+          return of(null);
+        }
+
+        const linksToSave = this.menuItemAddons.map(link => ({
+          addon_id: link.addon_id,
+          is_required: link.is_required,
+          min_quantity: link.min_quantity,
+          max_quantity: link.max_quantity,
+          display_order: link.display_order,
+          updated_by: Number(currentUser?.id) || 1
+        }));
+
+        const postObservables = linksToSave.map(linkData => {
+          const payload = {
+            addon_id: linkData.addon_id,
+            is_required: linkData.is_required,
+            min_quantity: linkData.min_quantity,
+            max_quantity: linkData.max_quantity,
+            display_order: linkData.display_order,
+            updated_by: linkData.updated_by
+          };
+          return this.crudService.postData(`menu-item-addons/menu-item/${menuItemId}/addons`, payload);
+        });
+
+        return forkJoin(postObservables);
+      }),
+      catchError(error => {
+        console.error('Error saving add-on links:', error);
+        return of(null);
+      })
+    );
+  }
 
   // Helper for template Math operations
   Math = Math;
+
+  trackByAddonId(index: number, addon: any): number {
+    return addon.id;
+  }
+
+  getCheckboxChecked(event: Event): boolean {
+    return (event.target as HTMLInputElement).checked;
+  }
+
+  getInputNumber(event: Event): number {
+    return +((event.target as HTMLInputElement).value);
+  }
 
   // Check if any filters are currently active
   get hasActiveFilters(): boolean {
