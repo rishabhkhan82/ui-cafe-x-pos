@@ -107,11 +107,11 @@
         *ngFor="let menu of menus"
         class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer group"
         (click)="selectMenu(menu)">
-        <div class="relative">
+        <div class="relative pt-3 px-3">
           <img
             [src]="getFullImageUrl(menu.image)"
             [alt]="menu.name"
-            class="w-full h-32 object-cover">
+            class="w-full h-32 object-cover rounded-xl">
           <div class="absolute top-2 right-2">
             <div
               [class]="menu.is_available ? 'w-3 h-3 rounded-full bg-green-500' : 'w-3 h-3 rounded-full bg-gray-400'"
@@ -376,15 +376,40 @@
               <div *ngIf="fieldErrors['price']" class="mt-1 text-xs text-red-500">{{ fieldErrors['price'] }}</div>
             </div>
             <div>
-              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-rupee-sign mr-2 text-blue-500"></i>Original Price</label>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-rupee-sign mr-2 text-red-500"></i>Half Price</label>
+              <input
+                type="number"
+                step="0.01"
+                [(ngModel)]="menuForm.half_price"
+                name="half_price"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
+                placeholder="0.00">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-rupee-sign mr-2 text-blue-500"></i>Original Price <span class="text-red-500">*</span></label>
               <input
                 type="number"
                 step="0.01"
                 [(ngModel)]="menuForm.original_price"
                 name="original_price"
-                (input)="recalculateDiscount()"
+                (blur)="validateOriginalPrice()"
+                (input)="validateOriginalPrice()"
                 class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
                 placeholder="0.00">
+              <div *ngIf="fieldErrors['original_price']" class="mt-1 text-xs text-red-500">{{ fieldErrors['original_price'] }}</div>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-percent mr-2 text-yellow-500"></i>Discount</label>
+              <input
+                type="text"
+                [(ngModel)]="menuForm.discount"
+                name="discount"
+                (input)="recalculatePriceFromDiscount()"
+                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
+                placeholder="10%">
             </div>
           </div>
 
@@ -402,7 +427,7 @@
               <div *ngIf="fieldErrors['category']" class="mt-1 text-xs text-red-500">{{ fieldErrors['category'] }}</div>
             </div>
             <div>
-              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-clock mr-2 text-orange-500"></i>Preparation Time (min)</label>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-clock mr-2 text-red-500"></i>Preparation Time (min) <span class="text-red-500">*</span></label>
               <input
                 type="number"
                 [(ngModel)]="menuForm.preparation_time"
@@ -429,19 +454,6 @@
                 placeholder="Auto-generated">
               <div *ngIf="fieldErrors['item_id']" class="mt-1 text-xs text-red-500">{{ fieldErrors['item_id'] }}</div>
             </div>
-            <div>
-              <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-percent mr-2 text-yellow-500"></i>Discount</label>
-              <input
-                type="text"
-                [(ngModel)]="menuForm.discount"
-                name="discount"
-                (input)="recalculatePriceFromDiscount()"
-                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 dark:text-white"
-                placeholder="10%">
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 gap-4">
             <div>
               <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2"><i class="fas fa-tag mr-2 text-indigo-500"></i>Type <span class="text-red-500">*</span></label>
               <select
@@ -520,6 +532,90 @@
               </label>
             </div>
           </div>
+
+            <!-- Add-ons Section -->
+            <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <i class="fas fa-plus-circle mr-2 text-red-500"></i>Menu Add-ons
+              </h3>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[520px] overflow-y-auto scrollbar-thin scrollbar-thumb-red-500 scrollbar-track-gray-100 dark:scrollbar-track-gray-700 pr-1">
+                 <div *ngFor="let addon of availableAddons; trackBy: trackByAddonId" class="p-4 rounded-xl border-2"
+                  [ngClass]="isAddonSelected(addon.id) ? 'border-red-500 bg-red-50 dark:bg-red-900/20 dark:border-red-500' : 'border-gray-200 bg-white dark:bg-gray-800 dark:border-gray-700'">
+
+                  <div *ngIf="isAddonSelected(addon.id)" class="absolute top-3 right-3 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-check text-white text-xs"></i>
+                  </div>
+
+                  <div class="flex items-start space-x-3">
+                    <img *ngIf="addon.image" [src]="getFullImageUrl(addon.image)" [alt]="addon.name" class="w-14 h-14 rounded-lg object-cover flex-shrink-0">
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center justify-between">
+                        <p class="text-sm font-semibold text-gray-900 dark:text-white truncate pr-6">{{ addon.name }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">₹{{ addon.price?.toFixed(2) }}</p>
+                      </div>
+
+                      <button type="button"
+                        (click)="toggleAddon(addon)"
+                        class="mt-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                        [ngClass]="isAddonSelected(addon.id) ? 'bg-red-50 text-red-600 dark:bg-red-900/20 hover:bg-red-100' : 'bg-red-500 text-white hover:bg-red-600'">
+                        <i class="fas mr-1" [class.fa-plus]="!isAddonSelected(addon.id)" [class.fa-times]="isAddonSelected(addon.id)"></i>
+                        {{ isAddonSelected(addon.id) ? 'Remove' : 'Add' }}
+                      </button>
+
+                      <div *ngIf="isAddonSelected(addon.id)" class="mt-3 pt-3 border-t border-red-200 dark:border-red-800">
+                        <div class="grid grid-cols-2 gap-2">
+                          <div class="flex items-center">
+                            <label class="flex items-center cursor-pointer">
+                              <input type="checkbox"
+                                [id]="'addon_required_' + addon.id"
+                                [name]="'addon_required_' + addon.id"
+                                [checked]="getAddonLink(addon.id)?.is_required"
+                                (change)="updateAddonConfig(addon.id, 'is_required', getCheckboxChecked($event))"
+                                class="sr-only peer">
+                              <div class="w-8 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-500 relative"></div>
+                              <span class="ml-2 text-xs text-gray-700 dark:text-gray-300">Required</span>
+                            </label>
+                          </div>
+                          <div>
+                            <label class="text-xs text-gray-500 dark:text-gray-400 block mb-1" [for]="'addon_order_' + addon.id">Order</label>
+                            <input type="number"
+                              [id]="'addon_order_' + addon.id"
+                              [name]="'addon_order_' + addon.id"
+                              [value]="getAddonLink(addon.id)?.display_order"
+                              (input)="updateAddonConfig(addon.id, 'display_order', getInputNumber($event))"
+                              class="w-full px-2 py-1 text-xs bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded text-gray-900 dark:text-gray-300">
+                          </div>
+                          <div>
+                            <label class="text-xs text-gray-500 dark:text-gray-400 block mb-1" [for]="'addon_min_' + addon.id">Min Qty</label>
+                            <input type="number"
+                              [id]="'addon_min_' + addon.id"
+                              [name]="'addon_min_' + addon.id"
+                              [value]="getAddonLink(addon.id)?.min_quantity"
+                              (input)="updateAddonConfig(addon.id, 'min_quantity', getInputNumber($event))"
+                              min="0"
+                              class="w-full px-2 py-1 text-xs bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded text-gray-900 dark:text-gray-300">
+                          </div>
+                          <div>
+                            <label class="text-xs text-gray-500 dark:text-gray-400 block mb-1" [for]="'addon_max_' + addon.id">Max Qty</label>
+                            <input type="number"
+                              [id]="'addon_max_' + addon.id"
+                              [name]="'addon_max_' + addon.id"
+                              [value]="getAddonLink(addon.id)?.max_quantity"
+                              (input)="updateAddonConfig(addon.id, 'max_quantity', getInputNumber($event))"
+                              min="1"
+                              class="w-full px-2 py-1 text-xs bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded text-gray-900 dark:text-gray-300">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div *ngIf="availableAddons.length === 0" class="col-span-full text-center py-4 text-sm text-gray-500 dark:text-gray-400">
+                  No add-ons available. Please create add-ons first.
+                </div>
+              </div>
+            </div>
         </form>
       </div>
       <!-- Modal Footer -->
@@ -590,12 +686,32 @@
               </div>
             </div>
             <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center">
-                <i class="fas fa-clock text-orange-600 dark:text-orange-400"></i>
+              <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+                <i class="fas fa-clock text-red-600 dark:text-red-400"></i>
               </div>
               <div>
                 <p class="text-xs text-gray-500 dark:text-gray-400">Prep Time</p>
                 <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedMenu!.preparation_time }} minutes</p>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 flex items-center justify-center">
+                <i class="fas fa-rupee-sign text-yellow-600 dark:text-yellow-400"></i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Half Price</p>
+                <p class="text-lg font-bold text-red-600 dark:text-red-400">₹{{ selectedMenu!.half_price?.toFixed(2) }}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">
+                <i class="fas fa-hashtag text-indigo-600 dark:text-indigo-400"></i>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Item ID</p>
+                <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedMenu!.item_id }}</p>
               </div>
             </div>
           </div>
@@ -608,17 +724,8 @@
               <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedMenu!.description }}</p>
             </div>
           </div>
-          <div class="grid grid-cols-2 gap-4">
+          <div *ngIf="selectedMenu!.discount" class="grid grid-cols-2 gap-4">
             <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">
-                <i class="fas fa-hashtag text-indigo-600 dark:text-indigo-400"></i>
-              </div>
-              <div>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Item ID</p>
-                <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedMenu!.item_id }}</p>
-              </div>
-            </div>
-            <div *ngIf="selectedMenu!.discount" class="flex items-center space-x-3">
               <div class="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
                 <i class="fas fa-percent text-green-600 dark:text-green-400"></i>
               </div>
@@ -627,8 +734,6 @@
                 <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedMenu!.discount }}</p>
               </div>
             </div>
-          </div>
-          <div class="grid grid-cols-2 gap-4">
             <div class="flex items-center space-x-3">
               <div class="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center">
                 <i [class]="selectedMenu!.is_veg ? 'fas fa-leaf text-green-600 dark:text-green-400' : 'fas fa-drumstick-bite text-red-600 dark:text-red-400'"></i>
@@ -638,6 +743,8 @@
                 <p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedMenu!.is_veg ? 'Vegetarian' : 'Non-Vegetarian' }}</p>
               </div>
             </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
             <div class="flex items-center space-x-3">
               <div class="w-10 h-10 rounded-xl bg-cyan-50 dark:bg-cyan-900/20 flex items-center justify-center">
                 <i class="fas fa-utensils text-cyan-600 dark:text-cyan-400"></i>

@@ -44,6 +44,7 @@ export interface MenuItem {
   item_id: string;
   discount: string;
   original_price?: number;
+  half_price?: number;
   preparation_time: number;
   is_active: boolean;
   is_available: boolean;
@@ -59,6 +60,23 @@ export interface MenuItem {
   updated_at?: Date;
   created_by?: number;
   updated_by?: number;
+  addons?: {
+    id: number;
+    addon_id: number;
+    addon_name: string;
+    addon_price: number;
+    addon_image?: string;
+    is_required: boolean;
+    min_quantity: number;
+    max_quantity: number;
+    display_order: number;
+    is_active?: any;
+    type?: 'RAW' | 'FINISHED';
+    created_at?: Date;
+    updated_at?: Date;
+    created_by?: any;
+    updated_by?: any;
+  }[];
 }
 
 export interface InventoryItem {

@@ -246,9 +246,13 @@ export class CommonUserNotificationsService {
         if (notifData) {
           const newNotif = this.mapSingleNotification(notifData);
           const current = this.notificationsSubject.value;
-          this.notificationsSubject.next([newNotif, ...current]);
-          if (newNotif.status === 'unread') {
-            this.unreadCountSubject.next(this.unreadCountSubject.value + 1);
+          const newId = newNotif.id || newNotif.notification_id;
+          const exists = current.some(n => (n.id || n.notification_id) === newId);
+          if (!exists) {
+            this.notificationsSubject.next([newNotif, ...current]);
+            if (newNotif.status === 'unread') {
+              this.unreadCountSubject.next(this.unreadCountSubject.value + 1);
+            }
           }
         }
       }),
