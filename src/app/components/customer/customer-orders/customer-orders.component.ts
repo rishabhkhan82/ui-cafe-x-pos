@@ -14,6 +14,7 @@ import { MenuItem } from '../../../interfaces';
 import { PendingordersService } from '../../../services/pendingorders.service';
 import { PendingBillsService } from '../../../services/pending-bills.service';
 import { RealtimeService } from '../../../services/realtime.service';
+import { RestaurantDataService } from '../../../services/restaurant-data.service';
 import { environment } from '../../../environments/environment';
 import { GetRestAndPlatformUsersService } from '../../../services/get-rest-and-platform-users.service';
 import { CommonUserNotificationsService } from '../../../services/common-user-notifications.service';
@@ -50,6 +51,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
   private pendingOrdersService = inject(PendingordersService);
   private pendingBillsService = inject(PendingBillsService);
   private realtimeService = inject(RealtimeService);
+  private restaurantDataService = inject(RestaurantDataService);
   private getRestAndPlatformUsersService = inject(GetRestAndPlatformUsersService);
   private commonUserNotificationsService = inject(CommonUserNotificationsService);
 
@@ -107,10 +109,13 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
       if (order) {
         order.items = order.items || [];
         if (order.status === 'COMPLETED' || order.status === 'CANCELLED') {
-          this.loadActiveOrders();
+          this.activeOrders = this.activeOrders.filter(o => o.id !== order.id);
+          this.calculateInvoice();
+          this.pendingOrdersService.updateCount(this.activeOrders.length);
+          this.pendingBillsService.setPendingBilling(false);
+          this.loadOrderHistory();
           this.loadLoyaltyProgram();
           this.loadEligibleOffers();
-          this.loadOrderHistory();
         } else {
           const index = this.activeOrders.findIndex(o => o.id === order.id);
           if (index !== -1) {
@@ -123,6 +128,35 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
       }
     });
     this.subscriptions.push(realtimeSub);
+
+    const orderUpdateSub = this.realtimeService.orderUpdate$.subscribe(order => {
+      console.log('[customer-orders] orderUpdate$ received:', order);
+      if (order && order.customer_id === this.currentUser?.id) {
+        order.items = order.items || [];
+        if (order.status === 'COMPLETED' || order.status === 'CANCELLED') {
+          this.activeOrders = this.activeOrders.filter(o => o.id !== order.id);
+          this.calculateInvoice();
+          this.pendingOrdersService.updateCount(this.activeOrders.length);
+          this.pendingBillsService.setPendingBilling(false);
+          const existsInHistory = this.orderHistory.some((o: Order) => o.id === order.id);
+          if (!existsInHistory) {
+            this.orderHistory = this.sortOrdersByDateDesc([order, ...this.orderHistory]);
+          }
+          this.loadOrderHistory();
+          this.loadLoyaltyProgram();
+          this.loadEligibleOffers();
+        } else {
+          const index = this.activeOrders.findIndex(o => o.id === order.id);
+          if (index !== -1) {
+            this.activeOrders[index] = order;
+          } else {
+            this.activeOrders.unshift(order);
+          }
+          this.calculateInvoice();
+        }
+      }
+    });
+    this.subscriptions.push(orderUpdateSub);
   }
 
   ngOnDestroy(): void {
@@ -264,15 +298,25 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
 
   private loadOrderHistory(): void {
     this.isOrderHistoryLoading = true;
-    this.crudService.getOrders({ customerId: this.authService.getCurrentUser()!.id, status: 'COMPLETED', page: 1, size: 10 }).subscribe({
+    const customerId: any = this.authService.getCurrentUser();
+    this.crudService.getOrders({ customerId: customerId.id, status: 'COMPLETED', page: 1, size: 10 }).subscribe({
       next: (response: any) => {
-        this.orderHistory = response?.data || [];
+        const data = response?.data || [];
+        this.orderHistory = this.sortOrdersByDateDesc(data);
         this.isOrderHistoryLoading = false;
       },
       error: () => {
         this.orderHistory = [];
         this.isOrderHistoryLoading = false;
       }
+    });
+  }
+
+  private sortOrdersByDateDesc(orders: Order[]): Order[] {
+    return [...orders].sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return dateB - dateA;
     });
   }
 
@@ -621,6 +665,110 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
     this.selectedOrder = null;
   }
 
+  printOrder(sourceOrder?: Order): void {
+    const order = sourceOrder || this.selectedOrder;
+    if (!order) return;
+    const subtotal = (order.items || []).reduce((sum, item) => sum + (item.total_price || 0), 0);
+    const taxAmount = order.tax_amount || 0;
+    const discountAmount = order.discount_amount || 0;
+    const loyaltyDiscountAmount = order.loyalty_discount_amount || 0;
+    const totalAmount = order.total_amount || 0;
+    const createdAt = new Date(order.created_at).toLocaleString('en-IN');
+
+    const restaurant = this.restaurantDataService.getCurrentRestaurant();
+    const restaurantName = restaurant?.name || sessionStorage.getItem('current_customer_restaurant_name') || 'Cafe-X POS';
+    let restaurantLogo = '';
+    if (restaurant?.logo_image) {
+      if (restaurant.logo_image.startsWith('http://') || restaurant.logo_image.startsWith('https://')) {
+        restaurantLogo = restaurant.logo_image;
+      } else {
+        restaurantLogo = environment.api.baseUrl + restaurant.logo_image;
+      }
+    }
+
+    const printWindow = window.open('', '_blank', 'width=480,height=600');
+    if (!printWindow) {
+      this.notificationService.error('Error', 'Popup blocked. Please allow popups to download the receipt.');
+      return;
+    }
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Receipt - ${order.order_id}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: 'Courier New', monospace; font-size: 12px; color: #000; padding: 10px; }
+          .receipt { max-width: 320px; margin: 0 auto; }
+          .center { text-align: center; }
+          .bold { font-weight: bold; }
+          .line { border-top: 1px dashed #000; margin: 8px 0; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { text-align: left; padding: 4px 2px; }
+          th { border-bottom: 1px solid #000; }
+          .text-right { text-align: right; }
+          .mt-2 { margin-top: 8px; }
+          .mt-1 { margin-top: 4px; }
+          .fs-sm { font-size: 11px; }
+          .logo { max-height: 60px; margin-bottom: 8px; }
+        </style>
+      </head>
+      <body>
+        <div class="receipt">
+          ${restaurantLogo ? `<div class="center"><img src="${restaurantLogo}" class="logo" /></div>` : ''}
+          <div class="center bold" style="font-size: 14px;">${restaurantName}</div>
+          <div class="center fs-sm">Order Receipt</div>
+          <div class="center fs-sm">${createdAt}</div>
+          <div class="line"></div>
+          <div><span class="bold">Order ID:</span> ${order.order_id}</div>
+          <div><span class="bold">Table:</span> ${order.table_number || 'Takeaway'}</div>
+          <div><span class="bold">Customer:</span> ${order.customer_name || 'Guest'}</div>
+          <div class="line"></div>
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th class="text-right">Qty</th>
+                <th class="text-right">Amt</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(order.items || []).map(item => `
+                <tr>
+                  <td>${item.menu_item_name}</td>
+                  <td class="text-right">${item.quantity}</td>
+                  <td class="text-right">₹${item.total_price}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <div class="line"></div>
+          <div class="mt-1" style="display:flex;justify-content:space-between;">
+            <span>Subtotal</span><span>₹${subtotal.toFixed(2)}</span>
+          </div>
+          ${taxAmount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Tax (${order.tax_percentage || 0}%)</span><span>₹${taxAmount.toFixed(2)}</span></div>` : ''}
+          ${discountAmount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Discount</span><span>-₹${discountAmount.toFixed(2)}</span></div>` : ''}
+          ${loyaltyDiscountAmount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Loyalty Discount</span><span>-₹${loyaltyDiscountAmount.toFixed(2)}</span></div>` : ''}
+          <div class="line"></div>
+          <div class="mt-1 bold" style="display:flex;justify-content:space-between;font-size:14px;">
+            <span>Total</span><span>₹${totalAmount.toFixed(2)}</span>
+          </div>
+          <div class="line"></div>
+          <div class="center fs-sm mt-1">Thank you for your order!</div>
+          <div class="center fs-sm mt-1">powered by cafexpos.in</div>
+        </div>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+    }, 300);
+  }
+
   openAllOrderHistory(): void {
     this.showAllOrderHistory = true;
     this.isAllOrderHistoryLoading = true;
@@ -736,11 +884,15 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
       READY: 'Ready',
       ON_THE_WAY: 'On the Way',
       SERVED: 'Served',
-      COMPLETED: 'Completed',
       BILLING_REQUESTED: 'Billing Requested',
+      COMPLETED: 'Completed',
       CANCELLED: 'Cancelled'
     };
     return map[status] || status;
+  }
+
+  getOrderSubtotal(order: Order): number {
+    return (order.items || []).reduce((sum, item) => sum + (item.total_price || 0), 0);
   }
 
   getOrderStatusBadgeClass(status: string): string {

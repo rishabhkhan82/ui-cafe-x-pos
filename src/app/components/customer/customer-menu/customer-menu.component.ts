@@ -20,6 +20,19 @@ interface MenuCategory {
   icon: string;
 }
 
+interface MenuItemAddonLink {
+  id: number;
+  menu_item_id: number;
+  addon_id: number;
+  is_required: boolean;
+  min_quantity: number;
+  max_quantity: number;
+  display_order: number;
+  addon_name?: string;
+  addon_price?: number;
+  addon_image?: string;
+}
+
 @Component({
   selector: 'app-customer-menu',
   standalone: true,
@@ -57,6 +70,10 @@ export class CustomerMenuComponent implements OnInit, OnDestroy {
   ];
 
   private restaurantId: string | null = null;
+
+  selectedItemForAddons: MenuItem | null = null;
+  private menuItemAddonsMap: { [menuItemId: number]: any[] } = {};
+  private loadedAddonItemIds = new Set<number>();
 
   constructor() {
     // Keep local copy in sync
@@ -160,6 +177,7 @@ export class CustomerMenuComponent implements OnInit, OnDestroy {
       name: item.name || '',
       description: item.description || '',
       price: item.price || 0,
+      half_price: item.half_price || item.halfPrice || undefined,
       category: item.category || '',
       image: item.image || '',
       item_id: item.item_id || '',
@@ -217,6 +235,7 @@ export class CustomerMenuComponent implements OnInit, OnDestroy {
           this.allMenuItems = this.mapApiMenuItemsToMenuItems(response.data);
           this.recommendedItems = this.allMenuItems.filter(item => item.is_recommended).slice(0, 3);
           this.filterMenuItems();
+          this.allMenuItems.forEach(item => this.loadMenuItemAddons(item.id));
         }
       },
       error: (error) => {
@@ -244,6 +263,7 @@ export class CustomerMenuComponent implements OnInit, OnDestroy {
         this.allMenuItems = this.mapApiMenuItemsToMenuItems(response.data);
         this.recommendedItems = this.allMenuItems.filter(item => item.is_recommended).slice(0, 3);
         this.filterMenuItems();
+        this.allMenuItems.forEach(item => this.loadMenuItemAddons(item.id));
       },
       error: (error) => {
         console.error('Error searching menu items:', error);
@@ -395,6 +415,51 @@ export class CustomerMenuComponent implements OnInit, OnDestroy {
       return imagePath;
     }
     return environment.api.baseUrl + imagePath;
+  }
+
+  private loadMenuItemAddons(menuItemId: number): void {
+    if (this.loadedAddonItemIds.has(menuItemId)) return;
+    this.loadedAddonItemIds.add(menuItemId);
+
+    this.crudService.getData(`menu-item-addons/menu-item/${menuItemId}`).subscribe({
+      next: (response: any) => {
+        const data = response || [];
+        this.menuItemAddonsMap[menuItemId] = data.map((item: any) => ({
+          id: item.id,
+          menu_item_id: item.menu_item_id,
+          addon_id: item.addon_id,
+          is_required: item.is_required,
+          min_quantity: item.min_quantity,
+          max_quantity: item.max_quantity,
+          display_order: item.display_order,
+          addon_name: item.addon_name,
+          addon_price: item.addon_price,
+          addon_image: item.addon_image
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading add-ons for menu item:', error);
+        this.menuItemAddonsMap[menuItemId] = [];
+      }
+    });
+  }
+
+  hasAddons(item: MenuItem): boolean {
+    return Array.isArray(item.addons)
+      ? item.addons.length > 0
+      : (this.menuItemAddonsMap[item.id]?.length > 0);
+  }
+
+  getItemAddons(item: MenuItem): any[] {
+    return this.menuItemAddonsMap[item.id] || item.addons || [];
+  }
+
+  openAddons(item: MenuItem): void {
+    this.selectedItemForAddons = item;
+  }
+
+  closeAddons(): void {
+    this.selectedItemForAddons = null;
   }
 
   ngOnDestroy(): void {

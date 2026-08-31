@@ -52,7 +52,7 @@ export class NotificationRoutingService {
       table_number: tableNo,
       customer_name: order.customer_name || '',
       total_amount: order.total_amount || 0,
-      new_status: rule.toStatus,
+      status: rule.toStatus,
     };
 
     return this.notificationService.createFromTemplate(rule.templateId, templateData, {

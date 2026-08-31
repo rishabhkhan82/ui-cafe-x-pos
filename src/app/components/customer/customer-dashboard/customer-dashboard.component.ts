@@ -59,6 +59,8 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   featuredItems: MenuItem[] = [];
   popularItems: MenuItem[] = [];
   private allMenuItems: MenuItem[] = [];
+  selectedItemForAddons: MenuItem | null = null;
+  private menuItemAddonsMap: { [menuItemId: number]: any[] } = {};
 
   promotionalBanners: PromotionalBanner[] = [];
   currentBannerIndex = 0;
@@ -320,6 +322,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
           item_id: item.item_id || '',
           discount: item.discount || '',
           original_price: item.original_price || item.originalPrice || undefined,
+          half_price: item.half_price || item.halfPrice || undefined,
           preparation_time: item.preparation_time || 0,
           is_active: item.is_active ?? true,
           is_available: item.is_available ?? true,
@@ -336,6 +339,12 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
         }));
         this.featuredItems = this.allMenuItems.filter(item => item.is_featured).slice(0, 3);
         this.popularItems = this.allMenuItems.filter(item => item.is_popular).slice(0, 2);
+
+        const visibleItemIds = new Set([
+          ...this.featuredItems.map(item => item.id),
+          ...this.popularItems.map(item => item.id)
+        ]);
+        visibleItemIds.forEach(id => this.loadMenuItemAddons(id));
 
         this.menuCategories = this.menuCategories.map(cat => ({
           ...cat,
@@ -411,6 +420,48 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
     if (img && !img.src.includes('placeholder.png')) {
       img.src = 'assets/images/placeholder.png';
     }
+  }
+
+  private loadMenuItemAddons(menuItemId: number): void {
+    this.crudService.getData(`menu-item-addons/menu-item/${menuItemId}`).subscribe({
+      next: (response: any) => {
+        const data = response || [];
+        this.menuItemAddonsMap[menuItemId] = data.map((item: any) => ({
+          id: item.id,
+          menu_item_id: item.menu_item_id,
+          addon_id: item.addon_id,
+          is_required: item.is_required,
+          min_quantity: item.min_quantity,
+          max_quantity: item.max_quantity,
+          display_order: item.display_order,
+          addon_name: item.addon_name,
+          addon_price: item.addon_price,
+          addon_image: item.addon_image
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading add-ons for menu item:', error);
+        this.menuItemAddonsMap[menuItemId] = [];
+      }
+    });
+  }
+
+  hasAddons(item: MenuItem): boolean {
+    return Array.isArray(item.addons)
+      ? item.addons.length > 0
+      : (this.menuItemAddonsMap[item.id]?.length > 0);
+  }
+
+  getItemAddons(item: MenuItem): any[] {
+    return this.menuItemAddonsMap[item.id] || item.addons || [];
+  }
+
+  openAddons(item: MenuItem): void {
+    this.selectedItemForAddons = item;
+  }
+
+  closeAddons(): void {
+    this.selectedItemForAddons = null;
   }
 
   private loadPromotionalBanners(): void {
