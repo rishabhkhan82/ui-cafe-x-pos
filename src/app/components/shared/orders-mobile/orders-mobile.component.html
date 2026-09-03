@@ -58,74 +58,76 @@
 
         <!-- Invoice Cards for BILLING_REQUESTED tab -->
         <div *ngIf="activeStatus === 'BILLING_REQUESTED'">
-          <div *ngFor="let invoice of billingRequestedInvoices; trackBy: trackByInvoiceId" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden mb-3 border-2 border-indigo-200 dark:border-indigo-700">
-            <div class="border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">
-              <div class="flex justify-between items-start">
-                <div>
-                  <h4 class="text-lg font-bold text-gray-900 dark:text-white">Invoice</h4>
-                  <p class="text-xs font-mono font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full inline-block mt-1">{{ invoice.invoiceId }}</p>
-                  <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Tables: {{ getTablesSummary(invoice.invoiceId) }}</p>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">Orders: {{ invoice.orders.length }}</p>
-                </div>
-                <div class="text-right">
-                  <div class="text-xl font-bold text-primary-600 dark:text-primary-400">₹{{ getInvoiceTotal(invoice.invoiceId) | number:'1.2-2' }}</div>
-                  <div class="text-xs text-gray-500 dark:text-gray-400">Total Amount</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="mb-4 space-y-2">
-              <div *ngFor="let invOrd of invoice.orders" class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
-                <div class="flex items-center justify-between mb-1">
-                  <div class="flex items-center space-x-2">
-                    <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">#{{ invOrd.order_id.split('-').pop() }}</span>
-                    <span class="px-2 py-0.5 rounded-full text-xs font-medium" [class]="getStatusBadgeClass(invOrd.status)">{{ invOrd.status }}</span>
-                    <span class="text-xs text-gray-500 dark:text-gray-400">Table: {{ invOrd.table_number || 'Takeaway' }}</span>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4">
+            <div *ngFor="let invoice of billingRequestedInvoices; trackBy: trackByInvoiceId" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden mb-3 border-2 border-indigo-200 dark:border-indigo-700">
+              <div class="border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h4 class="text-lg font-bold text-gray-900 dark:text-white">Invoice</h4>
+                    <p class="text-xs font-mono font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full inline-block mt-1">{{ invoice.invoiceId }}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Tables: {{ getTablesSummary(invoice.invoiceId) }}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Orders: {{ invoice.orders.length }}</p>
                   </div>
-                   <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">₹{{ (invOrd.total_amount || 0) | number:'1.2-2' }}</span>
-                </div>
-                <div class="flex flex-wrap gap-1">
-                  <span *ngFor="let item of invOrd.items" class="text-xs bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200 px-2 py-0.5 rounded-full">
-                    {{ item.quantity }} x {{ item.menu_item_name }}
-                  </span>
+                  <div class="text-right">
+                    <div class="text-xl font-bold text-primary-600 dark:text-primary-400">₹{{ getInvoiceTotal(invoice.invoiceId) | number:'1.2-2' }}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">Total Amount</div>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div class="border-t border-gray-200 dark:border-gray-700 pt-3 mb-4 space-y-1">
-              <div class="flex items-center justify-between text-sm">
-                <span class="text-gray-600 dark:text-gray-300">Subtotal</span>
-                <span class="font-medium text-gray-900 dark:text-white">₹{{ getInvoicePreTaxSubtotal(invoice.invoiceId) | number:'1.2-2' }}</span>
+  
+              <div class="mb-4 space-y-2">
+                <div *ngFor="let invOrd of invoice.orders" class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
+                  <div class="flex items-center justify-between mb-1">
+                    <div class="flex items-center space-x-2">
+                      <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">#{{ invOrd.order_id.split('-').pop() }}</span>
+                      <span class="px-2 py-0.5 rounded-full text-xs font-medium" [class]="getStatusBadgeClass(invOrd.status)">{{ invOrd.status }}</span>
+                      <span class="text-xs text-gray-500 dark:text-gray-400">Table: {{ invOrd.table_number || 'Takeaway' }}</span>
+                    </div>
+                     <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">₹{{ (invOrd.total_amount || 0) | number:'1.2-2' }}</span>
+                  </div>
+                  <div class="flex flex-wrap gap-1">
+                    <span *ngFor="let item of invOrd.items" class="text-xs bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200 px-2 py-0.5 rounded-full">
+                      {{ item.quantity }} x {{ item.menu_item_name }}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div class="flex items-center justify-between text-sm">
-                <span class="text-gray-600 dark:text-gray-300">GST (18%)</span>
-                <span class="font-medium text-gray-900 dark:text-white">₹{{ getInvoiceTax(invoice.invoiceId) | number:'1.2-2' }}</span>
+  
+              <div class="border-t border-gray-200 dark:border-gray-700 pt-3 mb-4 space-y-1">
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-gray-600 dark:text-gray-300">Subtotal</span>
+                  <span class="font-medium text-gray-900 dark:text-white">₹{{ getInvoicePreTaxSubtotal(invoice.invoiceId) | number:'1.2-2' }}</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-gray-600 dark:text-gray-300">GST (18%)</span>
+                  <span class="font-medium text-gray-900 dark:text-white">₹{{ getInvoiceTax(invoice.invoiceId) | number:'1.2-2' }}</span>
+                </div>
+                <div *ngIf="getInvoiceDiscount(invoice.invoiceId) > 0" class="flex items-center justify-between text-sm">
+                  <span class="text-green-600 dark:text-green-400">Discount</span>
+                  <span class="font-medium text-green-600 dark:text-green-400">-₹{{ getInvoiceDiscount(invoice.invoiceId) | number:'1.2-2' }}</span>
+                </div>
+                <div *ngIf="getInvoiceLoyaltyDiscount(invoice.invoiceId) > 0" class="flex items-center justify-between text-sm">
+                  <span class="text-purple-600 dark:text-purple-400">Loyalty Discount</span>
+                  <span class="font-medium text-purple-600 dark:text-purple-400">-₹{{ getInvoiceLoyaltyDiscount(invoice.invoiceId) | number:'1.2-2' }}</span>
+                </div>
+                <div class="border-b border-gray-200 dark:border-gray-600 my-2"></div>
+                <div class="flex items-center justify-between">
+                  <span class="text-base font-bold text-gray-900 dark:text-white">Grand Total</span>
+                  <span class="text-xl font-bold text-primary-500">₹{{ getInvoiceTotal(invoice.invoiceId) | number:'1.2-2' }}</span>
+                </div>
               </div>
-              <div *ngIf="getInvoiceDiscount(invoice.invoiceId) > 0" class="flex items-center justify-between text-sm">
-                <span class="text-green-600 dark:text-green-400">Discount</span>
-                <span class="font-medium text-green-600 dark:text-green-400">-₹{{ getInvoiceDiscount(invoice.invoiceId) | number:'1.2-2' }}</span>
+  
+              <div class="flex items-center gap-2">
+                <button *ngIf="userRole === 'restaurant_owner' || userRole === 'restaurant_manager'"
+                        (click)="markInvoiceCompleted(invoice.invoiceId)"
+                        class="flex-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
+                  <i class="fas fa-check-double mr-2"></i>Complete Invoice
+                </button>
+                <button (click)="viewOrder(invoice.orders[0])"
+                        class="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
+                  <i class="fas fa-eye mr-2"></i>Details
+                </button>
               </div>
-              <div *ngIf="getInvoiceLoyaltyDiscount(invoice.invoiceId) > 0" class="flex items-center justify-between text-sm">
-                <span class="text-purple-600 dark:text-purple-400">Loyalty Discount</span>
-                <span class="font-medium text-purple-600 dark:text-purple-400">-₹{{ getInvoiceLoyaltyDiscount(invoice.invoiceId) | number:'1.2-2' }}</span>
-              </div>
-              <div class="border-b border-gray-200 dark:border-gray-600 my-2"></div>
-              <div class="flex items-center justify-between">
-                <span class="text-base font-bold text-gray-900 dark:text-white">Grand Total</span>
-                <span class="text-xl font-bold text-primary-500">₹{{ getInvoiceTotal(invoice.invoiceId) | number:'1.2-2' }}</span>
-              </div>
-            </div>
-
-            <div class="flex items-center gap-2">
-              <button *ngIf="userRole === 'restaurant_owner' || userRole === 'restaurant_manager'"
-                      (click)="markInvoiceCompleted(invoice.invoiceId)"
-                      class="flex-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
-                <i class="fas fa-check-double mr-2"></i>Complete Invoice
-              </button>
-              <button (click)="viewOrder(invoice.orders[0])"
-                      class="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
-                <i class="fas fa-eye mr-2"></i>Details
-              </button>
             </div>
           </div>
         </div>
@@ -213,10 +215,16 @@
                 <i class="fas fa-eye mr-2"></i>Details
               </button>
 
-                <button *ngIf="['restaurant_owner', 'restaurant_manager', 'kitchen', 'kitchen_manager'].includes(userRole) && ord.status !== 'COMPLETED' && ord.status !== 'CANCELLED' && ord.status !== 'SERVED' && ord.status !== 'BILLING_REQUESTED'"
-                        (click)="cancelOrder(ord)"
-                        class="flex-1 px-3 py-2 bg-red-700 hover:bg-red-800 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
-                 <i class="fas fa-times mr-2"></i>Cancel
+                 <button *ngIf="['restaurant_owner', 'restaurant_manager', 'kitchen', 'kitchen_manager'].includes(userRole) && ord.status !== 'COMPLETED' && ord.status !== 'CANCELLED' && ord.status !== 'SERVED' && ord.status !== 'BILLING_REQUESTED'"
+                         (click)="cancelOrder(ord)"
+                         class="flex-1 px-3 py-2 bg-red-700 hover:bg-red-800 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
+                  <i class="fas fa-times mr-2"></i>Cancel
+                 </button>
+
+                <button *ngIf="userRole === 'waiter' && ord.status !== 'COMPLETED' && ord.status !== 'CANCELLED'"
+                        (click)="openEditOrder(ord)"
+                        class="flex-1 px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
+                  <i class="fas fa-edit mr-2"></i>Edit
                 </button>
            </div>
           </div>
@@ -260,7 +268,7 @@
 
 <!-- Order Details Modal -->
 <div *ngIf="selectedOrder"
-     class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+     class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[2000] p-4">
   <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-slate-900/50 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
 
     <!-- Header -->
@@ -391,7 +399,7 @@
           <span class="font-medium text-gray-900 dark:text-white">₹{{ getOrderSubtotal(selectedOrder) | number:'1.2-2' }}</span>
         </div>
         <div class="flex items-center justify-between text-sm">
-          <span class="text-gray-600 dark:text-gray-300">Tax Amount ({{ selectedOrder.tax_percentage || 0 }}%)</span>
+          <span class="text-gray-600 dark:text-gray-300">Tax Amount ({{ getOrderTaxPercentage(selectedOrder) !== null ? getOrderTaxPercentage(selectedOrder) + '%' : '' }})</span>
           <span class="font-medium text-gray-900 dark:text-white">₹{{ selectedOrder.tax_amount || 0 | number:'1.2-2' }}</span>
         </div>
         <div class="flex items-center justify-between text-sm">
@@ -464,10 +472,15 @@
          </button>
 
            <!-- Cancel for restaurant_owner, restaurant_manager and kitchen only -->
-            <button *ngIf="['restaurant_owner', 'restaurant_manager', 'kitchen', 'kitchen_manager'].includes(userRole) && selectedOrder.status !== 'COMPLETED' && selectedOrder.status !== 'CANCELLED'"
+            <!-- <button *ngIf="['restaurant_owner', 'restaurant_manager', 'kitchen', 'kitchen_manager'].includes(userRole) && selectedOrder.status !== 'COMPLETED' && selectedOrder.status !== 'CANCELLED'"
                    (click)="cancelOrder(selectedOrder); closeOrderDetails()"
                    class="px-4 sm:px-6 py-2 bg-red-700 hover:bg-red-800 text-white rounded-lg transition-all duration-200 font-medium flex items-center text-sm sm:text-base">
             <i class="fas fa-times mr-2"></i>Cancel Order
+          </button> -->
+          <button *ngIf="(userRole === 'restaurant_owner' || userRole === 'restaurant_manager')"
+                  (click)="closeOrderDetails()"
+                  class="px-4 sm:px-6 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg transition-all duration-200 font-medium flex items-center text-sm sm:text-base">
+           <i class="fas fa-check-double mr-2"></i>Close
           </button>
       </div>
     </div>
@@ -539,6 +552,137 @@
           </tbody>
         </table>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Order Modal -->
+<div *ngIf="showEditOrderModal && editingOrder" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[1001] p-4">
+  <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+    <div class="bg-gradient-to-r from-slate-600 via-slate-700 to-slate-800 rounded-t-2xl p-6 text-white relative overflow-hidden shadow-inner flex-shrink-0">
+      <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-12 translate-x-12"></div>
+      <div class="relative z-10 flex items-center justify-between">
+        <div>
+          <h3 class="text-xl font-bold">Edit Order</h3>
+          <p class="text-blue-100">#ORD-{{ editingOrder.order_id.split('-').pop() }} - {{ editingOrder.table_number || 'Takeaway' }}</p>
+        </div>
+        <button (click)="closeEditOrderModal()" class="text-white/80 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors">
+          <i class="fas fa-times text-lg"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-6">
+      <div class="mb-6 bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4">
+        <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Add New Item</h4>
+        <div class="mb-3">
+          <input type="text"
+                 [(ngModel)]="menuSearchTerm"
+                 (input)="filterAvailableMenuItems()"
+                 placeholder="Search menu items..."
+                 class="w-full border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white py-2 px-3 text-sm">
+        </div>
+        <div class="flex space-x-3 overflow-x-auto pb-2 mb-3" style="scrollbar-width: thin;">
+          <div *ngFor="let menuItem of filteredAvailableMenuItems"
+               (click)="selectMenuItemForAdd(menuItem)"
+               [class.border-primary-500]="selectedMenuItemForAdd && selectedMenuItemForAdd.id === menuItem.id && !isItemInEditForm(menuItem.id)"
+               [class.bg-primary-50]="selectedMenuItemForAdd && selectedMenuItemForAdd.id === menuItem.id && !isItemInEditForm(menuItem.id)"
+               [class.border-green-500]="isItemInEditForm(menuItem.id)"
+               [class.bg-green-50]="isItemInEditForm(menuItem.id)"
+               [class.opacity-75]="isItemInEditForm(menuItem.id)"
+               class="flex-shrink-0 w-40 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-3 cursor-pointer hover:border-primary-400 transition-colors relative">
+            <div class="w-full h-20 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 mb-2">
+              <img [src]="getFullImageUrl(menuItem.image)" [alt]="menuItem.name" class="w-full h-full object-cover">
+            </div>
+            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ menuItem.name }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">₹{{ menuItem.price }}</p>
+            <div *ngIf="isItemInEditForm(menuItem.id)" class="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full font-medium">
+              In Order
+            </div>
+          </div>
+          <div *ngIf="filteredAvailableMenuItems.length === 0" class="text-sm text-gray-500 dark:text-gray-400 py-2">
+            No items found.
+          </div>
+        </div>
+        <div class="flex items-center space-x-3" *ngIf="selectedMenuItemForAdd">
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-200">Selected: {{ selectedMenuItemForAdd.name }}</span>
+          <input type="number" [(ngModel)]="addItemQuantity" min="1" placeholder="Qty"
+                 class="w-20 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white py-2 px-3 text-sm">
+          <button (click)="addItemToEdit()"
+                  [disabled]="addItemQuantity < 1 || (selectedMenuItemForAdd && isItemInEditForm(selectedMenuItemForAdd.id))"
+                  class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+            <i class="fas fa-plus mr-1"></i>Add
+          </button>
+        </div>
+      </div>
+
+      <div class="mb-6">
+        <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Order Items</h4>
+        <div class="space-y-3">
+          <div *ngFor="let item of editFormItems" class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div class="flex-1 min-w-0">
+                <p class="font-medium text-gray-900 dark:text-white truncate">{{ item.menu_item_name }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">₹{{ item.unit_price }} per item</p>
+              </div>
+              <div class="flex items-center justify-between gap-3 md:justify-end">
+                <div class="flex items-center space-x-2">
+                  <button (click)="updateEditItemQuantity(item.id || item.menu_item_id, item.quantity - 1)"
+                          [disabled]="item.quantity <= 1"
+                          class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-500 disabled:opacity-50 flex-shrink-0">
+                    <i class="fas fa-minus text-xs"></i>
+                  </button>
+                  <input type="number" [value]="item.quantity" (input)="updateEditItemQuantity(item.id || item.menu_item_id, $any($event.target).value)"
+                         class="w-16 text-center border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white py-1 text-sm flex-shrink-0">
+                  <button (click)="updateEditItemQuantity(item.id || item.menu_item_id, item.quantity + 1)"
+                          class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-500 flex-shrink-0">
+                    <i class="fas fa-plus text-xs"></i>
+                  </button>
+                </div>
+                <span class="text-sm font-semibold text-gray-900 dark:text-white text-right flex-shrink-0">₹{{ item.quantity * item.unit_price }}</span>
+                <button (click)="removeEditItem(item.id || item.menu_item_id)" class="text-red-500 hover:text-red-700 p-2 flex-shrink-0">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 mb-6 space-y-2">
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-gray-600 dark:text-gray-300">Subtotal ({{ editFormItems.length }} item{{ editFormItems.length === 1 ? '' : 's' }})</span>
+          <span class="font-medium text-gray-900 dark:text-white">₹{{ getEditOrderTotal() }}</span>
+        </div>
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-gray-600 dark:text-gray-300">
+            GST {{ getEditOrderTaxPercentage() !== null ? '(' + getEditOrderTaxPercentage() + '%)' : '' }}
+          </span>
+          <span class="font-medium text-gray-900 dark:text-white">₹{{ getEditOrderTaxAmount() }}</span>
+        </div>
+        <div class="border-t border-gray-200 dark:border-gray-600 my-2"></div>
+        <div class="flex items-center justify-between">
+          <span class="text-base font-bold text-gray-900 dark:text-white">New Total</span>
+          <span class="text-xl font-bold text-primary-500">₹{{ getEditOrderTotal() + getEditOrderTaxAmount() }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="border-t border-gray-200 dark:border-gray-700 p-6 flex items-center justify-end gap-3 flex-shrink-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl rounded-b-2xl">
+      <button (click)="closeEditOrderModal()"
+              class="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+        Cancel
+      </button>
+      <button (click)="saveEditedOrder()"
+              [disabled]="isEditSubmitting || editFormItems.length === 0"
+              class="px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center">
+        <svg *ngIf="isEditSubmitting" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span *ngIf="!isEditSubmitting">Save Changes</span>
+        <span *ngIf="isEditSubmitting">Saving...</span>
+      </button>
     </div>
   </div>
 </div>

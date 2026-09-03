@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { interval, Subscription, Observable } from 'rxjs';
 import { NewLoyaltyProgram, NewLoyaltyTransaction, Order, OrderStatus } from '../../../services/mock-data.service';
+import { MenuItem } from '../../../interfaces';
 import { RealtimeService } from '../../../services/realtime.service';
 import { MockDataService } from '../../../services/mock-data.service';
 import { CrudService } from '../../../services/crud.service';
@@ -16,6 +17,7 @@ import { ElapsedTimePipe } from './elapsed-time.pipe';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonUserNotificationsService } from '../../../services/common-user-notifications.service';
 import { RestaurantDataService } from '../../../services/restaurant-data.service';
+import { GetRestAndPlatformUsersService } from '../../../services/get-rest-and-platform-users.service';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -42,6 +44,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   private ngZone = inject(NgZone);
   private commonUserNotificationsService = inject(CommonUserNotificationsService);
   private restaurantDataService = inject(RestaurantDataService);
+  private getRestAndPlatformUsersService = inject(GetRestAndPlatformUsersService);
 
   currentTime: string = '';
   activeStatus: string = 'all';
@@ -55,6 +58,17 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   searchTerm = '';
   userRole: string = 'owner'; // Default, will be set from sessionStorage
   currentUser: any;
+
+  // Edit order state for waiter
+  showEditOrderModal = false;
+  editingOrder: Order | null = null;
+  editFormItems: any[] = [];
+  availableMenuItems: MenuItem[] = [];
+  filteredAvailableMenuItems: MenuItem[] = [];
+  isEditSubmitting = false;
+  selectedMenuItemForAdd: MenuItem | null = null;
+  addItemQuantity = 1;
+  menuSearchTerm = '';
 
   // Swipe handling
   private touchStartX: number = 0;
@@ -721,9 +735,273 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.selectedOrderItems = null;
   }
 
+  openEditOrder(order: Order): void {
+    if (this.userRole !== 'waiter') return;
+    if (order.status === 'COMPLETED' || order.status === 'CANCELLED') return;
+
+    this.editingOrder = { ...order, items: order.items.map(item => ({ ...item })) };
+    this.editFormItems = this.editingOrder.items.map(item => ({ ...item }));
+    this.loadAvailableMenuItems();
+    this.showEditOrderModal = true;
+  }
+
+  closeEditOrderModal(): void {
+    this.showEditOrderModal = false;
+    this.editingOrder = null;
+    this.editFormItems = [];
+    this.availableMenuItems = [];
+    this.filteredAvailableMenuItems = [];
+    this.isEditSubmitting = false;
+    this.selectedMenuItemForAdd = null;
+    this.addItemQuantity = 1;
+    this.menuSearchTerm = '';
+  }
+
+  private loadAvailableMenuItems(): void {
+    const restaurantId = this.currentUser?.restaurantId || this.currentUser?.restaurant_id;
+    if (!restaurantId) return;
+
+    this.crudService.getMenuItems({ page: 1, size: 999, restaurant_id: String(restaurantId) }).subscribe({
+      next: (response: any) => {
+        const data = response?.data || response || [];
+        this.availableMenuItems = data.map((item: any) => ({
+          id: item.id,
+          name: item.name || '',
+          description: item.description || '',
+          price: item.price || 0,
+          category: item.category || '',
+          image: item.image || '',
+          item_id: item.item_id || '',
+          discount: item.discount || '',
+          original_price: item.original_price || item.originalPrice || item.price || 0,
+          half_price: item.half_price || item.halfPrice || undefined,
+          preparation_time: item.preparation_time || 0,
+          is_active: item.is_active ?? true,
+          is_available: item.is_available ?? true,
+          is_popular: item.is_popular ?? false,
+          is_featured: item.is_featured ?? false,
+          is_recommended: item.is_recommended ?? false,
+          is_spicy: item.is_spicy ?? false,
+          is_veg: item.is_veg ?? item.is_vegetarian ?? true,
+          is_vegetarian: item.is_vegetarian ?? true,
+          restaurant_id: item.restaurant_id || restaurantId,
+          created_at: item.created_at ? new Date(item.created_at) : undefined,
+          updated_at: item.updated_at ? new Date(item.updated_at) : undefined,
+          created_by: item.created_by,
+          updated_by: item.updated_by
+        }));
+        this.filteredAvailableMenuItems = [...this.availableMenuItems];
+      },
+      error: (err) => {
+        console.error('Error loading menu items for edit:', err);
+        this.availableMenuItems = [];
+        this.filteredAvailableMenuItems = [];
+      }
+    });
+  }
+
+  filterAvailableMenuItems(): void {
+    const term = (this.menuSearchTerm || '').toLowerCase().trim();
+    if (!term) {
+      this.filteredAvailableMenuItems = [...this.availableMenuItems];
+      return;
+    }
+    this.filteredAvailableMenuItems = this.availableMenuItems.filter(item =>
+      (item.name || '').toLowerCase().includes(term)
+    );
+  }
+
+  updateEditItemQuantity(itemId: number, newQty: number): void {
+    const qty = Math.max(1, parseInt(String(newQty), 10) || 1);
+    const item = this.editFormItems.find(i => i.id === itemId || i.menu_item_id === itemId);
+    if (item) {
+      item.quantity = qty;
+      item.total_price = qty * item.unit_price;
+    }
+  }
+
+  removeEditItem(itemId: number): void {
+    this.editFormItems = this.editFormItems.filter(i => i.id !== itemId && i.menu_item_id !== itemId);
+  }
+
+  selectMenuItemForAdd(menuItem: MenuItem): void {
+    this.selectedMenuItemForAdd = menuItem;
+    this.addItemQuantity = 1;
+  }
+
+  isItemInEditForm(menuItemId: number): boolean {
+    return this.editFormItems.some(item => item.menu_item_id === menuItemId || item.id === menuItemId);
+  }
+
+  addItemToEdit(): void {
+    if (!this.selectedMenuItemForAdd || this.addItemQuantity < 1) return;
+
+    const menuItem = this.selectedMenuItemForAdd;
+
+    if (this.isItemInEditForm(menuItem.id)) {
+      this.notificationService.warning('Already Added', 'This item is already in the order. Use the quantity controls to update the amount.');
+      return;
+    }
+
+    const qty = Math.max(1, this.addItemQuantity);
+
+    this.editFormItems.push({
+      menu_item_id: menuItem.id,
+      menu_item_name: menuItem.name,
+      quantity: qty,
+      unit_price: menuItem.price,
+      total_price: menuItem.price * qty,
+      category: menuItem.category || '',
+      special_instructions: '',
+      status: this.editingOrder?.status || 'PENDING'
+    });
+
+    this.selectedMenuItemForAdd = null;
+    this.addItemQuantity = 1;
+  }
+
+  getEditOrderTotal(): number {
+    return this.editFormItems.reduce((sum, item) => sum + (item.total_price || 0), 0);
+  }
+
+  getEditOrderTaxAmount(): number {
+    if (!this.editingOrder) return 0;
+    const restaurant = this.restaurantDataService.getCurrentRestaurant();
+    const isGst = !!restaurant?.is_gst;
+    if (!isGst) return 0;
+    const rate = restaurant && restaurant.gst_percentage != null ? Number(restaurant.gst_percentage) : 0;
+    return Math.round(this.getEditOrderTotal() * (rate / 100));
+  }
+
+  getEditOrderTaxPercentage(): number | null {
+    if (!this.editingOrder) return null;
+    const restaurant = this.restaurantDataService.getCurrentRestaurant();
+    const isGst = !!restaurant?.is_gst;
+    if (!isGst) return null;
+    if (restaurant && restaurant.gst_percentage != null) {
+      return Number(restaurant.gst_percentage);
+    }
+    const subtotal = this.getEditOrderTotal();
+    const taxAmount = this.getEditOrderTaxAmount();
+    if (subtotal > 0 && taxAmount > 0) {
+      return Math.round((taxAmount / subtotal) * 100);
+    }
+    return null;
+  }
+
+  saveEditedOrder(): void {
+    if (!this.editingOrder || this.editFormItems.length === 0 || this.isEditSubmitting) return;
+
+    this.confirmationService.confirm(
+      'Are you sure you want to save these changes to the order?',
+      'Save Order Changes'
+    ).then(confirmed => {
+      if (!confirmed) return;
+
+      this.isEditSubmitting = true;
+      this.loadingService.show();
+
+      const totalAmount = this.getEditOrderTotal() + this.getEditOrderTaxAmount();
+      const editingOrder = this.editingOrder!;
+      const orderRequest: any = {
+        order_id: editingOrder.order_id,
+        customer_name: editingOrder.customer_name,
+        table_number: editingOrder.table_number,
+        status: editingOrder.status,
+        total_amount: totalAmount,
+        special_instructions: editingOrder.special_instructions,
+        payment_status: editingOrder.payment_status,
+        payment_method: editingOrder.payment_method,
+        order_type: editingOrder.order_type,
+        priority: editingOrder.priority,
+        tax_amount: this.getEditOrderTaxAmount(),
+        tax_percentage: this.getEditOrderTaxPercentage(),
+        order_items: this.editFormItems.map(item => ({
+          order_id: editingOrder.id,
+          menu_item_id: item.menu_item_id,
+          menu_item_name: item.menu_item_name,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total_price: item.total_price,
+          category: item.category,
+          special_instructions: item.special_instructions || '',
+          status: item.status,
+          id: item.id || undefined
+        }))
+      };
+
+      this.crudService.updateOrder(editingOrder.id, orderRequest).subscribe({
+        next: (response) => {
+          console.log('Order edited successfully:', response);
+          this.loadingService.hide();
+          this.notificationService.success('Order Updated', 'Order has been modified successfully');
+          this.loadOrders();
+          this.sendOrderEditNotifications();
+          this.isEditSubmitting = false;
+          this.closeEditOrderModal();
+        },
+        error: (error) => {
+          console.error('Error editing order:', error);
+          this.loadingService.hide();
+          this.isEditSubmitting = false;
+          this.notificationService.error('Error', 'Failed to update order. Please try again.');
+        }
+      });
+    });
+  }
+
+  private sendOrderEditNotifications(): void {
+    if (!this.editingOrder) return;
+
+    const restaurantId = String(this.currentUser?.restaurantId || this.currentUser?.restaurant_id || '');
+    const orderId = this.editingOrder.order_id;
+    const orderIdShort = orderId.split('-').pop() || orderId;
+
+    const templateData = {
+      order_id: String(orderIdShort),
+      table_no: this.editingOrder.table_number || 'Takeaway',
+      status: this.editingOrder.status
+    };
+
+    this.getRestAndPlatformUsersService.getNotificationRecipients(restaurantId, ['kitchen_manager']).subscribe((users: any[]) => {
+      (users || []).forEach((user: any) => {
+        this.commonUserNotificationsService.createFromTemplate('order_status_updated', templateData, {
+          recipient_id: String(user.id),
+          recipient_role: 'kitchen_manager',
+          restaurant_id: restaurantId,
+          related_order_id: orderId,
+          priority: 'high'
+        }).subscribe();
+      });
+    });
+
+    if (this.editingOrder.customer_id) {
+      this.commonUserNotificationsService.createFromTemplate('order_status_updated', templateData, {
+        recipient_id: String(this.editingOrder.customer_id),
+        recipient_role: 'customer',
+        restaurant_id: restaurantId,
+        related_order_id: orderId,
+        priority: 'high'
+      }).subscribe();
+    }
+
+    this.getRestAndPlatformUsersService.getNotificationRecipients(restaurantId, ['waiter']).subscribe((users: any[]) => {
+      (users || []).forEach((user: any) => {
+        this.commonUserNotificationsService.createFromTemplate('order_status_updated', templateData, {
+          recipient_id: String(user.id),
+          recipient_role: 'waiter',
+          restaurant_id: restaurantId,
+          related_order_id: orderId,
+          priority: 'high'
+        }).subscribe();
+      });
+    });
+  }
+
   printOrder(order: Order): void {
     const subtotal = (order.items || []).reduce((sum, item) => sum + (item.total_price || 0), 0);
     const taxAmount = order.tax_amount || 0;
+    const taxPercentage = this.getOrderTaxPercentage(order);
     const discountAmount = order.discount_amount || 0;
     const loyaltyDiscountAmount = order.loyalty_discount_amount || 0;
     const totalAmount = order.total_amount || 0;
@@ -800,7 +1078,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
           <div class="mt-1" style="display:flex;justify-content:space-between;">
             <span>Subtotal</span><span>₹${subtotal.toFixed(2)}</span>
           </div>
-          ${taxAmount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Tax (${order.tax_percentage || 0}%)</span><span>₹${taxAmount.toFixed(2)}</span></div>` : ''}
+          ${taxAmount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Tax (${taxPercentage !== null ? taxPercentage + '%' : '0%'})</span><span>₹${taxAmount.toFixed(2)}</span></div>` : ''}
           ${discountAmount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Discount</span><span>-₹${discountAmount.toFixed(2)}</span></div>` : ''}
           ${loyaltyDiscountAmount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Loyalty Discount</span><span>-₹${loyaltyDiscountAmount.toFixed(2)}</span></div>` : ''}
           <div class="line"></div>
@@ -855,6 +1133,24 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
 
   getOrderSubtotal(order: Order): number {
     return (order.items || []).reduce((sum, item) => sum + (item.total_price || 0), 0);
+  }
+
+  getOrderTaxPercentage(order: Order): number | null {
+    if (!order) return null;
+    const subtotal = this.getOrderSubtotal(order);
+    const taxAmount = order.tax_amount || 0;
+    
+    // If tax_percentage is explicitly set and non-zero, use it
+    if (order.tax_percentage != null && Number(order.tax_percentage) > 0) {
+      return Number(order.tax_percentage);
+    }
+    
+    // Otherwise calculate from tax_amount and subtotal
+    if (subtotal > 0 && taxAmount > 0) {
+      return Math.round((taxAmount / subtotal) * 100);
+    }
+    
+    return null;
   }
 
   trackByOrderId(index: number, order: Order): string {
@@ -1249,5 +1545,13 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.body.classList.add('dark');
     }
+  }
+
+  getFullImageUrl(imagePath: string): string {
+    if (!imagePath) return '';
+    if (imagePath.startsWith('data:') || imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    return environment.api.baseUrl + imagePath;
   }
 }

@@ -110,6 +110,9 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
         order.items = order.items || [];
         if (order.status === 'COMPLETED' || order.status === 'CANCELLED') {
           this.activeOrders = this.activeOrders.filter(o => o.id !== order.id);
+          if (this.selectedOrder && this.selectedOrder.id === order.id) {
+            this.selectedOrder = order;
+          }
           this.calculateInvoice();
           this.pendingOrdersService.updateCount(this.activeOrders.length);
           this.pendingBillsService.setPendingBilling(false);
@@ -123,6 +126,9 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
           } else {
             this.activeOrders.unshift(order);
           }
+          if (this.selectedOrder && this.selectedOrder.id === order.id) {
+            this.selectedOrder = order;
+          }
           this.calculateInvoice();
         }
       }
@@ -135,6 +141,9 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
         order.items = order.items || [];
         if (order.status === 'COMPLETED' || order.status === 'CANCELLED') {
           this.activeOrders = this.activeOrders.filter(o => o.id !== order.id);
+          if (this.selectedOrder && this.selectedOrder.id === order.id) {
+            this.selectedOrder = order;
+          }
           this.calculateInvoice();
           this.pendingOrdersService.updateCount(this.activeOrders.length);
           this.pendingBillsService.setPendingBilling(false);
@@ -151,6 +160,9 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
             this.activeOrders[index] = order;
           } else {
             this.activeOrders.unshift(order);
+          }
+          if (this.selectedOrder && this.selectedOrder.id === order.id) {
+            this.selectedOrder = order;
           }
           this.calculateInvoice();
         }
@@ -665,11 +677,12 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
     this.selectedOrder = null;
   }
 
-  printOrder(sourceOrder?: Order): void {
+   printOrder(sourceOrder?: Order): void {
     const order = sourceOrder || this.selectedOrder;
     if (!order) return;
     const subtotal = (order.items || []).reduce((sum, item) => sum + (item.total_price || 0), 0);
     const taxAmount = order.tax_amount || 0;
+    const taxPercentage = this.getOrderTaxPercentage(order);
     const discountAmount = order.discount_amount || 0;
     const loyaltyDiscountAmount = order.loyalty_discount_amount || 0;
     const totalAmount = order.total_amount || 0;
@@ -747,7 +760,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
           <div class="mt-1" style="display:flex;justify-content:space-between;">
             <span>Subtotal</span><span>₹${subtotal.toFixed(2)}</span>
           </div>
-          ${taxAmount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Tax (${order.tax_percentage || 0}%)</span><span>₹${taxAmount.toFixed(2)}</span></div>` : ''}
+          ${taxAmount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Tax (${taxPercentage !== null ? taxPercentage + '%' : '0%'})</span><span>₹${taxAmount.toFixed(2)}</span></div>` : ''}
           ${discountAmount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Discount</span><span>-₹${discountAmount.toFixed(2)}</span></div>` : ''}
           ${loyaltyDiscountAmount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Loyalty Discount</span><span>-₹${loyaltyDiscountAmount.toFixed(2)}</span></div>` : ''}
           <div class="line"></div>
@@ -893,6 +906,22 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
 
   getOrderSubtotal(order: Order): number {
     return (order.items || []).reduce((sum, item) => sum + (item.total_price || 0), 0);
+  }
+
+  getOrderTaxPercentage(order: Order): number | null {
+    if (!order) return null;
+    const subtotal = this.getOrderSubtotal(order);
+    const taxAmount = order.tax_amount || 0;
+    
+    if (order.tax_percentage != null && Number(order.tax_percentage) > 0) {
+      return Number(order.tax_percentage);
+    }
+    
+    if (subtotal > 0 && taxAmount > 0) {
+      return Math.round((taxAmount / subtotal) * 100);
+    }
+    
+    return null;
   }
 
   getOrderStatusBadgeClass(status: string): string {

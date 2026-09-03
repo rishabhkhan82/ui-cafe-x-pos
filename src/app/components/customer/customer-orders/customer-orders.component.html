@@ -512,7 +512,7 @@
           <span class="font-medium text-gray-900 dark:text-white">₹{{ getOrderSubtotal(selectedOrder) | number:'1.2-2' }}</span>
         </div>
         <div class="flex items-center justify-between text-sm">
-          <span class="text-gray-600 dark:text-gray-300">Tax Amount ({{ selectedOrder.tax_percentage || 0 }}%)</span>
+          <span class="text-gray-600 dark:text-gray-300">Tax Amount ({{ getOrderTaxPercentage(selectedOrder) !== null ? getOrderTaxPercentage(selectedOrder) + '%' : '' }})</span>
           <span class="font-medium text-gray-900 dark:text-white">₹{{ selectedOrder.tax_amount || 0 | number:'1.2-2' }}</span>
         </div>
         <div class="flex items-center justify-between text-sm">

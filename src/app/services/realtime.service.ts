@@ -120,6 +120,11 @@ export class RealtimeService {
     this.orderUpdateSubject.next(order);
   }
 
+  public emitOrderUpdate(order: Order): void {
+    this.orderUpdateSubject.next(order);
+    this.customerOrderUpdateSubject.next(order);
+  }
+
   public requestNotificationPermissionManually(): Promise<NotificationPermission> {
     return this.requestNotificationPermission().then(() => this.notificationPermission);
   }
