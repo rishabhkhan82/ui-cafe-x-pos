@@ -87,11 +87,6 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   isCompletingInvoice: boolean = false;
 
   // Pagination
-  currentPage = 1;
-  itemsPerPage = 10;
-  totalPages = 1;
-  totalElements = 0;
-  itemsPerPageOptions = [5, 10, 15, 20, 25, 50];
 
   // Status options for filtering - role-based
   statusOptions: any[] = [];
@@ -124,6 +119,12 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     if (status && this.orderStatuses.some(s => s.key === status)) {
       this.activeStatus = status;
       this.activeStatusLabel = this.orderStatuses.find(s => s.key === status)?.label || 'All Orders';
+    } else if (['kitchen', 'kitchen_manager'].includes(this.userRole)) {
+      this.activeStatus = 'PENDING';
+      this.activeStatusLabel = this.orderStatuses.find(s => s.key === 'PENDING')?.label || 'Pending';
+    } else if (this.userRole === 'waiter') {
+      this.activeStatus = 'READY';
+      this.activeStatusLabel = this.orderStatuses.find(s => s.key === 'READY')?.label || 'Ready';
     } else {
       this.activeStatus = 'all';
       this.activeStatusLabel = 'All Orders';
@@ -131,6 +132,16 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   private initializeRoleConfig(): void {
+    const kitchenManagerStatuses = [
+      { key: 'PENDING', label: 'Pending', icon: 'fas fa-clock', color: 'bg-yellow-500' },
+      { key: 'PREPARING', label: 'Preparing', icon: 'fas fa-utensils', color: 'bg-orange-500' },
+      { key: 'READY', label: 'Ready', icon: 'fas fa-check-double', color: 'bg-green-500' },
+    ];
+    const waiterStatuses = [
+      { key: 'READY', label: 'Ready', icon: 'fas fa-check-double', color: 'bg-green-500' },
+      { key: 'ON_THE_WAY', label: 'On the Way', icon: 'fas fa-user-tie', color: 'bg-blue-500' },
+      { key: 'SERVED', label: 'Served', icon: 'fas fa-utensils', color: 'bg-purple-500' },
+    ];
     const allStatuses = [
       { key: 'all', label: 'All', icon: 'fas fa-list', color: 'bg-gray-500' },
       { key: 'PENDING', label: 'Pending', icon: 'fas fa-clock', color: 'bg-yellow-500' },
@@ -161,7 +172,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         this.statusOptions = allStatusOptions;
         break;
       case 'waiter':
-        this.orderStatuses = allStatuses;
+        this.orderStatuses = waiterStatuses;
         this.statusOptions = allStatusOptions;
         break;
       case 'kitchen':
@@ -169,7 +180,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         this.statusOptions = allStatusOptions;
         break;
       case 'kitchen_manager':
-        this.orderStatuses = allStatuses;
+        this.orderStatuses = kitchenManagerStatuses;
         this.statusOptions = allStatusOptions;
         break;
       default:
@@ -264,18 +275,20 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     // Role-based status filtering
     if (this.userRole === 'waiter') {
       // Hide for now - can show specifically using this filters
-      // filtered = filtered.filter(order =>
-      //   ['PREPARING', 'READY', 'ON_THE_WAY', 'SERVED'].includes(order.status)
-      // );
+      filtered = filtered.filter(order =>
+        ['READY', 'ON_THE_WAY', 'SERVED'].includes(order.status)
+      );
     } else if (['kitchen', 'kitchen_manager'].includes(this.userRole)) {
       // Hide for now - can show specifically using this filters
-      // filtered = filtered.filter(order =>
-      //   ['PENDING', 'PREPARING', 'READY'].includes(order.status)
-      // );
+      filtered = filtered.filter(order =>
+        ['PENDING', 'PREPARING', 'READY'].includes(order.status)
+      );
     }
     // Owner sees all
 
-    if (this.activeStatus !== 'all') {
+    if (this.activeStatus === 'all') {
+      filtered = filtered.filter(order => order.status !== 'COMPLETED' && order.status !== 'CANCELLED');
+    } else {
       filtered = filtered.filter(order => order.status === this.activeStatus);
     }
 
@@ -299,10 +312,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
       filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     }
 
-    this.totalElements = filtered.length;
-    this.totalPages = Math.ceil(this.totalElements / this.itemsPerPage);
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    this.orders = filtered.slice(startIndex, startIndex + this.itemsPerPage);
+    this.orders = filtered;
   }
 
   get activeOrdersCount(): number {
@@ -742,7 +752,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   openEditOrder(order: Order): void {
-    if (this.userRole !== 'waiter') return;
+    if (!['waiter', 'restaurant_owner', 'restaurant_manager'].includes(this.userRole)) return;
     if (order.status === 'COMPLETED' || order.status === 'CANCELLED') return;
 
     this.editingOrder = { ...order, items: order.items.map(item => ({ ...item })) };
@@ -939,6 +949,14 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     return null;
   }
 
+  getEditOrderDiscount(): number {
+    return this.editingOrder?.discount_amount || 0;
+  }
+
+  getEditOrderLoyaltyDiscount(): number {
+    return this.editingOrder?.loyalty_discount_amount || 0;
+  }
+
   saveEditedOrder(): void {
     if (!this.editingOrder || this.editFormItems.length === 0 || this.isEditSubmitting) return;
 
@@ -951,7 +969,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
       this.isEditSubmitting = true;
       this.loadingService.show();
 
-      const totalAmount = this.getEditOrderTotal() + this.getEditOrderTaxAmount();
+      const totalAmount = this.getEditOrderTotal() + this.getEditOrderTaxAmount() - this.getEditOrderDiscount() - this.getEditOrderLoyaltyDiscount();
       const editingOrder = this.editingOrder!;
       const orderRequest: any = {
         order_id: editingOrder.order_id,
@@ -967,6 +985,8 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         priority: editingOrder.priority,
         tax_amount: this.getEditOrderTaxAmount(),
         tax_percentage: this.getEditOrderTaxPercentage(),
+        discount_amount: editingOrder.discount_amount,
+        loyalty_discount_amount: editingOrder.loyalty_discount_amount,
         order_items: this.editFormItems.map(item => ({
           order_id: editingOrder.id,
           menu_item_id: item.menu_item_id,
@@ -1251,36 +1271,10 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.setActiveStatus(this.orderStatuses[prevIndex].key);
   }
 
-  // Pagination methods
-  changePage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.filterOrders();
-    }
-  }
-
-  changeItemsPerPage(newLimit: number): void {
-    this.itemsPerPage = newLimit;
-    this.currentPage = 1;
-    this.filterOrders();
-  }
-
-  onItemsPerPageChange(event: any): void {
-    this.itemsPerPage = +event.target.value;
-    this.currentPage = 1;
-    this.filterOrders();
-  }
-
-  get pageNumbers(): number[] {
-    const pages: number[] = [];
-    for (let i = 1; i <= this.totalPages; i++) {
-      pages.push(i);
-    }
-    return pages;
-  }
-
   getStatusCount(status: string): number {
-    if (status === 'all') return this.allOrders.length;
+    if (status === 'all') {
+      return this.allOrders.filter(order => order.status !== 'COMPLETED' && order.status !== 'CANCELLED').length;
+    }
     if (status === 'BILLING_REQUESTED') {
       return this.billingRequestedInvoices.length;
     }
@@ -1329,10 +1323,6 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.searchTerm = '';
     this.activeStatus = 'all';
     this.activeStatusLabel = 'All Orders';
-    this.currentPage = 1;
-    this.itemsPerPage = 10;
-    this.totalPages = 1;
-    this.totalElements = 0;
     this.router.navigate([], { queryParams: { status: null } });
     this.loadOrders();
   }
@@ -1357,7 +1347,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
 
   getInvoicePreTaxSubtotal(invoiceId: string): number {
     return this.billingRequestedInvoices
-      .find(inv => inv.invoiceId === invoiceId)?.orders.reduce((sum, o) => sum + (o.total_amount || 0) - (o.tax_amount || 0) + (o.discount_amount || 0), 0) || 0;
+      .find(inv => inv.invoiceId === invoiceId)?.orders.reduce((sum, o) => sum + (o.total_amount || 0) - (o.tax_amount || 0) + (o.discount_amount || 0) + (o.loyalty_discount_amount || 0), 0) || 0;
   }
 
   getInvoiceTax(invoiceId: string): number {
@@ -1575,7 +1565,6 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   filterOrders(): void {
-    this.currentPage = 1;
     this.applyFiltersAndPagination();
   }
 
@@ -1583,7 +1572,6 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.searchTerm = '';
     this.activeStatus = 'all';
     this.activeStatusLabel = 'All Orders';
-    this.currentPage = 1;
     this.router.navigate([], { queryParams: { status: null } });
     this.filterOrders();
   }

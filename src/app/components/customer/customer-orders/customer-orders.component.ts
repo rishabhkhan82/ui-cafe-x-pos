@@ -311,7 +311,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
   private loadOrderHistory(): void {
     this.isOrderHistoryLoading = true;
     const customerId: any = this.authService.getCurrentUser();
-    this.crudService.getOrders({ customerId: customerId.id, status: 'COMPLETED', page: 1, size: 10 }).subscribe({
+    this.crudService.getOrders({ customerId: customerId.id, status: 'COMPLETED', page: 1, size: 9999 }).subscribe({
       next: (response: any) => {
         const data = response?.data || [];
         this.orderHistory = this.sortOrdersByDateDesc(data);

@@ -245,6 +245,10 @@ export class CommonUserNotificationsService {
         const notifData = response?.data ?? response;
         if (notifData) {
           const newNotif = this.mapSingleNotification(notifData);
+          const currentUser = this.authService.getCurrentUser();
+          if (!currentUser || newNotif.recipient_id !== currentUser.id?.toString()) {
+            return;
+          }
           const current = this.notificationsSubject.value;
           const newId = newNotif.id || newNotif.notification_id;
           const exists = current.some(n => (n.id || n.notification_id) === newId);
