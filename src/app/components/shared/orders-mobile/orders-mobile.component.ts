@@ -70,6 +70,12 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   addItemQuantity = 1;
   menuSearchTerm = '';
 
+  // Custom item state
+  showCustomItemForm = false;
+  customItemName = '';
+  customItemQuantity = 1;
+  customItemPrice: number | null = null;
+
   // Swipe handling
   private touchStartX: number = 0;
   private touchEndX: number = 0;
@@ -860,6 +866,50 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.addItemQuantity = 1;
   }
 
+  openCustomItemForm(): void {
+    this.customItemName = '';
+    this.customItemQuantity = 1;
+    this.customItemPrice = null;
+    this.showCustomItemForm = true;
+  }
+
+  closeCustomItemForm(): void {
+    this.showCustomItemForm = false;
+    this.customItemName = '';
+    this.customItemQuantity = 1;
+    this.customItemPrice = null;
+  }
+
+  submitCustomItem(): void {
+    const name = (this.customItemName || '').trim();
+    const qty = Math.max(1, this.customItemQuantity || 1);
+    const price = Number(this.customItemPrice) || 0;
+
+    if (!name) {
+      this.notificationService.warning('Required', 'Please enter the item name.');
+      return;
+    }
+
+    if (price <= 0) {
+      this.notificationService.warning('Invalid Price', 'Please enter a valid price greater than 0.');
+      return;
+    }
+
+    this.editFormItems.push({
+      menu_item_id: null,
+      menu_item_name: name,
+      quantity: qty,
+      unit_price: price,
+      total_price: price * qty,
+      category: 'CUSTOM',
+      special_instructions: '',
+      status: this.editingOrder?.status || 'PENDING',
+      is_custom: true
+    });
+
+    this.closeCustomItemForm();
+  }
+
   getEditOrderTotal(): number {
     return this.editFormItems.reduce((sum, item) => sum + (item.total_price || 0), 0);
   }
@@ -910,6 +960,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         status: editingOrder.status,
         total_amount: totalAmount,
         special_instructions: editingOrder.special_instructions,
+        invoice_id: editingOrder.invoice_id,
         payment_status: editingOrder.payment_status,
         payment_method: editingOrder.payment_method,
         order_type: editingOrder.order_type,
@@ -926,6 +977,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
           category: item.category,
           special_instructions: item.special_instructions || '',
           status: item.status,
+          is_custom: !!item.is_custom,
           id: item.id || undefined
         }))
       };
@@ -1368,12 +1420,13 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         status: 'COMPLETED',
         total_amount: order.total_amount,
         special_instructions: order.special_instructions,
-        payment_status: 'PAID',
+        invoice_id: order.invoice_id,
+        payment_status: order.payment_status,
         payment_method: order.payment_method,
         order_type: order.order_type,
         priority: order.priority,
         tax_amount: order.tax_amount,
-        invoice_id: order.invoice_id,
+        tax_percentage: order.tax_percentage,
         order_items: order.items.map(item => ({
           order_id: order.id,
           menu_item_id: item.menu_item_id,
@@ -1382,8 +1435,9 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
           unit_price: item.unit_price,
           total_price: item.total_price,
           category: item.category,
-          special_instructions: item.special_instructions,
-          status: 'PAID',
+          special_instructions: item.special_instructions || '',
+          status: item.status,
+          is_custom: !!item.is_custom,
           id: item.id
         }))
       };

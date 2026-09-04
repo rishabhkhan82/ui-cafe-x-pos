@@ -126,6 +126,7 @@ export interface OrderItem {
   special_instructions?: string;
   category: string;
   status: string;
+  is_custom?: boolean;
 }
 
 export interface OrderCustomization {
