@@ -120,7 +120,7 @@
               <div class="flex items-center gap-2">
 
                 <button *ngIf="userRole === 'restaurant_owner' || userRole === 'restaurant_manager'"
-                        (click)="openEditOrder(invoice.orders[0])"
+                        (click)="openInvoiceOrderSelection(invoice)"
                         class="flex-1 px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
                   <i class="fas fa-edit mr-2"></i>Edit
                 </button>
@@ -723,6 +723,34 @@
         <span *ngIf="!isEditSubmitting">Save Changes</span>
         <span *ngIf="isEditSubmitting">Saving...</span>
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- Invoice Order Selection Dialog -->
+<div *ngIf="showInvoiceOrderSelection && selectedInvoiceForEdit" class="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col">
+    <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white">Select Order to Edit</h3>
+      <button (click)="closeInvoiceOrderSelection()" class="text-white/80 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors">
+        <i class="fas fa-times text-lg"></i>
+      </button>
+    </div>
+    <div class="flex-1 overflow-y-auto p-4 space-y-2">
+      <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Invoice {{ selectedInvoiceForEdit.invoiceId }} contains {{ selectedInvoiceForEdit.orders.length }} order(s). Please select which order you want to edit:</p>
+      <div *ngFor="let ord of selectedInvoiceForEdit.orders" (click)="selectOrderFromInvoice(ord)" class="cursor-pointer bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-600">
+        <div class="flex items-center justify-between">
+          <div>
+            <h4 class="font-bold text-gray-900 dark:text-white">#{{ ord.order_id.split('-').pop() }}</h4>
+            <p class="text-sm text-gray-600 dark:text-gray-300">Table: {{ ord.table_number || 'Takeaway' }}</p>
+            <p class="text-sm text-gray-600 dark:text-gray-300">Status: {{ ord.status }}</p>
+          </div>
+          <div class="text-right">
+            <p class="font-bold text-gray-900 dark:text-white">₹{{ ord.total_amount }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">{{ ord.items?.length || 0 }} items</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

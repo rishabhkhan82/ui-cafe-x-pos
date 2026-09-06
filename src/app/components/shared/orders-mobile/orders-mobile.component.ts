@@ -81,6 +81,10 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   editingOffer: any | null = null;
   restaurantOffers: any[] = [];
 
+  // Invoice order selection dialog
+  showInvoiceOrderSelection = false;
+  selectedInvoiceForEdit: any | null = null;
+
   // Swipe handling
   private touchStartX: number = 0;
   private touchEndX: number = 0;
@@ -767,6 +771,24 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.loadAvailableMenuItems();
     this.loadOfferRedemptionContext(order);
     this.showEditOrderModal = true;
+  }
+
+  openInvoiceOrderSelection(invoice: any): void {
+    if (!['waiter', 'restaurant_owner', 'restaurant_manager'].includes(this.userRole)) return;
+    if (!invoice || !invoice.orders || invoice.orders.length === 0) return;
+
+    this.selectedInvoiceForEdit = invoice;
+    this.showInvoiceOrderSelection = true;
+  }
+
+  closeInvoiceOrderSelection(): void {
+    this.showInvoiceOrderSelection = false;
+    this.selectedInvoiceForEdit = null;
+  }
+
+  selectOrderFromInvoice(order: Order): void {
+    this.closeInvoiceOrderSelection();
+    this.openEditOrder(order);
   }
 
   closeEditOrderModal(): void {
