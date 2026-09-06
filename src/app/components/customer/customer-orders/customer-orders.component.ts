@@ -241,7 +241,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
     const customerId = currentUser?.id;
     const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
 
-    const params: any = { is_active: 'true', page: 1, size: 50 };
+    const params: any = { is_active: 'true', page: 1, size: 9999 };
     if (restaurantId) params.restaurant_id = restaurantId;
 
     this.crudService.getCustomerOffers(params).subscribe({
@@ -265,7 +265,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
           next: (redemptions) => {
             const redemptionList = Array.isArray(redemptions) ? redemptions : (redemptions?.data || []);
             const redeemedOfferIds = new Set(
-              redemptionList.map((r: any) => String(r.offer_id ?? r.offer?.id ?? 0))
+              redemptionList.map((r: any) => String(r.offer?.id))
             );
             this.eligibleOffers = activeOffers.filter(
               (o: EligibleOffer) => !redeemedOfferIds.has(String(o.offerId))

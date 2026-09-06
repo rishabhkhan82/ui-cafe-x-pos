@@ -76,6 +76,11 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   customItemQuantity = 1;
   customItemPrice: number | null = null;
 
+  // Offer redemption state for edit order
+  editingOfferRedemption: any | null = null;
+  editingOffer: any | null = null;
+  restaurantOffers: any[] = [];
+
   // Swipe handling
   private touchStartX: number = 0;
   private touchEndX: number = 0;
@@ -757,7 +762,10 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
 
     this.editingOrder = { ...order, items: order.items.map(item => ({ ...item })) };
     this.editFormItems = this.editingOrder.items.map(item => ({ ...item }));
+    this.editingOfferRedemption = null;
+    this.editingOffer = null;
     this.loadAvailableMenuItems();
+    this.loadOfferRedemptionContext(order);
     this.showEditOrderModal = true;
   }
 
@@ -771,6 +779,72 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.selectedMenuItemForAdd = null;
     this.addItemQuantity = 1;
     this.menuSearchTerm = '';
+    this.editingOfferRedemption = null;
+    this.editingOffer = null;
+  }
+
+  private loadOfferRedemptionContext(order: Order): void {
+    const customerId = order.customer_id || this.currentUser?.id;
+    if (!customerId) return;
+
+    const loadRedemptions = () => {
+      this.crudService.getOfferRedemptionsByCustomer(customerId).subscribe({
+        next: (response: any) => {
+          const redemptions = Array.isArray(response) ? response : (response?.data || []);
+          const matched = redemptions.find((r: any) => r.order_id === order.id);
+          if (matched) {
+            this.editingOfferRedemption = matched;
+            const offer = this.restaurantOffers.find((o: any) => o.id === matched.offer_id);
+            this.editingOffer = offer || null;
+          } else {
+            this.editingOfferRedemption = null;
+            this.editingOffer = null;
+          }
+        },
+        error: () => {
+          this.editingOfferRedemption = null;
+          this.editingOffer = null;
+        }
+      });
+    };
+
+    if (this.restaurantOffers.length > 0) {
+      loadRedemptions();
+      return;
+    }
+
+    const restaurantId = this.currentUser?.restaurantId || this.currentUser?.restaurant_id;
+    if (!restaurantId) {
+      loadRedemptions();
+      return;
+    }
+
+    this.crudService.getOffers({ is_active: true, page: 1, size: 9999, restaurant_id: String(restaurantId) }).subscribe({
+      next: (response: any) => {
+        const data = response?.data || response || [];
+        this.restaurantOffers = Array.isArray(data) ? data : [];
+        loadRedemptions();
+      },
+      error: () => {
+        this.restaurantOffers = [];
+        loadRedemptions();
+      }
+    });
+  }
+
+  private recalculateOfferDiscount(): number {
+    if (!this.editingOrder || !this.editingOfferRedemption) return 0;
+    const subtotal = this.getEditOrderTotal();
+    const offer = this.editingOffer;
+    if (!offer || !subtotal) return 0;
+
+    if (offer.type === 'percentage') {
+      return Math.round(subtotal * (offer.discount_value || 0) / 100);
+    }
+    if (offer.type === 'fixed') {
+      return Math.min(offer.discount_value || 0, subtotal);
+    }
+    return this.editingOrder.discount_amount || 0;
   }
 
   private loadAvailableMenuItems(): void {
@@ -950,7 +1024,11 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   getEditOrderDiscount(): number {
-    return this.editingOrder?.discount_amount || 0;
+    if (!this.editingOrder) return 0;
+    if (this.editingOfferRedemption) {
+      return this.recalculateOfferDiscount();
+    }
+    return this.editingOrder.discount_amount || 0;
   }
 
   getEditOrderLoyaltyDiscount(): number {
@@ -985,7 +1063,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         priority: editingOrder.priority,
         tax_amount: this.getEditOrderTaxAmount(),
         tax_percentage: this.getEditOrderTaxPercentage(),
-        discount_amount: editingOrder.discount_amount,
+        discount_amount: this.getEditOrderDiscount(),
         loyalty_discount_amount: editingOrder.loyalty_discount_amount,
         order_items: this.editFormItems.map(item => ({
           order_id: editingOrder.id,
