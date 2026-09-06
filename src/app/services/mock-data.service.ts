@@ -104,6 +104,8 @@ export interface Order {
   tax_amount: number;
   tax_percentage?: number;
   discount_amount?: number;
+  discount_type?: string;
+  discount_percentage?: number;
   loyalty_discount_amount?: number;
   delivered_at?: Date;
   estimated_ready_time?: Date;

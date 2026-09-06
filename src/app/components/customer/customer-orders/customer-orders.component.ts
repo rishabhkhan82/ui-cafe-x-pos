@@ -30,9 +30,10 @@ interface EligibleOffer {
   validUntil: string;
   expiresSoon: boolean;
   offerId: string;
-  minOrderValue?: number;
-  discountValue?: number;
-}
+   minOrderValue?: number;
+   discountValue?: number;
+   value?: number;
+ }
 
 @Component({
   selector: 'app-customer-orders',
@@ -265,7 +266,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
           next: (redemptions) => {
             const redemptionList = Array.isArray(redemptions) ? redemptions : (redemptions?.data || []);
             const redeemedOfferIds = new Set(
-              redemptionList.map((r: any) => String(r.offer?.id))
+              redemptionList.map((r: any) => String(r.offer_id ?? r.offer?.id ?? r.offerId))
             );
             this.eligibleOffers = activeOffers.filter(
               (o: EligibleOffer) => !redeemedOfferIds.has(String(o.offerId))
@@ -305,6 +306,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
       offerId: String(o.id),
       minOrderValue: o.min_order_value,
       discountValue: o.discount_value,
+      value: o.value,
     };
   }
 
@@ -376,7 +378,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
       if (this.appliedOffer.type === 'percentage') {
         this.invoiceDiscount = Math.round(preTaxSubtotal * (this.appliedOffer.discountValue || 0) / 100);
       } else if (this.appliedOffer.type === 'fixed') {
-        this.invoiceDiscount = Math.min(this.appliedOffer.discountValue || 0, preTaxSubtotal);
+        this.invoiceDiscount = Math.min(this.appliedOffer.value || 0, preTaxSubtotal);
       }
     }
     const fromOrders = Math.round(this.activeOrders.reduce((sum, o) => sum + (o.loyalty_discount_amount || 0), 0) * 100) / 100;
@@ -513,6 +515,8 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
           tax_amount: order.tax_amount,
           discount_amount: orderDiscount,
           loyalty_discount_amount: orderLoyaltyDiscount,
+          discount_type: this.appliedOffer?.type,
+          discount_percentage: this.appliedOffer?.type === 'percentage' ? this.appliedOffer.discountValue : undefined,
           invoice_id: this.generatedInvoiceId,
           order_items: order.items.map(item => ({
             id: item.id,
@@ -622,36 +626,40 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
                        } else {
                        }
 
-                       if (this.appliedOffer && this.activeOrders.length > 0) {
-                         const firstOrder = this.activeOrders[0];
-                         const redemptionPayload: OfferRedemptionRecord = {
-                           id: '',
-                           redemption_id: '',
-                           offer_id: +this.appliedOffer.id,
-                           invoice_id: this.generatedInvoiceId,
-                           order_id: firstOrder.id,
-                           customer_id: firstOrder.customer_id,
-                           restaurant_id: firstOrder.restaurant_id,
-                           redemption_code: this.appliedOffer.code,
-                           discount_amount: this.invoiceDiscount || 0,
-                           original_amount: this.invoiceSubtotal + (this.invoiceGst || 0),
-                           final_amount: this.invoiceTotal,
-                           redemption_method: 'BILLING_REQUESTED',
-                           applied_by: firstOrder.customer_id,
-                           applied_at: new Date(),
-                           created_at: new Date(),
-                           device_type: 'MOBILE',
-                           platform: 'WEB',
-                           is_first_time: true,
-                           usage_count: 1,
-                           customer_lifetime_value: this.invoiceTotal
-                         };
-                          this.crudService.createOfferRedemption(redemptionPayload).subscribe({
-                            next: () => { },
-                            error: (err) => {
-                              console.error('Offer redemption failed:', err);
-                            }
-                          });
+                        if (this.appliedOffer && this.activeOrders.length > 0) {
+                          const appliedOffer = this.appliedOffer;
+                          this.activeOrders.forEach(order => {
+                            const orderDiscount = discountAllocations.get(order.id) || 0;
+                            const redemptionPayload: OfferRedemptionRecord = {
+                              id: '',
+                              redemption_id: '',
+                              offer_id: +appliedOffer.id,
+                              invoice_id: this.generatedInvoiceId,
+                              order_id: order.id,
+                              customer_id: order.customer_id,
+                              restaurant_id: order.restaurant_id,
+                              redemption_code: appliedOffer.code,
+                             discount_amount: orderDiscount,
+                             original_amount: (order.total_amount || 0) - (order.tax_amount || 0) + (order.discount_amount || 0),
+                             final_amount: order.total_amount - orderDiscount - (loyaltyAllocations.get(order.id) || 0),
+                             redemption_method: 'BILLING_REQUESTED',
+                             applied_by: order.customer_id,
+                             applied_at: new Date(),
+                             created_at: new Date(),
+                             device_type: 'MOBILE',
+                             platform: 'WEB',
+                             is_first_time: true,
+                             usage_count: 1,
+                             customer_lifetime_value: order.total_amount
+                           };
+
+                           this.crudService.createOfferRedemption(redemptionPayload).subscribe({
+                             next: () => {},
+                             error: (err) => {
+                               console.error('Offer redemption failed for order', order.id, err);
+                             }
+                           });
+                         });
                        }
                      }
                   },

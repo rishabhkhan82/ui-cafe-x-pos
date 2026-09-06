@@ -83,7 +83,7 @@
                       <span class="px-2 py-0.5 rounded-full text-xs font-medium" [class]="getStatusBadgeClass(invOrd.status)">{{ invOrd.status }}</span>
                       <span class="text-xs text-gray-500 dark:text-gray-400">Table: {{ invOrd.table_number || 'Takeaway' }}</span>
                     </div>
-                     <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">₹{{ (invOrd.total_amount || 0) | number:'1.2-2' }}</span>
+                     <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">₹{{ getOrderSubtotal(invOrd) | number:'1.2-2' }}</span>
                   </div>
                   <div class="flex flex-wrap gap-1">
                     <span *ngFor="let item of invOrd.items" class="text-xs bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200 px-2 py-0.5 rounded-full">
@@ -130,7 +130,7 @@
                         class="flex-1 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
                   <i class="fas fa-check-double mr-2"></i>Complete
                 </button>
-                <button (click)="viewOrder(invoice.orders[0])"
+                <button (click)="invoice.orders.length === 1 ? viewOrder(invoice.orders[0]) : openInvoiceDetails(invoice)"
                         class="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
                   <i class="fas fa-eye mr-2"></i>Details
                 </button>
@@ -479,6 +479,155 @@
   </div>
 </div>
 
+<!-- Invoice Details Modal -->
+<div *ngIf="showInvoiceDetailsModal && selectedInvoiceForDetails"
+     class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[2000] p-4">
+  <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-slate-900/50 w-full max-w-5xl max-h-[90vh] overflow-y-auto">
+
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-slate-600 via-slate-700 to-slate-800 rounded-t-2xl p-6 text-white relative overflow-hidden shadow-inner">
+      <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-12 translate-x-12"></div>
+      <div class="relative z-10">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-xl font-bold">Invoice Details</h3>
+              <p class="text-blue-100">{{ selectedInvoiceForDetails.invoiceId }} • {{ selectedInvoiceForDetails.orders.length }} order{{ selectedInvoiceForDetails.orders.length === 1 ? '' : 's' }}</p>
+            </div>
+            <button (click)="printInvoice(selectedInvoiceForDetails)"
+                    class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+              <i class="fas fa-print"></i> Print / Download PDF
+            </button>
+            <button (click)="closeInvoiceDetails()" class="text-white/80 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors">
+              <i class="fas fa-times text-lg"></i>
+            </button>
+          </div>
+      </div>
+    </div>
+
+    <!-- Invoice Summary -->
+    <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+          <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Invoice ID</p>
+          <p class="font-semibold text-gray-900 dark:text-white">{{ selectedInvoiceForDetails.invoiceId }}</p>
+        </div>
+        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+          <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Tables</p>
+          <p class="font-semibold text-gray-900 dark:text-white">{{ getTablesSummary(selectedInvoiceForDetails.invoiceId) }}</p>
+        </div>
+        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+          <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Orders</p>
+          <p class="font-semibold text-gray-900 dark:text-white">{{ selectedInvoiceForDetails.orders.length }}</p>
+        </div>
+        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+          <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Grand Total</p>
+          <p class="font-semibold text-gray-900 dark:text-white">₹{{ getInvoiceTotal(selectedInvoiceForDetails.invoiceId) | number:'1.2-2' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Orders -->
+    <div class="p-6 space-y-6">
+      <div *ngFor="let ord of selectedInvoiceForDetails.orders" class="border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
+
+        <!-- Order Header -->
+        <div class="bg-gray-50 dark:bg-gray-700/50 p-4 border-b border-gray-200 dark:border-gray-700">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div>
+                <h4 class="text-lg font-bold text-gray-900 dark:text-white">#{{ ord.order_id.split('-').pop() }}</h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Table No: {{ ord.table_number || 'Takeaway' }}</p>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border mt-1" [class]="getStatusBadgeClass(ord.status)">
+                  <span class="w-2 h-2 rounded-full mr-2" [class]="ord.status === 'PENDING' ? 'bg-yellow-400' : ord.status === 'CONFIRMED' ? 'bg-blue-400' : ord.status === 'PREPARING' ? 'bg-orange-400' : ord.status === 'READY' ? 'bg-green-400' : ord.status === 'ON_THE_WAY' ? 'bg-blue-400' : ord.status === 'SERVED' ? 'bg-purple-400' : ord.status === 'COMPLETED' ? 'bg-gray-400' : 'bg-red-400'"></span>
+                  {{ ord.status }}
+                </span>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-xl font-bold text-primary-600 dark:text-primary-400">₹{{ (ord.total_amount || 0) | number:'1.2-2' }}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">Total Amount</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="p-4">
+          <div class="overflow-x-auto">
+            <table class="w-full table-auto border-collapse border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+              <thead>
+                <tr class="bg-gray-100 dark:bg-gray-700">
+                  <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-300 dark:border-gray-600">Item</th>
+                  <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-300 dark:border-gray-600 border-l border-gray-300 dark:border-gray-600">Quantity</th>
+                  <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-300 dark:border-gray-600 border-l border-gray-300 dark:border-gray-600">Unit Price</th>
+                  <th class="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-300 dark:border-gray-600 border-l border-gray-300 dark:border-gray-600">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of ord.items" class="border-b border-gray-200 dark:border-gray-600">
+                  <td class="px-4 py-3 border-r border-gray-200 dark:border-gray-600">
+                    <div class="flex items-center space-x-3">
+                      <div class="w-8 h-8 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-utensils text-blue-600 dark:text-blue-400 text-xs"></i>
+                      </div>
+                      <div>
+                        <p class="font-medium text-gray-900 dark:text-white">{{ item.menu_item_name }}</p>
+                        <div *ngIf="item.special_instructions" class="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                          {{ item.special_instructions }}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600">
+                    <span class="font-semibold text-gray-900 dark:text-white">{{ item.quantity }}</span>
+                  </td>
+                  <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600">
+                    <span class="text-gray-700 dark:text-gray-300">₹{{ item.unit_price }}</span>
+                  </td>
+                  <td class="px-4 py-3 text-right">
+                    <span class="font-semibold text-gray-900 dark:text-white">₹{{ item.total_price }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Order Totals -->
+        <div class="p-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700">
+          <div class="flex items-center justify-between text-sm mb-1">
+            <span class="text-gray-600 dark:text-gray-300">Subtotal</span>
+            <span class="font-medium text-gray-900 dark:text-white">₹{{ getOrderSubtotal(ord) | number:'1.2-2' }}</span>
+          </div>
+          <div class="flex items-center justify-between text-sm mb-1">
+            <span class="text-gray-600 dark:text-gray-300">Tax ({{ getOrderTaxPercentage(ord) !== null ? getOrderTaxPercentage(ord) + '%' : '' }})</span>
+            <span class="font-medium text-gray-900 dark:text-white">₹{{ (ord.tax_amount || 0) | number:'1.2-2' }}</span>
+          </div>
+          <div class="flex items-center justify-between text-sm mb-1" *ngIf="(ord.discount_amount || 0) > 0">
+            <span class="text-green-600 dark:text-green-400">Discount</span>
+            <span class="font-medium text-green-600 dark:text-green-400">-₹{{ (ord.discount_amount || 0) | number:'1.2-2' }}</span>
+          </div>
+          <div class="flex items-center justify-between text-sm mb-1" *ngIf="(ord.loyalty_discount_amount || 0) > 0">
+            <span class="text-purple-600 dark:text-purple-400">Loyalty Discount</span>
+            <span class="font-medium text-purple-600 dark:text-purple-400">-₹{{ (ord.loyalty_discount_amount || 0) | number:'1.2-2' }}</span>
+          </div>
+          <div class="flex items-center justify-between mt-2">
+            <span class="text-base font-bold text-gray-900 dark:text-white">Order Total</span>
+            <span class="text-xl font-bold text-primary-500">₹{{ (ord.total_amount || 0) | number:'1.2-2' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="border-t border-gray-200 dark:border-gray-700 p-6 flex items-center justify-end gap-3">
+      <button (click)="closeInvoiceDetails()"
+              class="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Order Items Modal -->
 <div *ngIf="selectedOrderItems"
      class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -746,7 +895,7 @@
             <p class="text-sm text-gray-600 dark:text-gray-300">Status: {{ ord.status }}</p>
           </div>
           <div class="text-right">
-            <p class="font-bold text-gray-900 dark:text-white">₹{{ ord.total_amount }}</p>
+            <p class="font-bold text-gray-900 dark:text-white">₹{{ getOrderSubtotal(ord) | number:'1.2-2' }}</p>
             <p class="text-xs text-gray-500 dark:text-gray-400">{{ ord.items?.length || 0 }} items</p>
           </div>
         </div>

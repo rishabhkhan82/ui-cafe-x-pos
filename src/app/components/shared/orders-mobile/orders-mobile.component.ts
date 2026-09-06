@@ -85,6 +85,10 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   showInvoiceOrderSelection = false;
   selectedInvoiceForEdit: any | null = null;
 
+  // Invoice details modal
+  showInvoiceDetailsModal = false;
+  selectedInvoiceForDetails: { invoiceId: string; orders: Order[] } | null = null;
+
   // Swipe handling
   private touchStartX: number = 0;
   private touchEndX: number = 0;
@@ -786,6 +790,18 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.selectedInvoiceForEdit = null;
   }
 
+  openInvoiceDetails(invoice: { invoiceId: string; orders: Order[] } | null | undefined): void {
+    if (!invoice || !invoice.orders || invoice.orders.length === 0) return;
+
+    this.selectedInvoiceForDetails = { invoiceId: invoice.invoiceId, orders: invoice.orders };
+    this.showInvoiceDetailsModal = true;
+  }
+
+  closeInvoiceDetails(): void {
+    this.showInvoiceDetailsModal = false;
+    this.selectedInvoiceForDetails = null;
+  }
+
   selectOrderFromInvoice(order: Order): void {
     this.closeInvoiceOrderSelection();
     this.openEditOrder(order);
@@ -1264,6 +1280,121 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
       </body>
       </html>
     `);
+    printWindow.document.close();
+
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+    }, 300);
+  }
+
+  printInvoice(invoice: { invoiceId: string; orders: Order[] }): void {
+    if (!invoice || !invoice.orders || invoice.orders.length === 0) return;
+
+    const printWindow = window.open('', '_blank', 'width=480,height=600');
+    if (!printWindow) return;
+
+    const restaurant = this.restaurantDataService.getCurrentRestaurant();
+    const restaurantName = restaurant?.name || sessionStorage.getItem('current_customer_restaurant_name') || 'Cafe-X POS';
+    let restaurantLogo = '';
+    if (restaurant?.logo_image) {
+      if (restaurant.logo_image.startsWith('http:') || restaurant.logo_image.startsWith('https:')) {
+        restaurantLogo = restaurant.logo_image;
+      } else {
+        restaurantLogo = environment.api.baseUrl + restaurant.logo_image;
+      }
+    }
+
+    const createdAt = new Date().toLocaleString('en-IN');
+
+    const invoiceSubtotal = invoice.orders.reduce((sum, ord) => sum + (this.getOrderSubtotal(ord) || 0), 0);
+    const invoiceTax = invoice.orders.reduce((sum, ord) => sum + (ord.tax_amount || 0), 0);
+    const invoiceDiscount = invoice.orders.reduce((sum, ord) => sum + (ord.discount_amount || 0), 0);
+    const invoiceLoyaltyDiscount = invoice.orders.reduce((sum, ord) => sum + (ord.loyalty_discount_amount || 0), 0);
+    const invoiceGrandTotal = invoice.orders.reduce((sum, ord) => sum + (ord.total_amount || 0), 0);
+
+    const flatItems = invoice.orders.flatMap((ord) => {
+      const orderShortId = ord.order_id.split('-').pop();
+      return (ord.items || []).map((item) => ({
+        name: `${item.menu_item_name} (#${orderShortId})`,
+        quantity: item.quantity,
+        total_price: item.total_price
+      }));
+    });
+
+    const flatItemsHtml = flatItems.map(item => `
+      <tr>
+        <td>${item.name}</td>
+        <td class="text-right">${item.quantity}</td>
+        <td class="text-right">₹${item.total_price}</td>
+      </tr>
+    `).join('');
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Receipt - ${invoice.invoiceId}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: 'Courier New', monospace; font-size: 12px; color: #000; padding: 10px; }
+          .receipt { max-width: 320px; margin: 0 auto; }
+          .center { text-align: center; }
+          .bold { font-weight: bold; }
+          .line { border-top: 1px dashed #000; margin: 8px 0; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { text-align: left; padding: 4px 2px; }
+          th { border-bottom: 1px solid #000; }
+          .text-right { text-align: right; }
+          .mt-2 { margin-top: 8px; }
+          .mt-1 { margin-top: 4px; }
+          .fs-sm { font-size: 11px; }
+          .logo { max-height: 60px; margin-bottom: 8px; }
+        </style>
+      </head>
+      <body>
+        <div class="receipt">
+          ${restaurantLogo ? `<div class="center"><img src="${restaurantLogo}" class="logo" /></div>` : ''}
+          <div class="center bold" style="font-size: 14px;">${restaurantName}</div>
+          <div class="center fs-sm">Invoice Receipt</div>
+          <div class="center fs-sm">${createdAt}</div>
+          <div class="line"></div>
+          <div><span class="bold">Invoice ID:</span> ${invoice.invoiceId}</div>
+          <div><span class="bold">Orders:</span> ${invoice.orders.length}</div>
+          <div class="line"></div>
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th class="text-right">Qty</th>
+                <th class="text-right">Amt</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${flatItemsHtml}
+            </tbody>
+          </table>
+          <div class="line"></div>
+          <div class="mt-1" style="display:flex;justify-content:space-between;">
+            <span>Total Subtotal</span><span>₹${invoiceSubtotal.toFixed(2)}</span>
+          </div>
+          <div class="mt-1" style="display:flex;justify-content:space-between;">
+            <span>Total Tax</span><span>₹${invoiceTax.toFixed(2)}</span>
+          </div>
+          ${invoiceDiscount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Total Discount</span><span>-₹${invoiceDiscount.toFixed(2)}</span></div>` : ''}
+          ${invoiceLoyaltyDiscount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Total Loyalty Discount</span><span>-₹${invoiceLoyaltyDiscount.toFixed(2)}</span></div>` : ''}
+          <div class="line"></div>
+          <div class="mt-1 bold" style="display:flex;justify-content:space-between;font-size:14px;">
+            <span>Grand Total</span><span>₹${invoiceGrandTotal.toFixed(2)}</span>
+          </div>
+          <div class="line"></div>
+          <div class="center fs-sm mt-1">Thank you for your order!</div>
+          <div class="center fs-sm mt-1">powered by cafexpos.in</div>
+        </div>
+      </body>
+      </html>
+    `);
+
     printWindow.document.close();
 
     setTimeout(() => {
