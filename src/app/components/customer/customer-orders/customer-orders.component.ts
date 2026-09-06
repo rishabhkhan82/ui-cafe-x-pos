@@ -388,6 +388,21 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
     this.invoiceTotal = Math.round((preTaxSubtotal + totalTax - this.invoiceDiscount - this.invoiceLoyaltyDiscount) * 100) / 100;
   }
 
+  isOfferEligibleByMinValue(offer: EligibleOffer): boolean {
+    if (!offer.minOrderValue || offer.minOrderValue <= 0) {
+      return true;
+    }
+    return (this.invoiceSubtotal || 0) >= offer.minOrderValue;
+  }
+
+  getEligibleOffers(): EligibleOffer[] {
+    return this.eligibleOffers.filter(offer => this.isOfferEligibleByMinValue(offer));
+  }
+
+  getIneligibleOffers(): EligibleOffer[] {
+    return this.eligibleOffers.filter(offer => !this.isOfferEligibleByMinValue(offer));
+  }
+
   applyOffer(offer: EligibleOffer): void {
     this.appliedOffer = offer;
     this.calculateInvoice();

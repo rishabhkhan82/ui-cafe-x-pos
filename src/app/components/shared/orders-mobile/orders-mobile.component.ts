@@ -880,7 +880,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
       return Math.round(subtotal * (offer.discount_value || 0) / 100);
     }
     if (offer.type === 'fixed') {
-      return Math.min(offer.discount_value || 0, subtotal);
+      return offer.value || 0;
     }
     return this.editingOrder.discount_amount || 0;
   }
