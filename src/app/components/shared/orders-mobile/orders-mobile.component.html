@@ -25,12 +25,22 @@
   <!-- Fixed Search and Order Filter -->
   <div class="p-3 fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-slate-50 via-gray-100 to-slate-50 dark:from-slate-900 dark:via-gray-900 dark:to-slate-900 pb-0 shadow-lg backdrop-blur-sm border-b border-gray-200 dark:border-gray-700" style="margin-top: 73px;">
     <!-- Search -->
-    <div class="relative mb-4">
+    <div *ngIf="activeStatus !== 'BILLING_REQUESTED'" class="relative mb-4">
       <input [(ngModel)]="searchTerm"
              (input)="onSearchChange()"
              type="text"
-             placeholder="Search by order number or customer"
+             placeholder="Search by order number"
              class="w-full pl-12 pr-4 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300">
+      <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+        <i class="fas fa-search text-gray-400"></i>
+      </div>
+    </div>
+    <!-- Search -->
+    <div *ngIf="activeStatus === 'BILLING_REQUESTED'" class="relative mb-4">
+      <input [(ngModel)]="invoiceSearchTerm"
+            type="text"
+            placeholder="Search by invoice number"
+            class="w-full pl-12 pr-4 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300">
       <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
         <i class="fas fa-search text-gray-400"></i>
       </div>
@@ -56,10 +66,20 @@
           Loading Real Time Data...
         </div>
 
+        <div *ngIf="!realTimeLoader" class="flex items-center justify-between">
+          <span 
+            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+            {{ activeStatusLabel }}
+          </span>
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-300">
+            {{ activeStatus === 'BILLING_REQUESTED' ? filteredBillingRequestedInvoices.length : orders.length }}
+          </span>
+        </div>
+
         <!-- Invoice Cards for BILLING_REQUESTED tab -->
         <div *ngIf="activeStatus === 'BILLING_REQUESTED'">
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4">
-            <div *ngFor="let invoice of billingRequestedInvoices; trackBy: trackByInvoiceId" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden mb-3 border-2 border-indigo-200 dark:border-indigo-700">
+            <div *ngFor="let invoice of filteredBillingRequestedInvoices; trackBy: trackByInvoiceId" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden mb-3 border-2 border-cyan-200 dark:border-cyan-700">
               <div class="border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">
                 <div class="flex justify-between items-start">
                   <div>
@@ -93,7 +113,7 @@
                 </div>
               </div>
   
-              <div class="border-t border-gray-200 dark:border-gray-700 pt-3 mb-4 space-y-1">
+              <div class="border-t border-gray-200 dark:border-gray-700 pt-3 mb-2 space-y-1">
                 <div class="flex items-center justify-between text-sm">
                   <span class="text-gray-600 dark:text-gray-300">Subtotal</span>
                   <span class="font-medium text-gray-900 dark:text-white">₹{{ getInvoicePreTaxSubtotal(invoice.invoiceId) | number:'1.2-2' }}</span>
@@ -116,7 +136,30 @@
                   <span class="text-xl font-bold text-primary-500">₹{{ getInvoiceTotal(invoice.invoiceId) | number:'1.2-2' }}</span>
                 </div>
               </div>
-  
+
+              <div *ngIf="userRole === 'restaurant_owner' || userRole === 'restaurant_manager'" class="flex flex-wrap sm:flex-nowrap items-center gap-3 mb-3 border-t border-gray-200 dark:border-gray-600 pt-2">
+                <div class="flex-1 min-w-[140px]">
+                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Payment Status <span class="text-red-500">*</span></label>
+                  <select [(ngModel)]="invoicePaymentStatus[invoice.invoiceId]"
+                          class="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
+                    <option value="PAID" selected>PAID</option>
+                    <option value="PENDING">PENDING</option>
+                    <option value="FAILED">FAILED</option>
+                    <option value="REFUNDED">REFUNDED</option>
+                  </select>
+                </div>
+                <div class="flex-1 min-w-[140px]">
+                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Payment Method <span class="text-red-500">*</span></label>
+                  <select [(ngModel)]="invoicePaymentMethod[invoice.invoiceId]"
+                          class="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
+                    <option value="cash" selected>Cash</option>
+                    <option value="upi">UPI</option>
+                    <option value="split">Split</option>
+                    <option value="others">Others</option>
+                  </select>
+                </div>
+              </div>
+
               <div class="flex items-center gap-2">
 
                 <button *ngIf="userRole === 'restaurant_owner' || userRole === 'restaurant_manager'"
@@ -142,7 +185,7 @@
         <!-- Regular Order Cards for all other tabs -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4" *ngIf="activeStatus !== 'BILLING_REQUESTED'">
           <!-- <pre>{{orders | json}}</pre> -->
-          <div *ngFor="let ord of orders" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden mb-4">
+          <div *ngFor="let ord of orders" class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden mb-4 border-[3px] border-dashed animate-pulse" [class]="ord.status === 'PENDING' ? 'border-yellow-500' : ord.status === 'CONFIRMED' ? 'border-blue-500' : ord.status === 'PREPARING' ? 'border-orange-500' : ord.status === 'READY' ? 'border-green-500' : ord.status === 'ON_THE_WAY' ? 'border-blue-500' : ord.status === 'SERVED' ? 'border-purple-500' : ord.status === 'BILLING_REQUESTED' ? 'border-cyan-500' : 'border-red-500'">
 
           <!-- Card Header -->
           <div class="border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">
@@ -188,7 +231,7 @@
           <!-- Card Footer -->
           <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
             <div class="flex flex-wrap items-center gap-2">
-                <button *ngIf="['kitchen', 'kitchen_manager'].includes(userRole) && canMoveToNextStatus(ord)"
+                <button style="min-width: 140px;" *ngIf="['kitchen', 'kitchen_manager', 'restaurant_owner', 'restaurant_manager'].includes(userRole) && canMoveToNextStatus(ord)"
                         (click)="updateOrderStatus(ord, getNextStatus(ord.status))"
                         class="flex-1 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
                  <i class="fas fa-check mr-2"></i>{{ getNextStatusLabel(ord.status) }}
@@ -200,13 +243,13 @@
                  <i class="fas fa-times mr-2"></i>Cancel
                </button>
 
-              <button *ngIf="userRole === 'waiter' && ord.status === 'READY'"
+              <button style="min-width: 140px;" *ngIf="(userRole === 'waiter' || userRole === 'restaurant_owner' || userRole === 'restaurant_manager') && ord.status === 'READY'"
                       (click)="markOnTheWay(ord)"
                       class="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
                 <i class="fas fa-route mr-2"></i>On the Way
               </button>
 
-               <button *ngIf="userRole === 'waiter' && ord.status === 'ON_THE_WAY'"
+               <button *ngIf="(userRole === 'waiter' || userRole === 'restaurant_owner' || userRole === 'restaurant_manager') && ord.status === 'ON_THE_WAY'"
                        (click)="markServed(ord)"
                        class="flex-1 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
                 <i class="fas fa-check-circle mr-2"></i>Served
@@ -229,7 +272,7 @@
                   <i class="fas fa-times mr-2"></i>Cancel
                  </button>
 
-                <button *ngIf="userRole === 'waiter' && ord.status !== 'COMPLETED' && ord.status !== 'CANCELLED'"
+                <button *ngIf="(userRole === 'waiter' || userRole === 'restaurant_owner' || userRole === 'restaurant_manager') && ord.status !== 'COMPLETED' && ord.status !== 'CANCELLED'"
                         (click)="openEditOrder(ord)"
                         class="flex-1 px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center text-center">
                   <i class="fas fa-edit mr-2"></i>Edit

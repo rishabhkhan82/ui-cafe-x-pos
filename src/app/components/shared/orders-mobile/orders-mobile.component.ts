@@ -89,6 +89,10 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   showInvoiceDetailsModal = false;
   selectedInvoiceForDetails: { invoiceId: string; orders: Order[] } | null = null;
 
+  // Invoice payment state
+  invoicePaymentStatus: Record<string, string> = {};
+  invoicePaymentMethod: Record<string, string> = {};
+
   // Swipe handling
   private touchStartX: number = 0;
   private touchEndX: number = 0;
@@ -103,6 +107,8 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
 
   // Status options for filtering - role-based
   statusOptions: any[] = [];
+
+  invoiceSearchTerm: string = '';
 
   constructor(router: Router) {
     this.router = router;
@@ -138,7 +144,11 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     } else if (this.userRole === 'waiter') {
       this.activeStatus = 'READY';
       this.activeStatusLabel = this.orderStatuses.find(s => s.key === 'READY')?.label || 'Ready';
-    } else {
+    } else if (this.userRole === 'restaurant_owner') {
+      this.activeStatus = 'BILLING_REQUESTED';
+      this.activeStatusLabel = this.orderStatuses.find(s => s.key === 'BILLING_REQUESTED')?.label || 'Billing Requested';
+    }
+     else {
       this.activeStatus = 'all';
       this.activeStatusLabel = 'All Orders';
     }
@@ -151,6 +161,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
       { key: 'READY', label: 'Ready', icon: 'fas fa-check-double', color: 'bg-green-500' },
     ];
     const waiterStatuses = [
+      { key: 'all', label: 'All', icon: 'fas fa-list', color: 'bg-gray-500' },
       { key: 'READY', label: 'Ready', icon: 'fas fa-check-double', color: 'bg-green-500' },
       { key: 'ON_THE_WAY', label: 'On the Way', icon: 'fas fa-user-tie', color: 'bg-blue-500' },
       { key: 'SERVED', label: 'Served', icon: 'fas fa-utensils', color: 'bg-purple-500' },
@@ -251,19 +262,23 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
      });
      this.subscriptions.push(newOrderSub);
 
-     const orderUpdateSub = this.realtimeService.orderUpdate$.subscribe(order => {
-       console.log('[orders-mobile] orderUpdate$ received:', order);
-       if (order) {
-         order.items = order.items || [];
-         const index = this.allOrders.findIndex(o => o.id === order.id);
-         if (index !== -1) {
-           this.allOrders[index] = order;
-         } else {
-           this.allOrders.unshift(order);
-         }
-         this.filterOrders();
-       }
-     });
+      const orderUpdateSub = this.realtimeService.orderUpdate$.subscribe(order => {
+        console.log('[orders-mobile] orderUpdate$ received:', order);
+        if (order) {
+          order.items = order.items || [];
+          const index = this.allOrders.findIndex(o => o.id === order.id);
+          const oldStatus = index !== -1 ? this.allOrders[index].status : null;
+          if (index !== -1) {
+            this.allOrders[index] = order;
+          } else {
+            this.allOrders.unshift(order);
+          }
+          this.filterOrders();
+          if (oldStatus !== null) {
+            this.autoSwitchFilterForOrder(order, oldStatus);
+          }
+        }
+      });
      this.subscriptions.push(orderUpdateSub);
    }
 
@@ -271,7 +286,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.activeStatus = status;
     this.activeStatusLabel = this.orderStatuses.find(s => s.key === status)?.label || 'All Orders';
     if (status === 'all') {
-      this.router.navigate([], { queryParams: { status: null } });
+      this.router.navigate([], { queryParams: { status: 'all' } });
     } else {
       this.router.navigate([], { queryParams: { status } });
     }
@@ -289,7 +304,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     if (this.userRole === 'waiter') {
       // Hide for now - can show specifically using this filters
       filtered = filtered.filter(order =>
-        ['READY', 'ON_THE_WAY', 'SERVED'].includes(order.status)
+        ['PENDING','PREPARING', 'READY', 'ON_THE_WAY', 'SERVED', 'BILLING_REQUESTED'].includes(order.status)
       );
     } else if (['kitchen', 'kitchen_manager'].includes(this.userRole)) {
       // Hide for now - can show specifically using this filters
@@ -328,6 +343,16 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.orders = filtered;
   }
 
+  private autoSwitchFilterForOrder(order: Order, oldStatus: string): void {
+    if (oldStatus === order.status) return;
+    if (['COMPLETED', 'CANCELLED'].includes(order.status)) return;
+    if (this.activeStatus === 'all') return;
+    if (!['kitchen_manager', 'waiter', 'restaurant_owner', 'restaurant_manager'].includes(this.userRole)) return;
+    if (oldStatus !== this.activeStatus) return;
+
+    this.setActiveStatus(order.status);
+  }
+
   get activeOrdersCount(): number {
     if (['kitchen', 'kitchen_manager'].includes(this.userRole)) {
       return this.orders.filter(order =>
@@ -353,14 +378,29 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
 
   // UI Helper Methods
   getStatusButtonClass(status: string): string {
-    const baseClass = 'px-4 py-2 rounded-full font-medium transition-colors flex items-center text-sm border whitespace-nowrap lg:flex-1 lg:justify-around';
+    const baseClass = 'px-4 py-2 rounded-full font-medium transition-colors flex items-center text-sm border border-2 whitespace-nowrap lg:flex-1 lg:justify-around';
     const isActive = this.activeStatus === status;
+    const statusBorder = this.getStatusBorderClass(status);
 
     if (isActive) {
-      return `${baseClass} border-primary-500 text-primary-500 bg-white dark:bg-gray-800`;
+      return `${baseClass} ${statusBorder} text-white bg-red-800 dark:bg-red-700`;
     }
 
-    return `${baseClass} border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-primary-500 hover:text-primary-500 bg-white dark:bg-gray-800`;
+    return `${baseClass} ${statusBorder} text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700`;
+  }
+
+  private getStatusBorderClass(status: string): string {
+    const map: Record<string, string> = {
+      'PENDING': 'border-yellow-500',
+      'CONFIRMED': 'border-blue-500',
+      'PREPARING': 'border-orange-500',
+      'READY': 'border-green-500',
+      'ON_THE_WAY': 'border-blue-500',
+      'SERVED': 'border-purple-500',
+      'BILLING_REQUESTED': 'border-cyan-500',
+      'CANCELLED': 'border-red-500'
+    };
+    return map[status] || 'border-gray-300';
   }
 
   getStatusCountClass(status: string): string {
@@ -437,7 +477,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
 
 
   canMoveToNextStatus(order: Order): boolean {
-    if (!['kitchen', 'kitchen_manager'].includes(this.userRole)) return false;
+    if (!['kitchen', 'kitchen_manager', 'restaurant_owner', 'restaurant_manager'].includes(this.userRole)) return false;
     const statusFlow = ['PENDING', 'PREPARING', 'READY'];
     const currentIndex = statusFlow.indexOf(order.status);
 
@@ -445,7 +485,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   getNextStatus(currentStatus: string): string {
-    if (!['kitchen', 'kitchen_manager'].includes(this.userRole)) return currentStatus;
+    if (!['kitchen', 'kitchen_manager', 'restaurant_owner', 'restaurant_manager'].includes(this.userRole)) return currentStatus;
     const statusFlow = ['PENDING', 'PREPARING', 'READY'];
     const currentIndex = statusFlow.indexOf(currentStatus);
 
@@ -457,7 +497,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   getNextStatusLabel(currentStatus: string): string {
-    if (!['kitchen', 'kitchen_manager'].includes(this.userRole)) return 'Update';
+    if (!['kitchen', 'kitchen_manager', 'restaurant_owner', 'restaurant_manager'].includes(this.userRole)) return 'Update';
     const labels = {
       'PENDING': 'Start Prep',
       'PREPARING': 'Ready'
@@ -1620,6 +1660,14 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     if (!['restaurant_owner', 'restaurant_manager'].includes(this.userRole)) return;
     if (this.isCompletingInvoice) return;
 
+    const paymentStatus = this.invoicePaymentStatus[invoiceId];
+    const paymentMethod = this.invoicePaymentMethod[invoiceId];
+
+    if (!paymentStatus || !paymentMethod) {
+      this.notificationService.warning('Payment Required', 'Please select payment status and payment method before completing the invoice.');
+      return;
+    }
+
     const confirmed = await this.confirmationService.confirm(
       'Are you sure you want to mark this invoice as Completed?',
       'Confirm Invoice Completion'
@@ -1642,8 +1690,10 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         total_amount: order.total_amount,
         special_instructions: order.special_instructions,
         invoice_id: order.invoice_id,
-        payment_status: order.payment_status,
-        payment_method: order.payment_method,
+        // payment_status: order.payment_status,
+        // payment_method: order.payment_method,
+        payment_status: this.invoicePaymentStatus[invoiceId] || order.payment_status,
+        payment_method: this.invoicePaymentMethod[invoiceId] || order.payment_method,
         order_type: order.order_type,
         priority: order.priority,
         tax_amount: order.tax_amount,
@@ -1826,5 +1876,14 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
       return imagePath;
     }
     return environment.api.baseUrl + imagePath;
+  }
+
+  get filteredBillingRequestedInvoices(): { invoiceId: string; orders: Order[] }[] {
+    const term = (this.invoiceSearchTerm || '').trim().toLowerCase();
+    if (!term) return this.billingRequestedInvoices;
+
+    return this.billingRequestedInvoices.filter(inv =>
+      inv.invoiceId.toLowerCase().includes(term)
+    );
   }
 }
