@@ -589,7 +589,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   async markOnTheWay(order: Order): Promise<void> {
-    if (this.userRole !== 'waiter') return;
+    if (this.userRole !== 'waiter' && this.userRole !== 'restaurant_manager' && this.userRole !== 'restaurant_owner') return;
     const confirmed = await this.confirmationService.confirm(
       'Are you sure you want to mark this order as On the Way?',
       `Mark On the Way (#${order.order_id.split('-').pop()})`
@@ -639,7 +639,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   async markServed(order: Order): Promise<void> {
-    if (this.userRole !== 'waiter') return;
+    if (this.userRole !== 'waiter' && this.userRole !== 'restaurant_manager' && this.userRole !== 'restaurant_owner') return;
     const confirmed = await this.confirmationService.confirm(
       'Are you sure you want to mark this order as Served?',
       `Mark Served (#${order.order_id.split('-').pop()})`

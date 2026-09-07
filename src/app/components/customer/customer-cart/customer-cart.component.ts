@@ -8,6 +8,7 @@ import { Router } from '@angular/router';
 import { CartService, CartItem } from '../../../services/cart.service';
 import { CrudService } from '../../../services/crud.service';
 import { AuthService } from '../../../services/auth.service';
+import { GuestAuthService } from '../../../services/guest-auth.service';
 import { NotificationService } from '../../../services/notification.service';
 import { PendingBillsService } from '../../../services/pending-bills.service';
 import { RealtimeService } from '../../../services/realtime.service';
@@ -36,12 +37,15 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
 
   orderTypes: OrderType[] = [];
 
+  whatsappNumber: string = '';
+
   constructor(
     private location: Location,
     private router: Router,
     public cartService: CartService,
     private crudService: CrudService,
     private authService: AuthService,
+    private guestAuthService: GuestAuthService,
     private notificationService: NotificationService,
     private pendingBillsService: PendingBillsService,
     private realtimeService: RealtimeService
@@ -54,6 +58,9 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
       this.cartItems = items;
       this.computeTotals();
     });
+
+    const currentUser = this.authService.getCurrentUser();
+    this.whatsappNumber = currentUser?.phone || '';
 
     const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
     if (restaurantId) {
@@ -119,8 +126,65 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
     });
   }
 
+  private syncPhoneInBackground(newPhone: string): void {
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser) return;
+
+    const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
+    const restaurantIdNum = restaurantId ? parseInt(restaurantId) : 1;
+
+    let customerId: string | number;
+
+    if (currentUser.role === 'customer' && currentUser.user_type === 'customer') {
+      const guestData = this.guestAuthService.getCurrentGuestUser(restaurantIdNum);
+      if (guestData && guestData.customer) {
+        customerId = guestData.customer.id;
+      } else {
+        return;
+      }
+    } else {
+      customerId = currentUser.id;
+    }
+
+    const updatePayload: any = {
+      id: customerId,
+      name: currentUser.name,
+      email: currentUser.email || '',
+      phone: newPhone || undefined,
+      avatar: currentUser.avatar || '',
+      restaurant_id: restaurantIdNum,
+      customer_id: currentUser.username
+    };
+
+    this.crudService.updateCustomer(customerId, updatePayload).subscribe({
+      next: (response: any) => {
+        const updatedAvatar = response?.avatar || currentUser.avatar || '';
+        currentUser.phone = newPhone;
+        currentUser.avatar = updatedAvatar;
+        this.authService.setCurrentUser(currentUser);
+
+        if (currentUser.role === 'customer' && currentUser.user_type === 'customer') {
+          const guestData = this.guestAuthService.getCurrentGuestUser(restaurantIdNum);
+          if (guestData && guestData.customer) {
+            guestData.customer.phone = newPhone;
+            guestData.customer.avatar = updatedAvatar;
+            this.guestAuthService.storeCurrentGuestUser(guestData, restaurantIdNum);
+          }
+        }
+      },
+      error: (error) => {
+        console.error('Failed to sync WhatsApp number in background:', error);
+      }
+    });
+  }
+
   proceedToOrder(): void {
     if (this.cartItems.length === 0 || this.isPlacingOrder) return;
+
+    if (!this.whatsappNumber || this.whatsappNumber.trim() === '') {
+      this.notificationService.error('Required', 'Please enter your WhatsApp number before placing the order.');
+      return;
+    }
 
     if (this.pendingBillsService.hasPendingBilling) {
       this.notificationService.error(
@@ -130,9 +194,13 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const currentUser = this.authService.getCurrentUser();
+    if (currentUser && this.whatsappNumber !== currentUser.phone) {
+      this.syncPhoneInBackground(this.whatsappNumber);
+    }
+
     this.isPlacingOrder = true;
 
-    const currentUser = this.authService.getCurrentUser();
     const customerId = currentUser?.id;
     const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
     const tableNumber = sessionStorage.getItem('current_customer_table_no');
@@ -144,19 +212,18 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
       restaurant_id: restaurantId !== null ? Number(restaurantId) : null,
       status: 'PENDING',
       total_amount: this.total,
-      tax_amount: this.gst, 
+      tax_amount: this.gst,
       tax_percentage: this.isGst ? this.gstPercentage : null,
       payment_status: 'PENDING',
       order_type: this.orderType,
       priority: 'MEDIUM',
       special_instructions: '',
-      // new fields added to match order interface
       created_at : new Date().toISOString(),
       delivered_at : null,
       estimated_ready_time : null,
       updated_at : null,
       order_id : null,
-    payment_method : null,
+      payment_method : null,
       order_items: this.cartItems.map(cartItem => ({
         menu_item_id: cartItem.menuItem.id,
         menu_item_name: cartItem.menuItem.name,
