@@ -1,0 +1,129 @@
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
+  <div class="max-w-2xl mx-auto">
+    <div *ngIf="loading" class="text-center py-16">
+      <div class="animate-spin rounded-full h-8 w-8 border-2 border-primary-500 border-t-transparent mx-auto mb-4"></div>
+      <p class="text-gray-600 dark:text-gray-400">Loading receipt...</p>
+    </div>
+
+    <div *ngIf="!loading && orders.length === 0" class="text-center py-16">
+      <div class="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-receipt text-2xl text-gray-400"></i>
+      </div>
+      <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No orders found</h3>
+      <p class="text-gray-500 dark:text-gray-400">This invoice does not exist or has no orders.</p>
+    </div>
+
+    <div *ngIf="!loading && orders.length > 0" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-slate-600 via-slate-700 to-slate-800 p-6 text-white">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-bold">Invoice Receipt</h1>
+            <p class="text-blue-100 mt-1">{{ invoiceId }}</p>
+          </div>
+          <button (click)="downloadReceipt()"
+                  class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+            <i class="fas fa-download"></i> Download Receipt
+          </button>
+        </div>
+      </div>
+
+      <!-- Restaurant Info -->
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700 text-center">
+        <img *ngIf="getRestaurantLogo()" [src]="getRestaurantLogo()" class="max-h-20 mx-auto mb-2" alt="Restaurant Logo">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ getRestaurantName() }}</h2>
+      </div>
+
+      <!-- Invoice Summary -->
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Invoice ID</p>
+            <p class="font-semibold text-gray-900 dark:text-white">{{ invoiceId }}</p>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Tables</p>
+            <p class="font-semibold text-gray-900 dark:text-white">{{ getTablesSummary() }}</p>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Orders</p>
+            <p class="font-semibold text-gray-900 dark:text-white">{{ orders.length }}</p>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Grand Total</p>
+            <p class="font-semibold text-gray-900 dark:text-white">₹{{ getInvoiceTotal() | number:'1.2-2' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Flat Items List -->
+      <div class="p-6">
+        <div class="overflow-x-auto">
+          <table class="w-full table-auto border-collapse border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+            <thead>
+              <tr class="bg-gray-100 dark:bg-gray-700">
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-300 dark:border-gray-600">Item</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-300 dark:border-gray-600 border-l border-gray-300 dark:border-gray-600">Quantity</th>
+                <th class="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-300 dark:border-gray-600 border-l border-gray-300 dark:border-gray-600">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of getFlatItems()" class="border-b border-gray-200 dark:border-gray-600">
+                <td class="px-4 py-3 border-r border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-lg flex items-center justify-center">
+                      <i class="fas fa-utensils text-blue-600 dark:text-blue-400 text-xs"></i>
+                    </div>
+                    <div>
+                      <p class="font-medium text-gray-900 dark:text-white">{{ item.name }}</p>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600">
+                  <span class="font-semibold text-gray-900 dark:text-white">{{ item.quantity }}</span>
+                </td>
+                <td class="px-4 py-3 text-right">
+                  <span class="font-semibold text-gray-900 dark:text-white">₹{{ item.total_price }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Invoice Summary -->
+      <div class="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Invoice Summary</h3>
+        <div class="space-y-2">
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-gray-600 dark:text-gray-300">Total Subtotal</span>
+            <span class="font-medium text-gray-900 dark:text-white">₹{{ getInvoiceSubtotal() | number:'1.2-2' }}</span>
+          </div>
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-gray-600 dark:text-gray-300">Total Tax</span>
+            <span class="font-medium text-gray-900 dark:text-white">₹{{ getInvoiceTax() | number:'1.2-2' }}</span>
+          </div>
+          <div class="flex items-center justify-between text-sm" *ngIf="getInvoiceDiscount() > 0">
+            <span class="text-green-600 dark:text-green-400">Total Discount</span>
+            <span class="font-medium text-green-600 dark:text-green-400">-₹{{ getInvoiceDiscount() | number:'1.2-2' }}</span>
+          </div>
+          <div class="flex items-center justify-between text-sm" *ngIf="getInvoiceLoyaltyDiscount() > 0">
+            <span class="text-purple-600 dark:text-purple-400">Total Loyalty Discount</span>
+            <span class="font-medium text-purple-600 dark:text-purple-400">-₹{{ getInvoiceLoyaltyDiscount() | number:'1.2-2' }}</span>
+          </div>
+          <div class="border-t border-gray-200 dark:border-gray-600 my-2"></div>
+          <div class="flex items-center justify-between">
+            <span class="text-base font-bold text-gray-900 dark:text-white">Grand Total</span>
+            <span class="text-xl font-bold text-primary-500">₹{{ getInvoiceTotal() | number:'1.2-2' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="p-6 border-t border-gray-200 dark:border-gray-700 text-center">
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Thank you for your order!</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500">powered by cafexpos.in</p>
+      </div>
+    </div>
+  </div>
+</div>

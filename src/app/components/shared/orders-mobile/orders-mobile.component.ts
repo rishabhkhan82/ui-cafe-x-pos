@@ -1725,6 +1725,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
               const firstOrder = orders[0];
               const customerId = firstOrder.customer_id;
               const restaurantId = firstOrder.restaurant_id;
+              this.openWhatsAppLink(invoiceId, orders, restaurantId);
               const invoiceTotal = orders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
               const earnedPoints = Math.round(invoiceTotal);
 
@@ -1839,6 +1840,47 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
       this.isCompletingInvoice = false;
       this.pendingInvoiceConfirmationId = null;
     }
+  }
+
+  openWhatsAppLink(invoiceId: string, orders: Order[], restaurantId: string | number | null | undefined): void {
+    if (!orders || orders.length === 0) return;
+
+    const customerId = orders[0].customer_id;
+    if (!customerId) return;
+
+    this.crudService.getCustomerById(customerId).subscribe({
+      next: (response: any) => {
+        const phone = response?.customer?.phone || response?.phone;
+        if (!phone) {
+          console.warn('WhatsApp bill: customer phone not found for customer', customerId, 'response:', response);
+          return;
+        }
+
+        const restaurant = this.restaurantDataService.getCurrentRestaurant();
+        const restaurantName = restaurant?.name || sessionStorage.getItem('current_customer_restaurant_name') || 'Cafe-X POS';
+
+        const invoiceTotal = orders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
+        const orderIds = orders.map(o => '#' + o.order_id.split('-').pop()).join(', ');
+        const receiptUrl = `${window.location.origin}/receipt/${invoiceId}/${restaurantId || ''}`;
+
+        let message = `Thanks for dining with us!\n\n`;
+        message += `Your digital receipt from ${restaurantName} is ready.\n\n`;
+        message += `Orders: ${orderIds}\n`;
+        message += `Total: ₹${invoiceTotal.toFixed(2)}\n\n`;
+        message += `View your receipt:\n${receiptUrl}\n\n`;
+        message += `Loved your experience? We'd love to hear from you!\n\n`;
+        message += `See you again soon!`;
+
+        const encodedMessage = encodeURIComponent(message);
+        const normalizedPhone = String(phone).replace(/^\+/, '').replace(/^0+/, '');
+        const whatsappUrl = `https://wa.me/${normalizedPhone}?text=${encodedMessage}`;
+
+        window.open(whatsappUrl, '_blank');
+      },
+      error: (error) => {
+        console.error('Error fetching customer for WhatsApp bill:', error);
+      }
+    });
   }
 
   get hasActiveFilters(): boolean {
