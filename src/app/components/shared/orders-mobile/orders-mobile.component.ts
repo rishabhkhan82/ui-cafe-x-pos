@@ -46,6 +46,8 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   private restaurantDataService = inject(RestaurantDataService);
   private getRestAndPlatformUsersService = inject(GetRestAndPlatformUsersService);
 
+  private suppressSyncActiveStatusFromRoute: boolean = false;
+
   currentTime: string = '';
   activeStatus: string = 'all';
   activeStatusLabel: string = 'All Orders';
@@ -134,6 +136,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   private syncActiveStatusFromRoute(): void {
+    if (this.suppressSyncActiveStatusFromRoute) return;
     const status = this.route.snapshot.queryParamMap.get('status');
     if (status && this.orderStatuses.some(s => s.key === status)) {
       this.activeStatus = status;
@@ -248,7 +251,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     });
   }
 
-    private setupRealtimeSubscriptions(): void {
+  private setupRealtimeSubscriptions(): void {
      const newOrderSub = this.realtimeService.newOrder$.subscribe(order => {
        console.log('[orders-mobile] newOrder$ received:', order);
        if (order) {
@@ -275,7 +278,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
           }
           this.filterOrders();
           if (oldStatus !== null) {
-            this.autoSwitchFilterForOrder(order, oldStatus);
+            // this.autoSwitchFilterForOrder(order, oldStatus);
           }
         }
       });
@@ -343,14 +346,11 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.orders = filtered;
   }
 
-  private autoSwitchFilterForOrder(order: Order, oldStatus: string): void {
-    if (oldStatus === order.status) return;
-    if (['COMPLETED', 'CANCELLED'].includes(order.status)) return;
+  private autoSwitchFilterForOrder(newStatus: string): void {
     if (this.activeStatus === 'all') return;
-    if (!['kitchen_manager', 'waiter', 'restaurant_owner', 'restaurant_manager'].includes(this.userRole)) return;
-    if (oldStatus !== this.activeStatus) return;
-
-    this.setActiveStatus(order.status);
+    this.activeStatus = newStatus;
+    this.activeStatusLabel = this.orderStatuses.find(s => s.key === newStatus)?.label || 'All Orders';
+    this.filterOrders();
   }
 
   get activeOrdersCount(): number {
@@ -537,6 +537,8 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         if (['kitchen', 'kitchen_manager'].includes(this.userRole) && newStatus === 'READY') {
           this.deductInventoryForOrder(order);
         }
+
+        this.autoSwitchFilterForOrder(newStatus);
       },
       error: (error) => {
         console.error('Error updating order status:', error);
@@ -629,6 +631,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         console.log('Order marked as On the Way successfully:', response);
         this.loadingService.hide();
         this.notificationService.success('Order Updated', `Order #ORD-${order.order_id.split('-').pop()} marked as On the Way`);
+        this.autoSwitchFilterForOrder(response.data.status);
       },
       error: (error) => {
         console.error('Error marking order as On the Way:', error);
@@ -679,6 +682,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         console.log('Order marked as Served successfully:', response);
         this.loadingService.hide();
         this.notificationService.success('Order Updated', `Order #ORD-${order.order_id.split('-').pop()} marked as Served`);
+        this.autoSwitchFilterForOrder(response.data.status);
       },
       error: (error) => {
         console.error('Error marking order as Served:', error);
