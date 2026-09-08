@@ -168,11 +168,14 @@
                 <i class="fas fa-toggle-on mr-2 text-teal-500"></i>Status
               </label>
               <div class="flex items-center">
-                <input
-                  type="checkbox"
-                  [(ngModel)]="roleForm.is_active"
-                  class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Role is active</span>
+                <label class="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="roleForm.is_active"
+                    class="sr-only peer">
+                  <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-500 relative"></div>
+                  <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">{{ roleForm.is_active ? 'Active' : 'Inactive' }}</span>
+                </label>
               </div>
             </div>
           </div>
