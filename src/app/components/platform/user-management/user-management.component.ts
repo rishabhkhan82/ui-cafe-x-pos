@@ -174,7 +174,8 @@ export class UserManagementComponent implements OnInit {
 
     const params: any = {
       page: 1,
-      size: 9999
+      size: 9999,
+      isActive: true
     };
 
     this.crudService.getRestaurants(params).subscribe({
