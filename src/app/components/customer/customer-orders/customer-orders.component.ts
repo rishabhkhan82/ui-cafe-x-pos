@@ -63,6 +63,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
   activeOrders: Order[] = [];
   orderHistory: Order[] = [];
   allOrderHistory: Order[] = [];
+  private pendingCompletedOrders: Order[] = [];
   private menuItems: MenuItem[] = [];
   selectedOrder: Order | null = null;
   showOrderDetails = false;
@@ -117,6 +118,11 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
           this.calculateInvoice();
           this.pendingOrdersService.updateCount(this.activeOrders.length);
           this.pendingBillsService.setPendingBilling(false);
+          const existsInHistory = this.orderHistory.some((o: Order) => o.id === order.id);
+          if (!existsInHistory) {
+            this.orderHistory = this.sortOrdersByDateDesc([order, ...this.orderHistory]);
+          }
+          this.pendingCompletedOrders = [order, ...this.pendingCompletedOrders.filter(o => o.id !== order.id)];
           this.loadOrderHistory();
           this.loadLoyaltyProgram();
           this.loadEligibleOffers();
@@ -148,6 +154,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
           this.calculateInvoice();
           this.pendingOrdersService.updateCount(this.activeOrders.length);
           this.pendingBillsService.setPendingBilling(false);
+          this.pendingCompletedOrders = [order, ...this.pendingCompletedOrders.filter(o => o.id !== order.id)];
           const existsInHistory = this.orderHistory.some((o: Order) => o.id === order.id);
           if (!existsInHistory) {
             this.orderHistory = this.sortOrdersByDateDesc([order, ...this.orderHistory]);
@@ -316,7 +323,10 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
     this.crudService.getOrders({ customerId: customerId.id, status: 'COMPLETED', page: 1, size: 9999 }).subscribe({
       next: (response: any) => {
         const data = response?.data || [];
-        this.orderHistory = this.sortOrdersByDateDesc(data);
+        const apiIds = new Set(data.map((o: Order) => o.id));
+        const pendingToMerge = this.pendingCompletedOrders.filter(o => !apiIds.has(o.id));
+        this.pendingCompletedOrders = [];
+        this.orderHistory = this.sortOrdersByDateDesc([...data, ...pendingToMerge]);
         this.isOrderHistoryLoading = false;
       },
       error: () => {
