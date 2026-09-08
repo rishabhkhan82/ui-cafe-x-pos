@@ -325,7 +325,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
         const data = response?.data || [];
         const apiIds = new Set(data.map((o: Order) => o.id));
         const pendingToMerge = this.pendingCompletedOrders.filter(o => !apiIds.has(o.id));
-        this.pendingCompletedOrders = [];
+        this.pendingCompletedOrders = this.pendingCompletedOrders.filter(o => !apiIds.has(o.id));
         this.orderHistory = this.sortOrdersByDateDesc([...data, ...pendingToMerge]);
         this.isOrderHistoryLoading = false;
       },

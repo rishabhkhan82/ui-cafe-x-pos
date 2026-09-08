@@ -11,6 +11,7 @@ import { LoadingService } from './services/loading.service';
 import { ToastNotifierComponent } from './components/common/toast-notifier/app-toast-notifier';
 import { ConfirmationDialogComponent } from './components/common/confirmation-dialog/confirmation-dialog.component';
 import { CommonUserNotificationsComponent } from './components/common/common-user-notifications/common-user-notifications.component';
+import { LoyaltyEarnedPopupComponent } from './components/common/loyalty-earned-popup/loyalty-earned-popup.component';
 import { NavigationMenu } from './services/mock-data.service';
 import { environment } from './environments/environment';
 import { APP_VERSION } from './version';
@@ -22,6 +23,8 @@ import { NotificationRoutingService } from './services/notification-routing.serv
 import { GetRestAndPlatformUsersService } from './services/get-rest-and-platform-users.service';
 import { SubscriptionService } from './services/subscription.service';
 import { RestaurantDataService } from './services/restaurant-data.service';
+import { CrudService } from './services/crud.service';
+import { LoyaltyPopupService, LoyaltyPopupData } from './services/loyalty-popup.service';
 interface User {
   id: string;
   name: string;
@@ -34,7 +37,7 @@ interface User {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterModule, RouterOutlet, NavigationMenuComponent, ToastNotifierComponent, ConfirmationDialogComponent, CommonUserNotificationsComponent],
+  imports: [CommonModule, RouterModule, RouterOutlet, NavigationMenuComponent, ToastNotifierComponent, ConfirmationDialogComponent, CommonUserNotificationsComponent, LoyaltyEarnedPopupComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
@@ -70,8 +73,14 @@ export class AppComponent implements OnInit {
   private getRestAndPlatformUsersService = inject(GetRestAndPlatformUsersService);
   protected subscriptionService = inject(SubscriptionService);
   private restaurantDataService = inject(RestaurantDataService);
+  private crudService = inject(CrudService);
+  private loyaltyPopupService = inject(LoyaltyPopupService);
 
   @ViewChild(NavigationMenuComponent) navMenu!: NavigationMenuComponent;
+
+  private shownLoyaltyOrderIds = new Set<string>();
+  private loyaltyPopupBuffers = new Map<string, { pointsEarned: number; orderId?: string; invoiceId?: string }>();
+  private loyaltyPopupTimers = new Map<string, any>();
 
   constructor() {
     // Keep local copy in sync
@@ -207,12 +216,14 @@ export class AppComponent implements OnInit {
       console.log('Current user:', this.currentUser);
       if (order && this.currentUser) {
         this.processOrderNotification(order);
+        this.maybeShowLoyaltyPopup(order);
       }
     });
 
     this.realtimeService.customerOrderUpdate$.subscribe(order => {
       if (order && this.currentUser) {
         this.processOrderNotification(order);
+        this.maybeShowLoyaltyPopup(order);
       }
     });
 
@@ -230,6 +241,73 @@ export class AppComponent implements OnInit {
         });
       }
     });
+  }
+
+  private maybeShowLoyaltyPopup(order: any): void {
+    if (!this.currentUser || this.currentUser.role !== 'customer') return;
+    if (order.status !== 'COMPLETED') return;
+    if (order.customer_id !== Number(this.currentUser.id)) return;
+    if (this.shownLoyaltyOrderIds.has(String(order.id))) return;
+
+    this.shownLoyaltyOrderIds.add(String(order.id));
+    if (this.shownLoyaltyOrderIds.size > 50) {
+      const first = this.shownLoyaltyOrderIds.values().next().value;
+      if (first) this.shownLoyaltyOrderIds.delete(first);
+    }
+
+    const pointsEarned = Math.round(order.total_amount || 0);
+    if (pointsEarned <= 0) return;
+
+    const invoiceId = order.invoice_id;
+    if (!invoiceId) {
+      this.loyaltyPopupService.show({
+        pointsEarned,
+        totalPoints: pointsEarned,
+        orderId: order.order_id,
+        invoiceId: undefined
+      });
+      return;
+    }
+
+    const existing = this.loyaltyPopupBuffers.get(invoiceId) || { pointsEarned: 0, orderId: undefined, invoiceId };
+    existing.pointsEarned += pointsEarned;
+    if (!existing.orderId) existing.orderId = order.order_id;
+    existing.invoiceId = invoiceId;
+    this.loyaltyPopupBuffers.set(invoiceId, existing);
+
+    if (this.loyaltyPopupTimers.has(invoiceId)) {
+      clearTimeout(this.loyaltyPopupTimers.get(invoiceId));
+    }
+
+    const timer = setTimeout(() => {
+      this.loyaltyPopupTimers.delete(invoiceId);
+      const buffer = this.loyaltyPopupBuffers.get(invoiceId);
+      if (buffer) {
+        const customerId = this.currentUser.id;
+        this.crudService.getLoyaltyProgramByCustomer(customerId).subscribe({
+          next: (program: any) => {
+            const totalPoints = (program?.points_balance || 0) + buffer.pointsEarned;
+            this.loyaltyPopupService.show({
+              pointsEarned: buffer.pointsEarned,
+              totalPoints,
+              orderId: buffer.orderId,
+              invoiceId: buffer.invoiceId
+            });
+          },
+          error: () => {
+            this.loyaltyPopupService.show({
+              pointsEarned: buffer.pointsEarned,
+              totalPoints: buffer.pointsEarned,
+              orderId: buffer.orderId,
+              invoiceId: buffer.invoiceId
+            });
+          }
+        });
+        this.loyaltyPopupBuffers.delete(invoiceId);
+      }
+    }, 2000);
+
+    this.loyaltyPopupTimers.set(invoiceId, timer);
   }
 
   private processOrderNotification(order: any): void {
