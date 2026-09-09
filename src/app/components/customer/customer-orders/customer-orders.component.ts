@@ -553,7 +553,8 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
             total_price: item.total_price,
             category: item.category,
             special_instructions: item.special_instructions,
-            status: 'BILLING_REQUESTED'
+            status: 'BILLING_REQUESTED',
+            addons: item.addons || []
           }))
         };
 
@@ -780,13 +781,23 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
               </tr>
             </thead>
             <tbody>
-              ${(order.items || []).map(item => `
-                <tr>
-                  <td>${item.menu_item_name}</td>
-                  <td class="text-right">${item.quantity}</td>
-                  <td class="text-right">₹${item.total_price}</td>
-                </tr>
-              `).join('')}
+              ${(order.items || []).map(item => {
+                const addons = (item.addons || []).map(addon => `
+                  <tr>
+                    <td style="padding-left:14px;color:#666;">+ ${addon.addon_name} (₹${addon.addon_price})</td>
+                    <td class="text-right" style="color:#666;">${addon.quantity}</td>
+                    <td class="text-right" style="color:#666;">₹${(addon.addon_price * addon.quantity).toFixed(2)}</td>
+                  </tr>
+                `).join('');
+                return `
+                  <tr>
+                    <td>${item.menu_item_name} (₹${item.unit_price})</td>
+                    <td class="text-right">${item.quantity}</td>
+                    <td class="text-right">₹${item.total_price}</td>
+                  </tr>
+                  ${addons}
+                `;
+              }).join('')}
             </tbody>
           </table>
           <div class="line"></div>
@@ -895,7 +906,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
     return 15;
   }
 
-  reorder(order: Order): void {
+  async reorder(order: Order): Promise<void> {
     if (!order.items || order.items.length === 0) {
       this.notificationService.info('Reorder', 'No items to reorder.');
       return;
@@ -905,6 +916,19 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
       this.notificationService.info('Reorder', 'Menu is still loading. Please try again in a moment.');
       return;
     }
+
+    const itemLines = order.items.map(item => {
+      const addonPart = item.addons?.length ? ` with ${item.addons.length} add-on${item.addons.length !== 1 ? 's' : ''}` : '';
+      return `${item.quantity}x ${item.menu_item_name}${addonPart}`;
+    }).join(', ');
+
+    const confirmed = await this.confirmationService.confirm(
+      `This will add the items and add-ons from this order to your cart:\n\n${itemLines}\n\nDo you want to continue?`,
+      'Reorder',
+      'Add to Cart',
+      'Cancel'
+    );
+    if (!confirmed) return;
 
     this.cartService.clearCart();
 
