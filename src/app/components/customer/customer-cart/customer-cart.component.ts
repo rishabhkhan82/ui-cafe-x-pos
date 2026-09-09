@@ -12,6 +12,7 @@ import { GuestAuthService } from '../../../services/guest-auth.service';
 import { NotificationService } from '../../../services/notification.service';
 import { PendingBillsService } from '../../../services/pending-bills.service';
 import { RealtimeService } from '../../../services/realtime.service';
+import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
 import { environment } from '../../../environments/environment';
 import { OrderType } from '../../../interfaces';
 
@@ -29,6 +30,9 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
   deliveryFee = 0;
   total = 0;
   orderCount = 0;
+  itemsSubtotal = 0;
+  addonsSubtotal = 0;
+  addonsCount = 0;
   orderType: 'DINE_IN' | 'TAKEAWAY' = 'DINE_IN';
   isPlacingOrder = false;
   isGst = false;
@@ -49,7 +53,8 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
     private guestAuthService: GuestAuthService,
     private notificationService: NotificationService,
     private pendingBillsService: PendingBillsService,
-    private realtimeService: RealtimeService
+    private realtimeService: RealtimeService,
+    private confirmationService: ConfirmationDialogService
   ) {}
 
   getMenuItemAddons(cartItem: CartItem): any[] {
@@ -149,13 +154,67 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
     this.cartService.updateCartItemAddons(cartItem.menuItem, currentAddons);
   }
 
+  private applyRequiredAddonsForReadyCartItems(): void {
+    let hasChanges = false;
+    const updates = new Map<number, CartItem['selectedAddons']>();
+
+    for (const cartItem of this.cartItems) {
+      const menuItemId = cartItem.menuItem.id;
+      if (!(menuItemId in this.cartItemAddonsMap)) {
+        continue;
+      }
+
+      const availableAddons = this.cartItemAddonsMap[menuItemId] || [];
+      if (availableAddons.length === 0) {
+        continue;
+      }
+
+      const currentSelected = cartItem.selectedAddons ? [...cartItem.selectedAddons] : [];
+      const selectedIds = new Set(currentSelected.map(a => a.addonId));
+      let itemChanged = false;
+
+      for (const addon of availableAddons) {
+        const addonId = addon.addon_id || addon.addonId;
+        if (addon.is_required && !selectedIds.has(addonId)) {
+          const minQty = addon.min_quantity || addon.minQuantity || 1;
+          currentSelected.push({
+            addonId,
+            addonName: addon.addon_name || addon.addonName || '',
+            addonPrice: Number(addon.addon_price || addon.addonPrice || 0),
+            quantity: minQty,
+            isRequired: true,
+            minQuantity: addon.min_quantity || addon.minQuantity || 0,
+            maxQuantity: addon.max_quantity || addon.maxQuantity || 0
+          });
+          itemChanged = true;
+        }
+      }
+
+      if (itemChanged) {
+        hasChanges = true;
+        updates.set(menuItemId, currentSelected);
+      }
+    }
+
+    if (hasChanges) {
+      for (const [menuItemId, selectedAddons] of updates) {
+        const cartItem = this.cartItems.find(ci => ci.menuItem.id === menuItemId);
+        if (cartItem) {
+          this.cartService.updateCartItemAddons(cartItem.menuItem, selectedAddons);
+        }
+      }
+    }
+  }
+
   ngOnInit(): void {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     this.loadOrderTypes();
     this.loadRestaurantGstSettings();
     this.cartService.cart$.subscribe(items => {
       this.cartItems = items;
       this.computeTotals();
       this.loadCartItemAddons();
+      this.applyRequiredAddonsForReadyCartItems();
     });
 
     const currentUser = this.authService.getCurrentUser();
@@ -191,10 +250,12 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
               addon_price: item.addon_price,
               addon_image: item.addon_image
             }));
+            this.applyRequiredAddonsForReadyCartItems();
           },
           error: (error) => {
             console.error('Error loading add-ons for cart item:', error);
             this.cartItemAddonsMap[menuItemId] = [];
+            this.applyRequiredAddonsForReadyCartItems();
           }
         });
       }
@@ -306,7 +367,18 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
     });
   }
 
-  proceedToOrder(): void {
+  async confirmClearCart(): Promise<void> {
+    const confirmed = await this.confirmationService.confirm(
+      'This will remove all items from your cart. Are you sure you want to continue?',
+      'Clear Cart',
+      'Clear Cart',
+      'Cancel'
+    );
+    if (!confirmed) return;
+    this.cartService.clearCart();
+  }
+
+  async proceedToOrder(): Promise<void> {
     if (this.cartItems.length === 0 || this.isPlacingOrder) return;
 
     if (!this.whatsappNumber || this.whatsappNumber.trim() === '') {
@@ -321,6 +393,14 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
       );
       return;
     }
+
+    const confirmed = await this.confirmationService.confirm(
+      `Confirm order for ₹${this.total}?`,
+      'Place Order',
+      'Place Order',
+      'Cancel'
+    );
+    if (!confirmed) return;
 
     const currentUser = this.authService.getCurrentUser();
     if (currentUser && this.whatsappNumber !== currentUser.phone) {
@@ -413,12 +493,22 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
   }
 
   private computeTotals(): void {
-    this.subtotal = this.cartItems.reduce((sum, cartItem) => {
-      const menuItem = cartItem.menuItem;
-      const effectivePrice = menuItem.price;
-      const addonsTotal = (cartItem.selectedAddons || []).reduce((addonSum, addon) => addonSum + (addon.addonPrice * addon.quantity), 0);
-      return sum + (effectivePrice + addonsTotal) * cartItem.quantity;
+    this.itemsSubtotal = this.cartItems.reduce((sum, cartItem) => {
+      return sum + cartItem.menuItem.price * cartItem.quantity;
     }, 0);
+
+    this.addonsSubtotal = this.cartItems.reduce((sum, cartItem) => {
+      const addonsTotal = (cartItem.selectedAddons || []).reduce((addonSum, addon) => addonSum + (addon.addonPrice * addon.quantity), 0);
+      return sum + addonsTotal;
+    }, 0);
+
+    this.addonsCount = this.cartItems.reduce((sum, cartItem) => {
+      const selectedAddons = cartItem.selectedAddons || [];
+      const distinctAddons = selectedAddons.filter(a => a.quantity > 0);
+      return sum + distinctAddons.length;
+    }, 0);
+
+    this.subtotal = this.itemsSubtotal + this.addonsSubtotal;
 
     if (this.isGst && this.gstPercentage !== null) {
       const rate = Number(this.gstPercentage) || 0;

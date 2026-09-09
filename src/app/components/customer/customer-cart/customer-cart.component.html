@@ -3,7 +3,7 @@
   <section class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="0">
     <div class="flex items-center justify-between mb-3">
       <h3 class="text-lg font-bold text-gray-900 dark:text-white">Your Order</h3>
-      <button *ngIf="cartItems.length > 0" (click)="cartService.clearCart()" class="text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors">Clear Cart</button>
+      <button *ngIf="cartItems.length > 0" (click)="confirmClearCart()" class="text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors">Clear Cart</button>
     </div>
 
     <div *ngIf="cartItems.length === 0" class="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm text-center">
@@ -58,7 +58,7 @@
                 <div *ngFor="let addon of itemAddons"
                     (click)="!addon.is_required && toggleAddon(cartItem, addon)"
                     [ngClass]="{
-                      'flex flex-col items-center gap-1 p-2 rounded-xl border cursor-pointer transition-colors min-w-[88px]': true,
+                      'flex flex-col items-center gap-1 p-2 rounded-xl border cursor-pointer transition-colors': true,
                       'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800': isAddonSelected(cartItem, addon.addon_id || addon.addonId),
                       'bg-gray-50 dark:bg-gray-700/50 border-gray-100 dark:border-gray-700': !isAddonSelected(cartItem, addon.addon_id || addon.addonId)
                     }">
@@ -70,7 +70,7 @@
                       </div>
                     </div>
                     <div class="flex-1 min-w-0">
-                      <p class="text-[10px] font-medium text-gray-900 dark:text-white text-left leading-tight line-clamp-1">{{ addon.addon_name || addon.addonName }}</p>
+                      <p class="text-[10px] font-medium text-gray-900 dark:text-white text-left leading-tight">{{ addon.addon_name || addon.addonName }}</p>
                       <div class="flex items-center gap-1 flex-wrap mt-0.5">
                         <span *ngIf="addon.is_required" class="text-[9px] bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-1 py-0.5 rounded-full">Required</span>
                       </div>
@@ -78,7 +78,7 @@
                     <span *ngIf="addon.is_required" class="text-[9px] text-gray-500 dark:text-gray-400 flex-shrink-0"><i class="fas fa-lock"></i></span>
                   </div>
                   <div class="flex items-center justify-between w-full mt-1">
-                    <span class="text-[10px] font-bold text-primary-600 dark:text-primary-400">+₹{{ addon.addon_price || addon.addonPrice }}</span>
+                    <span class="text-[12px] font-bold text-primary-600 dark:text-primary-400 mr-1">+₹{{ addon.addon_price || addon.addonPrice }}</span>
                     <div class="flex items-center gap-1">
                       <button (click)="$event.stopPropagation(); decreaseAddonQuantity(cartItem, addon.addon_id || addon.addonId)" [disabled]="!isAddonSelected(cartItem, addon.addon_id || addon.addonId) || getSelectedAddonQuantity(cartItem, addon.addon_id || addon.addonId) <= (addon.min_quantity || addon.minQuantity || 0)" class="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed">
                         <i class="fas fa-minus text-[8px]"></i>
@@ -131,7 +131,15 @@
     <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Order Summary</h3>
     <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm space-y-3">
       <div class="flex items-center justify-between">
-        <span class="text-gray-600 dark:text-gray-300">Subtotal ({{ orderCount }} item{{ orderCount === 1 ? '' : 's' }})</span>
+        <span class="text-gray-600 dark:text-gray-300">Items ({{ orderCount }})</span>
+        <span class="font-semibold text-gray-900 dark:text-white">₹{{ itemsSubtotal }}</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-gray-600 dark:text-gray-300">Add-ons ({{ addonsCount }})</span>
+        <span class="font-semibold text-gray-900 dark:text-white">₹{{ addonsSubtotal }}</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-gray-600 dark:text-gray-300">Subtotal</span>
         <span class="font-semibold text-gray-900 dark:text-white">₹{{ subtotal }}</span>
       </div>
       <div class="flex items-center justify-between">
