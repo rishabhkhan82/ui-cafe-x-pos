@@ -129,6 +129,19 @@ export interface OrderItem {
   category: string;
   status: string;
   is_custom?: boolean;
+  addons?: OrderItemAddon[];
+}
+
+export interface OrderItemAddon {
+  id: number;
+  order_item_id: number;
+  addon_id: number;
+  addon_name: string;
+  addon_price: number;
+  quantity: number;
+  is_required: boolean;
+  min_quantity: number;
+  max_quantity: number;
 }
 
 export interface OrderCustomization {

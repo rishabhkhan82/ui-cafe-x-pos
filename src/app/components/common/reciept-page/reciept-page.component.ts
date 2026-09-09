@@ -99,7 +99,11 @@ export class RecieptPageComponent implements OnInit {
   }
 
   getOrderSubtotal(order: Order): number {
-    return (order.items || []).reduce((sum, item) => sum + (item.total_price || 0), 0);
+    return (order.items || []).reduce((sum, item) => {
+      const itemTotal = item.total_price || 0;
+      const addonsTotal = (item.addons || []).reduce((addonSum, addon) => addonSum + (addon.addon_price * addon.quantity), 0);
+      return sum + itemTotal + addonsTotal;
+    }, 0);
   }
 
   getOrderTaxPercentage(order: Order): number | null {
@@ -143,11 +147,18 @@ export class RecieptPageComponent implements OnInit {
   getFlatItems(): { name: string; quantity: number; total_price: number }[] {
     return this.orders.flatMap((ord) => {
       const orderShortId = ord.order_id.split('-').pop();
-      return (ord.items || []).map((item) => ({
-        name: `${item.menu_item_name} (#${orderShortId})`,
-        quantity: item.quantity,
-        total_price: item.total_price
-      }));
+      const items: { name: string; quantity: number; total_price: number }[] = [];
+      (ord.items || []).forEach((item) => {
+        const addonText = (item.addons || []).length
+          ? '<br/><span style="font-size:10px;color:#666;">' + (item.addons || []).map((a: any) => a.addon_name + ' x' + a.quantity).join(', ') + '</span>'
+          : '';
+        items.push({
+          name: `${item.menu_item_name} (#${orderShortId})${addonText}`,
+          quantity: item.quantity,
+          total_price: item.total_price
+        });
+      });
+      return items;
     });
   }
 

@@ -38,6 +38,7 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
   orderTypes: OrderType[] = [];
 
   whatsappNumber: string = '';
+  private cartItemAddonsMap: { [menuItemId: number]: any[] } = {};
 
   constructor(
     private location: Location,
@@ -51,12 +52,110 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
     private realtimeService: RealtimeService
   ) {}
 
+  getMenuItemAddons(cartItem: CartItem): any[] {
+    return this.cartItemAddonsMap[cartItem.menuItem.id] || cartItem.menuItem.addons || [];
+  }
+
+  getSelectedAddonIds(cartItem: CartItem): Set<number> {
+    return new Set((cartItem.selectedAddons || []).map(addon => addon.addonId));
+  }
+
+  isAddonSelected(cartItem: CartItem, addonId: number): boolean {
+    return this.getSelectedAddonIds(cartItem).has(addonId);
+  }
+
+  getSelectedAddonQuantity(cartItem: CartItem, addonId: number): number {
+    const addon = (cartItem.selectedAddons || []).find(a => a.addonId === addonId);
+    return addon ? addon.quantity : 0;
+  }
+
+  getAvailableAddon(cartItem: CartItem, addonId: number): any {
+    return (this.getMenuItemAddons(cartItem) || []).find((a: any) => (a.addon_id || a.addonId) === addonId);
+  }
+
+  clampAddonQuantity(cartItem: CartItem, addonId: number, quantity: number): number {
+    const addon = this.getAvailableAddon(cartItem, addonId);
+    if (!addon) return quantity;
+    const min = addon.min_quantity || addon.minQuantity || 0;
+    const max = addon.max_quantity || addon.maxQuantity || 0;
+    let next = quantity;
+    if (next < min) next = min;
+    if (max > 0 && next > max) next = max;
+    return next;
+  }
+
+  updateAddonQuantity(cartItem: CartItem, addonId: number, quantity: number): void {
+    const currentAddons = cartItem.selectedAddons ? [...cartItem.selectedAddons] : [];
+    const clampedQuantity = this.clampAddonQuantity(cartItem, addonId, quantity);
+    const existingIndex = currentAddons.findIndex(a => a.addonId === addonId);
+
+    if (clampedQuantity <= 0) {
+      if (existingIndex >= 0) {
+        currentAddons.splice(existingIndex, 1);
+      }
+    } else {
+      const updatedAddon = {
+        addonId,
+        addonName: this.getAvailableAddon(cartItem, addonId)?.addon_name || this.getAvailableAddon(cartItem, addonId)?.addonName || '',
+        addonPrice: Number(this.getAvailableAddon(cartItem, addonId)?.addon_price || this.getAvailableAddon(cartItem, addonId)?.addonPrice || 0),
+        quantity: clampedQuantity,
+        isRequired: !!this.getAvailableAddon(cartItem, addonId)?.is_required,
+        minQuantity: this.getAvailableAddon(cartItem, addonId)?.min_quantity || this.getAvailableAddon(cartItem, addonId)?.minQuantity || 0,
+        maxQuantity: this.getAvailableAddon(cartItem, addonId)?.max_quantity || this.getAvailableAddon(cartItem, addonId)?.maxQuantity || 10
+      };
+
+      if (existingIndex >= 0) {
+        currentAddons[existingIndex] = updatedAddon;
+      } else {
+        currentAddons.push(updatedAddon);
+      }
+    }
+
+    this.cartService.updateCartItemAddons(cartItem.menuItem, currentAddons);
+  }
+
+  increaseAddonQuantity(cartItem: CartItem, addonId: number): void {
+    const currentQty = this.getSelectedAddonQuantity(cartItem, addonId);
+    this.updateAddonQuantity(cartItem, addonId, currentQty + 1);
+  }
+
+  decreaseAddonQuantity(cartItem: CartItem, addonId: number): void {
+    const currentQty = this.getSelectedAddonQuantity(cartItem, addonId);
+    this.updateAddonQuantity(cartItem, addonId, currentQty - 1);
+  }
+
+  toggleAddon(cartItem: CartItem, addon: any): void {
+    const addonId = addon.addon_id || addon.addonId;
+    const available = this.getAvailableAddon(cartItem, addonId);
+    if (available && available.is_required) {
+      return;
+    }
+    const currentAddons = cartItem.selectedAddons ? [...cartItem.selectedAddons] : [];
+    const existingIndex = currentAddons.findIndex(a => a.addonId === addonId);
+    if (existingIndex >= 0) {
+      currentAddons.splice(existingIndex, 1);
+    } else {
+      const minQuantity = available ? (available.min_quantity || available.minQuantity || 1) : 1;
+      currentAddons.push({
+        addonId,
+        addonName: addon.addon_name || addon.addonName,
+        addonPrice: Number(addon.addon_price || addon.addonPrice || 0),
+        quantity: minQuantity,
+        isRequired: !!available?.is_required,
+        minQuantity: available ? (available.min_quantity || available.minQuantity || 0) : 0,
+        maxQuantity: available ? (available.max_quantity || available.maxQuantity || 0) : 0
+      });
+    }
+    this.cartService.updateCartItemAddons(cartItem.menuItem, currentAddons);
+  }
+
   ngOnInit(): void {
     this.loadOrderTypes();
     this.loadRestaurantGstSettings();
     this.cartService.cart$.subscribe(items => {
       this.cartItems = items;
       this.computeTotals();
+      this.loadCartItemAddons();
     });
 
     const currentUser = this.authService.getCurrentUser();
@@ -71,6 +170,35 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
       });
       this.subscriptions.push(sub);
     }
+  }
+
+  private loadCartItemAddons(): void {
+    const uniqueMenuItemIds = Array.from(new Set(this.cartItems.map(cartItem => cartItem.menuItem.id)));
+    uniqueMenuItemIds.forEach(menuItemId => {
+      if (!this.cartItemAddonsMap[menuItemId]) {
+        this.crudService.getData(`menu-item-addons/menu-item/${menuItemId}`).subscribe({
+          next: (response: any) => {
+            const data = response || [];
+            this.cartItemAddonsMap[menuItemId] = data.map((item: any) => ({
+              id: item.id,
+              menu_item_id: item.menu_item_id,
+              addon_id: item.addon_id,
+              is_required: item.is_required,
+              min_quantity: item.min_quantity,
+              max_quantity: item.max_quantity,
+              display_order: item.display_order,
+              addon_name: item.addon_name,
+              addon_price: item.addon_price,
+              addon_image: item.addon_image
+            }));
+          },
+          error: (error) => {
+            console.error('Error loading add-ons for cart item:', error);
+            this.cartItemAddonsMap[menuItemId] = [];
+          }
+        });
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -232,7 +360,16 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
         total_price: cartItem.menuItem.price * cartItem.quantity,
         category: cartItem.menuItem.category || '',
         special_instructions: '',
-        status: 'PENDING'
+        status: 'PENDING',
+        addons: (cartItem.selectedAddons || []).map(addon => ({
+          addon_id: addon.addonId,
+          addon_name: addon.addonName,
+          addon_price: addon.addonPrice,
+          quantity: addon.quantity,
+          is_required: addon.isRequired,
+          min_quantity: addon.minQuantity,
+          max_quantity: addon.maxQuantity
+        }))
       }))
     };
 
@@ -279,7 +416,8 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
     this.subtotal = this.cartItems.reduce((sum, cartItem) => {
       const menuItem = cartItem.menuItem;
       const effectivePrice = menuItem.price;
-      return sum + effectivePrice * cartItem.quantity;
+      const addonsTotal = (cartItem.selectedAddons || []).reduce((addonSum, addon) => addonSum + (addon.addonPrice * addon.quantity), 0);
+      return sum + (effectivePrice + addonsTotal) * cartItem.quantity;
     }, 0);
 
     if (this.isGst && this.gstPercentage !== null) {

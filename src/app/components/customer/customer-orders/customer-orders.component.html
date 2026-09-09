@@ -507,6 +507,9 @@
                     <div>
                       <p class="font-medium text-gray-900 dark:text-white text-sm">{{ item.menu_item_name }}</p>
                       <div *ngIf="item.special_instructions" class="text-xs text-orange-600 dark:text-orange-400 mt-1">{{ item.special_instructions }}</div>
+                      <div *ngIf="item.addons?.length" class="mt-1 space-y-0.5">
+                        <div *ngFor="let addon of item.addons" class="text-xs text-gray-600 dark:text-gray-300">{{ addon.addon_name }} x{{ addon.quantity }}</div>
+                      </div>
                     </div>
                   </div>
                 </td>

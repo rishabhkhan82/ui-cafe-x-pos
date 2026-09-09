@@ -48,12 +48,60 @@
           </div>
         </div>
       </div>
+      <!-- Add-ons -->
+      <div *ngIf="getMenuItemAddons(cartItem) as itemAddons" class="flex items-center space-x-4">
+        <div *ngIf="itemAddons.length" class="border-t-2 border-dashed border-gray-300 dark:border-gray-600 mt-2 w-full">
+          <ng-container>
+            <div class="mt-2">
+              <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Add-ons</p>
+              <div class="flex gap-2 overflow-x-auto pb-1">
+                <div *ngFor="let addon of itemAddons"
+                    (click)="!addon.is_required && toggleAddon(cartItem, addon)"
+                    [ngClass]="{
+                      'flex flex-col items-center gap-1 p-2 rounded-xl border cursor-pointer transition-colors min-w-[88px]': true,
+                      'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800': isAddonSelected(cartItem, addon.addon_id || addon.addonId),
+                      'bg-gray-50 dark:bg-gray-700/50 border-gray-100 dark:border-gray-700': !isAddonSelected(cartItem, addon.addon_id || addon.addonId)
+                    }">
+                  <div class="flex items-center gap-2 w-full">
+                    <div class="w-9 h-9 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 flex-shrink-0">
+                      <img *ngIf="addon.addon_image || addon.addonImage" [src]="getFullImageUrl(addon.addon_image || addon.addonImage)" [alt]="addon.addon_name || addon.addonName" class="w-full h-full object-cover">
+                      <div *ngIf="!(addon.addon_image || addon.addonImage)" class="w-full h-full flex items-center justify-center text-gray-400">
+                        <i class="fas fa-layer-group text-xs"></i>
+                      </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[10px] font-medium text-gray-900 dark:text-white text-left leading-tight line-clamp-1">{{ addon.addon_name || addon.addonName }}</p>
+                      <div class="flex items-center gap-1 flex-wrap mt-0.5">
+                        <span *ngIf="addon.is_required" class="text-[9px] bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-1 py-0.5 rounded-full">Required</span>
+                      </div>
+                    </div>
+                    <span *ngIf="addon.is_required" class="text-[9px] text-gray-500 dark:text-gray-400 flex-shrink-0"><i class="fas fa-lock"></i></span>
+                  </div>
+                  <div class="flex items-center justify-between w-full mt-1">
+                    <span class="text-[10px] font-bold text-primary-600 dark:text-primary-400">+₹{{ addon.addon_price || addon.addonPrice }}</span>
+                    <div class="flex items-center gap-1">
+                      <button (click)="$event.stopPropagation(); decreaseAddonQuantity(cartItem, addon.addon_id || addon.addonId)" [disabled]="!isAddonSelected(cartItem, addon.addon_id || addon.addonId) || getSelectedAddonQuantity(cartItem, addon.addon_id || addon.addonId) <= (addon.min_quantity || addon.minQuantity || 0)" class="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed">
+                        <i class="fas fa-minus text-[8px]"></i>
+                      </button>
+                      <span class="text-[10px] font-bold text-gray-900 dark:text-white w-4 text-center">{{ isAddonSelected(cartItem, addon.addon_id || addon.addonId) ? getSelectedAddonQuantity(cartItem, addon.addon_id || addon.addonId) : '0' }}</span>
+                      <button (click)="$event.stopPropagation(); increaseAddonQuantity(cartItem, addon.addon_id || addon.addonId)" [disabled]="(addon.max_quantity || addon.maxQuantity || 0) > 0 && isAddonSelected(cartItem, addon.addon_id || addon.addonId) && getSelectedAddonQuantity(cartItem, addon.addon_id || addon.addonId) >= (addon.max_quantity || addon.maxQuantity || 0)" class="w-5 h-5 rounded-full bg-primary-500 text-white flex items-center justify-center hover:bg-primary-600 disabled:opacity-40 disabled:cursor-not-allowed">
+                        <i class="fas fa-plus text-[8px]"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
     </div>
 
     <button *ngIf="cartItems.length > 0" (click)="addMoreItems()" class="w-full py-3 bg-gray-50 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
       <i class="fas fa-plus mr-2"></i>Add More Items
     </button>
   </section>
+
 
    <ng-container *ngIf="cartItems.length > 0">
      <!-- Special Instructions -->
@@ -107,7 +155,7 @@
   </ng-container>
 
   <!-- WhatsApp Number -->
-  <section class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="200">
+  <section *ngIf="cartItems.length !== 0" class="mb-6" appAnimateOnScroll animationClass="animate-fade-in-up" [delay]="200">
     <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">WhatsApp Number <span class="text-red-500">*</span></h3>
     <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
       <input [(ngModel)]="whatsappNumber"

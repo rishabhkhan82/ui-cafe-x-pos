@@ -912,7 +912,16 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
     order.items.forEach((item) => {
       const menuItem = this.getMenuItemById(item.menu_item_id);
       if (menuItem) {
-        this.cartService.addToCart(menuItem, item.quantity);
+        const selectedAddons = (item.addons || []).map(addon => ({
+          addonId: addon.addon_id,
+          addonName: addon.addon_name,
+          addonPrice: Number(addon.addon_price || 0),
+          quantity: addon.quantity,
+          isRequired: !!addon.is_required,
+          minQuantity: addon.min_quantity || 0,
+          maxQuantity: addon.max_quantity || 10
+        }));
+        this.cartService.addToCart(menuItem, item.quantity, selectedAddons);
         addedCount++;
       }
     });
@@ -938,7 +947,11 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
   }
 
   getOrderSubtotal(order: Order): number {
-    return (order.items || []).reduce((sum, item) => sum + (item.total_price || 0), 0);
+    return (order.items || []).reduce((sum, item) => {
+      const itemTotal = item.total_price || 0;
+      const addonsTotal = (item.addons || []).reduce((addonSum, addon) => addonSum + (addon.addon_price * addon.quantity), 0);
+      return sum + itemTotal + addonsTotal;
+    }, 0);
   }
 
   getOrderTaxPercentage(order: Order): number | null {

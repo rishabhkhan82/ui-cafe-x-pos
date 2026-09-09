@@ -813,7 +813,10 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     if (order.status === 'COMPLETED' || order.status === 'CANCELLED') return;
 
     this.editingOrder = { ...order, items: order.items.map(item => ({ ...item })) };
-    this.editFormItems = this.editingOrder.items.map(item => ({ ...item }));
+    this.editFormItems = this.editingOrder.items.map(item => ({
+      ...item,
+      addons: (item.addons || []).map(addon => ({ ...addon }))
+    }));
     this.editingOfferRedemption = null;
     this.editingOffer = null;
     this.loadAvailableMenuItems();
@@ -996,6 +999,54 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.editFormItems = this.editFormItems.filter(i => i.id !== itemId && i.menu_item_id !== itemId);
   }
 
+  getEditItemAddons(item: any): any[] {
+    return item.addons || [];
+  }
+
+  getAllAvailableAddons(): any[] {
+    return (this.availableMenuItems || []).reduce((addons: any[], menuItem: any) => {
+      const itemAddons = menuItem.addons || [];
+      return addons.concat(itemAddons);
+    }, []);
+  }
+
+  getAddonById(addonId: number): any {
+    return this.getAllAvailableAddons().find((addon: any) => addon.addon_id === addonId);
+  }
+
+  addEditItemAddon(item: any, addon: any): void {
+    if (!item.addons) item.addons = [];
+    const exists = item.addons.find((a: any) => a.addon_id === addon.addon_id);
+    if (!exists) {
+      item.addons.push({
+        addon_id: addon.addon_id,
+        addon_name: addon.addon_name,
+        addon_price: Number(addon.addon_price || 0),
+        quantity: 1,
+        is_required: !!addon.is_required,
+        min_quantity: addon.min_quantity || 0,
+        max_quantity: addon.max_quantity || 10
+      });
+    }
+  }
+
+  removeEditItemAddon(item: any, addonId: number): void {
+    if (!item.addons) return;
+    item.addons = item.addons.filter((a: any) => a.addon_id !== addonId);
+  }
+
+  updateEditItemAddonQuantity(item: any, addonId: number, delta: number): void {
+    if (!item.addons) return;
+    const addon = item.addons.find((a: any) => a.addon_id === addonId);
+    if (!addon) return;
+    const min = addon.min_quantity || 0;
+    const max = addon.max_quantity || 10;
+    let next = (addon.quantity || 1) + delta;
+    if (next < min) next = min;
+    if (max > 0 && next > max) next = max;
+    addon.quantity = next;
+  }
+
   selectMenuItemForAdd(menuItem: MenuItem): void {
     this.selectedMenuItemForAdd = menuItem;
     this.addItemQuantity = 1;
@@ -1077,7 +1128,11 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   getEditOrderTotal(): number {
-    return this.editFormItems.reduce((sum, item) => sum + (item.total_price || 0), 0);
+    return this.editFormItems.reduce((sum: number, item: any) => {
+      const itemTotal = (item.total_price || 0);
+      const addonsTotal = (item.addons || []).reduce((addonSum: number, addon: any) => addonSum + (addon.addon_price * addon.quantity), 0);
+      return sum + itemTotal + addonsTotal;
+    }, 0);
   }
 
   getEditOrderTaxAmount(): number {
@@ -1158,7 +1213,16 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
           special_instructions: item.special_instructions || '',
           status: item.status,
           is_custom: !!item.is_custom,
-          id: item.id || undefined
+          id: item.id || undefined,
+          addons: (item.addons || []).map((addon:any) => ({
+            addon_id: addon.addon_id,
+            addon_name: addon.addon_name,
+            addon_price: addon.addon_price,
+            quantity: addon.quantity,
+            is_required: addon.is_required,
+            min_quantity: addon.min_quantity,
+            max_quantity: addon.max_quantity
+          }))
         }))
       };
 
@@ -1299,7 +1363,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
             <tbody>
               ${(order.items || []).map(item => `
                 <tr>
-                  <td>${item.menu_item_name}</td>
+                  <td>${item.menu_item_name}${(item.addons || []).length ? '<br/><span style="font-size:10px;color:#555;">' + (item.addons || []).map((a: any) => a.addon_name + ' x' + a.quantity).join(', ') + '</span>' : ''}</td>
                   <td class="text-right">${item.quantity}</td>
                   <td class="text-right">₹${item.total_price}</td>
                 </tr>
@@ -1360,7 +1424,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     const flatItems = invoice.orders.flatMap((ord) => {
       const orderShortId = ord.order_id.split('-').pop();
       return (ord.items || []).map((item) => ({
-        name: `${item.menu_item_name} (#${orderShortId})`,
+        name: `${item.menu_item_name} (#${orderShortId})${(item.addons || []).length ? '<br/><span style="font-size:10px;color:#555;">' + (item.addons || []).map((a: any) => a.addon_name + ' x' + a.quantity).join(', ') + '</span>' : ''}`,
         quantity: item.quantity,
         total_price: item.total_price
       }));
@@ -1479,7 +1543,11 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   getOrderSubtotal(order: Order): number {
-    return (order.items || []).reduce((sum, item) => sum + (item.total_price || 0), 0);
+    return (order.items || []).reduce((sum, item) => {
+      const itemTotal = item.total_price || 0;
+      const addonsTotal = (item.addons || []).reduce((addonSum, addon) => addonSum + (addon.addon_price * addon.quantity), 0);
+      return sum + itemTotal + addonsTotal;
+    }, 0);
   }
 
   getOrderTaxPercentage(order: Order): number | null {
