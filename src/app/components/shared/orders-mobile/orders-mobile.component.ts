@@ -1361,13 +1361,23 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
               </tr>
             </thead>
             <tbody>
-              ${(order.items || []).map(item => `
-                <tr>
-                  <td>${item.menu_item_name}${(item.addons || []).length ? '<br/><span style="font-size:10px;color:#555;">' + (item.addons || []).map((a: any) => a.addon_name + ' x' + a.quantity).join(', ') + '</span>' : ''}</td>
-                  <td class="text-right">${item.quantity}</td>
-                  <td class="text-right">₹${item.total_price}</td>
-                </tr>
-              `).join('')}
+              ${(order.items || []).map(item => {
+                const addonRows = (item.addons || []).map(addon => `
+                  <tr>
+                    <td style="padding-left:14px;color:#666;">+ ${addon.addon_name} (₹${addon.addon_price})</td>
+                    <td class="text-right" style="color:#666;">${addon.quantity}</td>
+                    <td class="text-right" style="color:#666;">₹${(addon.addon_price * addon.quantity).toFixed(2)}</td>
+                  </tr>
+                `).join('');
+                return `
+                  <tr>
+                    <td>${item.menu_item_name} (₹${item.unit_price})</td>
+                    <td class="text-right">${item.quantity}</td>
+                    <td class="text-right">₹${item.total_price}</td>
+                  </tr>
+                  ${addonRows}
+                `;
+              }).join('')}
             </tbody>
           </table>
           <div class="line"></div>
@@ -1424,19 +1434,34 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     const flatItems = invoice.orders.flatMap((ord) => {
       const orderShortId = ord.order_id.split('-').pop();
       return (ord.items || []).map((item) => ({
-        name: `${item.menu_item_name} (#${orderShortId})${(item.addons || []).length ? '<br/><span style="font-size:10px;color:#555;">' + (item.addons || []).map((a: any) => a.addon_name + ' x' + a.quantity).join(', ') + '</span>' : ''}`,
+        name: `${item.menu_item_name} (#${orderShortId}) (₹${item.unit_price})`,
         quantity: item.quantity,
-        total_price: item.total_price
+        total_price: item.total_price,
+        addons: (item.addons || []).map((addon: any) => ({
+          name: `+ ${addon.addon_name} (#${orderShortId}) (₹${addon.addon_price})`,
+          quantity: addon.quantity,
+          total_price: addon.addon_price * addon.quantity
+        }))
       }));
     });
 
-    const flatItemsHtml = flatItems.map(item => `
-      <tr>
-        <td>${item.name}</td>
-        <td class="text-right">${item.quantity}</td>
-        <td class="text-right">₹${item.total_price}</td>
-      </tr>
-    `).join('');
+    const flatItemsHtml = flatItems.map((item) => {
+      const addonRows = (item.addons || []).map((addon: any) => `
+        <tr>
+          <td style="padding-left:14px;color:#666;">${addon.name}</td>
+          <td class="text-right" style="color:#666;">${addon.quantity}</td>
+          <td class="text-right" style="color:#666;">₹${addon.total_price.toFixed(2)}</td>
+        </tr>
+      `).join('');
+      return `
+        <tr>
+          <td>${item.name}</td>
+          <td class="text-right">${item.quantity}</td>
+          <td class="text-right">₹${item.total_price}</td>
+        </tr>
+        ${addonRows}
+      `;
+    }).join('');
 
     printWindow.document.write(`
       <!DOCTYPE html>

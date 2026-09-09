@@ -108,6 +108,7 @@
                   <div class="flex flex-wrap gap-1">
                     <span *ngFor="let item of invOrd.items" class="text-xs bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200 px-2 py-0.5 rounded-full">
                       {{ item.quantity }} x {{ item.menu_item_name }}
+                      <span *ngIf="item.addons?.length" class="text-gray-500 dark:text-gray-400">+{{ item.addons?.length }} add-on{{ item.addons?.length === 1 ? '' : 's' }}</span>
                     </span>
                   </div>
                 </div>
@@ -224,6 +225,7 @@
               <span *ngFor="let item of ord.items" class="inline-flex items-center px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-sm text-gray-700 dark:text-gray-300">
                 {{ item.menu_item_name }}
                 <span class="ml-2 px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full font-medium">{{ item.quantity }}</span>
+                <span *ngIf="item.addons?.length" class="ml-1 text-xs text-gray-500 dark:text-gray-400">+{{ item.addons?.length }} add-on{{ item.addons?.length === 1 ? '' : 's' }}</span>
               </span>
             </div>
           </div>
@@ -393,30 +395,38 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let item of selectedOrder.items" class="border-b border-gray-200 dark:border-gray-600">
-                <td class="px-4 py-3 border-r border-gray-200 dark:border-gray-600">
-                  <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-lg flex items-center justify-center">
-                      <i class="fas fa-utensils text-blue-600 dark:text-blue-400 text-xs"></i>
+              <ng-container *ngFor="let item of selectedOrder.items">
+                <tr class="border-b border-gray-200 dark:border-gray-600">
+                  <td class="px-4 py-3 border-r border-gray-200 dark:border-gray-600">
+                    <div class="flex items-center space-x-3">
+                      <div class="w-8 h-8 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-utensils text-blue-600 dark:text-blue-400 text-xs"></i>
+                      </div>
+                      <div>
+                        <p class="font-medium text-gray-900 dark:text-white">{{ item.menu_item_name }}</p>
+                        <div *ngIf="item.special_instructions" class="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                          {{ item.special_instructions }}
+                        </div>
+                      </div>
                     </div>
-                     <div>
-                       <p class="font-medium text-gray-900 dark:text-white">{{ item.menu_item_name }}</p>
-                       <div *ngIf="item.special_instructions" class="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                         {{ item.special_instructions }}
-                       </div>
-                     </div>
-                  </div>
-                </td>
-                <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600">
-                  <span class="font-semibold text-gray-900 dark:text-white">{{ item.quantity }}</span>
-                </td>
-                <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600">
-                  <span class="text-gray-700 dark:text-gray-300">₹{{ item.unit_price }}</span>
-                </td>
-                <td class="px-4 py-3 text-right">
-                  <span class="font-semibold text-gray-900 dark:text-white">₹{{ item.total_price }}</span>
-                </td>
-              </tr>
+                  </td>
+                  <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600">
+                    <span class="font-semibold text-gray-900 dark:text-white">{{ item.quantity }}</span>
+                  </td>
+                  <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600">
+                    <span class="text-gray-700 dark:text-gray-300">₹{{ item.unit_price }}</span>
+                  </td>
+                  <td class="px-4 py-3 text-right">
+                    <span class="font-semibold text-gray-900 dark:text-white">₹{{ item.total_price }}</span>
+                  </td>
+                </tr>
+                <tr *ngFor="let addon of item.addons" class="border-b border-gray-100 dark:border-gray-700 last:border-0">
+                  <td class="px-4 py-2 pl-10 border-r border-gray-200 dark:border-gray-600 text-xs text-gray-600 dark:text-gray-300">+ {{ addon.addon_name }}</td>
+                  <td class="px-4 py-2 text-center border-r border-gray-200 dark:border-gray-600 text-xs text-gray-500 dark:text-gray-400">{{ addon.quantity }}</td>
+                  <td class="px-4 py-2 text-center border-r border-gray-200 dark:border-gray-600 text-xs text-gray-500 dark:text-gray-400">₹{{ addon.addon_price }}</td>
+                  <td class="px-4 py-2 text-right text-xs text-gray-500 dark:text-gray-400">₹{{ (addon.addon_price * addon.quantity).toFixed(2) }}</td>
+                </tr>
+              </ng-container>
             </tbody>
           </table>
         </div>
@@ -606,30 +616,38 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let item of ord.items" class="border-b border-gray-200 dark:border-gray-600">
-                  <td class="px-4 py-3 border-r border-gray-200 dark:border-gray-600">
-                    <div class="flex items-center space-x-3">
-                      <div class="w-8 h-8 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-utensils text-blue-600 dark:text-blue-400 text-xs"></i>
-                      </div>
-                      <div>
-                        <p class="font-medium text-gray-900 dark:text-white">{{ item.menu_item_name }}</p>
-                        <div *ngIf="item.special_instructions" class="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                          {{ item.special_instructions }}
+                <ng-container *ngFor="let item of ord.items">
+                  <tr class="border-b border-gray-200 dark:border-gray-600">
+                    <td class="px-4 py-3 border-r border-gray-200 dark:border-gray-600">
+                      <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-lg flex items-center justify-center">
+                          <i class="fas fa-utensils text-blue-600 dark:text-blue-400 text-xs"></i>
+                        </div>
+                        <div>
+                          <p class="font-medium text-gray-900 dark:text-white">{{ item.menu_item_name }}</p>
+                          <div *ngIf="item.special_instructions" class="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                            {{ item.special_instructions }}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </td>
-                  <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600">
-                    <span class="font-semibold text-gray-900 dark:text-white">{{ item.quantity }}</span>
-                  </td>
-                  <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600">
-                    <span class="text-gray-700 dark:text-gray-300">₹{{ item.unit_price }}</span>
-                  </td>
-                  <td class="px-4 py-3 text-right">
-                    <span class="font-semibold text-gray-900 dark:text-white">₹{{ item.total_price }}</span>
-                  </td>
-                </tr>
+                    </td>
+                    <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600">
+                      <span class="font-semibold text-gray-900 dark:text-white">{{ item.quantity }}</span>
+                    </td>
+                    <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600">
+                      <span class="text-gray-700 dark:text-gray-300">₹{{ item.unit_price }}</span>
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                      <span class="font-semibold text-gray-900 dark:text-white">₹{{ item.total_price }}</span>
+                    </td>
+                  </tr>
+                  <tr *ngFor="let addon of item.addons" class="border-b border-gray-100 dark:border-gray-700 last:border-0">
+                    <td class="px-4 py-2 pl-10 border-r border-gray-200 dark:border-gray-600 text-xs text-gray-600 dark:text-gray-300">+ {{ addon.addon_name }}</td>
+                    <td class="px-4 py-2 text-center border-r border-gray-200 dark:border-gray-600 text-xs text-gray-500 dark:text-gray-400">{{ addon.quantity }}</td>
+                    <td class="px-4 py-2 text-center border-r border-gray-200 dark:border-gray-600 text-xs text-gray-500 dark:text-gray-400">₹{{ addon.addon_price }}</td>
+                    <td class="px-4 py-2 text-right text-xs text-gray-500 dark:text-gray-400">₹{{ (addon.addon_price * addon.quantity).toFixed(2) }}</td>
+                  </tr>
+                </ng-container>
               </tbody>
             </table>
           </div>
@@ -709,30 +727,38 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let item of selectedOrderItems.items" class="border-b border-gray-200 dark:border-gray-600">
-              <td class="px-4 py-3 border-r border-gray-200 dark:border-gray-600">
-                <div class="flex items-center space-x-3">
-                  <div class="w-8 h-8 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-utensils text-blue-600 dark:text-blue-400 text-xs"></i>
-                  </div>
-                  <div>
-                    <p class="font-medium text-gray-900 dark:text-white">{{ item.menu_item_name }}</p>
-                    <div *ngIf="item.special_instructions" class="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                      {{ item.special_instructions }}
+            <ng-container *ngFor="let item of selectedOrderItems.items">
+              <tr class="border-b border-gray-200 dark:border-gray-600">
+                <td class="px-4 py-3 border-r border-gray-200 dark:border-gray-600">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-lg flex items-center justify-center">
+                      <i class="fas fa-utensils text-blue-600 dark:text-blue-400 text-xs"></i>
+                    </div>
+                    <div>
+                      <p class="font-medium text-gray-900 dark:text-white">{{ item.menu_item_name }}</p>
+                      <div *ngIf="item.special_instructions" class="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                        {{ item.special_instructions }}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </td>
-              <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600">
-                <span class="font-semibold text-gray-900 dark:text-white">{{ item.quantity }}</span>
-              </td>
-              <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600">
-                <span class="text-gray-700 dark:text-gray-300">₹{{ item.unit_price }}</span>
-              </td>
-              <td class="px-4 py-3 text-right">
-                <span class="font-semibold text-gray-900 dark:text-white">₹{{ item.total_price }}</span>
-              </td>
-            </tr>
+                </td>
+                <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600">
+                  <span class="font-semibold text-gray-900 dark:text-white">{{ item.quantity }}</span>
+                </td>
+                <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600">
+                  <span class="text-gray-700 dark:text-gray-300">₹{{ item.unit_price }}</span>
+                </td>
+                <td class="px-4 py-3 text-right">
+                  <span class="font-semibold text-gray-900 dark:text-white">₹{{ item.total_price }}</span>
+                </td>
+              </tr>
+              <tr *ngFor="let addon of item.addons" class="border-b border-gray-100 dark:border-gray-700 last:border-0">
+                <td class="px-4 py-2 pl-10 border-r border-gray-200 dark:border-gray-600 text-xs text-gray-600 dark:text-gray-300">+ {{ addon.addon_name }}</td>
+                <td class="px-4 py-2 text-center border-r border-gray-200 dark:border-gray-600 text-xs text-gray-500 dark:text-gray-400">{{ addon.quantity }}</td>
+                <td class="px-4 py-2 text-center border-r border-gray-200 dark:border-gray-600 text-xs text-gray-500 dark:text-gray-400">₹{{ addon.addon_price }}</td>
+                <td class="px-4 py-2 text-right text-xs text-gray-500 dark:text-gray-400">₹{{ (addon.addon_price * addon.quantity).toFixed(2) }}</td>
+              </tr>
+            </ng-container>
           </tbody>
         </table>
       </div>
