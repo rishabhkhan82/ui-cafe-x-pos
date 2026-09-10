@@ -71,6 +71,15 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   selectedMenuItemForAdd: MenuItem | null = null;
   addItemQuantity = 1;
   menuSearchTerm = '';
+  editFormItemAddonsMap: Record<number, any[]> = {};
+
+  // Edit order summary
+  editOrderItemsSubtotal = 0;
+  editOrderAddonsSubtotal = 0;
+  editOrderAddonsCount = 0;
+  editOrderSubtotal = 0;
+  editOrderGst = 0;
+  editOrderTotal = 0;
 
   // Custom item state
   showCustomItemForm = false;
@@ -817,10 +826,12 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
       ...item,
       addons: (item.addons || []).map(addon => ({ ...addon }))
     }));
+    this.editFormItemAddonsMap = {};
     this.editingOfferRedemption = null;
     this.editingOffer = null;
     this.loadAvailableMenuItems();
     this.loadOfferRedemptionContext(order);
+    this.computeEditOrderSummary();
     this.showEditOrderModal = true;
   }
 
@@ -866,6 +877,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.menuSearchTerm = '';
     this.editingOfferRedemption = null;
     this.editingOffer = null;
+    this.editFormItemAddonsMap = {};
   }
 
   private loadOfferRedemptionContext(order: Order): void {
@@ -963,9 +975,11 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
           created_at: item.created_at ? new Date(item.created_at) : undefined,
           updated_at: item.updated_at ? new Date(item.updated_at) : undefined,
           created_by: item.created_by,
-          updated_by: item.updated_by
+          updated_by: item.updated_by,
+          addons: item.addons || []
         }));
         this.filteredAvailableMenuItems = [...this.availableMenuItems];
+        this.loadEditFormItemAddons();
       },
       error: (err) => {
         console.error('Error loading menu items for edit:', err);
@@ -992,59 +1006,122 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     if (item) {
       item.quantity = qty;
       item.total_price = qty * item.unit_price;
+      this.computeEditOrderSummary();
     }
   }
 
   removeEditItem(itemId: number): void {
     this.editFormItems = this.editFormItems.filter(i => i.id !== itemId && i.menu_item_id !== itemId);
+    this.computeEditOrderSummary();
   }
 
-  getEditItemAddons(item: any): any[] {
-    return item.addons || [];
+  getEditItemAvailableAddons(item: any): any[] {
+    if (!item.menu_item_id) return [];
+    const cached = this.editFormItemAddonsMap[item.menu_item_id];
+    if (cached) {
+      return cached;
+    }
+    const menuItem = this.availableMenuItems.find((m: any) => m.id === item.menu_item_id);
+    return menuItem?.addons || [];
   }
 
-  getAllAvailableAddons(): any[] {
-    return (this.availableMenuItems || []).reduce((addons: any[], menuItem: any) => {
-      const itemAddons = menuItem.addons || [];
-      return addons.concat(itemAddons);
-    }, []);
+  private loadEditFormItemAddons(): void {
+    const existingIds = this.editFormItems.map(item => item.menu_item_id).filter(Boolean);
+    const availableIds = this.availableMenuItems.map(item => item.id).filter(Boolean);
+    const uniqueMenuItemIds = Array.from(new Set([...existingIds, ...availableIds]));
+
+    uniqueMenuItemIds.forEach(menuItemId => {
+      if (!this.editFormItemAddonsMap[menuItemId]) {
+        const sub = this.crudService.getData(`menu-item-addons/menu-item/${menuItemId}`).subscribe({
+          next: (response: any) => {
+            const data = response || [];
+            this.editFormItemAddonsMap[menuItemId] = data.map((item: any) => ({
+              id: item.id,
+              menu_item_id: item.menu_item_id,
+              addon_id: item.addon_id,
+              is_required: item.is_required,
+              min_quantity: item.min_quantity,
+              max_quantity: item.max_quantity,
+              display_order: item.display_order,
+              addon_name: item.addon_name,
+              addon_price: item.addon_price,
+              addon_image: item.addon_image
+            }));
+          },
+          error: (error) => {
+            console.error('Error loading add-ons for edit item:', error);
+            this.editFormItemAddonsMap[menuItemId] = [];
+          }
+        });
+        this.subscriptions.push(sub);
+      }
+    });
   }
 
-  getAddonById(addonId: number): any {
-    return this.getAllAvailableAddons().find((addon: any) => addon.addon_id === addonId);
+  isEditItemAddonSelected(item: any, addon: any): boolean {
+    return (item.addons || []).some((a: any) => a.addon_id === addon.addon_id);
   }
 
-  addEditItemAddon(item: any, addon: any): void {
+  getEditItemSelectedAddonQuantity(item: any, addonId: number): number {
+    const addon = (item.addons || []).find((a: any) => a.addon_id === addonId);
+    return addon ? addon.quantity : 0;
+  }
+
+  setEditItemAddonQuantity(item: any, addonId: number, value: number): void {
     if (!item.addons) item.addons = [];
-    const exists = item.addons.find((a: any) => a.addon_id === addon.addon_id);
-    if (!exists) {
+    const availableAddon = this.getEditItemAvailableAddons(item).find((a: any) => a.addon_id === addonId);
+    const min = availableAddon ? (availableAddon.min_quantity || 0) : 0;
+    const max = availableAddon ? (availableAddon.max_quantity || 0) : 0;
+    let next = value;
+    if (next > 0 && next < min) next = min;
+    if (max > 0 && next > max) next = max;
+
+    const existingIndex = item.addons.findIndex((a: any) => a.addon_id === addonId);
+    if (next <= 0) {
+      if (existingIndex >= 0) {
+        item.addons.splice(existingIndex, 1);
+      }
+      this.computeEditOrderSummary();
+      return;
+    }
+
+    if (existingIndex >= 0) {
+      item.addons[existingIndex].quantity = next;
+    } else if (next > 0) {
       item.addons.push({
-        addon_id: addon.addon_id,
-        addon_name: addon.addon_name,
-        addon_price: Number(addon.addon_price || 0),
-        quantity: 1,
-        is_required: !!addon.is_required,
-        min_quantity: addon.min_quantity || 0,
-        max_quantity: addon.max_quantity || 10
+        addon_id: addonId,
+        addon_name: availableAddon?.addon_name || '',
+        addon_price: Number(availableAddon?.addon_price || 0),
+        quantity: next,
+        is_required: !!availableAddon?.is_required,
+        min_quantity: availableAddon?.min_quantity || 0,
+        max_quantity: availableAddon?.max_quantity || 0
       });
+    }
+    this.computeEditOrderSummary();
+  }
+
+  toggleEditItemAddon(item: any, addon: any): void {
+    const currentQuantity = this.getEditItemSelectedAddonQuantity(item, addon.addon_id);
+    if (currentQuantity > 0) {
+      this.setEditItemAddonQuantity(item, addon.addon_id, 0);
+    } else {
+      const minQty = addon.min_quantity || 1;
+      this.setEditItemAddonQuantity(item, addon.addon_id, minQty);
     }
   }
 
-  removeEditItemAddon(item: any, addonId: number): void {
-    if (!item.addons) return;
-    item.addons = item.addons.filter((a: any) => a.addon_id !== addonId);
+  increaseEditItemAddon(item: any, addonId: number): void {
+    this.setEditItemAddonQuantity(item, addonId, this.getEditItemSelectedAddonQuantity(item, addonId) + 1);
   }
 
-  updateEditItemAddonQuantity(item: any, addonId: number, delta: number): void {
-    if (!item.addons) return;
-    const addon = item.addons.find((a: any) => a.addon_id === addonId);
-    if (!addon) return;
-    const min = addon.min_quantity || 0;
-    const max = addon.max_quantity || 10;
-    let next = (addon.quantity || 1) + delta;
-    if (next < min) next = min;
-    if (max > 0 && next > max) next = max;
-    addon.quantity = next;
+  decreaseEditItemAddon(item: any, addonId: number): void {
+    this.setEditItemAddonQuantity(item, addonId, this.getEditItemSelectedAddonQuantity(item, addonId) - 1);
+  }
+
+  onEditItemAddonButtonClick(item: any, addonId: number, delta: number, event: Event): void {
+    event.stopPropagation();
+    this.setEditItemAddonQuantity(item, addonId, this.getEditItemSelectedAddonQuantity(item, addonId) + delta);
   }
 
   selectMenuItemForAdd(menuItem: MenuItem): void {
@@ -1067,6 +1144,18 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     }
 
     const qty = Math.max(1, this.addItemQuantity);
+    const availableAddons = menuItem.addons || [];
+    const initialAddons = availableAddons
+      .filter((addon: any) => addon.is_required)
+      .map((addon: any) => ({
+        addon_id: addon.addon_id,
+        addon_name: addon.addon_name,
+        addon_price: Number(addon.addon_price || 0),
+        quantity: addon.min_quantity || 1,
+        is_required: true,
+        min_quantity: addon.min_quantity || 0,
+        max_quantity: addon.max_quantity || 0
+      }));
 
     this.editFormItems.push({
       menu_item_id: menuItem.id,
@@ -1076,11 +1165,13 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
       total_price: menuItem.price * qty,
       category: menuItem.category || '',
       special_instructions: '',
-      status: this.editingOrder?.status || 'PENDING'
+      status: this.editingOrder?.status || 'PENDING',
+      addons: initialAddons
     });
 
     this.selectedMenuItemForAdd = null;
     this.addItemQuantity = 1;
+    this.computeEditOrderSummary();
   }
 
   openCustomItemForm(): void {
@@ -1125,6 +1216,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     });
 
     this.closeCustomItemForm();
+    this.computeEditOrderSummary();
   }
 
   getEditOrderTotal(): number {
@@ -1170,6 +1262,33 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
 
   getEditOrderLoyaltyDiscount(): number {
     return this.editingOrder?.loyalty_discount_amount || 0;
+  }
+
+  private computeEditOrderSummary(): void {
+    this.editOrderItemsSubtotal = this.editFormItems.reduce((sum, item) => sum + ((item.unit_price || 0) * (item.quantity || 0)), 0);
+
+    this.editOrderAddonsSubtotal = this.editFormItems.reduce((sum: number, item: any) => {
+      const addonsTotal = (item.addons || []).reduce((addonSum: number, addon: any) => addonSum + ((addon.addon_price || 0) * (addon.quantity || 0)), 0);
+      return sum + addonsTotal;
+    }, 0);
+
+    this.editOrderAddonsCount = this.editFormItems.reduce((sum: number, item: any) => {
+      const selectedAddons = item.addons || [];
+      const distinctAddons = selectedAddons.filter((a: any) => a.quantity > 0);
+      return sum + distinctAddons.length;
+    }, 0);
+
+    this.editOrderSubtotal = this.editOrderItemsSubtotal + this.editOrderAddonsSubtotal;
+
+    const restaurant = this.restaurantDataService.getCurrentRestaurant();
+    const isGst = !!restaurant?.is_gst;
+    if (isGst && this.editingOrder) {
+      const rate = restaurant && restaurant.gst_percentage != null ? Number(restaurant.gst_percentage) : 0;
+      this.editOrderGst = Math.round(this.editOrderSubtotal * (rate / 100));
+    } else {
+      this.editOrderGst = 0;
+    }
+    this.editOrderTotal = this.editOrderSubtotal + this.editOrderGst - this.getEditOrderDiscount() - this.getEditOrderLoyaltyDiscount();
   }
 
   saveEditedOrder(): void {

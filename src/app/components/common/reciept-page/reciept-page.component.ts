@@ -100,8 +100,8 @@ export class RecieptPageComponent implements OnInit {
 
   getOrderSubtotal(order: Order): number {
     return (order.items || []).reduce((sum, item) => {
-      const itemTotal = item.total_price || 0;
-      const addonsTotal = (item.addons || []).reduce((addonSum, addon) => addonSum + (addon.addon_price * addon.quantity), 0);
+      const itemTotal = (item.total_price || 0);
+      const addonsTotal = (item.addons || []).reduce((addonSum: number, addon: any) => addonSum + ((addon.addon_price || 0) * (addon.quantity || 0)), 0);
       return sum + itemTotal + addonsTotal;
     }, 0);
   }
@@ -139,27 +139,60 @@ export class RecieptPageComponent implements OnInit {
     return this.orders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
   }
 
+  getInvoiceItemsCount(): number {
+    return this.orders.reduce((sum, order) => sum + (order.items || []).length, 0);
+  }
+
+  getInvoiceItemsSubtotal(): number {
+    return this.orders.reduce((sum, order) => {
+      return sum + (order.items || []).reduce((itemSum, item) => itemSum + (item.total_price || 0), 0);
+    }, 0);
+  }
+
+  getInvoiceAddonsCount(): number {
+    return this.orders.reduce((sum, order) => {
+      return sum + (order.items || []).reduce((itemSum, item) => {
+        const selectedAddons = (item.addons || []).filter(a => (a.quantity || 0) > 0);
+        return itemSum + selectedAddons.length;
+      }, 0);
+    }, 0);
+  }
+
+  getInvoiceAddonsSubtotal(): number {
+    return this.orders.reduce((sum, order) => {
+      return sum + (order.items || []).reduce((itemSum, item) => {
+        const addonsTotal = (item.addons || []).reduce((addonSum, addon) => addonSum + ((addon.addon_price || 0) * (addon.quantity || 0)), 0);
+        return itemSum + addonsTotal;
+      }, 0);
+    }, 0);
+  }
+
   getTablesSummary(): string {
     const tables = this.orders.map(o => o.table_number || 'Takeaway');
     return [...new Set(tables)].join(', ');
   }
 
-  getFlatItems(): { name: string; quantity: number; total_price: number }[] {
-    return this.orders.flatMap((ord) => {
-      const orderShortId = ord.order_id.split('-').pop();
-      const items: { name: string; quantity: number; total_price: number }[] = [];
-      (ord.items || []).forEach((item) => {
-        const addonText = (item.addons || []).length
-          ? '<br/><span style="font-size:10px;color:#666;">' + (item.addons || []).map((a: any) => a.addon_name + ' x' + a.quantity).join(', ') + '</span>'
-          : '';
-        items.push({
-          name: `${item.menu_item_name} (#${orderShortId})${addonText}`,
-          quantity: item.quantity,
-          total_price: item.total_price
-        });
-      });
-      return items;
-    });
+  getPaymentStatus(): string {
+    if (!this.orders.length) return 'N/A';
+    const statuses = this.orders.map(o => o.payment_status).filter(Boolean);
+    if (!statuses.length) return 'N/A';
+    const uniqueStatuses = [...new Set(statuses)];
+    if (uniqueStatuses.length === 1) {
+      return this.formatPaymentStatus(uniqueStatuses[0]);
+    }
+    return `${this.formatPaymentStatus(uniqueStatuses[0])} (${uniqueStatuses.length} statuses)`;
+  }
+
+  formatPaymentStatus(status: string): string {
+    if (!status) return 'N/A';
+    const map: Record<string, string> = {
+      PENDING: 'Pending',
+      PAID: 'Paid',
+      FAILED: 'Failed',
+      REFUNDED: 'Refunded',
+      completed: 'Completed'
+    };
+    return map[status.toUpperCase()] || status;
   }
 
   downloadReceipt(): void {
@@ -173,15 +206,40 @@ export class RecieptPageComponent implements OnInit {
     const invoiceDiscount = this.getInvoiceDiscount();
     const invoiceLoyaltyDiscount = this.getInvoiceLoyaltyDiscount();
 
-    const flatItems = this.getFlatItems();
-
-    const flatItemsHtml = flatItems.map(item => `
-      <tr>
-        <td>${item.name}</td>
-        <td class="text-right">${item.quantity}</td>
-        <td class="text-right">₹${item.total_price}</td>
-      </tr>
-    `).join('');
+    const flatItemsHtml = this.orders.map((ord) => {
+      const orderShortId = ord.order_id.split('-').pop();
+      return (ord.items || [])
+        .map((item) => {
+          const addonRows = (item.addons || [])
+            .map((addon: any) => {
+              const addonName = addon.addon_name || '';
+              const addonPrice = Number(addon.addon_price || 0);
+              const addonQty = Number(addon.quantity || 0);
+              const lineTotal = addonPrice * addonQty;
+              return `
+                <tr>
+                  <td style="padding-left:14px;color:#666;">+ ${addonName} (₹${addonPrice})</td>
+                  <td class="text-right" style="color:#666;">${addonQty}</td>
+                  <td class="text-right" style="color:#666;">₹${lineTotal.toFixed(2)}</td>
+                </tr>
+              `;
+            })
+            .join('');
+          const itemName = item.menu_item_name || '';
+          const itemUnitPrice = Number(item.unit_price || 0);
+          const itemQty = Number(item.quantity || 0);
+          const itemTotal = Number(item.total_price || 0);
+          return `
+            <tr>
+              <td>${itemName} (#${orderShortId}) (₹${itemUnitPrice})</td>
+              <td class="text-right">${itemQty}</td>
+              <td class="text-right">₹${itemTotal.toFixed(2)}</td>
+            </tr>
+            ${addonRows}
+          `;
+        })
+        .join('');
+    }).join('');
 
     const printWindow = window.open('', '_blank', 'width=480,height=600');
     if (!printWindow) return;
@@ -244,7 +302,7 @@ export class RecieptPageComponent implements OnInit {
             <span>Grand Total</span><span>₹${invoiceTotal.toFixed(2)}</span>
           </div>
           <div class="line"></div>
-          <div class="center fs-sm mt-1">Thank you for your order!</div>
+          <div class="center fs-sm mt-1">Thank you for your order, visit us again!</div>
           <div class="center fs-sm mt-1">powered by cafexpos.in</div>
         </div>
       </body>
