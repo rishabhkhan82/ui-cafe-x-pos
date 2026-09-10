@@ -1327,6 +1327,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         tax_percentage: this.getEditOrderTaxPercentage(),
         discount_amount: this.getEditOrderDiscount(),
         loyalty_discount_amount: editingOrder.loyalty_discount_amount,
+        send_notification: false,
         order_items: this.editFormItems.map(item => ({
           order_id: editingOrder.id,
           menu_item_id: item.menu_item_id,
@@ -1386,7 +1387,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
 
     this.getRestAndPlatformUsersService.getNotificationRecipients(restaurantId, ['kitchen_manager']).subscribe((users: any[]) => {
       (users || []).forEach((user: any) => {
-        this.commonUserNotificationsService.createFromTemplate('order_status_updated', templateData, {
+        this.commonUserNotificationsService.createFromTemplate('order_edited_admin', templateData, {
           recipient_id: String(user.id),
           recipient_role: 'kitchen_manager',
           restaurant_id: restaurantId,
@@ -1397,7 +1398,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     });
 
     if (this.editingOrder.customer_id) {
-      this.commonUserNotificationsService.createFromTemplate('order_status_updated', templateData, {
+      this.commonUserNotificationsService.createFromTemplate('order_edited_customer', templateData, {
         recipient_id: String(this.editingOrder.customer_id),
         recipient_role: 'customer',
         restaurant_id: restaurantId,
@@ -1408,7 +1409,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
 
     this.getRestAndPlatformUsersService.getNotificationRecipients(restaurantId, ['waiter']).subscribe((users: any[]) => {
       (users || []).forEach((user: any) => {
-        this.commonUserNotificationsService.createFromTemplate('order_status_updated', templateData, {
+        this.commonUserNotificationsService.createFromTemplate('order_edited_admin', templateData, {
           recipient_id: String(user.id),
           recipient_role: 'waiter',
           restaurant_id: restaurantId,

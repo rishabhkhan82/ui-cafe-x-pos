@@ -66,10 +66,20 @@ export class CommonUserNotificationsTemplatesService {
       action_url: '/orders/{{order_id}}',
       icon: 'fas fa-sync-alt'
     },
-    order_updated: {
-      id: 'order_updated',
-      title: 'Order #{{order_id}} Updated',
-      message: 'Your order has been updated.',
+    order_edited_customer: {
+      id: 'order_edited_customer',
+      title: 'Order #{{order_id}} Edited',
+      message: 'Your order has been edited successfully. Please review the change in orders page.',
+      type: 'order',
+      priority: 'medium',
+      action_text: 'View Order',
+      action_url: '/orders/{{order_id}}',
+      icon: 'fas fa-edit'
+    },
+    order_edited_admin: {
+      id: 'order_edited_admin',
+      title: 'Order #{{order_id}} Edited',
+      message: 'Please review the changes made to the order.',
       type: 'order',
       priority: 'medium',
       action_text: 'View Order',
