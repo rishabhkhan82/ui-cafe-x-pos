@@ -20,7 +20,6 @@ export class NotificationRoutingService {
     { toStatus: 'READY',              targetRoles: ['waiter', 'customer'], templateId: 'order_status_updated', persistToList: true },
     { toStatus: 'ON_THE_WAY',            targetRoles: ['customer'], templateId: 'order_status_updated', persistToList: true },
     { toStatus: 'SERVED',            targetRoles: ['customer'], templateId: 'order_status_updated', persistToList: true },
-    { toStatus: 'COMPLETED',          targetRoles: ['customer'], templateId: 'order_status_updated', persistToList: true },
   ];
 
   constructor(

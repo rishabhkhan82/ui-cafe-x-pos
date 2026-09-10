@@ -76,7 +76,7 @@ export class CommonUserNotificationsService {
   // ===============================
 
   loadNotifications(recipientId: string, filter: 'unread' | 'read' | 'all' = 'unread', page: number = 1, size: number = 100): Observable<Notification[]> {
-    const params: any = { recipient_id: recipientId, page, size };
+    const params: any = { recipient_id: recipientId };
     if (filter === 'unread') {
       params.status = 'unread';
     } else if (filter === 'read') {
