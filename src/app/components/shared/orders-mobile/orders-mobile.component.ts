@@ -1010,7 +1010,13 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     }
   }
 
-  removeEditItem(itemId: number): void {
+  async removeEditItem(itemId: number): Promise<void> {
+    const confirmed = await this.confirmationService.confirm(
+      'Are you sure you want to remove this item from the list?',
+      'Remove Item'
+    );
+    if (!confirmed) return;
+
     this.editFormItems = this.editFormItems.filter(i => i.id !== itemId && i.menu_item_id !== itemId);
     this.computeEditOrderSummary();
   }
