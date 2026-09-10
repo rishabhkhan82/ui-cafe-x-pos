@@ -18,7 +18,6 @@ import { RestaurantDataService } from '../../../services/restaurant-data.service
 import { environment } from '../../../environments/environment';
 import { GetRestAndPlatformUsersService } from '../../../services/get-rest-and-platform-users.service';
 import { CommonUserNotificationsService } from '../../../services/common-user-notifications.service';
-import { take, filter } from 'rxjs/operators';
 
 interface EligibleOffer {
   id: string;
@@ -69,8 +68,6 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
   showOrderDetails = false;
   showAllOrderHistory = false;
   eligibleOffers: EligibleOffer[] = [];
-  restaurantOwnerUserIds: string[] = [];
-  restaurantManagerUserIds: string[] = [];
   cartItemCount = 0;
   isLoading = false;
   isOrderHistoryLoading = false;
@@ -449,18 +446,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
   requestBilling(): void {
     if (!this.canRequestBilling()) return;
 
-    this.getRestAndPlatformUsersService.users$.pipe(
-      take(1),
-      filter(users => users.length > 0)
-    ).subscribe(recipients => {
-      this.restaurantOwnerUserIds = recipients
-        .filter(u => u.role === 'restaurant_owner')
-        .map(u => String(u.id));
-      this.restaurantManagerUserIds = recipients
-        .filter(u => u.role === 'restaurant_manager')
-        .map(u => String(u.id));
-    });
-
+    const restaurantId = sessionStorage.getItem('current_customer_restaurant_id') || String(this.activeOrders[0]?.restaurant_id || '');
 
     this.generatedInvoiceId = this.generateInvoiceId();
 
@@ -517,186 +503,202 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
       if (!confirmed) { this.generatedInvoiceId = null; return; }
       this.isRequestingBilling = true;
 
-      let completed = 0;
-      const total = this.activeOrders.length;
+      this.getRestAndPlatformUsersService.getNotificationRecipients(restaurantId, ['restaurant_owner', 'restaurant_manager']).subscribe({
+        next: (response: any) => {
+          const recipients = Array.isArray(response) ? response : (response?.data || []);
+          const ownerIds = recipients
+            .filter((u: any) => u.role === 'restaurant_owner')
+            .map((u: any) => String(u.id));
+          const managerIds = recipients
+            .filter((u: any) => u.role === 'restaurant_manager')
+            .map((u: any) => String(u.id));
 
-      this.activeOrders.forEach(order => {
-        const orderDiscount = discountAllocations.get(order.id) || 0;
-        const orderLoyaltyDiscount = loyaltyAllocations.get(order.id) || 0;
-        const orderPreTax = (order.total_amount || 0) - (order.tax_amount || 0) + (order.discount_amount || 0);
-        const orderNewTotal = Math.round((orderPreTax - orderDiscount - orderLoyaltyDiscount + (order.tax_amount || 0)) * 100) / 100;
+          let completed = 0;
+          const total = this.activeOrders.length;
 
-        const orderRequest: any = {
-          order_id: order.order_id,
-          customer_name: order.customer_name,
-          table_number: order.table_number,
-          status: 'BILLING_REQUESTED',
-          total_amount: orderNewTotal,
-          special_instructions: order.special_instructions,
-          payment_status: order.payment_status,
-          payment_method: order.payment_method,
-          order_type: order.order_type,
-          priority: order.priority,
-          tax_amount: order.tax_amount,
-          discount_amount: orderDiscount,
-          loyalty_discount_amount: orderLoyaltyDiscount,
-          discount_type: this.appliedOffer?.type,
-          discount_percentage: this.appliedOffer?.type === 'percentage' ? this.appliedOffer.discountValue : undefined,
-          invoice_id: this.generatedInvoiceId,
-          order_items: order.items.map(item => ({
-            id: item.id,
-            order_id: item.order_id,
-            menu_item_id: item.menu_item_id,
-            menu_item_name: item.menu_item_name,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-            total_price: item.total_price,
-            category: item.category,
-            special_instructions: item.special_instructions,
-            status: 'BILLING_REQUESTED',
-            addons: item.addons || []
-          }))
-        };
+          this.activeOrders.forEach(order => {
+            const orderDiscount = discountAllocations.get(order.id) || 0;
+            const orderLoyaltyDiscount = loyaltyAllocations.get(order.id) || 0;
+            const orderPreTax = (order.total_amount || 0) - (order.tax_amount || 0) + (order.discount_amount || 0);
+            const orderNewTotal = Math.round((orderPreTax - orderDiscount - orderLoyaltyDiscount + (order.tax_amount || 0)) * 100) / 100;
 
-        this.crudService.updateOrder(order.id, orderRequest).subscribe({
-                  next: () => {
-                    completed++;
-                    if (completed === total) {
-                      this.notificationService.success(
-                        'Billing Generated',
-                        `Your bill of ₹${this.invoiceTotal} has been generated, please show this at counter and pay`
-                      );
-                      this.pendingBillsService.setPendingBilling(true);
+            const orderRequest: any = {
+              order_id: order.order_id,
+              customer_name: order.customer_name,
+              table_number: order.table_number,
+              status: 'BILLING_REQUESTED',
+              total_amount: orderNewTotal,
+              special_instructions: order.special_instructions,
+              payment_status: order.payment_status,
+              payment_method: order.payment_method,
+              order_type: order.order_type,
+              priority: order.priority,
+              tax_amount: order.tax_amount,
+              discount_amount: orderDiscount,
+              loyalty_discount_amount: orderLoyaltyDiscount,
+              discount_type: this.appliedOffer?.type,
+              discount_percentage: this.appliedOffer?.type === 'percentage' ? this.appliedOffer.discountValue : undefined,
+              invoice_id: this.generatedInvoiceId,
+              order_items: order.items.map((item: any) => ({
+                id: item.id,
+                order_id: item.order_id,
+                menu_item_id: item.menu_item_id,
+                menu_item_name: item.menu_item_name,
+                quantity: item.quantity,
+                unit_price: item.unit_price,
+                total_price: item.total_price,
+                category: item.category,
+                special_instructions: item.special_instructions,
+                status: 'BILLING_REQUESTED',
+                addons: item.addons || []
+              }))
+            };
 
-                      const restaurantId = this.activeOrders[0].restaurant_id;
-                      const templateData: Record<string, string | number> = {
-                        invoice_number: this.generatedInvoiceId || '',
-                        order_id: String(this.activeOrders[0].order_id || ''),
-                        amount: String(this.invoiceTotal)
+            this.crudService.updateOrder(order.id, orderRequest).subscribe({
+              next: () => {
+                completed++;
+                if (completed === total) {
+                  this.notificationService.success(
+                    'Billing Generated',
+                    `Your bill of ₹${this.invoiceTotal} has been generated, please show this at counter and pay`
+                  );
+                  this.pendingBillsService.setPendingBilling(true);
+
+                  const restaurantIdStr = String(this.activeOrders[0].restaurant_id || restaurantId);
+                  const templateData: Record<string, string | number> = {
+                    invoice_number: this.generatedInvoiceId || '',
+                    order_id: String(this.activeOrders[0].order_id || ''),
+                    amount: String(this.invoiceTotal)
+                  };
+
+                  ownerIds.forEach((ownerId:any) => {
+                    this.commonUserNotificationsService.createFromTemplate(
+                      'invoice_generated',
+                      templateData,
+                      {
+                        recipient_id: ownerId,
+                        recipient_role: 'restaurant_owner',
+                        restaurant_id: restaurantIdStr,
+                        priority: 'medium',
+                        related_order_id: String(this.activeOrders[0].order_id || ''),
+                        related_entity_type: 'invoice'
+                      }
+                    ).subscribe({
+                      next: () => console.log(`[CustomerOrders] Invoice notification sent to restaurant owner ${ownerId}`),
+                      error: (err) => console.error(`[CustomerOrders] Invoice notification failed for owner ${ownerId}`, err)
+                    });
+                  });
+
+                  managerIds.forEach((managerId:any) => {
+                    this.commonUserNotificationsService.createFromTemplate(
+                      'invoice_generated',
+                      templateData,
+                      {
+                        recipient_id: managerId,
+                        recipient_role: 'restaurant_manager',
+                        restaurant_id: restaurantIdStr,
+                        priority: 'medium',
+                        related_order_id: String(this.activeOrders[0].order_id || ''),
+                        related_entity_type: 'invoice'
+                      }
+                    ).subscribe({
+                      next: () => console.log(`[CustomerOrders] Invoice notification sent to restaurant manager ${managerId}`),
+                      error: (err) => console.error(`[CustomerOrders] Invoice notification failed for manager ${managerId}`, err)
+                    });
+                  });
+
+                  if (this.invoiceLoyaltyDiscount > 0 && this.activeOrders.length > 0) {
+                    const firstOrder = this.activeOrders[0];
+                    const pointsToRedeem = Math.round(this.invoiceLoyaltyDiscount * 100);
+
+                    this.crudService.getLoyaltyProgramByCustomer(firstOrder.customer_id).subscribe({
+                      next: (program: any) => {
+                        const balanceBefore = program?.points_balance || 0;
+                        const balanceAfter = Math.max(0, balanceBefore - pointsToRedeem);
+
+                        const redeemPayload: any = {
+                          transaction_id: '',
+                          customer_id: firstOrder.customer_id,
+                          restaurant_id: firstOrder.restaurant_id,
+                          transaction_type: 'REDEEMED',
+                          points: pointsToRedeem,
+                          balance_before: balanceBefore,
+                          balance_after: balanceAfter,
+                          order_id: String(firstOrder.id),
+                          invoice_id: this.generatedInvoiceId,
+                          description: `Redeemed ${pointsToRedeem} points for ₹${this.invoiceLoyaltyDiscount} discount`,
+                          processed_by: firstOrder.customer_id,
+                          processed_at: new Date().toISOString(),
+                          created_at: new Date().toISOString(),
+                          created_by: firstOrder.customer_id,
+                          approval_required: false,
+                          is_reversal: false
+                        };
+                        this.crudService.createLoyaltyTransaction(redeemPayload).subscribe({
+                          next: () => { },
+                          error: (err) => {
+                            console.error('Loyalty redeem transaction failed:', err);
+                          }
+                        });
+                      },
+                      error: (err) => {
+                        console.error('Failed to fetch loyalty program for redeem:', err);
+                      }
+                    });
+                  }
+
+                  if (this.appliedOffer && this.activeOrders.length > 0) {
+                    const appliedOffer = this.appliedOffer;
+                    this.activeOrders.forEach(order => {
+                      const orderDiscount = discountAllocations.get(order.id) || 0;
+                      const redemptionPayload: OfferRedemptionRecord = {
+                        id: '',
+                        redemption_id: '',
+                        offer_id: +appliedOffer.id,
+                        invoice_id: this.generatedInvoiceId,
+                        order_id: order.id,
+                        customer_id: order.customer_id,
+                        restaurant_id: order.restaurant_id,
+                        redemption_code: appliedOffer.code,
+                        discount_amount: orderDiscount,
+                        original_amount: (order.total_amount || 0) - (order.tax_amount || 0) + (order.discount_amount || 0),
+                        final_amount: order.total_amount - orderDiscount - (loyaltyAllocations.get(order.id) || 0),
+                        redemption_method: 'BILLING_REQUESTED',
+                        applied_by: order.customer_id,
+                        applied_at: new Date(),
+                        created_at: new Date(),
+                        device_type: 'MOBILE',
+                        platform: 'WEB',
+                        is_first_time: true,
+                        usage_count: 1,
+                        customer_lifetime_value: order.total_amount
                       };
 
-                      this.restaurantOwnerUserIds.forEach(ownerId => {
-                        this.commonUserNotificationsService.createFromTemplate(
-                          'invoice_generated',
-                          templateData,
-                          {
-                            recipient_id: ownerId,
-                            recipient_role: 'restaurant_owner',
-                            restaurant_id: restaurantId.toString(),
-                            priority: 'medium',
-                            related_order_id: String(this.activeOrders[0].order_id || ''),
-                            related_entity_type: 'invoice'
-                          }
-                        ).subscribe({
-                          next: () => console.log(`[CustomerOrders] Invoice notification sent to restaurant owner ${ownerId}`),
-                          error: (err) => console.error(`[CustomerOrders] Invoice notification failed for owner ${ownerId}`, err)
-                        });
+                      this.crudService.createOfferRedemption(redemptionPayload).subscribe({
+                        next: () => {},
+                        error: (err) => {
+                          console.error('Offer redemption failed for order', order.id, err);
+                        }
                       });
-
-                      this.restaurantManagerUserIds.forEach(managerId => {
-                        this.commonUserNotificationsService.createFromTemplate(
-                          'invoice_generated',
-                          templateData,
-                          {
-                            recipient_id: managerId,
-                            recipient_role: 'restaurant_manager',
-                            restaurant_id: restaurantId.toString(),
-                            priority: 'medium',
-                            related_order_id: String(this.activeOrders[0].order_id || ''),
-                            related_entity_type: 'invoice'
-                          }
-                        ).subscribe({
-                          next: () => console.log(`[CustomerOrders] Invoice notification sent to restaurant manager ${managerId}`),
-                          error: (err) => console.error(`[CustomerOrders] Invoice notification failed for manager ${managerId}`, err)
-                        });
-                      });
-
-                      if (this.invoiceLoyaltyDiscount > 0 && this.activeOrders.length > 0) {
-                        const firstOrder = this.activeOrders[0];
-                        const pointsToRedeem = Math.round(this.invoiceLoyaltyDiscount * 100);
-
-                        this.crudService.getLoyaltyProgramByCustomer(firstOrder.customer_id).subscribe({
-                          next: (program: any) => {
-                            const balanceBefore = program?.points_balance || 0;
-                            const balanceAfter = Math.max(0, balanceBefore - pointsToRedeem);
-
-                            const redeemPayload: any = {
-                              transaction_id: '',
-                              customer_id: firstOrder.customer_id,
-                              restaurant_id: firstOrder.restaurant_id,
-                              transaction_type: 'REDEEMED',
-                              points: pointsToRedeem,
-                              balance_before: balanceBefore,
-                              balance_after: balanceAfter,
-                              order_id: String(firstOrder.id),
-                              invoice_id: this.generatedInvoiceId,
-                              description: `Redeemed ${pointsToRedeem} points for ₹${this.invoiceLoyaltyDiscount} discount`,
-                              processed_by: firstOrder.customer_id,
-                              processed_at: new Date().toISOString(),
-                              created_at: new Date().toISOString(),
-                              created_by: firstOrder.customer_id,
-                              approval_required: false,
-                              is_reversal: false
-                            };
-                            this.crudService.createLoyaltyTransaction(redeemPayload).subscribe({
-                              next: () => { },
-                              error: (err) => {
-                                console.error('Loyalty redeem transaction failed:', err);
-                              }
-                            });
-                          },
-                          error: (err) => {
-                            console.error('Failed to fetch loyalty program for redeem:', err);
-                          }
-                        });
-                       } else {
-                       }
-
-                        if (this.appliedOffer && this.activeOrders.length > 0) {
-                          const appliedOffer = this.appliedOffer;
-                          this.activeOrders.forEach(order => {
-                            const orderDiscount = discountAllocations.get(order.id) || 0;
-                            const redemptionPayload: OfferRedemptionRecord = {
-                              id: '',
-                              redemption_id: '',
-                              offer_id: +appliedOffer.id,
-                              invoice_id: this.generatedInvoiceId,
-                              order_id: order.id,
-                              customer_id: order.customer_id,
-                              restaurant_id: order.restaurant_id,
-                              redemption_code: appliedOffer.code,
-                             discount_amount: orderDiscount,
-                             original_amount: (order.total_amount || 0) - (order.tax_amount || 0) + (order.discount_amount || 0),
-                             final_amount: order.total_amount - orderDiscount - (loyaltyAllocations.get(order.id) || 0),
-                             redemption_method: 'BILLING_REQUESTED',
-                             applied_by: order.customer_id,
-                             applied_at: new Date(),
-                             created_at: new Date(),
-                             device_type: 'MOBILE',
-                             platform: 'WEB',
-                             is_first_time: true,
-                             usage_count: 1,
-                             customer_lifetime_value: order.total_amount
-                           };
-
-                           this.crudService.createOfferRedemption(redemptionPayload).subscribe({
-                             next: () => {},
-                             error: (err) => {
-                               console.error('Offer redemption failed for order', order.id, err);
-                             }
-                           });
-                         });
-                       }
-                     }
-                  },
-          error: () => {
-            completed++;
-            this.isRequestingBilling = false;
-            if (completed === total) {
-              this.notificationService.error('Error', 'Some orders could not be updated. Please try again.');
-            }
-          }
-        });
+                    });
+                  }
+                }
+              },
+              error: () => {
+                completed++;
+                this.isRequestingBilling = false;
+                if (completed === total) {
+                  this.notificationService.error('Error', 'Some orders could not be updated. Please try again.');
+                }
+              }
+            });
+          });
+        },
+        error: (err) => {
+          console.error('[CustomerOrders] Failed to load notification recipients for billing request:', err);
+          this.notificationService.error('Error', 'Could not send billing notification. Please try again.');
+          this.isRequestingBilling = false;
+        }
       });
     });
   }

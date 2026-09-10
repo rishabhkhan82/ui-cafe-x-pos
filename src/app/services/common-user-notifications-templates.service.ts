@@ -79,7 +79,7 @@ export class CommonUserNotificationsTemplatesService {
     payment_received: {   // on order completed 
       id: 'payment_received',
       title: 'Payment Received',
-      message: 'Payment of ₹{{amount}} received for order #{{order_id}}. Method: {{payment_method}}.',
+      message: 'Payment of ₹{{amount}} received for invoice #{{invoice_id}}. Method: {{payment_method}}.',
       type: 'payment',
       priority: 'medium',
       action_text: 'View Receipt',

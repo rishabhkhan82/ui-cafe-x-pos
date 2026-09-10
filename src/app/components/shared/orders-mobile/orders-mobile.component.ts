@@ -1953,7 +1953,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
 
               // Create a notification for the customer about the payment received
               this.commonUserNotificationsService.createFromTemplate('payment_received', {
-                order_id: firstOrder.order_id,
+                invoice_id: invoiceId,
                 amount: invoiceTotal,
                 payment_method: firstOrder.payment_method || 'Cash',
                 payment_id: invoiceId
@@ -1964,6 +1964,30 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
                 related_order_id: firstOrder.order_id,
                 priority: 'medium'
               }).subscribe();
+
+              this.getRestAndPlatformUsersService.getNotificationRecipients(String(restaurantId), ['restaurant_owner', 'restaurant_manager']).subscribe({
+                next: (recipients: any[]) => {
+                  const staff = (recipients || []).filter((u: any) => u.role === 'restaurant_owner' || u.role === 'restaurant_manager');
+                  staff.forEach((user: any) => {
+                    this.commonUserNotificationsService.createFromTemplate('payment_received', {
+                      invoice_id: invoiceId,
+                      amount: invoiceTotal,
+                      payment_method: firstOrder.payment_method || 'Cash',
+                      payment_id: invoiceId
+                    }, {
+                      recipient_id: String(user.id),
+                      recipient_role: user.role,
+                      restaurant_id: String(restaurantId),
+                      related_order_id: firstOrder.order_id,
+                      priority: 'medium'
+                    }).subscribe({
+                      next: () => console.log(`[OrdersMobile] Payment notification sent to ${user.role} ${user.id}`),
+                      error: (err) => console.error(`[OrdersMobile] Payment notification failed for ${user.role} ${user.id}`, err)
+                    });
+                  });
+                },
+                error: (err) => console.error('[OrdersMobile] Failed to load staff recipients for payment notification:', err)
+              });
 
               const processLoyalty = () => {
                 this.crudService.getLoyaltyProgramByCustomer(customerId).subscribe({
