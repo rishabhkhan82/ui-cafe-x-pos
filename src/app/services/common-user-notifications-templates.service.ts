@@ -66,6 +66,16 @@ export class CommonUserNotificationsTemplatesService {
       action_url: '/orders/{{order_id}}',
       icon: 'fas fa-sync-alt'
     },
+    order_updated: {
+      id: 'order_updated',
+      title: 'Order #{{order_id}} Updated',
+      message: 'Your order has been updated.',
+      type: 'order',
+      priority: 'medium',
+      action_text: 'View Order',
+      action_url: '/orders/{{order_id}}',
+      icon: 'fas fa-edit'
+    },
     payment_received: {   // on order completed 
       id: 'payment_received',
       title: 'Payment Received',
