@@ -248,6 +248,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.crudService.getCurrentOrders(restaurantId || undefined).subscribe({
       next: (response: any) => {
         this.allOrders = response || [];
+        (this.allOrders || []).forEach((o: any) => this.realtimeService.recordOrderStatus(o.id, o.status));
         this.filterOrders();
         this.realTimeLoader = false;
       },
@@ -1376,7 +1377,6 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         tax_percentage: this.getEditOrderTaxPercentage(),
         discount_amount: this.getEditOrderDiscount(),
         loyalty_discount_amount: editingOrder.loyalty_discount_amount,
-        send_notification: false,
         order_items: this.editFormItems.map(item => ({
           order_id: editingOrder.id,
           menu_item_id: item.menu_item_id,
@@ -1434,17 +1434,31 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
       status: this.editingOrder.status
     };
 
-    this.getRestAndPlatformUsersService.getNotificationRecipients(restaurantId, ['kitchen_manager']).subscribe((users: any[]) => {
-      (users || []).forEach((user: any) => {
-        this.commonUserNotificationsService.createFromTemplate('order_edited_admin', templateData, {
-          recipient_id: String(user.id),
-          recipient_role: 'kitchen_manager',
-          restaurant_id: restaurantId,
-          related_order_id: orderId,
-          priority: 'high'
-        }).subscribe();
+    if(this.editingOrder.status != 'BILLING_REQUESTED') { 
+      this.getRestAndPlatformUsersService.getNotificationRecipients(restaurantId, ['kitchen_manager']).subscribe((users: any[]) => {
+        (users || []).forEach((user: any) => {
+          this.commonUserNotificationsService.createFromTemplate('order_edited_admin', templateData, {
+            recipient_id: String(user.id),
+            recipient_role: 'kitchen_manager',
+            restaurant_id: restaurantId,
+            related_order_id: orderId,
+            priority: 'high'
+          }).subscribe();
+        });
       });
-    });
+  
+      this.getRestAndPlatformUsersService.getNotificationRecipients(restaurantId, ['waiter']).subscribe((users: any[]) => {
+        (users || []).forEach((user: any) => {
+          this.commonUserNotificationsService.createFromTemplate('order_edited_admin', templateData, {
+            recipient_id: String(user.id),
+            recipient_role: 'waiter',
+            restaurant_id: restaurantId,
+            related_order_id: orderId,
+            priority: 'high'
+          }).subscribe();
+        });
+      });
+    }
 
     if (this.editingOrder.customer_id) {
       this.commonUserNotificationsService.createFromTemplate('order_edited_customer', templateData, {
@@ -1456,17 +1470,6 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
       }).subscribe();
     }
 
-    this.getRestAndPlatformUsersService.getNotificationRecipients(restaurantId, ['waiter']).subscribe((users: any[]) => {
-      (users || []).forEach((user: any) => {
-        this.commonUserNotificationsService.createFromTemplate('order_edited_admin', templateData, {
-          recipient_id: String(user.id),
-          recipient_role: 'waiter',
-          restaurant_id: restaurantId,
-          related_order_id: orderId,
-          priority: 'high'
-        }).subscribe();
-      });
-    });
   }
 
   printOrder(order: Order): void {

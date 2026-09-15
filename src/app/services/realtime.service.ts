@@ -133,6 +133,22 @@ export class RealtimeService {
     return this.notificationPermission;
   }
 
+  private orderStatusHistory = new Map<string, string>();
+
+  public recordOrderStatus(orderId: string, status: string): void {
+    this.orderStatusHistory.set(String(orderId), (status || '').toString().toUpperCase());
+  }
+
+  public shouldSuppressOrderNotification(orderId: string, newStatus: string): boolean {
+    const previousStatus = this.orderStatusHistory.get(String(orderId));
+    const normalized = (newStatus || '').toString().toUpperCase();
+    if (previousStatus && previousStatus === normalized) {
+      return true;
+    }
+    this.orderStatusHistory.set(String(orderId), normalized);
+    return false;
+  }
+
   public async disconnect(): Promise<void> {
     if (this.isDisconnecting) {
       console.log('[Realtime] Already disconnecting, skipping duplicate call');

@@ -316,6 +316,11 @@ export class AppComponent implements OnInit {
       return;
     }
 
+    if (this.realtimeService.shouldSuppressOrderNotification(order.id, order.status)) {
+      console.log('[AppComponent] Notification suppressed for order', order.id, 'status unchanged');
+      return;
+    }
+
     const rule = this.routingService.findRule(this.currentUser.role, order.status);
     if (!rule) return;
 

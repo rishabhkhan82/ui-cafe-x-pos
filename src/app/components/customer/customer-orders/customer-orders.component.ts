@@ -141,7 +141,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
 
     const orderUpdateSub = this.realtimeService.orderUpdate$.subscribe(order => {
       console.log('[customer-orders] orderUpdate$ received:', order);
-      if (order && order.customer_id === this.currentUser?.id) {
+      if (order && String(order.customer_id) === String(this.currentUser?.id)) {
         order.items = order.items || [];
         if (order.status === 'COMPLETED' || order.status === 'CANCELLED') {
           this.activeOrders = this.activeOrders.filter(o => o.id !== order.id);
@@ -220,6 +220,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
             if (aServed !== bServed) return aServed - bServed;
             return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
           });
+        (this.activeOrders || []).forEach((o: Order) => this.realtimeService.recordOrderStatus(String(o.id), o.status));
         this.isLoading = false;
         if (!this.isBillingRequested) {
           this.pendingBillsService.setPendingBilling(false);
