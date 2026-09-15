@@ -367,6 +367,10 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
     });
   }
 
+  private roundToTwo(value: number): number {
+    return Math.round(value * 100) / 100;
+  }
+
   private calculateInvoice(): void {
     const preTaxSubtotal = this.activeOrders.reduce((sum, o) => {
       return sum + (o.total_amount || 0) - (o.tax_amount || 0) + (o.discount_amount || 0) + (o.loyalty_discount_amount || 0);
@@ -374,25 +378,25 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
 
     const totalTax = this.activeOrders.reduce((sum, o) => sum + (o.tax_amount || 0), 0);
 
-    this.invoiceSubtotal = preTaxSubtotal;
-    this.invoiceGst = Math.round(totalTax);
+    this.invoiceSubtotal = this.roundToTwo(preTaxSubtotal);
+    this.invoiceGst = this.roundToTwo(totalTax);
     if (!this.isBillingRequested) {
       this.invoiceDiscount = 0;
     } else if (!this.appliedOffer) {
-      this.invoiceDiscount = Math.round(this.activeOrders.reduce((sum, o) => sum + (o.discount_amount || 0), 0) * 100) / 100;
+      this.invoiceDiscount = this.roundToTwo(this.activeOrders.reduce((sum, o) => sum + (o.discount_amount || 0), 0));
     }
     if (this.appliedOffer) {
       if (this.appliedOffer.type === 'percentage') {
-        this.invoiceDiscount = Math.round(preTaxSubtotal * (this.appliedOffer.discountValue || 0) / 100);
+        this.invoiceDiscount = this.roundToTwo(preTaxSubtotal * (this.appliedOffer.discountValue || 0) / 100);
       } else if (this.appliedOffer.type === 'fixed') {
-        this.invoiceDiscount = Math.min(this.appliedOffer.value || 0, preTaxSubtotal);
+        this.invoiceDiscount = this.roundToTwo(Math.min(this.appliedOffer.value || 0, preTaxSubtotal));
       }
     }
-    const fromOrders = Math.round(this.activeOrders.reduce((sum, o) => sum + (o.loyalty_discount_amount || 0), 0) * 100) / 100;
+    const fromOrders = this.roundToTwo(this.activeOrders.reduce((sum, o) => sum + (o.loyalty_discount_amount || 0), 0));
     if (fromOrders > 0) {
       this.invoiceLoyaltyDiscount = fromOrders;
     }
-    this.invoiceTotal = Math.round((preTaxSubtotal + totalTax - this.invoiceDiscount - this.invoiceLoyaltyDiscount) * 100) / 100;
+    this.invoiceTotal = this.roundToTwo(preTaxSubtotal + totalTax - this.invoiceDiscount - this.invoiceLoyaltyDiscount);
   }
 
   isOfferEligibleByMinValue(offer: EligibleOffer): boolean {
@@ -421,11 +425,11 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
     const redeemableValue = Math.floor(this.loyaltyPointsToRedeem / 100);
     if (redeemableValue <= 0) {
       this.invoiceLoyaltyDiscount = 0;
-      this.invoiceTotal = Math.round((this.invoiceSubtotal + this.invoiceGst - this.invoiceDiscount) * 100) / 100;
+      this.invoiceTotal = this.roundToTwo(this.invoiceSubtotal + this.invoiceGst - this.invoiceDiscount);
       return;
     }
-    this.invoiceLoyaltyDiscount = Math.round(redeemableValue * 100) / 100;
-    this.invoiceTotal = Math.round((this.invoiceSubtotal + this.invoiceGst - this.invoiceDiscount - this.invoiceLoyaltyDiscount) * 100) / 100;
+    this.invoiceLoyaltyDiscount = this.roundToTwo(redeemableValue);
+    this.invoiceTotal = this.roundToTwo(this.invoiceSubtotal + this.invoiceGst - this.invoiceDiscount - this.invoiceLoyaltyDiscount);
   }
 
   removeAppliedOffer(): void {
@@ -462,8 +466,8 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
         this.activeOrders.forEach((order, index) => {
           const isLast = index === ordersCount - 1;
           const raw = totalDiscount / ordersCount;
-          const rounded = Math.round(raw * 100) / 100;
-          const adjust = isLast ? Math.round((totalDiscount - allocated) * 100) / 100 : rounded;
+          const rounded = this.roundToTwo(raw);
+          const adjust = isLast ? this.roundToTwo(totalDiscount - allocated) : rounded;
           discountAllocations.set(order.id, Math.max(0, adjust));
           allocated += Math.max(0, adjust);
         });
@@ -473,8 +477,8 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
           const orderPreTax = (order.total_amount || 0) - (order.tax_amount || 0);
           const isLast = index === ordersCount - 1;
           const raw = totalDiscount * (orderPreTax / totalPreTax);
-          const rounded = Math.round(raw * 100) / 100;
-          const adjust = isLast ? Math.round((totalDiscount - allocated) * 100) / 100 : rounded;
+          const rounded = this.roundToTwo(raw);
+          const adjust = isLast ? this.roundToTwo(totalDiscount - allocated) : rounded;
           discountAllocations.set(order.id, Math.max(0, adjust));
           allocated += Math.max(0, adjust);
         });
@@ -489,8 +493,8 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
       this.activeOrders.forEach((order, index) => {
         const isLast = index === ordersCount - 1;
         const raw = totalLoyaltyDiscount / ordersCount;
-        const rounded = Math.round(raw * 100) / 100;
-        const adjust = isLast ? Math.round((totalLoyaltyDiscount - allocated) * 100) / 100 : rounded;
+        const rounded = this.roundToTwo(raw);
+        const adjust = isLast ? this.roundToTwo(totalLoyaltyDiscount - allocated) : rounded;
         loyaltyAllocations.set(order.id, Math.max(0, adjust));
         allocated += Math.max(0, adjust);
       });
@@ -649,7 +653,12 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
 
                   if (this.appliedOffer && this.activeOrders.length > 0) {
                     const appliedOffer = this.appliedOffer;
-                    this.activeOrders.forEach(order => {
+                    const ordersToProcess = [...this.activeOrders];
+                    let orderIndex = 0;
+
+                    const processNextOrderRedemption = (): void => {
+                      if (orderIndex >= ordersToProcess.length) return;
+                      const order = ordersToProcess[orderIndex++];
                       const orderDiscount = discountAllocations.get(order.id) || 0;
                       const redemptionPayload: OfferRedemptionRecord = {
                         id: '',
@@ -675,12 +684,15 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
                       };
 
                       this.crudService.createOfferRedemption(redemptionPayload).subscribe({
-                        next: () => {},
+                        next: () => processNextOrderRedemption(),
                         error: (err) => {
                           console.error('Offer redemption failed for order', order.id, err);
+                          processNextOrderRedemption();
                         }
                       });
-                    });
+                    };
+
+                    processNextOrderRedemption();
                   }
                 }
               },

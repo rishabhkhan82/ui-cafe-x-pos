@@ -94,7 +94,7 @@
 
         <div class="flex items-center justify-between mt-4">
           <div class="text-sm text-gray-600 dark:text-gray-300">
-            Items: {{ order.items.length }} • Amount: <span class="text-gray-900 dark:text-white">₹{{ order.total_amount }}</span>
+            Items: {{ order.items.length }} • Amount: <span class="text-gray-900 dark:text-white">₹{{ order.total_amount.toFixed(2) }}</span>
           </div>
           <div class="space-x-2">
             <button (click)="callWaiter(order)" [disabled]="!canCallWaiterForOrder(order)" class="text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
@@ -198,20 +198,20 @@
                 {{ getOrderStatusText(order.status) }}
               </span>
             </div>
-            <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">₹{{ (order.total_amount - (order.tax_amount || 0)) + (order.discount_amount || 0) + (order.loyalty_discount_amount || 0) }}</span>
+            <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">₹{{ ((order.total_amount - (order.tax_amount || 0)) + (order.discount_amount || 0) + (order.loyalty_discount_amount || 0)).toFixed(2) }}</span>
           </div>
           <div class="space-y-1">
             <div *ngFor="let item of order.items" class="text-xs">
               <div class="flex items-center justify-between">
-                <span class="text-gray-600 dark:text-gray-300">{{ item.quantity }} x {{ item.menu_item_name }} (₹{{ item.unit_price }})</span>
-                <span class="text-gray-500 dark:text-gray-400 font-medium">₹{{ item.total_price }}</span>
+                <span class="text-gray-600 dark:text-gray-300">{{ item.quantity }} x {{ item.menu_item_name }} (₹{{ item.unit_price.toFixed(2) }})</span>
+                <span class="text-gray-500 dark:text-gray-400 font-medium">₹{{ item.total_price.toFixed(2) }}</span>
               </div>
               <div *ngIf="item.addons?.length" class="pl-2 mt-0.5 space-y-0.5">
                 <div *ngFor="let addon of item.addons" class="text-[11px] text-gray-500 dark:text-gray-400 flex items-center justify-between">
                   <div>
-                    + {{ addon.quantity }} x {{ addon.addon_name }} <span class="text-gray-400 dark:text-gray-500">(₹{{ addon.addon_price }})</span>
+                    + {{ addon.quantity }} x {{ addon.addon_name }} <span class="text-gray-400 dark:text-gray-500">(₹{{ addon.addon_price.toFixed(2) }})</span>
                   </div>
-                  <span class="text-gray-400 dark:text-gray-500 font-medium">₹{{ addon.addon_price * addon.quantity }}</span>
+                  <span class="text-gray-400 dark:text-gray-500 font-medium">₹{{ (addon.addon_price * addon.quantity).toFixed(2) }}</span>
                 </div>
               </div>
             </div>
@@ -230,7 +230,7 @@
                   [disabled]="appliedOffer?.offerId === offer.offerId"
                   [class.opacity-50]="appliedOffer?.offerId === offer.offerId"
                   class="px-3 py-2 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 text-xs font-medium text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors">
-            {{ offer.code }} · {{ offer.type === 'percentage' ? offer.discountValue + '% off' : '₹' + offer.value + ' off' }}
+             {{ offer.code }} · {{ offer.type === 'percentage' ? offer.discountValue + '% off' : '₹' + (offer.value || 0).toFixed(2) + ' off' }}
           </button>
         </div>
         
@@ -238,8 +238,8 @@
           <button *ngFor="let offer of getIneligibleOffers()"
                   disabled
                   class="px-3 py-2 rounded-xl border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 text-xs font-medium text-red-800 dark:text-red-300 cursor-not-allowed opacity-75">
-            {{ offer.code }} · {{ offer.type === 'percentage' ? offer.discountValue + '% off' : '₹' + offer.value + ' off' }}
-            <span class="block text-[10px] text-red-600 dark:text-red-400 mt-0.5">Min order ₹{{ offer.minOrderValue }} required</span>
+             {{ offer.code }} · {{ offer.type === 'percentage' ? offer.discountValue + '% off' : '₹' + (offer.value || 0).toFixed(2) + ' off' }}
+            <span class="block text-[10px] text-red-600 dark:text-red-400 mt-0.5">Min order ₹{{ (offer.minOrderValue || 0).toFixed(2) }} required</span>
           </button>
         </div>
         
@@ -255,26 +255,26 @@
       <div class="space-y-1.5 mb-4">
         <div class="flex items-center justify-between text-sm">
           <span class="text-gray-600 dark:text-gray-300">Subtotal</span>
-          <span class="font-medium text-gray-900 dark:text-white">₹{{ invoiceSubtotal }}</span>
+          <span class="font-medium text-gray-900 dark:text-white">₹{{ invoiceSubtotal.toFixed(2) }}</span>
         </div>
         <div class="flex items-center justify-between text-sm">
           <span class="text-gray-600 dark:text-gray-300">GST (18%)</span>
-          <span class="font-medium text-gray-900 dark:text-white">₹{{ invoiceGst }}</span>
+          <span class="font-medium text-gray-900 dark:text-white">₹{{ invoiceGst.toFixed(2) }}</span>
         </div>
         <div class="flex items-center justify-between text-sm" *ngIf="invoiceDiscount > 0">
           <span class="text-green-600 dark:text-green-400">Discount</span>
-          <span class="font-medium text-green-600 dark:text-green-400">-₹{{ invoiceDiscount }}</span>
+          <span class="font-medium text-green-600 dark:text-green-400">-₹{{ invoiceDiscount.toFixed(2) }}</span>
         </div>
         <div class="flex items-center justify-between text-sm" *ngIf="invoiceLoyaltyDiscount > 0">
           <span class="text-purple-600 dark:text-purple-400">Loyalty Discount</span>
-          <span class="font-medium text-purple-600 dark:text-purple-400">-₹{{ invoiceLoyaltyDiscount }}</span>
+          <span class="font-medium text-purple-600 dark:text-purple-400">-₹{{ invoiceLoyaltyDiscount.toFixed(2) }}</span>
         </div>
         <div>
           <div class="border-b border-gray-200 dark:border-gray-600 my-3"></div>
         </div>
         <div class="flex items-center justify-between">
           <span class="text-base font-bold text-gray-900 dark:text-white">Total</span>
-          <span class="text-xl font-bold text-primary-500">₹{{ invoiceTotal }}</span>
+          <span class="text-xl font-bold text-primary-500">₹{{ invoiceTotal.toFixed(2) }}</span>
         </div>
       </div>
 
@@ -289,7 +289,7 @@
       <div *ngIf="activeOrders.length > 0 && loyaltyPointsBalance >= 100 && !isBillingRequested" class="mb-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-4">
         <div class="flex items-center justify-between mb-2">
           <span class="text-sm font-semibold text-purple-800 dark:text-purple-300">💎 Loyalty Points</span>
-          <span class="text-xs text-purple-600 dark:text-purple-400">{{ loyaltyPointsBalance }} pts = ₹{{ loyaltyPointsBalance / 100 }}</span>
+          <span class="text-xs text-purple-600 dark:text-purple-400">{{ loyaltyPointsBalance }} pts = ₹{{ (loyaltyPointsBalance / 100).toFixed(2) }}</span>
         </div>
         <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">Redeem points for discount. 100 points = ₹1</p>
         <div class="space-y-3">
@@ -305,7 +305,7 @@
           </div>
           <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 px-1">
             <span>0 pts</span>
-            <span class="font-semibold text-purple-600 dark:text-purple-400">{{ loyaltyPointsToRedeem }} pts = ₹{{ loyaltyPointsToRedeem / 100 }}</span>
+            <span class="font-semibold text-purple-600 dark:text-purple-400">{{ loyaltyPointsToRedeem }} pts = ₹{{ (loyaltyPointsToRedeem / 100).toFixed(2) }}</span>
             <span>{{ maxLoyaltyPoints }} pts</span>
           </div>
         </div>
@@ -317,7 +317,7 @@
               [disabled]="!canRequestBilling() || isRequestingBilling"
               [class.opacity-50]="!canRequestBilling() || isRequestingBilling"
               class="w-full py-4 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white rounded-2xl font-bold text-lg shadow-lg transition-all duration-300 disabled:cursor-not-allowed">
-        <span *ngIf="!isRequestingBilling"><i class="fas fa-file-invoice-dollar mr-2"></i>Request Billing • ₹{{ invoiceTotal }}</span>
+        <span *ngIf="!isRequestingBilling"><i class="fas fa-file-invoice-dollar mr-2"></i>Request Billing • ₹{{ invoiceTotal.toFixed(2) }}</span>
         <span *ngIf="isRequestingBilling" class="flex items-center justify-center">
           <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -343,7 +343,7 @@
           <span class="text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/40 px-2 py-1 rounded-full">
             {{ offer.type === 'percentage' ? offer.discountValue + '% off' : '₹' + offer.value + ' off' }}
           </span>
-          <p class="mt-1 text-xs text-amber-600 dark:text-amber-400" *ngIf="offer.minOrderValue && offer.minOrderValue > 0">Min Order Value: ₹{{ offer.minOrderValue }}</p>
+           <p class="mt-1 text-xs text-amber-600 dark:text-amber-400" *ngIf="offer.minOrderValue && offer.minOrderValue > 0">Min Order Value: ₹{{ (offer.minOrderValue || 0).toFixed(2) }}</p>
         </div>
       </div>
     </div>
@@ -392,7 +392,7 @@
           </div>
 
           <div class="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
-            <p class="text-lg font-bold text-gray-900 dark:text-white">₹{{ order.total_amount }}</p>
+            <p class="text-lg font-bold text-gray-900 dark:text-white">₹{{ order.total_amount.toFixed(2) }}</p>
             <div class="flex items-center space-x-2">
               <button (click)="printOrder(order)" class="px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" title="Download Receipt">
                 <i class="fas fa-download mr-1"></i> Receipt
@@ -534,13 +534,13 @@
                     </div>
                   </td>
                   <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600 text-sm text-gray-500 dark:text-gray-400">{{ item.quantity }}</td>
-                  <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600 text-sm text-gray-500 dark:text-gray-400">₹{{ item.unit_price }}</td>
-                  <td class="px-4 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">₹{{ item.total_price }}</td>
+                  <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-600 text-sm text-gray-500 dark:text-gray-400">₹{{ item.unit_price.toFixed(2) }}</td>
+                  <td class="px-4 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">₹{{ item.total_price.toFixed(2) }}</td>
                 </tr>
                 <tr *ngFor="let addon of item.addons" class="border-b border-gray-100 dark:border-gray-700 last:border-0">
                   <td class="px-4 py-2 pl-10 border-r border-gray-200 dark:border-gray-600 text-xs text-gray-600 dark:text-gray-300">+ {{ addon.addon_name }}</td>
                   <td class="px-4 py-2 text-center border-r border-gray-200 dark:border-gray-600 text-xs text-gray-500 dark:text-gray-400">{{ addon.quantity }}</td>
-                  <td class="px-4 py-2 text-center border-r border-gray-200 dark:border-gray-600 text-xs text-gray-500 dark:text-gray-400">₹{{ addon.addon_price }}</td>
+                  <td class="px-4 py-2 text-center border-r border-gray-200 dark:border-gray-600 text-xs text-gray-500 dark:text-gray-400">₹{{ addon.addon_price.toFixed(2) }}</td>
                   <td class="px-4 py-2 text-right text-xs text-gray-500 dark:text-gray-400">₹{{ (addon.addon_price * addon.quantity).toFixed(2) }}</td>
                 </tr>
               </ng-container>
@@ -557,7 +557,7 @@
         </div>
         <div class="flex items-center justify-between text-sm">
           <span class="text-gray-600 dark:text-gray-300">Tax Amount ({{ getOrderTaxPercentage(selectedOrder) !== null ? getOrderTaxPercentage(selectedOrder) + '%' : '' }})</span>
-          <span class="font-medium text-gray-900 dark:text-white">₹{{ selectedOrder.tax_amount || 0 | number:'1.2-2' }}</span>
+          <span class="font-medium text-gray-900 dark:text-white">₹{{ (selectedOrder.tax_amount || 0) | number:'1.2-2' }}</span>
         </div>
         <div class="flex items-center justify-between text-sm">
           <span class="text-green-600 dark:text-green-400">Discount</span>
@@ -620,7 +620,7 @@
               </div>
             </div>
             <div class="text-right ml-4">
-              <p class="text-lg font-bold text-gray-900 dark:text-white">₹{{ order.total_amount }}</p>
+              <p class="text-lg font-bold text-gray-900 dark:text-white">₹{{ order.total_amount.toFixed(2) }}</p>
               <div class="mt-2 space-x-2">
                 <button (click)="$event.stopPropagation(); viewOrderDetails(order); closeAllOrderHistory()" class="px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs">View</button>
                 <button (click)="$event.stopPropagation(); reorder(order)" class="px-3 py-1.5 rounded-full bg-primary-500 text-white text-xs">Reorder</button>

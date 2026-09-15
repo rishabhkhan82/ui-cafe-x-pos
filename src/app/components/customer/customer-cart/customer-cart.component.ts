@@ -421,7 +421,7 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
       status: 'PENDING',
       total_amount: this.total,
       tax_amount: this.gst,
-      tax_percentage: this.isGst ? this.gstPercentage : null,
+      tax_percentage: this.isGst ? Number(this.gstPercentage || 0) : null,
       payment_status: 'PENDING',
       order_type: this.orderType,
       priority: 'MEDIUM',
@@ -492,15 +492,19 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
     this.location.back();
   }
 
-  private computeTotals(): void {
-    this.itemsSubtotal = this.cartItems.reduce((sum, cartItem) => {
-      return sum + cartItem.menuItem.price * cartItem.quantity;
-    }, 0);
+  private roundToTwo(value: number): number {
+    return Math.round(value * 100) / 100;
+  }
 
-    this.addonsSubtotal = this.cartItems.reduce((sum, cartItem) => {
+  private computeTotals(): void {
+    this.itemsSubtotal = this.roundToTwo(this.cartItems.reduce((sum, cartItem) => {
+      return sum + cartItem.menuItem.price * cartItem.quantity;
+    }, 0));
+
+    this.addonsSubtotal = this.roundToTwo(this.cartItems.reduce((sum, cartItem) => {
       const addonsTotal = (cartItem.selectedAddons || []).reduce((addonSum, addon) => addonSum + (addon.addonPrice * addon.quantity), 0);
       return sum + addonsTotal;
-    }, 0);
+    }, 0));
 
     this.addonsCount = this.cartItems.reduce((sum, cartItem) => {
       const selectedAddons = cartItem.selectedAddons || [];
@@ -508,15 +512,15 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
       return sum + distinctAddons.length;
     }, 0);
 
-    this.subtotal = this.itemsSubtotal + this.addonsSubtotal;
+    this.subtotal = this.roundToTwo(this.itemsSubtotal + this.addonsSubtotal);
 
     if (this.isGst && this.gstPercentage !== null) {
       const rate = Number(this.gstPercentage) || 0;
-      this.gst = Math.round(this.subtotal * (rate / 100));
+      this.gst = this.roundToTwo(this.subtotal * (rate / 100));
     } else {
       this.gst = 0;
     }
-    this.total = this.subtotal + this.deliveryFee + this.gst;
+    this.total = this.roundToTwo(this.subtotal + this.deliveryFee + this.gst);
     this.orderCount = this.cartItems.length;
   }
 }

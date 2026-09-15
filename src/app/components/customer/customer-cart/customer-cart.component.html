@@ -132,30 +132,30 @@
     <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm space-y-3">
       <div class="flex items-center justify-between">
         <span class="text-gray-600 dark:text-gray-300">Items ({{ orderCount }})</span>
-        <span class="font-semibold text-gray-900 dark:text-white">₹{{ itemsSubtotal }}</span>
+        <span class="font-semibold text-gray-900 dark:text-white">₹{{ itemsSubtotal.toFixed(2) }}</span>
       </div>
       <div class="flex items-center justify-between">
         <span class="text-gray-600 dark:text-gray-300">Add-ons ({{ addonsCount }})</span>
-        <span class="font-semibold text-gray-900 dark:text-white">₹{{ addonsSubtotal }}</span>
+        <span class="font-semibold text-gray-900 dark:text-white">₹{{ addonsSubtotal.toFixed(2) }}</span>
       </div>
       <div class="flex items-center justify-between">
         <span class="text-gray-600 dark:text-gray-300">Subtotal</span>
-        <span class="font-semibold text-gray-900 dark:text-white">₹{{ subtotal }}</span>
+        <span class="font-semibold text-gray-900 dark:text-white">₹{{ subtotal.toFixed(2) }}</span>
       </div>
       <div class="flex items-center justify-between">
         <span class="text-gray-600 dark:text-gray-300">Delivery Fee</span>
-        <span class="font-semibold text-gray-900 dark:text-white">₹{{ deliveryFee }}</span>
+        <span class="font-semibold text-gray-900 dark:text-white">₹{{ deliveryFee.toFixed(2) }}</span>
       </div>
       <div class="flex items-center justify-between">
         <span class="text-gray-600 dark:text-gray-300">
           GST {{ isGst && gstPercentage ? '(' + gstPercentage + '%' + ')' : '' }}
         </span>
-        <span class="font-semibold text-gray-900 dark:text-white">₹{{ gst }}</span>
+        <span class="font-semibold text-gray-900 dark:text-white">₹{{ gst.toFixed(2) }}</span>
       </div>
       <div class="border-t border-gray-200 dark:border-gray-700 pt-3">
         <div class="flex items-center justify-between">
           <span class="text-lg font-bold text-gray-900 dark:text-white">Total</span>
-          <span class="text-lg font-bold text-primary-500">₹{{ total }}</span>
+          <span class="text-lg font-bold text-primary-500">₹{{ total.toFixed(2) }}</span>
         </div>
       </div>
     </div>
@@ -178,7 +178,7 @@
     <button (click)="proceedToOrder()"
             [disabled]="isPlacingOrder"
             class="w-full py-4 bg-primary-500 hover:bg-primary-600 text-white rounded-2xl font-bold text-lg shadow-lg transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center">
-      <span *ngIf="!isPlacingOrder"><i class="fas fa-utensils mr-2"></i>Proceed to Order • ₹{{ total }}</span>
+      <span *ngIf="!isPlacingOrder"><i class="fas fa-utensils mr-2"></i>Proceed to Order • ₹{{ total.toFixed(2) }}</span>
       <span *ngIf="isPlacingOrder" class="flex items-center">
         <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

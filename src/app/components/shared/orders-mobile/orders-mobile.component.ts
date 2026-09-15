@@ -592,7 +592,16 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         category: item.category,
         special_instructions: item.special_instructions,
         status: item.status,
-        id: item.id
+        id: item.id,
+        addons: (item.addons || []).map((addon: any) => ({
+          addon_id: addon.addon_id,
+          addon_name: addon.addon_name,
+          addon_price: addon.addon_price,
+          quantity: addon.quantity,
+          is_required: addon.is_required,
+          min_quantity: addon.min_quantity,
+          max_quantity: addon.max_quantity
+        }))
       }))
     };
 
@@ -631,7 +640,16 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         category: item.category,
         special_instructions: item.special_instructions,
         status: item.status,
-        id: item.id
+        id: item.id,
+        addons: (item.addons || []).map((addon: any) => ({
+          addon_id: addon.addon_id,
+          addon_name: addon.addon_name,
+          addon_price: addon.addon_price,
+          quantity: addon.quantity,
+          is_required: addon.is_required,
+          min_quantity: addon.min_quantity,
+          max_quantity: addon.max_quantity
+        }))
       }))
     };
 
@@ -682,7 +700,16 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         category: item.category,
         special_instructions: item.special_instructions,
         status: item.status,
-        id: item.id
+        id: item.id,
+        addons: (item.addons || []).map((addon: any) => ({
+          addon_id: addon.addon_id,
+          addon_name: addon.addon_name,
+          addon_price: addon.addon_price,
+          quantity: addon.quantity,
+          is_required: addon.is_required,
+          min_quantity: addon.min_quantity,
+          max_quantity: addon.max_quantity
+        }))
       }))
     };
 
@@ -733,7 +760,16 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         category: item.category,
         special_instructions: item.special_instructions,
         status: item.status,
-        id: item.id
+        id: item.id,
+        addons: (item.addons || []).map((addon: any) => ({
+          addon_id: addon.addon_id,
+          addon_name: addon.addon_name,
+          addon_price: addon.addon_price,
+          quantity: addon.quantity,
+          is_required: addon.is_required,
+          min_quantity: addon.min_quantity,
+          max_quantity: addon.max_quantity
+        }))
       }))
     };
 
@@ -783,7 +819,16 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         category: item.category,
         special_instructions: item.special_instructions,
         status: item.status,
-        id: item.id
+        id: item.id,
+        addons: (item.addons || []).map((addon: any) => ({
+          addon_id: addon.addon_id,
+          addon_name: addon.addon_name,
+          addon_price: addon.addon_price,
+          quantity: addon.quantity,
+          is_required: addon.is_required,
+          min_quantity: addon.min_quantity,
+          max_quantity: addon.max_quantity
+        }))
       }))
     };
 
@@ -936,12 +981,12 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     if (!offer || !subtotal) return 0;
 
     if (offer.type === 'percentage') {
-      return Math.round(subtotal * (offer.discount_value || 0) / 100);
+      return this.roundToTwo(subtotal * (offer.discount_value || 0) / 100);
     }
     if (offer.type === 'fixed') {
-      return offer.value || 0;
+      return this.roundToTwo(offer.value || 0);
     }
-    return this.editingOrder.discount_amount || 0;
+    return this.roundToTwo(this.editingOrder.discount_amount || 0);
   }
 
   private loadAvailableMenuItems(): void {
@@ -1225,12 +1270,16 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.computeEditOrderSummary();
   }
 
+  private roundToTwo(value: number): number {
+    return Math.round(value * 100) / 100;
+  }
+
   getEditOrderTotal(): number {
-    return this.editFormItems.reduce((sum: number, item: any) => {
+    return this.roundToTwo(this.editFormItems.reduce((sum: number, item: any) => {
       const itemTotal = (item.total_price || 0);
-      const addonsTotal = (item.addons || []).reduce((addonSum: number, addon: any) => addonSum + (addon.addon_price * addon.quantity), 0);
+      const addonsTotal = (item.addons || []).reduce((addonSum: number, addon: any) => addonSum + ((addon.addon_price || 0) * (addon.quantity || 0)), 0);
       return sum + itemTotal + addonsTotal;
-    }, 0);
+    }, 0));
   }
 
   getEditOrderTaxAmount(): number {
@@ -1239,7 +1288,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     const isGst = !!restaurant?.is_gst;
     if (!isGst) return 0;
     const rate = restaurant && restaurant.gst_percentage != null ? Number(restaurant.gst_percentage) : 0;
-    return Math.round(this.getEditOrderTotal() * (rate / 100));
+    return this.roundToTwo(this.getEditOrderTotal() * (rate / 100));
   }
 
   getEditOrderTaxPercentage(): number | null {
@@ -1263,20 +1312,20 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     if (this.editingOfferRedemption) {
       return this.recalculateOfferDiscount();
     }
-    return this.editingOrder.discount_amount || 0;
+    return this.roundToTwo(this.editingOrder.discount_amount || 0);
   }
 
   getEditOrderLoyaltyDiscount(): number {
-    return this.editingOrder?.loyalty_discount_amount || 0;
+    return this.roundToTwo(this.editingOrder?.loyalty_discount_amount || 0);
   }
 
   private computeEditOrderSummary(): void {
-    this.editOrderItemsSubtotal = this.editFormItems.reduce((sum, item) => sum + ((item.unit_price || 0) * (item.quantity || 0)), 0);
+    this.editOrderItemsSubtotal = this.roundToTwo(this.editFormItems.reduce((sum, item) => sum + ((item.unit_price || 0) * (item.quantity || 0)), 0));
 
-    this.editOrderAddonsSubtotal = this.editFormItems.reduce((sum: number, item: any) => {
+    this.editOrderAddonsSubtotal = this.roundToTwo(this.editFormItems.reduce((sum: number, item: any) => {
       const addonsTotal = (item.addons || []).reduce((addonSum: number, addon: any) => addonSum + ((addon.addon_price || 0) * (addon.quantity || 0)), 0);
       return sum + addonsTotal;
-    }, 0);
+    }, 0));
 
     this.editOrderAddonsCount = this.editFormItems.reduce((sum: number, item: any) => {
       const selectedAddons = item.addons || [];
@@ -1284,17 +1333,17 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
       return sum + distinctAddons.length;
     }, 0);
 
-    this.editOrderSubtotal = this.editOrderItemsSubtotal + this.editOrderAddonsSubtotal;
+    this.editOrderSubtotal = this.roundToTwo(this.editOrderItemsSubtotal + this.editOrderAddonsSubtotal);
 
     const restaurant = this.restaurantDataService.getCurrentRestaurant();
     const isGst = !!restaurant?.is_gst;
     if (isGst && this.editingOrder) {
       const rate = restaurant && restaurant.gst_percentage != null ? Number(restaurant.gst_percentage) : 0;
-      this.editOrderGst = Math.round(this.editOrderSubtotal * (rate / 100));
+      this.editOrderGst = this.roundToTwo(this.editOrderSubtotal * (rate / 100));
     } else {
       this.editOrderGst = 0;
     }
-    this.editOrderTotal = this.editOrderSubtotal + this.editOrderGst - this.getEditOrderDiscount() - this.getEditOrderLoyaltyDiscount();
+    this.editOrderTotal = this.roundToTwo(this.editOrderSubtotal + this.editOrderGst - this.getEditOrderDiscount() - this.getEditOrderLoyaltyDiscount());
   }
 
   saveEditedOrder(): void {
@@ -1309,7 +1358,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
       this.isEditSubmitting = true;
       this.loadingService.show();
 
-      const totalAmount = this.getEditOrderTotal() + this.getEditOrderTaxAmount() - this.getEditOrderDiscount() - this.getEditOrderLoyaltyDiscount();
+      const totalAmount = this.roundToTwo(this.getEditOrderTotal() + this.getEditOrderTaxAmount() - this.getEditOrderDiscount() - this.getEditOrderLoyaltyDiscount());
       const editingOrder = this.editingOrder!;
       const orderRequest: any = {
         order_id: editingOrder.order_id,
@@ -1932,7 +1981,16 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
           special_instructions: item.special_instructions || '',
           status: item.status,
           is_custom: !!item.is_custom,
-          id: item.id
+          id: item.id,
+          addons: (item.addons || []).map((addon: any) => ({
+            addon_id: addon.addon_id,
+            addon_name: addon.addon_name,
+            addon_price: addon.addon_price,
+            quantity: addon.quantity,
+            is_required: addon.is_required,
+            min_quantity: addon.min_quantity,
+            max_quantity: addon.max_quantity
+          }))
         }))
       };
       return this.crudService.updateOrder(order.id, orderRequest).subscribe({

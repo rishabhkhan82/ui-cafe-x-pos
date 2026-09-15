@@ -873,7 +873,7 @@
                   <p class="font-medium text-gray-900 dark:text-white truncate">{{ item.menu_item_name }}</p>
                   <span *ngIf="item.is_custom" class="text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 font-medium">Custom</span>
                 </div>
-                <p class="text-xs text-gray-500 dark:text-gray-400">₹{{ item.unit_price }} per item</p>
+                 <p class="text-xs text-gray-500 dark:text-gray-400">₹{{ item.unit_price.toFixed(2) }} per item</p>
               </div>
               <div class="flex items-center justify-between gap-3 md:justify-end">
                 <div class="flex items-center space-x-2">
@@ -889,7 +889,7 @@
                     <i class="fas fa-plus text-xs"></i>
                   </button>
                 </div>
-                <span class="text-sm font-semibold text-gray-900 dark:text-white text-right flex-shrink-0">₹{{ item.quantity * item.unit_price }}</span>
+                 <span class="text-sm font-semibold text-gray-900 dark:text-white text-right flex-shrink-0">₹{{ (item.quantity * item.unit_price).toFixed(2) }}</span>
                 <button (click)="removeEditItem(item.id || item.menu_item_id)" class="text-red-500 hover:text-red-700 p-2 flex-shrink-0">
                   <i class="fas fa-trash-alt"></i>
                 </button>
@@ -920,7 +920,7 @@
                           <span class="px-1 py-0.5 rounded-full text-[10px] font-medium" [class]="addon.is_required ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : 'bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400'">
                             {{ addon.is_required ? 'Required' : 'Optional' }}
                           </span>
-                          <p class="text-xs font-bold text-primary-600 dark:text-primary-400">₹{{ addon.addon_price }}</p>
+                           <p class="text-xs font-bold text-primary-600 dark:text-primary-400">₹{{ addon.addon_price.toFixed(2) }}</p>
                         </div>
                         <div class="flex items-center gap-1 flex-shrink-0">
                           <button (click)="onEditItemAddonButtonClick(item, addon.addon_id, -1, $event)"
@@ -944,32 +944,32 @@
       <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 mb-6 space-y-2">
         <div class="flex items-center justify-between text-sm">
           <span class="text-gray-600 dark:text-gray-300">Items ({{ editFormItems.length }})</span>
-          <span class="font-medium text-gray-900 dark:text-white">₹{{ editOrderItemsSubtotal }}</span>
+          <span class="font-medium text-gray-900 dark:text-white">₹{{ editOrderItemsSubtotal.toFixed(2) }}</span>
         </div>
         <div class="flex items-center justify-between text-sm">
           <span class="text-gray-600 dark:text-gray-300">Add-ons ({{ editOrderAddonsCount }})</span>
-          <span class="font-medium text-gray-900 dark:text-white">₹{{ editOrderAddonsSubtotal }}</span>
+          <span class="font-medium text-gray-900 dark:text-white">₹{{ editOrderAddonsSubtotal.toFixed(2) }}</span>
         </div>
         <div class="flex items-center justify-between text-sm">
           <span class="text-gray-600 dark:text-gray-300">Subtotal</span>
-          <span class="font-medium text-gray-900 dark:text-white">₹{{ editOrderSubtotal }}</span>
+          <span class="font-medium text-gray-900 dark:text-white">₹{{ editOrderSubtotal.toFixed(2) }}</span>
         </div>
         <div class="flex items-center justify-between text-sm">
           <span class="text-gray-600 dark:text-gray-300">GST {{ getEditOrderTaxPercentage() !== null ? '(' + getEditOrderTaxPercentage() + '%)' : '' }}</span>
-          <span class="font-medium text-gray-900 dark:text-white">₹{{ editOrderGst }}</span>
+          <span class="font-medium text-gray-900 dark:text-white">₹{{ editOrderGst.toFixed(2) }}</span>
         </div>
         <div *ngIf="getEditOrderDiscount() > 0" class="flex items-center justify-between text-sm">
           <span class="text-gray-600 dark:text-gray-300">Discount</span>
-          <span class="font-medium text-green-600 dark:text-green-400">-₹{{ getEditOrderDiscount() }}</span>
+          <span class="font-medium text-green-600 dark:text-green-400">-₹{{ getEditOrderDiscount().toFixed(2) }}</span>
         </div>
         <div *ngIf="getEditOrderLoyaltyDiscount() > 0" class="flex items-center justify-between text-sm">
           <span class="text-gray-600 dark:text-gray-300">Loyalty Discount</span>
-          <span class="font-medium text-purple-600 dark:text-purple-400">-₹{{ getEditOrderLoyaltyDiscount() }}</span>
+          <span class="font-medium text-purple-600 dark:text-purple-400">-₹{{ getEditOrderLoyaltyDiscount().toFixed(2) }}</span>
         </div>
         <div class="border-t border-gray-200 dark:border-gray-600 my-2"></div>
         <div class="flex items-center justify-between">
           <span class="text-base font-bold text-gray-900 dark:text-white">New Total</span>
-          <span class="text-xl font-bold text-primary-500">₹{{ editOrderTotal }}</span>
+          <span class="text-xl font-bold text-primary-500">₹{{ editOrderTotal.toFixed(2) }}</span>
         </div>
       </div>
     </div>
