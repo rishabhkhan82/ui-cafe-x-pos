@@ -15,7 +15,7 @@ export interface ConfirmationDialogData {
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div *ngIf="dialogData" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[110] p-4">
+    <div *ngIf="dialogData" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[2000] p-4">
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg w-full max-w-md border border-gray-200 dark:border-gray-700">
         <!-- Modal Header -->
         <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">

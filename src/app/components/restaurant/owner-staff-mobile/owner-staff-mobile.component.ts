@@ -12,6 +12,7 @@ import { ConfirmationDialogService } from '../../../services/confirmation-dialog
 import { environment } from '../../../environments/environment';
 import { NotificationService } from '../../../services/notification.service';
 import { ValidationService } from '../../../services/validation.service';
+import { UserType } from '../../../interfaces';
 
 @Component({
   selector: 'app-owner-staff-mobile',
@@ -48,10 +49,9 @@ export class OwnerStaffMobileComponent implements OnInit {
   fieldErrors: { [key: string]: string } = {};
 
   // User Types
-  userTypes : any = [
-    {name: 'Admin', value: 'admin'},
-    {name: 'Customer', value: 'customer'}
-  ];
+  userTypes : UserType[] = [];
+
+  userRoles: any = [];
 
   userForm: User = {
     id: '',
@@ -60,7 +60,7 @@ export class OwnerStaffMobileComponent implements OnInit {
     name: '',
     email: '',
     phone: '',
-    role: 'customer',
+    role: 'restaurant_owner',
     user_type: 'admin',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face',
     restaurant_id: '',
@@ -95,6 +95,8 @@ export class OwnerStaffMobileComponent implements OnInit {
   ngOnInit(): void {
     this.loadUsers();
     this.loadRestaurants();
+    this.loadUserRoles();
+    this.loadUserTypes();
     this.setupSearch();
   }
 
@@ -171,8 +173,72 @@ export class OwnerStaffMobileComponent implements OnInit {
   }
 
   loadRestaurants(): void {
-    this.mockDataService.getRestaurants().subscribe(restaurants => {
-      this.restaurants = restaurants;
+    this.loadingService.show();
+    this.errorMessage = '';
+
+    const params: any = {
+      page: 1,
+      size: 9999,
+      isActive: true
+    };
+
+    this.crudService.getRestaurants(params).subscribe({
+      next: (response: any) => {
+        this.restaurants = response.data;
+        this.loadingService.hide();
+      },
+      error: (error) => {
+        console.error('Error loading restaurants:', error);
+        this.errorMessage = 'Failed to load restaurants. Please try again.';
+        this.notificationService.error('Error', 'Failed to load restaurants');
+        this.loadingService.hide();
+      }
+    });
+  }
+
+  loadUserRoles(): void {
+    this.loadingService.show();
+    this.errorMessage = '';
+
+    const params: any = {
+      page: 1,
+      size: 9999,
+      isActive: true
+    };
+
+    this.crudService.getUserRoles(params).subscribe({
+      next: (response: any) => {
+        this.userRoles = (response.data || []).filter((role: any) => role.role_id !== 'platform_owner');
+        this.loadingService.hide();
+      },
+      error: (error) => {
+        console.error('Error loading user roles:', error);
+        this.errorMessage = 'Failed to load user roles. Please try again.';
+        this.notificationService.error('Error', 'Failed to load user roles');
+        this.loadingService.hide();
+      }
+    });
+  }
+
+  loadUserTypes(): void {
+    this.loadingService.show();
+    this.errorMessage = '';
+
+    const params: any = {
+      isActive: true
+    };
+
+    this.crudService.getUserTypes(params).subscribe({
+      next: (response: any) => {
+        this.userTypes = (response.data || []).filter((userType: any) => userType.key !== 'sadmin');
+        this.loadingService.hide();
+      },
+      error: (error) => {
+        console.error('Error loading user types:', error);
+        this.errorMessage = 'Failed to load user types. Please try again.';
+        this.notificationService.error('Error', 'Failed to load user types');
+        this.loadingService.hide();
+      }
     });
   }
 
@@ -262,6 +328,7 @@ export class OwnerStaffMobileComponent implements OnInit {
       console.log('Editing user, userForm.user_type:', this.userForm.user_type);
     } else {
       // Adding new user
+      const currentUser = this.authService.getCurrentUser();
       this.userForm = {
         id: '',
         username: '',
@@ -269,10 +336,10 @@ export class OwnerStaffMobileComponent implements OnInit {
         name: '',
         email: '',
         phone: '',
-        role: 'customer',
+        role: 'restaurant_owner',
         user_type: 'admin',
         avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face',
-        restaurant_id: '',
+        restaurant_id: currentUser?.restaurantId || '',
         member_since: undefined,
         created_at: undefined,
         updated_at: undefined,
@@ -286,6 +353,7 @@ export class OwnerStaffMobileComponent implements OnInit {
 
   cancelAdd(): void {
     this.showAddForm = false;
+    const currentUser = this.authService.getCurrentUser();
     this.userForm = {
       id: '',
       username: '',
@@ -293,10 +361,10 @@ export class OwnerStaffMobileComponent implements OnInit {
       name: '',
       email: '',
       phone: '',
-      role: 'customer',
+      role: 'restaurant_owner',
       user_type: 'admin',
       avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face',
-      restaurant_id: '',
+      restaurant_id: currentUser?.restaurantId || '',
       member_since: undefined,
       created_at: undefined,
       updated_at: undefined,
@@ -576,6 +644,7 @@ export class OwnerStaffMobileComponent implements OnInit {
 
   private resetForm(): void {
     this.showAddForm = false;
+    const currentUser = this.authService.getCurrentUser();
     this.userForm = {
       id: '',
       username: '',
@@ -583,10 +652,10 @@ export class OwnerStaffMobileComponent implements OnInit {
       name: '',
       email: '',
       phone: '',
-      role: 'customer',
+      role: 'restaurant_owner',
       user_type: 'admin',
       avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face',
-      restaurant_id: '',
+      restaurant_id: currentUser?.restaurantId || '',
       member_since: undefined,
       created_at: undefined,
       updated_at: undefined,
@@ -745,7 +814,7 @@ export class OwnerStaffMobileComponent implements OnInit {
       name: '',
       email: '',
       phone: '',
-      role: 'customer',
+      role: 'restaurant_owner',
       user_type: 'admin',
       avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face',
       restaurant_id: '',
@@ -760,6 +829,8 @@ export class OwnerStaffMobileComponent implements OnInit {
     // Reload data
     this.loadUsers();
     this.loadRestaurants();
+    this.loadUserRoles();
+    this.loadUserTypes();
   }
 
   // Helper for template Math operations

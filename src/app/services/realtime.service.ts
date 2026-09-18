@@ -120,12 +120,33 @@ export class RealtimeService {
     this.orderUpdateSubject.next(order);
   }
 
+  public emitOrderUpdate(order: Order): void {
+    this.orderUpdateSubject.next(order);
+    this.customerOrderUpdateSubject.next(order);
+  }
+
   public requestNotificationPermissionManually(): Promise<NotificationPermission> {
     return this.requestNotificationPermission().then(() => this.notificationPermission);
   }
 
   public getNotificationPermission(): NotificationPermission {
     return this.notificationPermission;
+  }
+
+  private orderStatusHistory = new Map<string, string>();
+
+  public recordOrderStatus(orderId: string, status: string): void {
+    this.orderStatusHistory.set(String(orderId), (status || '').toString().toUpperCase());
+  }
+
+  public shouldSuppressOrderNotification(orderId: string, newStatus: string): boolean {
+    const previousStatus = this.orderStatusHistory.get(String(orderId));
+    const normalized = (newStatus || '').toString().toUpperCase();
+    if (previousStatus && previousStatus === normalized) {
+      return true;
+    }
+    this.orderStatusHistory.set(String(orderId), normalized);
+    return false;
   }
 
   public async disconnect(): Promise<void> {

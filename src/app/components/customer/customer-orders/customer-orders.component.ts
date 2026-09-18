@@ -18,7 +18,6 @@ import { RestaurantDataService } from '../../../services/restaurant-data.service
 import { environment } from '../../../environments/environment';
 import { GetRestAndPlatformUsersService } from '../../../services/get-rest-and-platform-users.service';
 import { CommonUserNotificationsService } from '../../../services/common-user-notifications.service';
-import { take, filter } from 'rxjs/operators';
 
 interface EligibleOffer {
   id: string;
@@ -30,9 +29,10 @@ interface EligibleOffer {
   validUntil: string;
   expiresSoon: boolean;
   offerId: string;
-  minOrderValue?: number;
-  discountValue?: number;
-}
+   minOrderValue?: number;
+   discountValue?: number;
+   value?: number;
+ }
 
 @Component({
   selector: 'app-customer-orders',
@@ -62,13 +62,12 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
   activeOrders: Order[] = [];
   orderHistory: Order[] = [];
   allOrderHistory: Order[] = [];
+  private pendingCompletedOrders: Order[] = [];
   private menuItems: MenuItem[] = [];
   selectedOrder: Order | null = null;
   showOrderDetails = false;
   showAllOrderHistory = false;
   eligibleOffers: EligibleOffer[] = [];
-  restaurantOwnerUserIds: string[] = [];
-  restaurantManagerUserIds: string[] = [];
   cartItemCount = 0;
   isLoading = false;
   isOrderHistoryLoading = false;
@@ -110,9 +109,17 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
         order.items = order.items || [];
         if (order.status === 'COMPLETED' || order.status === 'CANCELLED') {
           this.activeOrders = this.activeOrders.filter(o => o.id !== order.id);
+          if (this.selectedOrder && this.selectedOrder.id === order.id) {
+            this.selectedOrder = order;
+          }
           this.calculateInvoice();
           this.pendingOrdersService.updateCount(this.activeOrders.length);
           this.pendingBillsService.setPendingBilling(false);
+          const existsInHistory = this.orderHistory.some((o: Order) => o.id === order.id);
+          if (!existsInHistory) {
+            this.orderHistory = this.sortOrdersByDateDesc([order, ...this.orderHistory]);
+          }
+          this.pendingCompletedOrders = [order, ...this.pendingCompletedOrders.filter(o => o.id !== order.id)];
           this.loadOrderHistory();
           this.loadLoyaltyProgram();
           this.loadEligibleOffers();
@@ -123,6 +130,9 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
           } else {
             this.activeOrders.unshift(order);
           }
+          if (this.selectedOrder && this.selectedOrder.id === order.id) {
+            this.selectedOrder = order;
+          }
           this.calculateInvoice();
         }
       }
@@ -131,13 +141,17 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
 
     const orderUpdateSub = this.realtimeService.orderUpdate$.subscribe(order => {
       console.log('[customer-orders] orderUpdate$ received:', order);
-      if (order && order.customer_id === this.currentUser?.id) {
+      if (order && String(order.customer_id) === String(this.currentUser?.id)) {
         order.items = order.items || [];
         if (order.status === 'COMPLETED' || order.status === 'CANCELLED') {
           this.activeOrders = this.activeOrders.filter(o => o.id !== order.id);
+          if (this.selectedOrder && this.selectedOrder.id === order.id) {
+            this.selectedOrder = order;
+          }
           this.calculateInvoice();
           this.pendingOrdersService.updateCount(this.activeOrders.length);
           this.pendingBillsService.setPendingBilling(false);
+          this.pendingCompletedOrders = [order, ...this.pendingCompletedOrders.filter(o => o.id !== order.id)];
           const existsInHistory = this.orderHistory.some((o: Order) => o.id === order.id);
           if (!existsInHistory) {
             this.orderHistory = this.sortOrdersByDateDesc([order, ...this.orderHistory]);
@@ -151,6 +165,9 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
             this.activeOrders[index] = order;
           } else {
             this.activeOrders.unshift(order);
+          }
+          if (this.selectedOrder && this.selectedOrder.id === order.id) {
+            this.selectedOrder = order;
           }
           this.calculateInvoice();
         }
@@ -203,6 +220,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
             if (aServed !== bServed) return aServed - bServed;
             return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
           });
+        (this.activeOrders || []).forEach((o: Order) => this.realtimeService.recordOrderStatus(String(o.id), o.status));
         this.isLoading = false;
         if (!this.isBillingRequested) {
           this.pendingBillsService.setPendingBilling(false);
@@ -229,7 +247,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
     const customerId = currentUser?.id;
     const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
 
-    const params: any = { is_active: 'true', page: 1, size: 50 };
+    const params: any = { is_active: 'true', page: 1, size: 9999 };
     if (restaurantId) params.restaurant_id = restaurantId;
 
     this.crudService.getCustomerOffers(params).subscribe({
@@ -253,7 +271,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
           next: (redemptions) => {
             const redemptionList = Array.isArray(redemptions) ? redemptions : (redemptions?.data || []);
             const redeemedOfferIds = new Set(
-              redemptionList.map((r: any) => String(r.offer_id ?? r.offer?.id ?? 0))
+              redemptionList.map((r: any) => String(r.offer_id ?? r.offer?.id ?? r.offerId))
             );
             this.eligibleOffers = activeOffers.filter(
               (o: EligibleOffer) => !redeemedOfferIds.has(String(o.offerId))
@@ -293,16 +311,20 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
       offerId: String(o.id),
       minOrderValue: o.min_order_value,
       discountValue: o.discount_value,
+      value: o.value,
     };
   }
 
   private loadOrderHistory(): void {
     this.isOrderHistoryLoading = true;
     const customerId: any = this.authService.getCurrentUser();
-    this.crudService.getOrders({ customerId: customerId.id, status: 'COMPLETED', page: 1, size: 10 }).subscribe({
+    this.crudService.getOrders({ customerId: customerId.id, status: 'COMPLETED', page: 1, size: 9999 }).subscribe({
       next: (response: any) => {
         const data = response?.data || [];
-        this.orderHistory = this.sortOrdersByDateDesc(data);
+        const apiIds = new Set(data.map((o: Order) => o.id));
+        const pendingToMerge = this.pendingCompletedOrders.filter(o => !apiIds.has(o.id));
+        this.pendingCompletedOrders = this.pendingCompletedOrders.filter(o => !apiIds.has(o.id));
+        this.orderHistory = this.sortOrdersByDateDesc([...data, ...pendingToMerge]);
         this.isOrderHistoryLoading = false;
       },
       error: () => {
@@ -346,6 +368,10 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
     });
   }
 
+  private roundToTwo(value: number): number {
+    return Math.round(value * 100) / 100;
+  }
+
   private calculateInvoice(): void {
     const preTaxSubtotal = this.activeOrders.reduce((sum, o) => {
       return sum + (o.total_amount || 0) - (o.tax_amount || 0) + (o.discount_amount || 0) + (o.loyalty_discount_amount || 0);
@@ -353,25 +379,40 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
 
     const totalTax = this.activeOrders.reduce((sum, o) => sum + (o.tax_amount || 0), 0);
 
-    this.invoiceSubtotal = preTaxSubtotal;
-    this.invoiceGst = Math.round(totalTax);
+    this.invoiceSubtotal = this.roundToTwo(preTaxSubtotal);
+    this.invoiceGst = this.roundToTwo(totalTax);
     if (!this.isBillingRequested) {
       this.invoiceDiscount = 0;
     } else if (!this.appliedOffer) {
-      this.invoiceDiscount = Math.round(this.activeOrders.reduce((sum, o) => sum + (o.discount_amount || 0), 0) * 100) / 100;
+      this.invoiceDiscount = this.roundToTwo(this.activeOrders.reduce((sum, o) => sum + (o.discount_amount || 0), 0));
     }
     if (this.appliedOffer) {
       if (this.appliedOffer.type === 'percentage') {
-        this.invoiceDiscount = Math.round(preTaxSubtotal * (this.appliedOffer.discountValue || 0) / 100);
+        this.invoiceDiscount = this.roundToTwo(preTaxSubtotal * (this.appliedOffer.discountValue || 0) / 100);
       } else if (this.appliedOffer.type === 'fixed') {
-        this.invoiceDiscount = Math.min(this.appliedOffer.discountValue || 0, preTaxSubtotal);
+        this.invoiceDiscount = this.roundToTwo(Math.min(this.appliedOffer.value || 0, preTaxSubtotal));
       }
     }
-    const fromOrders = Math.round(this.activeOrders.reduce((sum, o) => sum + (o.loyalty_discount_amount || 0), 0) * 100) / 100;
+    const fromOrders = this.roundToTwo(this.activeOrders.reduce((sum, o) => sum + (o.loyalty_discount_amount || 0), 0));
     if (fromOrders > 0) {
       this.invoiceLoyaltyDiscount = fromOrders;
     }
-    this.invoiceTotal = Math.round((preTaxSubtotal + totalTax - this.invoiceDiscount - this.invoiceLoyaltyDiscount) * 100) / 100;
+    this.invoiceTotal = this.roundToTwo(preTaxSubtotal + totalTax - this.invoiceDiscount - this.invoiceLoyaltyDiscount);
+  }
+
+  isOfferEligibleByMinValue(offer: EligibleOffer): boolean {
+    if (!offer.minOrderValue || offer.minOrderValue <= 0) {
+      return true;
+    }
+    return (this.invoiceSubtotal || 0) >= offer.minOrderValue;
+  }
+
+  getEligibleOffers(): EligibleOffer[] {
+    return this.eligibleOffers.filter(offer => this.isOfferEligibleByMinValue(offer));
+  }
+
+  getIneligibleOffers(): EligibleOffer[] {
+    return this.eligibleOffers.filter(offer => !this.isOfferEligibleByMinValue(offer));
   }
 
   applyOffer(offer: EligibleOffer): void {
@@ -385,11 +426,11 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
     const redeemableValue = Math.floor(this.loyaltyPointsToRedeem / 100);
     if (redeemableValue <= 0) {
       this.invoiceLoyaltyDiscount = 0;
-      this.invoiceTotal = Math.round((this.invoiceSubtotal + this.invoiceGst - this.invoiceDiscount) * 100) / 100;
+      this.invoiceTotal = this.roundToTwo(this.invoiceSubtotal + this.invoiceGst - this.invoiceDiscount);
       return;
     }
-    this.invoiceLoyaltyDiscount = Math.round(redeemableValue * 100) / 100;
-    this.invoiceTotal = Math.round((this.invoiceSubtotal + this.invoiceGst - this.invoiceDiscount - this.invoiceLoyaltyDiscount) * 100) / 100;
+    this.invoiceLoyaltyDiscount = this.roundToTwo(redeemableValue);
+    this.invoiceTotal = this.roundToTwo(this.invoiceSubtotal + this.invoiceGst - this.invoiceDiscount - this.invoiceLoyaltyDiscount);
   }
 
   removeAppliedOffer(): void {
@@ -410,18 +451,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
   requestBilling(): void {
     if (!this.canRequestBilling()) return;
 
-    this.getRestAndPlatformUsersService.users$.pipe(
-      take(1),
-      filter(users => users.length > 0)
-    ).subscribe(recipients => {
-      this.restaurantOwnerUserIds = recipients
-        .filter(u => u.role === 'restaurant_owner')
-        .map(u => String(u.id));
-      this.restaurantManagerUserIds = recipients
-        .filter(u => u.role === 'restaurant_manager')
-        .map(u => String(u.id));
-    });
-
+    const restaurantId = sessionStorage.getItem('current_customer_restaurant_id') || String(this.activeOrders[0]?.restaurant_id || '');
 
     this.generatedInvoiceId = this.generateInvoiceId();
 
@@ -437,8 +467,8 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
         this.activeOrders.forEach((order, index) => {
           const isLast = index === ordersCount - 1;
           const raw = totalDiscount / ordersCount;
-          const rounded = Math.round(raw * 100) / 100;
-          const adjust = isLast ? Math.round((totalDiscount - allocated) * 100) / 100 : rounded;
+          const rounded = this.roundToTwo(raw);
+          const adjust = isLast ? this.roundToTwo(totalDiscount - allocated) : rounded;
           discountAllocations.set(order.id, Math.max(0, adjust));
           allocated += Math.max(0, adjust);
         });
@@ -448,8 +478,8 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
           const orderPreTax = (order.total_amount || 0) - (order.tax_amount || 0);
           const isLast = index === ordersCount - 1;
           const raw = totalDiscount * (orderPreTax / totalPreTax);
-          const rounded = Math.round(raw * 100) / 100;
-          const adjust = isLast ? Math.round((totalDiscount - allocated) * 100) / 100 : rounded;
+          const rounded = this.roundToTwo(raw);
+          const adjust = isLast ? this.roundToTwo(totalDiscount - allocated) : rounded;
           discountAllocations.set(order.id, Math.max(0, adjust));
           allocated += Math.max(0, adjust);
         });
@@ -464,8 +494,8 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
       this.activeOrders.forEach((order, index) => {
         const isLast = index === ordersCount - 1;
         const raw = totalLoyaltyDiscount / ordersCount;
-        const rounded = Math.round(raw * 100) / 100;
-        const adjust = isLast ? Math.round((totalLoyaltyDiscount - allocated) * 100) / 100 : rounded;
+        const rounded = this.roundToTwo(raw);
+        const adjust = isLast ? this.roundToTwo(totalLoyaltyDiscount - allocated) : rounded;
         loyaltyAllocations.set(order.id, Math.max(0, adjust));
         allocated += Math.max(0, adjust);
       });
@@ -478,179 +508,210 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
       if (!confirmed) { this.generatedInvoiceId = null; return; }
       this.isRequestingBilling = true;
 
-      let completed = 0;
-      const total = this.activeOrders.length;
+      this.getRestAndPlatformUsersService.getNotificationRecipients(restaurantId, ['restaurant_owner', 'restaurant_manager']).subscribe({
+        next: (response: any) => {
+          const recipients = Array.isArray(response) ? response : (response?.data || []);
+          const ownerIds = recipients
+            .filter((u: any) => u.role === 'restaurant_owner')
+            .map((u: any) => String(u.id));
+          const managerIds = recipients
+            .filter((u: any) => u.role === 'restaurant_manager')
+            .map((u: any) => String(u.id));
 
-      this.activeOrders.forEach(order => {
-        const orderDiscount = discountAllocations.get(order.id) || 0;
-        const orderLoyaltyDiscount = loyaltyAllocations.get(order.id) || 0;
-        const orderPreTax = (order.total_amount || 0) - (order.tax_amount || 0) + (order.discount_amount || 0);
-        const orderNewTotal = Math.round((orderPreTax - orderDiscount - orderLoyaltyDiscount + (order.tax_amount || 0)) * 100) / 100;
+          let completed = 0;
+          const total = this.activeOrders.length;
 
-        const orderRequest: any = {
-          order_id: order.order_id,
-          customer_name: order.customer_name,
-          table_number: order.table_number,
-          status: 'BILLING_REQUESTED',
-          total_amount: orderNewTotal,
-          special_instructions: order.special_instructions,
-          payment_status: order.payment_status,
-          payment_method: order.payment_method,
-          order_type: order.order_type,
-          priority: order.priority,
-          tax_amount: order.tax_amount,
-          discount_amount: orderDiscount,
-          loyalty_discount_amount: orderLoyaltyDiscount,
-          invoice_id: this.generatedInvoiceId,
-          order_items: order.items.map(item => ({
-            id: item.id,
-            order_id: item.order_id,
-            menu_item_id: item.menu_item_id,
-            menu_item_name: item.menu_item_name,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-            total_price: item.total_price,
-            category: item.category,
-            special_instructions: item.special_instructions,
-            status: 'BILLING_REQUESTED'
-          }))
-        };
+          this.activeOrders.forEach(order => {
+            const orderDiscount = discountAllocations.get(order.id) || 0;
+            const orderLoyaltyDiscount = loyaltyAllocations.get(order.id) || 0;
+            const orderPreTax = (order.total_amount || 0) - (order.tax_amount || 0) + (order.discount_amount || 0);
+            const orderNewTotal = Math.round((orderPreTax - orderDiscount - orderLoyaltyDiscount + (order.tax_amount || 0)) * 100) / 100;
 
-        this.crudService.updateOrder(order.id, orderRequest).subscribe({
-                  next: () => {
-                    completed++;
-                    if (completed === total) {
-                      this.notificationService.success(
-                        'Billing Generated',
-                        `Your bill of ₹${this.invoiceTotal} has been generated, please show this at counter and pay`
-                      );
-                      this.pendingBillsService.setPendingBilling(true);
+            const orderRequest: any = {
+              order_id: order.order_id,
+              customer_name: order.customer_name,
+              table_number: order.table_number,
+              status: 'BILLING_REQUESTED',
+              total_amount: orderNewTotal,
+              special_instructions: order.special_instructions,
+              payment_status: order.payment_status,
+              payment_method: order.payment_method,
+              order_type: order.order_type,
+              priority: order.priority,
+              tax_amount: order.tax_amount,
+              discount_amount: orderDiscount,
+              loyalty_discount_amount: orderLoyaltyDiscount,
+              discount_type: this.appliedOffer?.type,
+              discount_percentage: this.appliedOffer?.type === 'percentage' ? this.appliedOffer.discountValue : undefined,
+              invoice_id: this.generatedInvoiceId,
+              order_items: order.items.map((item: any) => ({
+                id: item.id,
+                order_id: item.order_id,
+                menu_item_id: item.menu_item_id,
+                menu_item_name: item.menu_item_name,
+                quantity: item.quantity,
+                unit_price: item.unit_price,
+                total_price: item.total_price,
+                category: item.category,
+                special_instructions: item.special_instructions,
+                status: 'BILLING_REQUESTED',
+                addons: item.addons || []
+              }))
+            };
 
-                      const restaurantId = this.activeOrders[0].restaurant_id;
-                      const templateData: Record<string, string | number> = {
-                        invoice_number: this.generatedInvoiceId || '',
-                        order_id: String(this.activeOrders[0].order_id || ''),
-                        amount: String(this.invoiceTotal)
+            this.crudService.updateOrder(order.id, orderRequest).subscribe({
+              next: () => {
+                completed++;
+                if (completed === total) {
+                  this.notificationService.success(
+                    'Billing Generated',
+                    `Your bill of ₹${this.invoiceTotal} has been generated, please show this at counter and pay`
+                  );
+                  this.pendingBillsService.setPendingBilling(true);
+
+                  const restaurantIdStr = String(this.activeOrders[0].restaurant_id || restaurantId);
+                  const templateData: Record<string, string | number> = {
+                    invoice_number: this.generatedInvoiceId || '',
+                    order_id: String(this.activeOrders[0].order_id || ''),
+                    amount: String(this.invoiceTotal)
+                  };
+
+                  ownerIds.forEach((ownerId:any) => {
+                    this.commonUserNotificationsService.createFromTemplate(
+                      'invoice_generated',
+                      templateData,
+                      {
+                        recipient_id: ownerId,
+                        recipient_role: 'restaurant_owner',
+                        restaurant_id: restaurantIdStr,
+                        priority: 'medium',
+                        related_order_id: String(this.activeOrders[0].order_id || ''),
+                        related_entity_type: 'invoice'
+                      }
+                    ).subscribe({
+                      next: () => console.log(`[CustomerOrders] Invoice notification sent to restaurant owner ${ownerId}`),
+                      error: (err) => console.error(`[CustomerOrders] Invoice notification failed for owner ${ownerId}`, err)
+                    });
+                  });
+
+                  managerIds.forEach((managerId:any) => {
+                    this.commonUserNotificationsService.createFromTemplate(
+                      'invoice_generated',
+                      templateData,
+                      {
+                        recipient_id: managerId,
+                        recipient_role: 'restaurant_manager',
+                        restaurant_id: restaurantIdStr,
+                        priority: 'medium',
+                        related_order_id: String(this.activeOrders[0].order_id || ''),
+                        related_entity_type: 'invoice'
+                      }
+                    ).subscribe({
+                      next: () => console.log(`[CustomerOrders] Invoice notification sent to restaurant manager ${managerId}`),
+                      error: (err) => console.error(`[CustomerOrders] Invoice notification failed for manager ${managerId}`, err)
+                    });
+                  });
+
+                  if (this.invoiceLoyaltyDiscount > 0 && this.activeOrders.length > 0) {
+                    const firstOrder = this.activeOrders[0];
+                    const pointsToRedeem = Math.round(this.invoiceLoyaltyDiscount * 100);
+
+                    this.crudService.getLoyaltyProgramByCustomer(firstOrder.customer_id).subscribe({
+                      next: (program: any) => {
+                        const balanceBefore = program?.points_balance || 0;
+                        const balanceAfter = Math.max(0, balanceBefore - pointsToRedeem);
+
+                        const redeemPayload: any = {
+                          transaction_id: '',
+                          customer_id: firstOrder.customer_id,
+                          restaurant_id: firstOrder.restaurant_id,
+                          transaction_type: 'REDEEMED',
+                          points: pointsToRedeem,
+                          balance_before: balanceBefore,
+                          balance_after: balanceAfter,
+                          order_id: String(firstOrder.id),
+                          invoice_id: this.generatedInvoiceId,
+                          description: `Redeemed ${pointsToRedeem} points for ₹${this.invoiceLoyaltyDiscount} discount`,
+                          processed_by: firstOrder.customer_id,
+                          processed_at: new Date().toISOString(),
+                          created_at: new Date().toISOString(),
+                          created_by: firstOrder.customer_id,
+                          approval_required: false,
+                          is_reversal: false
+                        };
+                        this.crudService.createLoyaltyTransaction(redeemPayload).subscribe({
+                          next: () => { },
+                          error: (err) => {
+                            console.error('Loyalty redeem transaction failed:', err);
+                          }
+                        });
+                      },
+                      error: (err) => {
+                        console.error('Failed to fetch loyalty program for redeem:', err);
+                      }
+                    });
+                  }
+
+                  if (this.appliedOffer && this.activeOrders.length > 0) {
+                    const appliedOffer = this.appliedOffer;
+                    const ordersToProcess = [...this.activeOrders];
+                    let orderIndex = 0;
+
+                    const processNextOrderRedemption = (): void => {
+                      if (orderIndex >= ordersToProcess.length) return;
+                      const order = ordersToProcess[orderIndex++];
+                      const orderDiscount = discountAllocations.get(order.id) || 0;
+                      const redemptionPayload: OfferRedemptionRecord = {
+                        id: '',
+                        redemption_id: '',
+                        offer_id: +appliedOffer.id,
+                        invoice_id: this.generatedInvoiceId,
+                        order_id: order.id,
+                        customer_id: order.customer_id,
+                        restaurant_id: order.restaurant_id,
+                        redemption_code: appliedOffer.code,
+                        discount_amount: orderDiscount,
+                        original_amount: (order.total_amount || 0) - (order.tax_amount || 0) + (order.discount_amount || 0),
+                        final_amount: order.total_amount - orderDiscount - (loyaltyAllocations.get(order.id) || 0),
+                        redemption_method: 'BILLING_REQUESTED',
+                        applied_by: order.customer_id,
+                        applied_at: new Date(),
+                        created_at: new Date(),
+                        device_type: 'MOBILE',
+                        platform: 'WEB',
+                        is_first_time: true,
+                        usage_count: 1,
+                        customer_lifetime_value: order.total_amount
                       };
 
-                      this.restaurantOwnerUserIds.forEach(ownerId => {
-                        this.commonUserNotificationsService.createFromTemplate(
-                          'invoice_generated',
-                          templateData,
-                          {
-                            recipient_id: ownerId,
-                            recipient_role: 'restaurant_owner',
-                            restaurant_id: restaurantId.toString(),
-                            priority: 'medium',
-                            related_order_id: String(this.activeOrders[0].order_id || ''),
-                            related_entity_type: 'invoice'
-                          }
-                        ).subscribe({
-                          next: () => console.log(`[CustomerOrders] Invoice notification sent to restaurant owner ${ownerId}`),
-                          error: (err) => console.error(`[CustomerOrders] Invoice notification failed for owner ${ownerId}`, err)
-                        });
+                      this.crudService.createOfferRedemption(redemptionPayload).subscribe({
+                        next: () => processNextOrderRedemption(),
+                        error: (err) => {
+                          console.error('Offer redemption failed for order', order.id, err);
+                          processNextOrderRedemption();
+                        }
                       });
+                    };
 
-                      this.restaurantManagerUserIds.forEach(managerId => {
-                        this.commonUserNotificationsService.createFromTemplate(
-                          'invoice_generated',
-                          templateData,
-                          {
-                            recipient_id: managerId,
-                            recipient_role: 'restaurant_manager',
-                            restaurant_id: restaurantId.toString(),
-                            priority: 'medium',
-                            related_order_id: String(this.activeOrders[0].order_id || ''),
-                            related_entity_type: 'invoice'
-                          }
-                        ).subscribe({
-                          next: () => console.log(`[CustomerOrders] Invoice notification sent to restaurant manager ${managerId}`),
-                          error: (err) => console.error(`[CustomerOrders] Invoice notification failed for manager ${managerId}`, err)
-                        });
-                      });
-
-                      if (this.invoiceLoyaltyDiscount > 0 && this.activeOrders.length > 0) {
-                        const firstOrder = this.activeOrders[0];
-                        const pointsToRedeem = Math.round(this.invoiceLoyaltyDiscount * 100);
-
-                        this.crudService.getLoyaltyProgramByCustomer(firstOrder.customer_id).subscribe({
-                          next: (program: any) => {
-                            const balanceBefore = program?.points_balance || 0;
-                            const balanceAfter = Math.max(0, balanceBefore - pointsToRedeem);
-
-                            const redeemPayload: any = {
-                              transaction_id: '',
-                              customer_id: firstOrder.customer_id,
-                              restaurant_id: firstOrder.restaurant_id,
-                              transaction_type: 'REDEEMED',
-                              points: pointsToRedeem,
-                              balance_before: balanceBefore,
-                              balance_after: balanceAfter,
-                              order_id: String(firstOrder.id),
-                              invoice_id: this.generatedInvoiceId,
-                              description: `Redeemed ${pointsToRedeem} points for ₹${this.invoiceLoyaltyDiscount} discount`,
-                              processed_by: firstOrder.customer_id,
-                              processed_at: new Date().toISOString(),
-                              created_at: new Date().toISOString(),
-                              created_by: firstOrder.customer_id,
-                              approval_required: false,
-                              is_reversal: false
-                            };
-                            this.crudService.createLoyaltyTransaction(redeemPayload).subscribe({
-                              next: () => { },
-                              error: (err) => {
-                                console.error('Loyalty redeem transaction failed:', err);
-                              }
-                            });
-                          },
-                          error: (err) => {
-                            console.error('Failed to fetch loyalty program for redeem:', err);
-                          }
-                        });
-                       } else {
-                       }
-
-                       if (this.appliedOffer && this.activeOrders.length > 0) {
-                         const firstOrder = this.activeOrders[0];
-                         const redemptionPayload: OfferRedemptionRecord = {
-                           id: '',
-                           redemption_id: '',
-                           offer_id: +this.appliedOffer.id,
-                           invoice_id: this.generatedInvoiceId,
-                           order_id: firstOrder.id,
-                           customer_id: firstOrder.customer_id,
-                           restaurant_id: firstOrder.restaurant_id,
-                           redemption_code: this.appliedOffer.code,
-                           discount_amount: this.invoiceDiscount || 0,
-                           original_amount: this.invoiceSubtotal + (this.invoiceGst || 0),
-                           final_amount: this.invoiceTotal,
-                           redemption_method: 'BILLING_REQUESTED',
-                           applied_by: firstOrder.customer_id,
-                           applied_at: new Date(),
-                           created_at: new Date(),
-                           device_type: 'MOBILE',
-                           platform: 'WEB',
-                           is_first_time: true,
-                           usage_count: 1,
-                           customer_lifetime_value: this.invoiceTotal
-                         };
-                          this.crudService.createOfferRedemption(redemptionPayload).subscribe({
-                            next: () => { },
-                            error: (err) => {
-                              console.error('Offer redemption failed:', err);
-                            }
-                          });
-                       }
-                     }
-                  },
-          error: () => {
-            completed++;
-            this.isRequestingBilling = false;
-            if (completed === total) {
-              this.notificationService.error('Error', 'Some orders could not be updated. Please try again.');
-            }
-          }
-        });
+                    processNextOrderRedemption();
+                  }
+                }
+              },
+              error: () => {
+                completed++;
+                this.isRequestingBilling = false;
+                if (completed === total) {
+                  this.notificationService.error('Error', 'Some orders could not be updated. Please try again.');
+                }
+              }
+            });
+          });
+        },
+        error: (err) => {
+          console.error('[CustomerOrders] Failed to load notification recipients for billing request:', err);
+          this.notificationService.error('Error', 'Could not send billing notification. Please try again.');
+          this.isRequestingBilling = false;
+        }
       });
     });
   }
@@ -665,11 +726,12 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
     this.selectedOrder = null;
   }
 
-  printOrder(sourceOrder?: Order): void {
+   printOrder(sourceOrder?: Order): void {
     const order = sourceOrder || this.selectedOrder;
     if (!order) return;
     const subtotal = (order.items || []).reduce((sum, item) => sum + (item.total_price || 0), 0);
     const taxAmount = order.tax_amount || 0;
+    const taxPercentage = this.getOrderTaxPercentage(order);
     const discountAmount = order.discount_amount || 0;
     const loyaltyDiscountAmount = order.loyalty_discount_amount || 0;
     const totalAmount = order.total_amount || 0;
@@ -734,20 +796,30 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
               </tr>
             </thead>
             <tbody>
-              ${(order.items || []).map(item => `
-                <tr>
-                  <td>${item.menu_item_name}</td>
-                  <td class="text-right">${item.quantity}</td>
-                  <td class="text-right">₹${item.total_price}</td>
-                </tr>
-              `).join('')}
+              ${(order.items || []).map(item => {
+                const addons = (item.addons || []).map(addon => `
+                  <tr>
+                    <td style="padding-left:14px;color:#666;">+ ${addon.addon_name} (₹${addon.addon_price})</td>
+                    <td class="text-right" style="color:#666;">${addon.quantity}</td>
+                    <td class="text-right" style="color:#666;">₹${(addon.addon_price * addon.quantity).toFixed(2)}</td>
+                  </tr>
+                `).join('');
+                return `
+                  <tr>
+                    <td>${item.menu_item_name} (₹${item.unit_price})</td>
+                    <td class="text-right">${item.quantity}</td>
+                    <td class="text-right">₹${item.total_price}</td>
+                  </tr>
+                  ${addons}
+                `;
+              }).join('')}
             </tbody>
           </table>
           <div class="line"></div>
           <div class="mt-1" style="display:flex;justify-content:space-between;">
             <span>Subtotal</span><span>₹${subtotal.toFixed(2)}</span>
           </div>
-          ${taxAmount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Tax (${order.tax_percentage || 0}%)</span><span>₹${taxAmount.toFixed(2)}</span></div>` : ''}
+          ${taxAmount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Tax (${taxPercentage !== null ? taxPercentage + '%' : '0%'})</span><span>₹${taxAmount.toFixed(2)}</span></div>` : ''}
           ${discountAmount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Discount</span><span>-₹${discountAmount.toFixed(2)}</span></div>` : ''}
           ${loyaltyDiscountAmount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Loyalty Discount</span><span>-₹${loyaltyDiscountAmount.toFixed(2)}</span></div>` : ''}
           <div class="line"></div>
@@ -849,7 +921,7 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
     return 15;
   }
 
-  reorder(order: Order): void {
+  async reorder(order: Order): Promise<void> {
     if (!order.items || order.items.length === 0) {
       this.notificationService.info('Reorder', 'No items to reorder.');
       return;
@@ -860,13 +932,35 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const itemLines = order.items.map(item => {
+      const addonPart = item.addons?.length ? ` with ${item.addons.length} add-on${item.addons.length !== 1 ? 's' : ''}` : '';
+      return `${item.quantity}x ${item.menu_item_name}${addonPart}`;
+    }).join(', ');
+
+    const confirmed = await this.confirmationService.confirm(
+      `This will add the items and add-ons from this order to your cart:\n\n${itemLines}\n\nDo you want to continue?`,
+      'Reorder',
+      'Add to Cart',
+      'Cancel'
+    );
+    if (!confirmed) return;
+
     this.cartService.clearCart();
 
     let addedCount = 0;
     order.items.forEach((item) => {
       const menuItem = this.getMenuItemById(item.menu_item_id);
       if (menuItem) {
-        this.cartService.addToCart(menuItem, item.quantity);
+        const selectedAddons = (item.addons || []).map(addon => ({
+          addonId: addon.addon_id,
+          addonName: addon.addon_name,
+          addonPrice: Number(addon.addon_price || 0),
+          quantity: addon.quantity,
+          isRequired: !!addon.is_required,
+          minQuantity: addon.min_quantity || 0,
+          maxQuantity: addon.max_quantity || 10
+        }));
+        this.cartService.addToCart(menuItem, item.quantity, selectedAddons);
         addedCount++;
       }
     });
@@ -892,7 +986,27 @@ export class CustomerOrdersComponent implements OnInit, OnDestroy {
   }
 
   getOrderSubtotal(order: Order): number {
-    return (order.items || []).reduce((sum, item) => sum + (item.total_price || 0), 0);
+    return (order.items || []).reduce((sum, item) => {
+      const itemTotal = item.total_price || 0;
+      const addonsTotal = (item.addons || []).reduce((addonSum, addon) => addonSum + (addon.addon_price * addon.quantity), 0);
+      return sum + itemTotal + addonsTotal;
+    }, 0);
+  }
+
+  getOrderTaxPercentage(order: Order): number | null {
+    if (!order) return null;
+    const subtotal = this.getOrderSubtotal(order);
+    const taxAmount = order.tax_amount || 0;
+    
+    if (order.tax_percentage != null && Number(order.tax_percentage) > 0) {
+      return Number(order.tax_percentage);
+    }
+    
+    if (subtotal > 0 && taxAmount > 0) {
+      return Math.round((taxAmount / subtotal) * 100);
+    }
+    
+    return null;
   }
 
   getOrderStatusBadgeClass(status: string): string {
