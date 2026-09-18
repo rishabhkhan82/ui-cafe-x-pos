@@ -6,6 +6,7 @@ import { Subject, Observable, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, filter } from 'rxjs/operators';
 import { CrudService } from '../../../services/crud.service';
 import { AuthService } from '../../../services/auth.service';
+import { NotificationService } from '../../../services/notification.service';
 import { User } from '../../../services/mock-data.service';
 import { MenuItem } from '../../../interfaces';
 import { CartService, CartItem } from '../../../services/cart.service';
@@ -47,6 +48,7 @@ export class CustomerMenuComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private cartService = inject(CartService);
   private realtimeService = inject(RealtimeService);
+  private notificationService = inject(NotificationService);
   private subscriptions: Subscription[] = [];
   public subscriptionService = inject(SubscriptionService);
 
@@ -74,6 +76,7 @@ export class CustomerMenuComponent implements OnInit, OnDestroy {
   selectedItemForAddons: MenuItem | null = null;
   private menuItemAddonsMap: { [menuItemId: number]: any[] } = {};
   private loadedAddonItemIds = new Set<number>();
+  selectedAddonQuantities: { [addonId: number]: number } = {};
 
   constructor() {
     // Keep local copy in sync
@@ -383,7 +386,29 @@ export class CustomerMenuComponent implements OnInit, OnDestroy {
   }
 
   addToCart(item: MenuItem): void {
-    this.cartService.addToCart(item);
+    const selectedAddons = this.buildSelectedAddons(item);
+    this.cartService.addToCart(item, 1, selectedAddons);
+  }
+
+  addToCartWithQuantity(item: MenuItem, quantity: number): void {
+    const selectedAddons = this.buildSelectedAddons(item);
+    this.cartService.addToCart(item, quantity, selectedAddons);
+  }
+
+  private buildSelectedAddons(item: MenuItem): CartItem['selectedAddons'] {
+    const addons = this.getItemAddons(item);
+    if (!addons.length) return [];
+    return addons
+      .map((addon: any) => ({
+        addonId: addon.addon_id,
+        addonName: addon.addon_name,
+        addonPrice: Number(addon.addon_price || 0),
+        quantity: this.selectedAddonQuantities[addon.addon_id] || 0,
+        isRequired: !!addon.is_required,
+        minQuantity: addon.min_quantity || 0,
+        maxQuantity: addon.max_quantity || 0
+      }))
+      .filter(addon => addon.quantity > 0);
   }
 
   increaseQuantity(item: MenuItem): void {
@@ -450,16 +475,94 @@ export class CustomerMenuComponent implements OnInit, OnDestroy {
       : (this.menuItemAddonsMap[item.id]?.length > 0);
   }
 
-  getItemAddons(item: MenuItem): any[] {
+  getItemAddons(item: MenuItem | null): any[] {
+    if (!item) return [];
     return this.menuItemAddonsMap[item.id] || item.addons || [];
   }
 
   openAddons(item: MenuItem): void {
     this.selectedItemForAddons = item;
+    this.selectedAddonQuantities = {};
+    const addons = this.getItemAddons(item) || [];
+    const existingCartItem = this.cartService.cartItems.find(cartItem => cartItem.menuItem.id === item.id);
+    const existingAddonMap = new Map(
+      (existingCartItem?.selectedAddons || []).map(addon => [addon.addonId, addon.quantity])
+    );
+    addons.forEach((addon: any) => {
+      const restoredQuantity = existingAddonMap.get(addon.addon_id);
+      if (restoredQuantity !== undefined) {
+        this.selectedAddonQuantities[addon.addon_id] = restoredQuantity;
+      } else {
+        const defaultValue = addon.is_required ? (addon.min_quantity || 1) : 0;
+        this.selectedAddonQuantities[addon.addon_id] = defaultValue;
+      }
+    });
   }
 
   closeAddons(): void {
     this.selectedItemForAddons = null;
+    this.selectedAddonQuantities = {};
+  }
+
+  getSelectedAddonQuantity(addonId: number): number {
+    return this.selectedAddonQuantities[addonId] || 0;
+  }
+
+  setSelectedAddonQuantity(addonId: number, value: number): void {
+    const addon = (this.getItemAddons(this.selectedItemForAddons) || []).find((a: any) => a.addon_id === addonId);
+    const min = addon ? (addon.min_quantity || 0) : 0;
+    const max = addon ? (addon.max_quantity || 0) : 0;
+    let next = value;
+    if (next > 0 && next < min) next = min;
+    if (max > 0 && next > max) next = max;
+    this.selectedAddonQuantities[addonId] = next;
+  }
+
+  increaseAddonQuantity(addonId: number): void {
+    this.setSelectedAddonQuantity(addonId, (this.selectedAddonQuantities[addonId] || 0) + 1);
+  }
+
+  decreaseAddonQuantity(addonId: number): void {
+    this.setSelectedAddonQuantity(addonId, (this.selectedAddonQuantities[addonId] || 0) - 1);
+  }
+
+  toggleAddonInDialog(addon: any): void {
+    const currentQuantity = this.getSelectedAddonQuantity(addon.addon_id);
+    if (currentQuantity > 0) {
+      this.setSelectedAddonQuantity(addon.addon_id, 0);
+    } else {
+      const minQty = addon.min_quantity || 1;
+      this.setSelectedAddonQuantity(addon.addon_id, minQty);
+    }
+  }
+
+  isAddonSelectedInDialog(addon: any): boolean {
+    return this.getSelectedAddonQuantity(addon.addon_id) > 0;
+  }
+
+  confirmAddonsAndAddToCart(): void {
+    if (!this.selectedItemForAddons) return;
+    const existingCartItem = this.cartService.cartItems.find(cartItem => cartItem.menuItem?.id === this.selectedItemForAddons!.id);
+    if (!existingCartItem) {
+      this.notificationService.warning('Menu Item Required', 'Please add the menu item to the cart first.');
+      return;
+    }
+
+    const addons = this.getItemAddons(this.selectedItemForAddons) || [];
+    const missingRequired = addons.filter((addon: any) => addon.is_required && (this.selectedAddonQuantities[addon.addon_id] || 0) <= 0);
+    if (missingRequired.length > 0) {
+      this.notificationService.warning('Required Add-ons', `Please select: ${missingRequired.map((a: any) => a.addon_name).join(', ')}`);
+      return;
+    }
+
+    const selectedAddons = this.buildSelectedAddons(this.selectedItemForAddons) || [];
+    if (!selectedAddons.length) {
+      this.notificationService.warning('No Add-ons Selected', 'Please select at least one add-on before adding.');
+      return;
+    }
+    this.cartService.updateCartItemAddons(this.selectedItemForAddons, selectedAddons);
+    this.notificationService.success('Add-ons Added', 'Add-ons have been updated in your cart.');
+    this.closeAddons();
   }
 
   ngOnDestroy(): void {

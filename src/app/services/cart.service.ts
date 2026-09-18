@@ -8,6 +8,15 @@ import { PendingBillsService } from './pending-bills.service';
 export interface CartItem {
   menuItem: MenuItem;
   quantity: number;
+  selectedAddons?: Array<{
+    addonId: number;
+    addonName: string;
+    addonPrice: number;
+    quantity: number;
+    isRequired: boolean;
+    minQuantity: number;
+    maxQuantity: number;
+  }>;
 }
 
 @Injectable({
@@ -32,7 +41,7 @@ export class CartService {
     return this.cartSubject.value.length;
   }
 
-  addToCart(menuItem: MenuItem, quantity: number = 1): void {
+  addToCart(menuItem: MenuItem, quantity: number = 1, selectedAddons: CartItem['selectedAddons'] = []): void {
     if (this.pendingBillsService.hasPendingBilling) {
       this.notificationService.error(
         'Bill Pending',
@@ -44,11 +53,22 @@ export class CartService {
     const existing = current.find(cartItem => cartItem.menuItem.id === menuItem.id);
     if (existing) {
       existing.quantity += quantity;
+      existing.selectedAddons = selectedAddons || [];
     } else {
-      current.push({ menuItem, quantity });
+      current.push({ menuItem, quantity, selectedAddons: selectedAddons || [] });
     }
     this.cartSubject.next([...current]);
     this.saveToStorage();
+  }
+
+  updateCartItemAddons(menuItem: MenuItem, selectedAddons: CartItem['selectedAddons'] = []): void {
+    const current = this.cartSubject.value;
+    const existing = current.find(cartItem => cartItem.menuItem.id === menuItem.id);
+    if (existing) {
+      existing.selectedAddons = selectedAddons || [];
+      this.cartSubject.next([...current]);
+      this.saveToStorage();
+    }
   }
 
 
@@ -86,7 +106,7 @@ export class CartService {
       if (existing) {
         existing.quantity += item.quantity;
       } else {
-        current.push({ menuItem, quantity: item.quantity });
+        current.push({ menuItem, quantity: item.quantity, selectedAddons: (item as any).addons || [] });
       }
     }
     this.cartSubject.next([...current]);
@@ -106,7 +126,7 @@ export class CartService {
     if (existing) {
       existing.quantity++;
     } else {
-      current.push({ menuItem, quantity: 1 });
+      current.push({ menuItem, quantity: 1, selectedAddons: [] });
     }
     this.cartSubject.next([...current]);
     this.saveToStorage();

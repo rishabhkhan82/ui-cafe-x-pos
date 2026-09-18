@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { interval, Subscription, Observable } from 'rxjs';
 import { NewLoyaltyProgram, NewLoyaltyTransaction, Order, OrderStatus } from '../../../services/mock-data.service';
+import { MenuItem } from '../../../interfaces';
 import { RealtimeService } from '../../../services/realtime.service';
 import { MockDataService } from '../../../services/mock-data.service';
 import { CrudService } from '../../../services/crud.service';
@@ -16,6 +17,7 @@ import { ElapsedTimePipe } from './elapsed-time.pipe';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonUserNotificationsService } from '../../../services/common-user-notifications.service';
 import { RestaurantDataService } from '../../../services/restaurant-data.service';
+import { GetRestAndPlatformUsersService } from '../../../services/get-rest-and-platform-users.service';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -42,6 +44,9 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   private ngZone = inject(NgZone);
   private commonUserNotificationsService = inject(CommonUserNotificationsService);
   private restaurantDataService = inject(RestaurantDataService);
+  private getRestAndPlatformUsersService = inject(GetRestAndPlatformUsersService);
+
+  private suppressSyncActiveStatusFromRoute: boolean = false;
 
   currentTime: string = '';
   activeStatus: string = 'all';
@@ -56,6 +61,49 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   userRole: string = 'owner'; // Default, will be set from sessionStorage
   currentUser: any;
 
+  // Edit order state for waiter
+  showEditOrderModal = false;
+  editingOrder: Order | null = null;
+  editFormItems: any[] = [];
+  availableMenuItems: MenuItem[] = [];
+  filteredAvailableMenuItems: MenuItem[] = [];
+  isEditSubmitting = false;
+  selectedMenuItemForAdd: MenuItem | null = null;
+  addItemQuantity = 1;
+  menuSearchTerm = '';
+  editFormItemAddonsMap: Record<number, any[]> = {};
+
+  // Edit order summary
+  editOrderItemsSubtotal = 0;
+  editOrderAddonsSubtotal = 0;
+  editOrderAddonsCount = 0;
+  editOrderSubtotal = 0;
+  editOrderGst = 0;
+  editOrderTotal = 0;
+
+  // Custom item state
+  showCustomItemForm = false;
+  customItemName = '';
+  customItemQuantity = 1;
+  customItemPrice: number | null = null;
+
+  // Offer redemption state for edit order
+  editingOfferRedemption: any | null = null;
+  editingOffer: any | null = null;
+  restaurantOffers: any[] = [];
+
+  // Invoice order selection dialog
+  showInvoiceOrderSelection = false;
+  selectedInvoiceForEdit: any | null = null;
+
+  // Invoice details modal
+  showInvoiceDetailsModal = false;
+  selectedInvoiceForDetails: { invoiceId: string; orders: Order[] } | null = null;
+
+  // Invoice payment state
+  invoicePaymentStatus: Record<string, string> = {};
+  invoicePaymentMethod: Record<string, string> = {};
+
   // Swipe handling
   private touchStartX: number = 0;
   private touchEndX: number = 0;
@@ -67,14 +115,11 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   isCompletingInvoice: boolean = false;
 
   // Pagination
-  currentPage = 1;
-  itemsPerPage = 10;
-  totalPages = 1;
-  totalElements = 0;
-  itemsPerPageOptions = [5, 10, 15, 20, 25, 50];
 
   // Status options for filtering - role-based
   statusOptions: any[] = [];
+
+  invoiceSearchTerm: string = '';
 
   constructor(router: Router) {
     this.router = router;
@@ -100,17 +145,39 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   private syncActiveStatusFromRoute(): void {
+    if (this.suppressSyncActiveStatusFromRoute) return;
     const status = this.route.snapshot.queryParamMap.get('status');
     if (status && this.orderStatuses.some(s => s.key === status)) {
       this.activeStatus = status;
       this.activeStatusLabel = this.orderStatuses.find(s => s.key === status)?.label || 'All Orders';
-    } else {
+    } else if (['kitchen', 'kitchen_manager'].includes(this.userRole)) {
+      this.activeStatus = 'PENDING';
+      this.activeStatusLabel = this.orderStatuses.find(s => s.key === 'PENDING')?.label || 'Pending';
+    } else if (this.userRole === 'waiter') {
+      this.activeStatus = 'READY';
+      this.activeStatusLabel = this.orderStatuses.find(s => s.key === 'READY')?.label || 'Ready';
+    } else if (this.userRole === 'restaurant_owner') {
+      this.activeStatus = 'BILLING_REQUESTED';
+      this.activeStatusLabel = this.orderStatuses.find(s => s.key === 'BILLING_REQUESTED')?.label || 'Billing Requested';
+    }
+     else {
       this.activeStatus = 'all';
       this.activeStatusLabel = 'All Orders';
     }
   }
 
   private initializeRoleConfig(): void {
+    const kitchenManagerStatuses = [
+      { key: 'PENDING', label: 'Pending', icon: 'fas fa-clock', color: 'bg-yellow-500' },
+      { key: 'PREPARING', label: 'Preparing', icon: 'fas fa-utensils', color: 'bg-orange-500' },
+      { key: 'READY', label: 'Ready', icon: 'fas fa-check-double', color: 'bg-green-500' },
+    ];
+    const waiterStatuses = [
+      { key: 'all', label: 'All', icon: 'fas fa-list', color: 'bg-gray-500' },
+      { key: 'READY', label: 'Ready', icon: 'fas fa-check-double', color: 'bg-green-500' },
+      { key: 'ON_THE_WAY', label: 'On the Way', icon: 'fas fa-user-tie', color: 'bg-blue-500' },
+      { key: 'SERVED', label: 'Served', icon: 'fas fa-utensils', color: 'bg-purple-500' },
+    ];
     const allStatuses = [
       { key: 'all', label: 'All', icon: 'fas fa-list', color: 'bg-gray-500' },
       { key: 'PENDING', label: 'Pending', icon: 'fas fa-clock', color: 'bg-yellow-500' },
@@ -141,7 +208,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         this.statusOptions = allStatusOptions;
         break;
       case 'waiter':
-        this.orderStatuses = allStatuses;
+        this.orderStatuses = waiterStatuses;
         this.statusOptions = allStatusOptions;
         break;
       case 'kitchen':
@@ -149,7 +216,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         this.statusOptions = allStatusOptions;
         break;
       case 'kitchen_manager':
-        this.orderStatuses = allStatuses;
+        this.orderStatuses = kitchenManagerStatuses;
         this.statusOptions = allStatusOptions;
         break;
       default:
@@ -181,6 +248,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.crudService.getCurrentOrders(restaurantId || undefined).subscribe({
       next: (response: any) => {
         this.allOrders = response || [];
+        (this.allOrders || []).forEach((o: any) => this.realtimeService.recordOrderStatus(o.id, o.status));
         this.filterOrders();
         this.realTimeLoader = false;
       },
@@ -193,7 +261,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     });
   }
 
-    private setupRealtimeSubscriptions(): void {
+  private setupRealtimeSubscriptions(): void {
      const newOrderSub = this.realtimeService.newOrder$.subscribe(order => {
        console.log('[orders-mobile] newOrder$ received:', order);
        if (order) {
@@ -207,19 +275,23 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
      });
      this.subscriptions.push(newOrderSub);
 
-     const orderUpdateSub = this.realtimeService.orderUpdate$.subscribe(order => {
-       console.log('[orders-mobile] orderUpdate$ received:', order);
-       if (order) {
-         order.items = order.items || [];
-         const index = this.allOrders.findIndex(o => o.id === order.id);
-         if (index !== -1) {
-           this.allOrders[index] = order;
-         } else {
-           this.allOrders.unshift(order);
-         }
-         this.filterOrders();
-       }
-     });
+      const orderUpdateSub = this.realtimeService.orderUpdate$.subscribe(order => {
+        console.log('[orders-mobile] orderUpdate$ received:', order);
+        if (order) {
+          order.items = order.items || [];
+          const index = this.allOrders.findIndex(o => o.id === order.id);
+          const oldStatus = index !== -1 ? this.allOrders[index].status : null;
+          if (index !== -1) {
+            this.allOrders[index] = order;
+          } else {
+            this.allOrders.unshift(order);
+          }
+          this.filterOrders();
+          if (oldStatus !== null) {
+            // this.autoSwitchFilterForOrder(order, oldStatus);
+          }
+        }
+      });
      this.subscriptions.push(orderUpdateSub);
    }
 
@@ -227,7 +299,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.activeStatus = status;
     this.activeStatusLabel = this.orderStatuses.find(s => s.key === status)?.label || 'All Orders';
     if (status === 'all') {
-      this.router.navigate([], { queryParams: { status: null } });
+      this.router.navigate([], { queryParams: { status: 'all' } });
     } else {
       this.router.navigate([], { queryParams: { status } });
     }
@@ -244,18 +316,20 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     // Role-based status filtering
     if (this.userRole === 'waiter') {
       // Hide for now - can show specifically using this filters
-      // filtered = filtered.filter(order =>
-      //   ['PREPARING', 'READY', 'ON_THE_WAY', 'SERVED'].includes(order.status)
-      // );
+      filtered = filtered.filter(order =>
+        ['PENDING','PREPARING', 'READY', 'ON_THE_WAY', 'SERVED', 'BILLING_REQUESTED'].includes(order.status)
+      );
     } else if (['kitchen', 'kitchen_manager'].includes(this.userRole)) {
       // Hide for now - can show specifically using this filters
-      // filtered = filtered.filter(order =>
-      //   ['PENDING', 'PREPARING', 'READY'].includes(order.status)
-      // );
+      filtered = filtered.filter(order =>
+        ['PENDING', 'PREPARING', 'READY'].includes(order.status)
+      );
     }
     // Owner sees all
 
-    if (this.activeStatus !== 'all') {
+    if (this.activeStatus === 'all') {
+      filtered = filtered.filter(order => order.status !== 'COMPLETED' && order.status !== 'CANCELLED');
+    } else {
       filtered = filtered.filter(order => order.status === this.activeStatus);
     }
 
@@ -279,10 +353,14 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
       filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     }
 
-    this.totalElements = filtered.length;
-    this.totalPages = Math.ceil(this.totalElements / this.itemsPerPage);
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    this.orders = filtered.slice(startIndex, startIndex + this.itemsPerPage);
+    this.orders = filtered;
+  }
+
+  private autoSwitchFilterForOrder(newStatus: string): void {
+    if (this.activeStatus === 'all') return;
+    this.activeStatus = newStatus;
+    this.activeStatusLabel = this.orderStatuses.find(s => s.key === newStatus)?.label || 'All Orders';
+    this.filterOrders();
   }
 
   get activeOrdersCount(): number {
@@ -310,14 +388,29 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
 
   // UI Helper Methods
   getStatusButtonClass(status: string): string {
-    const baseClass = 'px-4 py-2 rounded-full font-medium transition-colors flex items-center text-sm border whitespace-nowrap lg:flex-1 lg:justify-around';
+    const baseClass = 'px-4 py-2 rounded-full font-medium transition-colors flex items-center text-sm border border-2 whitespace-nowrap lg:flex-1 lg:justify-around';
     const isActive = this.activeStatus === status;
+    const statusBorder = this.getStatusBorderClass(status);
 
     if (isActive) {
-      return `${baseClass} border-primary-500 text-primary-500 bg-white dark:bg-gray-800`;
+      return `${baseClass} ${statusBorder} text-white bg-red-800 dark:bg-red-700`;
     }
 
-    return `${baseClass} border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-primary-500 hover:text-primary-500 bg-white dark:bg-gray-800`;
+    return `${baseClass} ${statusBorder} text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700`;
+  }
+
+  private getStatusBorderClass(status: string): string {
+    const map: Record<string, string> = {
+      'PENDING': 'border-yellow-500',
+      'CONFIRMED': 'border-blue-500',
+      'PREPARING': 'border-orange-500',
+      'READY': 'border-green-500',
+      'ON_THE_WAY': 'border-blue-500',
+      'SERVED': 'border-purple-500',
+      'BILLING_REQUESTED': 'border-cyan-500',
+      'CANCELLED': 'border-red-500'
+    };
+    return map[status] || 'border-gray-300';
   }
 
   getStatusCountClass(status: string): string {
@@ -394,7 +487,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
 
 
   canMoveToNextStatus(order: Order): boolean {
-    if (!['kitchen', 'kitchen_manager'].includes(this.userRole)) return false;
+    if (!['kitchen', 'kitchen_manager', 'restaurant_owner', 'restaurant_manager'].includes(this.userRole)) return false;
     const statusFlow = ['PENDING', 'PREPARING', 'READY'];
     const currentIndex = statusFlow.indexOf(order.status);
 
@@ -402,7 +495,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   getNextStatus(currentStatus: string): string {
-    if (!['kitchen', 'kitchen_manager'].includes(this.userRole)) return currentStatus;
+    if (!['kitchen', 'kitchen_manager', 'restaurant_owner', 'restaurant_manager'].includes(this.userRole)) return currentStatus;
     const statusFlow = ['PENDING', 'PREPARING', 'READY'];
     const currentIndex = statusFlow.indexOf(currentStatus);
 
@@ -414,7 +507,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   getNextStatusLabel(currentStatus: string): string {
-    if (!['kitchen', 'kitchen_manager'].includes(this.userRole)) return 'Update';
+    if (!['kitchen', 'kitchen_manager', 'restaurant_owner', 'restaurant_manager'].includes(this.userRole)) return 'Update';
     const labels = {
       'PENDING': 'Start Prep',
       'PREPARING': 'Ready'
@@ -454,6 +547,8 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         if (['kitchen', 'kitchen_manager'].includes(this.userRole) && newStatus === 'READY') {
           this.deductInventoryForOrder(order);
         }
+
+        this.autoSwitchFilterForOrder(newStatus);
       },
       error: (error) => {
         console.error('Error updating order status:', error);
@@ -498,7 +593,16 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         category: item.category,
         special_instructions: item.special_instructions,
         status: item.status,
-        id: item.id
+        id: item.id,
+        addons: (item.addons || []).map((addon: any) => ({
+          addon_id: addon.addon_id,
+          addon_name: addon.addon_name,
+          addon_price: addon.addon_price,
+          quantity: addon.quantity,
+          is_required: addon.is_required,
+          min_quantity: addon.min_quantity,
+          max_quantity: addon.max_quantity
+        }))
       }))
     };
 
@@ -506,7 +610,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   async markOnTheWay(order: Order): Promise<void> {
-    if (this.userRole !== 'waiter') return;
+    if (this.userRole !== 'waiter' && this.userRole !== 'restaurant_manager' && this.userRole !== 'restaurant_owner') return;
     const confirmed = await this.confirmationService.confirm(
       'Are you sure you want to mark this order as On the Way?',
       `Mark On the Way (#${order.order_id.split('-').pop()})`
@@ -537,7 +641,16 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         category: item.category,
         special_instructions: item.special_instructions,
         status: item.status,
-        id: item.id
+        id: item.id,
+        addons: (item.addons || []).map((addon: any) => ({
+          addon_id: addon.addon_id,
+          addon_name: addon.addon_name,
+          addon_price: addon.addon_price,
+          quantity: addon.quantity,
+          is_required: addon.is_required,
+          min_quantity: addon.min_quantity,
+          max_quantity: addon.max_quantity
+        }))
       }))
     };
 
@@ -546,6 +659,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         console.log('Order marked as On the Way successfully:', response);
         this.loadingService.hide();
         this.notificationService.success('Order Updated', `Order #ORD-${order.order_id.split('-').pop()} marked as On the Way`);
+        this.autoSwitchFilterForOrder(response.data.status);
       },
       error: (error) => {
         console.error('Error marking order as On the Way:', error);
@@ -556,7 +670,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   async markServed(order: Order): Promise<void> {
-    if (this.userRole !== 'waiter') return;
+    if (this.userRole !== 'waiter' && this.userRole !== 'restaurant_manager' && this.userRole !== 'restaurant_owner') return;
     const confirmed = await this.confirmationService.confirm(
       'Are you sure you want to mark this order as Served?',
       `Mark Served (#${order.order_id.split('-').pop()})`
@@ -587,7 +701,16 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         category: item.category,
         special_instructions: item.special_instructions,
         status: item.status,
-        id: item.id
+        id: item.id,
+        addons: (item.addons || []).map((addon: any) => ({
+          addon_id: addon.addon_id,
+          addon_name: addon.addon_name,
+          addon_price: addon.addon_price,
+          quantity: addon.quantity,
+          is_required: addon.is_required,
+          min_quantity: addon.min_quantity,
+          max_quantity: addon.max_quantity
+        }))
       }))
     };
 
@@ -596,6 +719,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         console.log('Order marked as Served successfully:', response);
         this.loadingService.hide();
         this.notificationService.success('Order Updated', `Order #ORD-${order.order_id.split('-').pop()} marked as Served`);
+        this.autoSwitchFilterForOrder(response.data.status);
       },
       error: (error) => {
         console.error('Error marking order as Served:', error);
@@ -637,7 +761,16 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         category: item.category,
         special_instructions: item.special_instructions,
         status: item.status,
-        id: item.id
+        id: item.id,
+        addons: (item.addons || []).map((addon: any) => ({
+          addon_id: addon.addon_id,
+          addon_name: addon.addon_name,
+          addon_price: addon.addon_price,
+          quantity: addon.quantity,
+          is_required: addon.is_required,
+          min_quantity: addon.min_quantity,
+          max_quantity: addon.max_quantity
+        }))
       }))
     };
 
@@ -687,7 +820,16 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         category: item.category,
         special_instructions: item.special_instructions,
         status: item.status,
-        id: item.id
+        id: item.id,
+        addons: (item.addons || []).map((addon: any) => ({
+          addon_id: addon.addon_id,
+          addon_name: addon.addon_name,
+          addon_price: addon.addon_price,
+          quantity: addon.quantity,
+          is_required: addon.is_required,
+          min_quantity: addon.min_quantity,
+          max_quantity: addon.max_quantity
+        }))
       }))
     };
 
@@ -721,9 +863,619 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.selectedOrderItems = null;
   }
 
+  openEditOrder(order: Order): void {
+    if (!['waiter', 'restaurant_owner', 'restaurant_manager'].includes(this.userRole)) return;
+    if (order.status === 'COMPLETED' || order.status === 'CANCELLED') return;
+
+    this.editingOrder = { ...order, items: order.items.map(item => ({ ...item })) };
+    this.editFormItems = this.editingOrder.items.map(item => ({
+      ...item,
+      addons: (item.addons || []).map(addon => ({ ...addon }))
+    }));
+    this.editFormItemAddonsMap = {};
+    this.editingOfferRedemption = null;
+    this.editingOffer = null;
+    this.loadAvailableMenuItems();
+    this.loadOfferRedemptionContext(order);
+    this.computeEditOrderSummary();
+    this.showEditOrderModal = true;
+  }
+
+  openInvoiceOrderSelection(invoice: any): void {
+    if (!['waiter', 'restaurant_owner', 'restaurant_manager'].includes(this.userRole)) return;
+    if (!invoice || !invoice.orders || invoice.orders.length === 0) return;
+
+    this.selectedInvoiceForEdit = invoice;
+    this.showInvoiceOrderSelection = true;
+  }
+
+  closeInvoiceOrderSelection(): void {
+    this.showInvoiceOrderSelection = false;
+    this.selectedInvoiceForEdit = null;
+  }
+
+  openInvoiceDetails(invoice: { invoiceId: string; orders: Order[] } | null | undefined): void {
+    if (!invoice || !invoice.orders || invoice.orders.length === 0) return;
+
+    this.selectedInvoiceForDetails = { invoiceId: invoice.invoiceId, orders: invoice.orders };
+    this.showInvoiceDetailsModal = true;
+  }
+
+  closeInvoiceDetails(): void {
+    this.showInvoiceDetailsModal = false;
+    this.selectedInvoiceForDetails = null;
+  }
+
+  selectOrderFromInvoice(order: Order): void {
+    this.closeInvoiceOrderSelection();
+    this.openEditOrder(order);
+  }
+
+  closeEditOrderModal(): void {
+    this.showEditOrderModal = false;
+    this.editingOrder = null;
+    this.editFormItems = [];
+    this.availableMenuItems = [];
+    this.filteredAvailableMenuItems = [];
+    this.isEditSubmitting = false;
+    this.selectedMenuItemForAdd = null;
+    this.addItemQuantity = 1;
+    this.menuSearchTerm = '';
+    this.editingOfferRedemption = null;
+    this.editingOffer = null;
+    this.editFormItemAddonsMap = {};
+  }
+
+  private loadOfferRedemptionContext(order: Order): void {
+    const customerId = order.customer_id || this.currentUser?.id;
+    if (!customerId) return;
+
+    const loadRedemptions = () => {
+      this.crudService.getOfferRedemptionsByCustomer(customerId).subscribe({
+        next: (response: any) => {
+          const redemptions = Array.isArray(response) ? response : (response?.data || []);
+          const matched = redemptions.find((r: any) => r.order_id === order.id);
+          if (matched) {
+            this.editingOfferRedemption = matched;
+            const offer = this.restaurantOffers.find((o: any) => o.id === matched.offer_id);
+            this.editingOffer = offer || null;
+          } else {
+            this.editingOfferRedemption = null;
+            this.editingOffer = null;
+          }
+        },
+        error: () => {
+          this.editingOfferRedemption = null;
+          this.editingOffer = null;
+        }
+      });
+    };
+
+    if (this.restaurantOffers.length > 0) {
+      loadRedemptions();
+      return;
+    }
+
+    const restaurantId = this.currentUser?.restaurantId || this.currentUser?.restaurant_id;
+    if (!restaurantId) {
+      loadRedemptions();
+      return;
+    }
+
+    this.crudService.getOffers({ is_active: true, page: 1, size: 9999, restaurant_id: String(restaurantId) }).subscribe({
+      next: (response: any) => {
+        const data = response?.data || response || [];
+        this.restaurantOffers = Array.isArray(data) ? data : [];
+        loadRedemptions();
+      },
+      error: () => {
+        this.restaurantOffers = [];
+        loadRedemptions();
+      }
+    });
+  }
+
+  private recalculateOfferDiscount(): number {
+    if (!this.editingOrder || !this.editingOfferRedemption) return 0;
+    const subtotal = this.getEditOrderTotal();
+    const offer = this.editingOffer;
+    if (!offer || !subtotal) return 0;
+
+    if (offer.type === 'percentage') {
+      return this.roundToTwo(subtotal * (offer.discount_value || 0) / 100);
+    }
+    if (offer.type === 'fixed') {
+      return this.roundToTwo(offer.value || 0);
+    }
+    return this.roundToTwo(this.editingOrder.discount_amount || 0);
+  }
+
+  private loadAvailableMenuItems(): void {
+    const restaurantId = this.currentUser?.restaurantId || this.currentUser?.restaurant_id;
+    if (!restaurantId) return;
+
+    this.crudService.getMenuItems({ page: 1, size: 999, restaurant_id: String(restaurantId) }).subscribe({
+      next: (response: any) => {
+        const data = response?.data || response || [];
+        this.availableMenuItems = data.map((item: any) => ({
+          id: item.id,
+          name: item.name || '',
+          description: item.description || '',
+          price: item.price || 0,
+          category: item.category || '',
+          image: item.image || '',
+          item_id: item.item_id || '',
+          discount: item.discount || '',
+          original_price: item.original_price || item.originalPrice || item.price || 0,
+          half_price: item.half_price || item.halfPrice || undefined,
+          preparation_time: item.preparation_time || 0,
+          is_active: item.is_active ?? true,
+          is_available: item.is_available ?? true,
+          is_popular: item.is_popular ?? false,
+          is_featured: item.is_featured ?? false,
+          is_recommended: item.is_recommended ?? false,
+          is_spicy: item.is_spicy ?? false,
+          is_veg: item.is_veg ?? item.is_vegetarian ?? true,
+          is_vegetarian: item.is_vegetarian ?? true,
+          restaurant_id: item.restaurant_id || restaurantId,
+          created_at: item.created_at ? new Date(item.created_at) : undefined,
+          updated_at: item.updated_at ? new Date(item.updated_at) : undefined,
+          created_by: item.created_by,
+          updated_by: item.updated_by,
+          addons: item.addons || []
+        }));
+        this.filteredAvailableMenuItems = [...this.availableMenuItems];
+        this.loadEditFormItemAddons();
+      },
+      error: (err) => {
+        console.error('Error loading menu items for edit:', err);
+        this.availableMenuItems = [];
+        this.filteredAvailableMenuItems = [];
+      }
+    });
+  }
+
+  filterAvailableMenuItems(): void {
+    const term = (this.menuSearchTerm || '').toLowerCase().trim();
+    if (!term) {
+      this.filteredAvailableMenuItems = [...this.availableMenuItems];
+      return;
+    }
+    this.filteredAvailableMenuItems = this.availableMenuItems.filter(item =>
+      (item.name || '').toLowerCase().includes(term)
+    );
+  }
+
+  updateEditItemQuantity(itemId: number, newQty: number): void {
+    const qty = Math.max(1, parseInt(String(newQty), 10) || 1);
+    const item = this.editFormItems.find(i => i.id === itemId || i.menu_item_id === itemId);
+    if (item) {
+      item.quantity = qty;
+      item.total_price = qty * item.unit_price;
+      this.computeEditOrderSummary();
+    }
+  }
+
+  async removeEditItem(itemId: number): Promise<void> {
+    const confirmed = await this.confirmationService.confirm(
+      'Are you sure you want to remove this item from the list?',
+      'Remove Item'
+    );
+    if (!confirmed) return;
+
+    this.editFormItems = this.editFormItems.filter(i => i.id !== itemId && i.menu_item_id !== itemId);
+    this.computeEditOrderSummary();
+  }
+
+  getEditItemAvailableAddons(item: any): any[] {
+    if (!item.menu_item_id) return [];
+    const cached = this.editFormItemAddonsMap[item.menu_item_id];
+    if (cached) {
+      return cached;
+    }
+    const menuItem = this.availableMenuItems.find((m: any) => m.id === item.menu_item_id);
+    return menuItem?.addons || [];
+  }
+
+  private loadEditFormItemAddons(): void {
+    const existingIds = this.editFormItems.map(item => item.menu_item_id).filter(Boolean);
+    const availableIds = this.availableMenuItems.map(item => item.id).filter(Boolean);
+    const uniqueMenuItemIds = Array.from(new Set([...existingIds, ...availableIds]));
+
+    uniqueMenuItemIds.forEach(menuItemId => {
+      if (!this.editFormItemAddonsMap[menuItemId]) {
+        const sub = this.crudService.getData(`menu-item-addons/menu-item/${menuItemId}`).subscribe({
+          next: (response: any) => {
+            const data = response || [];
+            this.editFormItemAddonsMap[menuItemId] = data.map((item: any) => ({
+              id: item.id,
+              menu_item_id: item.menu_item_id,
+              addon_id: item.addon_id,
+              is_required: item.is_required,
+              min_quantity: item.min_quantity,
+              max_quantity: item.max_quantity,
+              display_order: item.display_order,
+              addon_name: item.addon_name,
+              addon_price: item.addon_price,
+              addon_image: item.addon_image
+            }));
+          },
+          error: (error) => {
+            console.error('Error loading add-ons for edit item:', error);
+            this.editFormItemAddonsMap[menuItemId] = [];
+          }
+        });
+        this.subscriptions.push(sub);
+      }
+    });
+  }
+
+  isEditItemAddonSelected(item: any, addon: any): boolean {
+    return (item.addons || []).some((a: any) => a.addon_id === addon.addon_id);
+  }
+
+  getEditItemSelectedAddonQuantity(item: any, addonId: number): number {
+    const addon = (item.addons || []).find((a: any) => a.addon_id === addonId);
+    return addon ? addon.quantity : 0;
+  }
+
+  setEditItemAddonQuantity(item: any, addonId: number, value: number): void {
+    if (!item.addons) item.addons = [];
+    const availableAddon = this.getEditItemAvailableAddons(item).find((a: any) => a.addon_id === addonId);
+    const min = availableAddon ? (availableAddon.min_quantity || 0) : 0;
+    const max = availableAddon ? (availableAddon.max_quantity || 0) : 0;
+    let next = value;
+    if (next > 0 && next < min) next = min;
+    if (max > 0 && next > max) next = max;
+
+    const existingIndex = item.addons.findIndex((a: any) => a.addon_id === addonId);
+    if (next <= 0) {
+      if (existingIndex >= 0) {
+        item.addons.splice(existingIndex, 1);
+      }
+      this.computeEditOrderSummary();
+      return;
+    }
+
+    if (existingIndex >= 0) {
+      item.addons[existingIndex].quantity = next;
+    } else if (next > 0) {
+      item.addons.push({
+        addon_id: addonId,
+        addon_name: availableAddon?.addon_name || '',
+        addon_price: Number(availableAddon?.addon_price || 0),
+        quantity: next,
+        is_required: !!availableAddon?.is_required,
+        min_quantity: availableAddon?.min_quantity || 0,
+        max_quantity: availableAddon?.max_quantity || 0
+      });
+    }
+    this.computeEditOrderSummary();
+  }
+
+  toggleEditItemAddon(item: any, addon: any): void {
+    const currentQuantity = this.getEditItemSelectedAddonQuantity(item, addon.addon_id);
+    if (currentQuantity > 0) {
+      this.setEditItemAddonQuantity(item, addon.addon_id, 0);
+    } else {
+      const minQty = addon.min_quantity || 1;
+      this.setEditItemAddonQuantity(item, addon.addon_id, minQty);
+    }
+  }
+
+  increaseEditItemAddon(item: any, addonId: number): void {
+    this.setEditItemAddonQuantity(item, addonId, this.getEditItemSelectedAddonQuantity(item, addonId) + 1);
+  }
+
+  decreaseEditItemAddon(item: any, addonId: number): void {
+    this.setEditItemAddonQuantity(item, addonId, this.getEditItemSelectedAddonQuantity(item, addonId) - 1);
+  }
+
+  onEditItemAddonButtonClick(item: any, addonId: number, delta: number, event: Event): void {
+    event.stopPropagation();
+    this.setEditItemAddonQuantity(item, addonId, this.getEditItemSelectedAddonQuantity(item, addonId) + delta);
+  }
+
+  selectMenuItemForAdd(menuItem: MenuItem): void {
+    this.selectedMenuItemForAdd = menuItem;
+    this.addItemQuantity = 1;
+  }
+
+  isItemInEditForm(menuItemId: number): boolean {
+    return this.editFormItems.some(item => item.menu_item_id === menuItemId || item.id === menuItemId);
+  }
+
+  addItemToEdit(): void {
+    if (!this.selectedMenuItemForAdd || this.addItemQuantity < 1) return;
+
+    const menuItem = this.selectedMenuItemForAdd;
+
+    if (this.isItemInEditForm(menuItem.id)) {
+      this.notificationService.warning('Already Added', 'This item is already in the order. Use the quantity controls to update the amount.');
+      return;
+    }
+
+    const qty = Math.max(1, this.addItemQuantity);
+    const availableAddons = menuItem.addons || [];
+    const initialAddons = availableAddons
+      .filter((addon: any) => addon.is_required)
+      .map((addon: any) => ({
+        addon_id: addon.addon_id,
+        addon_name: addon.addon_name,
+        addon_price: Number(addon.addon_price || 0),
+        quantity: addon.min_quantity || 1,
+        is_required: true,
+        min_quantity: addon.min_quantity || 0,
+        max_quantity: addon.max_quantity || 0
+      }));
+
+    this.editFormItems.push({
+      menu_item_id: menuItem.id,
+      menu_item_name: menuItem.name,
+      quantity: qty,
+      unit_price: menuItem.price,
+      total_price: menuItem.price * qty,
+      category: menuItem.category || '',
+      special_instructions: '',
+      status: this.editingOrder?.status || 'PENDING',
+      addons: initialAddons
+    });
+
+    this.selectedMenuItemForAdd = null;
+    this.addItemQuantity = 1;
+    this.computeEditOrderSummary();
+  }
+
+  openCustomItemForm(): void {
+    this.customItemName = '';
+    this.customItemQuantity = 1;
+    this.customItemPrice = null;
+    this.showCustomItemForm = true;
+  }
+
+  closeCustomItemForm(): void {
+    this.showCustomItemForm = false;
+    this.customItemName = '';
+    this.customItemQuantity = 1;
+    this.customItemPrice = null;
+  }
+
+  submitCustomItem(): void {
+    const name = (this.customItemName || '').trim();
+    const qty = Math.max(1, this.customItemQuantity || 1);
+    const price = Number(this.customItemPrice) || 0;
+
+    if (!name) {
+      this.notificationService.warning('Required', 'Please enter the item name.');
+      return;
+    }
+
+    if (price <= 0) {
+      this.notificationService.warning('Invalid Price', 'Please enter a valid price greater than 0.');
+      return;
+    }
+
+    this.editFormItems.push({
+      menu_item_id: null,
+      menu_item_name: name,
+      quantity: qty,
+      unit_price: price,
+      total_price: price * qty,
+      category: 'CUSTOM',
+      special_instructions: '',
+      status: this.editingOrder?.status || 'PENDING',
+      is_custom: true
+    });
+
+    this.closeCustomItemForm();
+    this.computeEditOrderSummary();
+  }
+
+  private roundToTwo(value: number): number {
+    return Math.round(value * 100) / 100;
+  }
+
+  getEditOrderTotal(): number {
+    return this.roundToTwo(this.editFormItems.reduce((sum: number, item: any) => {
+      const itemTotal = (item.total_price || 0);
+      const addonsTotal = (item.addons || []).reduce((addonSum: number, addon: any) => addonSum + ((addon.addon_price || 0) * (addon.quantity || 0)), 0);
+      return sum + itemTotal + addonsTotal;
+    }, 0));
+  }
+
+  getEditOrderTaxAmount(): number {
+    if (!this.editingOrder) return 0;
+    const restaurant = this.restaurantDataService.getCurrentRestaurant();
+    const isGst = !!restaurant?.is_gst;
+    if (!isGst) return 0;
+    const rate = restaurant && restaurant.gst_percentage != null ? Number(restaurant.gst_percentage) : 0;
+    return this.roundToTwo(this.getEditOrderTotal() * (rate / 100));
+  }
+
+  getEditOrderTaxPercentage(): number | null {
+    if (!this.editingOrder) return null;
+    const restaurant = this.restaurantDataService.getCurrentRestaurant();
+    const isGst = !!restaurant?.is_gst;
+    if (!isGst) return null;
+    if (restaurant && restaurant.gst_percentage != null) {
+      return Number(restaurant.gst_percentage);
+    }
+    const subtotal = this.getEditOrderTotal();
+    const taxAmount = this.getEditOrderTaxAmount();
+    if (subtotal > 0 && taxAmount > 0) {
+      return Math.round((taxAmount / subtotal) * 100);
+    }
+    return null;
+  }
+
+  getEditOrderDiscount(): number {
+    if (!this.editingOrder) return 0;
+    if (this.editingOfferRedemption) {
+      return this.recalculateOfferDiscount();
+    }
+    return this.roundToTwo(this.editingOrder.discount_amount || 0);
+  }
+
+  getEditOrderLoyaltyDiscount(): number {
+    return this.roundToTwo(this.editingOrder?.loyalty_discount_amount || 0);
+  }
+
+  private computeEditOrderSummary(): void {
+    this.editOrderItemsSubtotal = this.roundToTwo(this.editFormItems.reduce((sum, item) => sum + ((item.unit_price || 0) * (item.quantity || 0)), 0));
+
+    this.editOrderAddonsSubtotal = this.roundToTwo(this.editFormItems.reduce((sum: number, item: any) => {
+      const addonsTotal = (item.addons || []).reduce((addonSum: number, addon: any) => addonSum + ((addon.addon_price || 0) * (addon.quantity || 0)), 0);
+      return sum + addonsTotal;
+    }, 0));
+
+    this.editOrderAddonsCount = this.editFormItems.reduce((sum: number, item: any) => {
+      const selectedAddons = item.addons || [];
+      const distinctAddons = selectedAddons.filter((a: any) => a.quantity > 0);
+      return sum + distinctAddons.length;
+    }, 0);
+
+    this.editOrderSubtotal = this.roundToTwo(this.editOrderItemsSubtotal + this.editOrderAddonsSubtotal);
+
+    const restaurant = this.restaurantDataService.getCurrentRestaurant();
+    const isGst = !!restaurant?.is_gst;
+    if (isGst && this.editingOrder) {
+      const rate = restaurant && restaurant.gst_percentage != null ? Number(restaurant.gst_percentage) : 0;
+      this.editOrderGst = this.roundToTwo(this.editOrderSubtotal * (rate / 100));
+    } else {
+      this.editOrderGst = 0;
+    }
+    this.editOrderTotal = this.roundToTwo(this.editOrderSubtotal + this.editOrderGst - this.getEditOrderDiscount() - this.getEditOrderLoyaltyDiscount());
+  }
+
+  saveEditedOrder(): void {
+    if (!this.editingOrder || this.editFormItems.length === 0 || this.isEditSubmitting) return;
+
+    this.confirmationService.confirm(
+      'Are you sure you want to save these changes to the order?',
+      'Save Order Changes'
+    ).then(confirmed => {
+      if (!confirmed) return;
+
+      this.isEditSubmitting = true;
+      this.loadingService.show();
+
+      const totalAmount = this.roundToTwo(this.getEditOrderTotal() + this.getEditOrderTaxAmount() - this.getEditOrderDiscount() - this.getEditOrderLoyaltyDiscount());
+      const editingOrder = this.editingOrder!;
+      const orderRequest: any = {
+        order_id: editingOrder.order_id,
+        customer_name: editingOrder.customer_name,
+        table_number: editingOrder.table_number,
+        status: editingOrder.status,
+        total_amount: totalAmount,
+        special_instructions: editingOrder.special_instructions,
+        invoice_id: editingOrder.invoice_id,
+        payment_status: editingOrder.payment_status,
+        payment_method: editingOrder.payment_method,
+        order_type: editingOrder.order_type,
+        priority: editingOrder.priority,
+        tax_amount: this.getEditOrderTaxAmount(),
+        tax_percentage: this.getEditOrderTaxPercentage(),
+        discount_amount: this.getEditOrderDiscount(),
+        loyalty_discount_amount: editingOrder.loyalty_discount_amount,
+        order_items: this.editFormItems.map(item => ({
+          order_id: editingOrder.id,
+          menu_item_id: item.menu_item_id,
+          menu_item_name: item.menu_item_name,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total_price: item.total_price,
+          category: item.category,
+          special_instructions: item.special_instructions || '',
+          status: item.status,
+          is_custom: !!item.is_custom,
+          id: item.id || undefined,
+          addons: (item.addons || []).map((addon:any) => ({
+            addon_id: addon.addon_id,
+            addon_name: addon.addon_name,
+            addon_price: addon.addon_price,
+            quantity: addon.quantity,
+            is_required: addon.is_required,
+            min_quantity: addon.min_quantity,
+            max_quantity: addon.max_quantity
+          }))
+        }))
+      };
+
+      this.crudService.updateOrder(editingOrder.id, orderRequest).subscribe({
+        next: (response) => {
+          console.log('Order edited successfully:', response);
+          this.loadingService.hide();
+          this.notificationService.success('Order Updated', 'Order has been modified successfully');
+          this.loadOrders();
+          this.sendOrderEditNotifications();
+          this.isEditSubmitting = false;
+          this.closeEditOrderModal();
+        },
+        error: (error) => {
+          console.error('Error editing order:', error);
+          this.loadingService.hide();
+          this.isEditSubmitting = false;
+          this.notificationService.error('Error', 'Failed to update order. Please try again.');
+        }
+      });
+    });
+  }
+
+  private sendOrderEditNotifications(): void {
+    if (!this.editingOrder) return;
+
+    const restaurantId = String(this.currentUser?.restaurantId || this.currentUser?.restaurant_id || '');
+    const orderId = this.editingOrder.order_id;
+    const orderIdShort = orderId.split('-').pop() || orderId;
+
+    const templateData = {
+      order_id: String(orderIdShort),
+      table_no: this.editingOrder.table_number || 'Takeaway',
+      status: this.editingOrder.status
+    };
+
+    if(this.editingOrder.status != 'BILLING_REQUESTED') { 
+      this.getRestAndPlatformUsersService.getNotificationRecipients(restaurantId, ['kitchen_manager']).subscribe((users: any[]) => {
+        (users || []).forEach((user: any) => {
+          this.commonUserNotificationsService.createFromTemplate('order_edited_admin', templateData, {
+            recipient_id: String(user.id),
+            recipient_role: 'kitchen_manager',
+            restaurant_id: restaurantId,
+            related_order_id: orderId,
+            priority: 'high'
+          }).subscribe();
+        });
+      });
+  
+      this.getRestAndPlatformUsersService.getNotificationRecipients(restaurantId, ['waiter']).subscribe((users: any[]) => {
+        (users || []).forEach((user: any) => {
+          this.commonUserNotificationsService.createFromTemplate('order_edited_admin', templateData, {
+            recipient_id: String(user.id),
+            recipient_role: 'waiter',
+            restaurant_id: restaurantId,
+            related_order_id: orderId,
+            priority: 'high'
+          }).subscribe();
+        });
+      });
+    }
+
+    if (this.editingOrder.customer_id) {
+      this.commonUserNotificationsService.createFromTemplate('order_edited_customer', templateData, {
+        recipient_id: String(this.editingOrder.customer_id),
+        recipient_role: 'customer',
+        restaurant_id: restaurantId,
+        related_order_id: orderId,
+        priority: 'high'
+      }).subscribe();
+    }
+
+  }
+
   printOrder(order: Order): void {
     const subtotal = (order.items || []).reduce((sum, item) => sum + (item.total_price || 0), 0);
     const taxAmount = order.tax_amount || 0;
+    const taxPercentage = this.getOrderTaxPercentage(order);
     const discountAmount = order.discount_amount || 0;
     const loyaltyDiscountAmount = order.loyalty_discount_amount || 0;
     const totalAmount = order.total_amount || 0;
@@ -787,20 +1539,30 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
               </tr>
             </thead>
             <tbody>
-              ${(order.items || []).map(item => `
-                <tr>
-                  <td>${item.menu_item_name}</td>
-                  <td class="text-right">${item.quantity}</td>
-                  <td class="text-right">₹${item.total_price}</td>
-                </tr>
-              `).join('')}
+              ${(order.items || []).map(item => {
+                const addonRows = (item.addons || []).map(addon => `
+                  <tr>
+                    <td style="padding-left:14px;color:#666;">+ ${addon.addon_name} (₹${addon.addon_price})</td>
+                    <td class="text-right" style="color:#666;">${addon.quantity}</td>
+                    <td class="text-right" style="color:#666;">₹${(addon.addon_price * addon.quantity).toFixed(2)}</td>
+                  </tr>
+                `).join('');
+                return `
+                  <tr>
+                    <td>${item.menu_item_name} (₹${item.unit_price})</td>
+                    <td class="text-right">${item.quantity}</td>
+                    <td class="text-right">₹${item.total_price}</td>
+                  </tr>
+                  ${addonRows}
+                `;
+              }).join('')}
             </tbody>
           </table>
           <div class="line"></div>
           <div class="mt-1" style="display:flex;justify-content:space-between;">
             <span>Subtotal</span><span>₹${subtotal.toFixed(2)}</span>
           </div>
-          ${taxAmount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Tax (${order.tax_percentage || 0}%)</span><span>₹${taxAmount.toFixed(2)}</span></div>` : ''}
+          ${taxAmount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Tax (${taxPercentage !== null ? taxPercentage + '%' : '0%'})</span><span>₹${taxAmount.toFixed(2)}</span></div>` : ''}
           ${discountAmount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Discount</span><span>-₹${discountAmount.toFixed(2)}</span></div>` : ''}
           ${loyaltyDiscountAmount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Loyalty Discount</span><span>-₹${loyaltyDiscountAmount.toFixed(2)}</span></div>` : ''}
           <div class="line"></div>
@@ -814,6 +1576,136 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
       </body>
       </html>
     `);
+    printWindow.document.close();
+
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+    }, 300);
+  }
+
+  printInvoice(invoice: { invoiceId: string; orders: Order[] }): void {
+    if (!invoice || !invoice.orders || invoice.orders.length === 0) return;
+
+    const printWindow = window.open('', '_blank', 'width=480,height=600');
+    if (!printWindow) return;
+
+    const restaurant = this.restaurantDataService.getCurrentRestaurant();
+    const restaurantName = restaurant?.name || sessionStorage.getItem('current_customer_restaurant_name') || 'Cafe-X POS';
+    let restaurantLogo = '';
+    if (restaurant?.logo_image) {
+      if (restaurant.logo_image.startsWith('http:') || restaurant.logo_image.startsWith('https:')) {
+        restaurantLogo = restaurant.logo_image;
+      } else {
+        restaurantLogo = environment.api.baseUrl + restaurant.logo_image;
+      }
+    }
+
+    const createdAt = new Date().toLocaleString('en-IN');
+
+    const invoiceSubtotal = invoice.orders.reduce((sum, ord) => sum + (this.getOrderSubtotal(ord) || 0), 0);
+    const invoiceTax = invoice.orders.reduce((sum, ord) => sum + (ord.tax_amount || 0), 0);
+    const invoiceDiscount = invoice.orders.reduce((sum, ord) => sum + (ord.discount_amount || 0), 0);
+    const invoiceLoyaltyDiscount = invoice.orders.reduce((sum, ord) => sum + (ord.loyalty_discount_amount || 0), 0);
+    const invoiceGrandTotal = invoice.orders.reduce((sum, ord) => sum + (ord.total_amount || 0), 0);
+
+    const flatItems = invoice.orders.flatMap((ord) => {
+      const orderShortId = ord.order_id.split('-').pop();
+      return (ord.items || []).map((item) => ({
+        name: `${item.menu_item_name} (#${orderShortId}) (₹${item.unit_price})`,
+        quantity: item.quantity,
+        total_price: item.total_price,
+        addons: (item.addons || []).map((addon: any) => ({
+          name: `+ ${addon.addon_name} (#${orderShortId}) (₹${addon.addon_price})`,
+          quantity: addon.quantity,
+          total_price: addon.addon_price * addon.quantity
+        }))
+      }));
+    });
+
+    const flatItemsHtml = flatItems.map((item) => {
+      const addonRows = (item.addons || []).map((addon: any) => `
+        <tr>
+          <td style="padding-left:14px;color:#666;">${addon.name}</td>
+          <td class="text-right" style="color:#666;">${addon.quantity}</td>
+          <td class="text-right" style="color:#666;">₹${addon.total_price.toFixed(2)}</td>
+        </tr>
+      `).join('');
+      return `
+        <tr>
+          <td>${item.name}</td>
+          <td class="text-right">${item.quantity}</td>
+          <td class="text-right">₹${item.total_price}</td>
+        </tr>
+        ${addonRows}
+      `;
+    }).join('');
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Receipt - ${invoice.invoiceId}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: 'Courier New', monospace; font-size: 12px; color: #000; padding: 10px; }
+          .receipt { max-width: 320px; margin: 0 auto; }
+          .center { text-align: center; }
+          .bold { font-weight: bold; }
+          .line { border-top: 1px dashed #000; margin: 8px 0; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { text-align: left; padding: 4px 2px; }
+          th { border-bottom: 1px solid #000; }
+          .text-right { text-align: right; }
+          .mt-2 { margin-top: 8px; }
+          .mt-1 { margin-top: 4px; }
+          .fs-sm { font-size: 11px; }
+          .logo { max-height: 60px; margin-bottom: 8px; }
+        </style>
+      </head>
+      <body>
+        <div class="receipt">
+          ${restaurantLogo ? `<div class="center"><img src="${restaurantLogo}" class="logo" /></div>` : ''}
+          <div class="center bold" style="font-size: 14px;">${restaurantName}</div>
+          <div class="center fs-sm">Invoice Receipt</div>
+          <div class="center fs-sm">${createdAt}</div>
+          <div class="line"></div>
+          <div><span class="bold">Invoice ID:</span> ${invoice.invoiceId}</div>
+          <div><span class="bold">Orders:</span> ${invoice.orders.length}</div>
+          <div class="line"></div>
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th class="text-right">Qty</th>
+                <th class="text-right">Amt</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${flatItemsHtml}
+            </tbody>
+          </table>
+          <div class="line"></div>
+          <div class="mt-1" style="display:flex;justify-content:space-between;">
+            <span>Total Subtotal</span><span>₹${invoiceSubtotal.toFixed(2)}</span>
+          </div>
+          <div class="mt-1" style="display:flex;justify-content:space-between;">
+            <span>Total Tax</span><span>₹${invoiceTax.toFixed(2)}</span>
+          </div>
+          ${invoiceDiscount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Total Discount</span><span>-₹${invoiceDiscount.toFixed(2)}</span></div>` : ''}
+          ${invoiceLoyaltyDiscount > 0 ? `<div class="mt-1" style="display:flex;justify-content:space-between;"><span>Total Loyalty Discount</span><span>-₹${invoiceLoyaltyDiscount.toFixed(2)}</span></div>` : ''}
+          <div class="line"></div>
+          <div class="mt-1 bold" style="display:flex;justify-content:space-between;font-size:14px;">
+            <span>Grand Total</span><span>₹${invoiceGrandTotal.toFixed(2)}</span>
+          </div>
+          <div class="line"></div>
+          <div class="center fs-sm mt-1">Thank you for your order!</div>
+          <div class="center fs-sm mt-1">powered by cafexpos.in</div>
+        </div>
+      </body>
+      </html>
+    `);
+
     printWindow.document.close();
 
     setTimeout(() => {
@@ -854,7 +1746,29 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
   }
 
   getOrderSubtotal(order: Order): number {
-    return (order.items || []).reduce((sum, item) => sum + (item.total_price || 0), 0);
+    return (order.items || []).reduce((sum, item) => {
+      const itemTotal = item.total_price || 0;
+      const addonsTotal = (item.addons || []).reduce((addonSum, addon) => addonSum + (addon.addon_price * addon.quantity), 0);
+      return sum + itemTotal + addonsTotal;
+    }, 0);
+  }
+
+  getOrderTaxPercentage(order: Order): number | null {
+    if (!order) return null;
+    const subtotal = this.getOrderSubtotal(order);
+    const taxAmount = order.tax_amount || 0;
+    
+    // If tax_percentage is explicitly set and non-zero, use it
+    if (order.tax_percentage != null && Number(order.tax_percentage) > 0) {
+      return Number(order.tax_percentage);
+    }
+    
+    // Otherwise calculate from tax_amount and subtotal
+    if (subtotal > 0 && taxAmount > 0) {
+      return Math.round((taxAmount / subtotal) * 100);
+    }
+    
+    return null;
   }
 
   trackByOrderId(index: number, order: Order): string {
@@ -903,36 +1817,10 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.setActiveStatus(this.orderStatuses[prevIndex].key);
   }
 
-  // Pagination methods
-  changePage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.filterOrders();
-    }
-  }
-
-  changeItemsPerPage(newLimit: number): void {
-    this.itemsPerPage = newLimit;
-    this.currentPage = 1;
-    this.filterOrders();
-  }
-
-  onItemsPerPageChange(event: any): void {
-    this.itemsPerPage = +event.target.value;
-    this.currentPage = 1;
-    this.filterOrders();
-  }
-
-  get pageNumbers(): number[] {
-    const pages: number[] = [];
-    for (let i = 1; i <= this.totalPages; i++) {
-      pages.push(i);
-    }
-    return pages;
-  }
-
   getStatusCount(status: string): number {
-    if (status === 'all') return this.allOrders.length;
+    if (status === 'all') {
+      return this.allOrders.filter(order => order.status !== 'COMPLETED' && order.status !== 'CANCELLED').length;
+    }
     if (status === 'BILLING_REQUESTED') {
       return this.billingRequestedInvoices.length;
     }
@@ -981,10 +1869,6 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.searchTerm = '';
     this.activeStatus = 'all';
     this.activeStatusLabel = 'All Orders';
-    this.currentPage = 1;
-    this.itemsPerPage = 10;
-    this.totalPages = 1;
-    this.totalElements = 0;
     this.router.navigate([], { queryParams: { status: null } });
     this.loadOrders();
   }
@@ -1009,7 +1893,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
 
   getInvoicePreTaxSubtotal(invoiceId: string): number {
     return this.billingRequestedInvoices
-      .find(inv => inv.invoiceId === invoiceId)?.orders.reduce((sum, o) => sum + (o.total_amount || 0) - (o.tax_amount || 0) + (o.discount_amount || 0), 0) || 0;
+      .find(inv => inv.invoiceId === invoiceId)?.orders.reduce((sum, o) => sum + (o.total_amount || 0) - (o.tax_amount || 0) + (o.discount_amount || 0) + (o.loyalty_discount_amount || 0), 0) || 0;
   }
 
   getInvoiceTax(invoiceId: string): number {
@@ -1051,6 +1935,14 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     if (!['restaurant_owner', 'restaurant_manager'].includes(this.userRole)) return;
     if (this.isCompletingInvoice) return;
 
+    const paymentStatus = this.invoicePaymentStatus[invoiceId];
+    const paymentMethod = this.invoicePaymentMethod[invoiceId];
+
+    if (!paymentStatus || !paymentMethod) {
+      this.notificationService.warning('Payment Required', 'Please select payment status and payment method before completing the invoice.');
+      return;
+    }
+
     const confirmed = await this.confirmationService.confirm(
       'Are you sure you want to mark this invoice as Completed?',
       'Confirm Invoice Completion'
@@ -1072,12 +1964,15 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
         status: 'COMPLETED',
         total_amount: order.total_amount,
         special_instructions: order.special_instructions,
-        payment_status: 'PAID',
-        payment_method: order.payment_method,
+        invoice_id: order.invoice_id,
+        // payment_status: order.payment_status,
+        // payment_method: order.payment_method,
+        payment_status: this.invoicePaymentStatus[invoiceId] || order.payment_status,
+        payment_method: this.invoicePaymentMethod[invoiceId] || order.payment_method,
         order_type: order.order_type,
         priority: order.priority,
         tax_amount: order.tax_amount,
-        invoice_id: order.invoice_id,
+        tax_percentage: order.tax_percentage,
         order_items: order.items.map(item => ({
           order_id: order.id,
           menu_item_id: item.menu_item_id,
@@ -1086,9 +1981,19 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
           unit_price: item.unit_price,
           total_price: item.total_price,
           category: item.category,
-          special_instructions: item.special_instructions,
-          status: 'PAID',
-          id: item.id
+          special_instructions: item.special_instructions || '',
+          status: item.status,
+          is_custom: !!item.is_custom,
+          id: item.id,
+          addons: (item.addons || []).map((addon: any) => ({
+            addon_id: addon.addon_id,
+            addon_name: addon.addon_name,
+            addon_price: addon.addon_price,
+            quantity: addon.quantity,
+            is_required: addon.is_required,
+            min_quantity: addon.min_quantity,
+            max_quantity: addon.max_quantity
+          }))
         }))
       };
       return this.crudService.updateOrder(order.id, orderRequest).subscribe({
@@ -1104,12 +2009,13 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
               const firstOrder = orders[0];
               const customerId = firstOrder.customer_id;
               const restaurantId = firstOrder.restaurant_id;
+              this.openWhatsAppLink(invoiceId, orders, restaurantId);
               const invoiceTotal = orders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
               const earnedPoints = Math.round(invoiceTotal);
 
               // Create a notification for the customer about the payment received
               this.commonUserNotificationsService.createFromTemplate('payment_received', {
-                order_id: firstOrder.order_id,
+                invoice_id: invoiceId,
                 amount: invoiceTotal,
                 payment_method: firstOrder.payment_method || 'Cash',
                 payment_id: invoiceId
@@ -1120,6 +2026,30 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
                 related_order_id: firstOrder.order_id,
                 priority: 'medium'
               }).subscribe();
+
+              this.getRestAndPlatformUsersService.getNotificationRecipients(String(restaurantId), ['restaurant_owner', 'restaurant_manager']).subscribe({
+                next: (recipients: any[]) => {
+                  const staff = (recipients || []).filter((u: any) => u.role === 'restaurant_owner' || u.role === 'restaurant_manager');
+                  staff.forEach((user: any) => {
+                    this.commonUserNotificationsService.createFromTemplate('payment_received', {
+                      invoice_id: invoiceId,
+                      amount: invoiceTotal,
+                      payment_method: firstOrder.payment_method || 'Cash',
+                      payment_id: invoiceId
+                    }, {
+                      recipient_id: String(user.id),
+                      recipient_role: user.role,
+                      restaurant_id: String(restaurantId),
+                      related_order_id: firstOrder.order_id,
+                      priority: 'medium'
+                    }).subscribe({
+                      next: () => console.log(`[OrdersMobile] Payment notification sent to ${user.role} ${user.id}`),
+                      error: (err) => console.error(`[OrdersMobile] Payment notification failed for ${user.role} ${user.id}`, err)
+                    });
+                  });
+                },
+                error: (err) => console.error('[OrdersMobile] Failed to load staff recipients for payment notification:', err)
+              });
 
               const processLoyalty = () => {
                 this.crudService.getLoyaltyProgramByCustomer(customerId).subscribe({
@@ -1135,7 +2065,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
                         points: earnedPoints,
                         balance_before: balanceBefore,
                         balance_after: balanceAfter,
-                        order_id: String(firstOrder.id),
+                        order_id: invoiceId,
                         invoice_id: invoiceId,
                         description: `Points earned from invoice ${invoiceId}`,
                         processed_by: this.currentUser?.username || 'owner',
@@ -1172,7 +2102,7 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
                             points: earnedPoints,
                             balance_before: balanceBefore,
                             balance_after: balanceAfter,
-                            order_id: String(firstOrder.id),
+                            order_id: invoiceId,
                             invoice_id: invoiceId,
                             description: `Points earned from invoice ${invoiceId}`,
                             processed_by: this.currentUser?.username || 'owner',
@@ -1220,12 +2150,52 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     }
   }
 
+  openWhatsAppLink(invoiceId: string, orders: Order[], restaurantId: string | number | null | undefined): void {
+    if (!orders || orders.length === 0) return;
+
+    const customerId = orders[0].customer_id;
+    if (!customerId) return;
+
+    this.crudService.getCustomerById(customerId).subscribe({
+      next: (response: any) => {
+        const phone = response?.customer?.phone || response?.phone;
+        if (!phone) {
+          console.warn('WhatsApp bill: customer phone not found for customer', customerId, 'response:', response);
+          return;
+        }
+
+        const restaurant = this.restaurantDataService.getCurrentRestaurant();
+        const restaurantName = restaurant?.name || sessionStorage.getItem('current_customer_restaurant_name') || 'Cafe-X POS';
+
+        const invoiceTotal = orders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
+        const orderIds = orders.map(o => '#' + o.order_id.split('-').pop()).join(', ');
+        const receiptUrl = `${window.location.origin}/receipt/${invoiceId}/${restaurantId || ''}`;
+
+        let message = `Thanks for dining with us!\n\n`;
+        message += `Your digital receipt from ${restaurantName} is ready.\n\n`;
+        message += `Orders: ${orderIds}\n`;
+        message += `Total: ₹${invoiceTotal.toFixed(2)}\n\n`;
+        message += `View your receipt:\n${receiptUrl}\n\n`;
+        message += `Loved your experience? We'd love to hear from you!\n\n`;
+        message += `See you again soon!`;
+
+        const encodedMessage = encodeURIComponent(message);
+        const normalizedPhone = String(phone).replace(/^\+/, '').replace(/^0+/, '');
+        const whatsappUrl = `https://wa.me/${normalizedPhone}?text=${encodedMessage}`;
+
+        window.open(whatsappUrl, '_blank');
+      },
+      error: (error) => {
+        console.error('Error fetching customer for WhatsApp bill:', error);
+      }
+    });
+  }
+
   get hasActiveFilters(): boolean {
     return !!(this.searchTerm?.trim() || this.activeStatus !== 'all');
   }
 
   filterOrders(): void {
-    this.currentPage = 1;
     this.applyFiltersAndPagination();
   }
 
@@ -1233,7 +2203,6 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     this.searchTerm = '';
     this.activeStatus = 'all';
     this.activeStatusLabel = 'All Orders';
-    this.currentPage = 1;
     this.router.navigate([], { queryParams: { status: null } });
     this.filterOrders();
   }
@@ -1249,5 +2218,22 @@ export class OrdersMobileComponent implements OnInit, OnDestroy {
     if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.body.classList.add('dark');
     }
+  }
+
+  getFullImageUrl(imagePath: string): string {
+    if (!imagePath) return '';
+    if (imagePath.startsWith('data:') || imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    return environment.api.baseUrl + imagePath;
+  }
+
+  get filteredBillingRequestedInvoices(): { invoiceId: string; orders: Order[] }[] {
+    const term = (this.invoiceSearchTerm || '').trim().toLowerCase();
+    if (!term) return this.billingRequestedInvoices;
+
+    return this.billingRequestedInvoices.filter(inv =>
+      inv.invoiceId.toLowerCase().includes(term)
+    );
   }
 }

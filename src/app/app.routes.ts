@@ -61,6 +61,11 @@ export const routes: Routes = [
   },
 
   {
+    path: 'receipt/:invoiceId/:restaurantId',
+    loadComponent: () => import('./components/common/reciept-page/reciept-page.component').then(m => m.RecieptPageComponent)
+  },
+
+  {
     path: 'platform-dashboard',
     loadComponent: () => import('./components/platform/platform-dashboard/platform-dashboard.component').then(m => m.PlatformDashboardComponent),
     canActivate: [authGuard, roleGuard],

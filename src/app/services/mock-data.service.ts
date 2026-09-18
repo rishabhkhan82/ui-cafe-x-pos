@@ -104,6 +104,8 @@ export interface Order {
   tax_amount: number;
   tax_percentage?: number;
   discount_amount?: number;
+  discount_type?: string;
+  discount_percentage?: number;
   loyalty_discount_amount?: number;
   delivered_at?: Date;
   estimated_ready_time?: Date;
@@ -126,6 +128,20 @@ export interface OrderItem {
   special_instructions?: string;
   category: string;
   status: string;
+  is_custom?: boolean;
+  addons?: OrderItemAddon[];
+}
+
+export interface OrderItemAddon {
+  id: number;
+  order_item_id: number;
+  addon_id: number;
+  addon_name: string;
+  addon_price: number;
+  quantity: number;
+  is_required: boolean;
+  min_quantity: number;
+  max_quantity: number;
 }
 
 export interface OrderCustomization {

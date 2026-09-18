@@ -8,9 +8,11 @@ import { Router } from '@angular/router';
 import { CartService, CartItem } from '../../../services/cart.service';
 import { CrudService } from '../../../services/crud.service';
 import { AuthService } from '../../../services/auth.service';
+import { GuestAuthService } from '../../../services/guest-auth.service';
 import { NotificationService } from '../../../services/notification.service';
 import { PendingBillsService } from '../../../services/pending-bills.service';
 import { RealtimeService } from '../../../services/realtime.service';
+import { ConfirmationDialogService } from '../../../services/confirmation-dialog.service';
 import { environment } from '../../../environments/environment';
 import { OrderType } from '../../../interfaces';
 
@@ -28,6 +30,9 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
   deliveryFee = 0;
   total = 0;
   orderCount = 0;
+  itemsSubtotal = 0;
+  addonsSubtotal = 0;
+  addonsCount = 0;
   orderType: 'DINE_IN' | 'TAKEAWAY' = 'DINE_IN';
   isPlacingOrder = false;
   isGst = false;
@@ -36,24 +41,184 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
 
   orderTypes: OrderType[] = [];
 
+  whatsappNumber: string = '';
+  private cartItemAddonsMap: { [menuItemId: number]: any[] } = {};
+
   constructor(
     private location: Location,
     private router: Router,
     public cartService: CartService,
     private crudService: CrudService,
     private authService: AuthService,
+    private guestAuthService: GuestAuthService,
     private notificationService: NotificationService,
     private pendingBillsService: PendingBillsService,
-    private realtimeService: RealtimeService
+    private realtimeService: RealtimeService,
+    private confirmationService: ConfirmationDialogService
   ) {}
 
+  getMenuItemAddons(cartItem: CartItem): any[] {
+    return this.cartItemAddonsMap[cartItem.menuItem.id] || cartItem.menuItem.addons || [];
+  }
+
+  getSelectedAddonIds(cartItem: CartItem): Set<number> {
+    return new Set((cartItem.selectedAddons || []).map(addon => addon.addonId));
+  }
+
+  isAddonSelected(cartItem: CartItem, addonId: number): boolean {
+    return this.getSelectedAddonIds(cartItem).has(addonId);
+  }
+
+  getSelectedAddonQuantity(cartItem: CartItem, addonId: number): number {
+    const addon = (cartItem.selectedAddons || []).find(a => a.addonId === addonId);
+    return addon ? addon.quantity : 0;
+  }
+
+  getAvailableAddon(cartItem: CartItem, addonId: number): any {
+    return (this.getMenuItemAddons(cartItem) || []).find((a: any) => (a.addon_id || a.addonId) === addonId);
+  }
+
+  clampAddonQuantity(cartItem: CartItem, addonId: number, quantity: number): number {
+    const addon = this.getAvailableAddon(cartItem, addonId);
+    if (!addon) return quantity;
+    const min = addon.min_quantity || addon.minQuantity || 0;
+    const max = addon.max_quantity || addon.maxQuantity || 0;
+    let next = quantity;
+    if (next < min) next = min;
+    if (max > 0 && next > max) next = max;
+    return next;
+  }
+
+  updateAddonQuantity(cartItem: CartItem, addonId: number, quantity: number): void {
+    const currentAddons = cartItem.selectedAddons ? [...cartItem.selectedAddons] : [];
+    const clampedQuantity = this.clampAddonQuantity(cartItem, addonId, quantity);
+    const existingIndex = currentAddons.findIndex(a => a.addonId === addonId);
+
+    if (clampedQuantity <= 0) {
+      if (existingIndex >= 0) {
+        currentAddons.splice(existingIndex, 1);
+      }
+    } else {
+      const updatedAddon = {
+        addonId,
+        addonName: this.getAvailableAddon(cartItem, addonId)?.addon_name || this.getAvailableAddon(cartItem, addonId)?.addonName || '',
+        addonPrice: Number(this.getAvailableAddon(cartItem, addonId)?.addon_price || this.getAvailableAddon(cartItem, addonId)?.addonPrice || 0),
+        quantity: clampedQuantity,
+        isRequired: !!this.getAvailableAddon(cartItem, addonId)?.is_required,
+        minQuantity: this.getAvailableAddon(cartItem, addonId)?.min_quantity || this.getAvailableAddon(cartItem, addonId)?.minQuantity || 0,
+        maxQuantity: this.getAvailableAddon(cartItem, addonId)?.max_quantity || this.getAvailableAddon(cartItem, addonId)?.maxQuantity || 10
+      };
+
+      if (existingIndex >= 0) {
+        currentAddons[existingIndex] = updatedAddon;
+      } else {
+        currentAddons.push(updatedAddon);
+      }
+    }
+
+    this.cartService.updateCartItemAddons(cartItem.menuItem, currentAddons);
+  }
+
+  increaseAddonQuantity(cartItem: CartItem, addonId: number): void {
+    const currentQty = this.getSelectedAddonQuantity(cartItem, addonId);
+    this.updateAddonQuantity(cartItem, addonId, currentQty + 1);
+  }
+
+  decreaseAddonQuantity(cartItem: CartItem, addonId: number): void {
+    const currentQty = this.getSelectedAddonQuantity(cartItem, addonId);
+    this.updateAddonQuantity(cartItem, addonId, currentQty - 1);
+  }
+
+  toggleAddon(cartItem: CartItem, addon: any): void {
+    const addonId = addon.addon_id || addon.addonId;
+    const available = this.getAvailableAddon(cartItem, addonId);
+    if (available && available.is_required) {
+      return;
+    }
+    const currentAddons = cartItem.selectedAddons ? [...cartItem.selectedAddons] : [];
+    const existingIndex = currentAddons.findIndex(a => a.addonId === addonId);
+    if (existingIndex >= 0) {
+      currentAddons.splice(existingIndex, 1);
+    } else {
+      const minQuantity = available ? (available.min_quantity || available.minQuantity || 1) : 1;
+      currentAddons.push({
+        addonId,
+        addonName: addon.addon_name || addon.addonName,
+        addonPrice: Number(addon.addon_price || addon.addonPrice || 0),
+        quantity: minQuantity,
+        isRequired: !!available?.is_required,
+        minQuantity: available ? (available.min_quantity || available.minQuantity || 0) : 0,
+        maxQuantity: available ? (available.max_quantity || available.maxQuantity || 0) : 0
+      });
+    }
+    this.cartService.updateCartItemAddons(cartItem.menuItem, currentAddons);
+  }
+
+  private applyRequiredAddonsForReadyCartItems(): void {
+    let hasChanges = false;
+    const updates = new Map<number, CartItem['selectedAddons']>();
+
+    for (const cartItem of this.cartItems) {
+      const menuItemId = cartItem.menuItem.id;
+      if (!(menuItemId in this.cartItemAddonsMap)) {
+        continue;
+      }
+
+      const availableAddons = this.cartItemAddonsMap[menuItemId] || [];
+      if (availableAddons.length === 0) {
+        continue;
+      }
+
+      const currentSelected = cartItem.selectedAddons ? [...cartItem.selectedAddons] : [];
+      const selectedIds = new Set(currentSelected.map(a => a.addonId));
+      let itemChanged = false;
+
+      for (const addon of availableAddons) {
+        const addonId = addon.addon_id || addon.addonId;
+        if (addon.is_required && !selectedIds.has(addonId)) {
+          const minQty = addon.min_quantity || addon.minQuantity || 1;
+          currentSelected.push({
+            addonId,
+            addonName: addon.addon_name || addon.addonName || '',
+            addonPrice: Number(addon.addon_price || addon.addonPrice || 0),
+            quantity: minQty,
+            isRequired: true,
+            minQuantity: addon.min_quantity || addon.minQuantity || 0,
+            maxQuantity: addon.max_quantity || addon.maxQuantity || 0
+          });
+          itemChanged = true;
+        }
+      }
+
+      if (itemChanged) {
+        hasChanges = true;
+        updates.set(menuItemId, currentSelected);
+      }
+    }
+
+    if (hasChanges) {
+      for (const [menuItemId, selectedAddons] of updates) {
+        const cartItem = this.cartItems.find(ci => ci.menuItem.id === menuItemId);
+        if (cartItem) {
+          this.cartService.updateCartItemAddons(cartItem.menuItem, selectedAddons);
+        }
+      }
+    }
+  }
+
   ngOnInit(): void {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     this.loadOrderTypes();
     this.loadRestaurantGstSettings();
     this.cartService.cart$.subscribe(items => {
       this.cartItems = items;
       this.computeTotals();
+      this.loadCartItemAddons();
+      this.applyRequiredAddonsForReadyCartItems();
     });
+
+    const currentUser = this.authService.getCurrentUser();
+    this.whatsappNumber = currentUser?.phone || '';
 
     const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
     if (restaurantId) {
@@ -64,6 +229,37 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
       });
       this.subscriptions.push(sub);
     }
+  }
+
+  private loadCartItemAddons(): void {
+    const uniqueMenuItemIds = Array.from(new Set(this.cartItems.map(cartItem => cartItem.menuItem.id)));
+    uniqueMenuItemIds.forEach(menuItemId => {
+      if (!this.cartItemAddonsMap[menuItemId]) {
+        this.crudService.getData(`menu-item-addons/menu-item/${menuItemId}`).subscribe({
+          next: (response: any) => {
+            const data = response || [];
+            this.cartItemAddonsMap[menuItemId] = data.map((item: any) => ({
+              id: item.id,
+              menu_item_id: item.menu_item_id,
+              addon_id: item.addon_id,
+              is_required: item.is_required,
+              min_quantity: item.min_quantity,
+              max_quantity: item.max_quantity,
+              display_order: item.display_order,
+              addon_name: item.addon_name,
+              addon_price: item.addon_price,
+              addon_image: item.addon_image
+            }));
+            this.applyRequiredAddonsForReadyCartItems();
+          },
+          error: (error) => {
+            console.error('Error loading add-ons for cart item:', error);
+            this.cartItemAddonsMap[menuItemId] = [];
+            this.applyRequiredAddonsForReadyCartItems();
+          }
+        });
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -119,8 +315,76 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
     });
   }
 
-  proceedToOrder(): void {
+  private syncPhoneInBackground(newPhone: string): void {
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser) return;
+
+    const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
+    const restaurantIdNum = restaurantId ? parseInt(restaurantId) : 1;
+
+    let customerId: string | number;
+
+    if (currentUser.role === 'customer' && currentUser.user_type === 'customer') {
+      const guestData = this.guestAuthService.getCurrentGuestUser(restaurantIdNum);
+      if (guestData && guestData.customer) {
+        customerId = guestData.customer.id;
+      } else {
+        return;
+      }
+    } else {
+      customerId = currentUser.id;
+    }
+
+    const updatePayload: any = {
+      id: customerId,
+      name: currentUser.name,
+      email: currentUser.email || '',
+      phone: newPhone || undefined,
+      avatar: currentUser.avatar || '',
+      restaurant_id: restaurantIdNum,
+      customer_id: currentUser.username
+    };
+
+    this.crudService.updateCustomer(customerId, updatePayload).subscribe({
+      next: (response: any) => {
+        const updatedAvatar = response?.avatar || currentUser.avatar || '';
+        currentUser.phone = newPhone;
+        currentUser.avatar = updatedAvatar;
+        this.authService.setCurrentUser(currentUser);
+
+        if (currentUser.role === 'customer' && currentUser.user_type === 'customer') {
+          const guestData = this.guestAuthService.getCurrentGuestUser(restaurantIdNum);
+          if (guestData && guestData.customer) {
+            guestData.customer.phone = newPhone;
+            guestData.customer.avatar = updatedAvatar;
+            this.guestAuthService.storeCurrentGuestUser(guestData, restaurantIdNum);
+          }
+        }
+      },
+      error: (error) => {
+        console.error('Failed to sync WhatsApp number in background:', error);
+      }
+    });
+  }
+
+  async confirmClearCart(): Promise<void> {
+    const confirmed = await this.confirmationService.confirm(
+      'This will remove all items from your cart. Are you sure you want to continue?',
+      'Clear Cart',
+      'Clear Cart',
+      'Cancel'
+    );
+    if (!confirmed) return;
+    this.cartService.clearCart();
+  }
+
+  async proceedToOrder(): Promise<void> {
     if (this.cartItems.length === 0 || this.isPlacingOrder) return;
+
+    if (!this.whatsappNumber || this.whatsappNumber.trim() === '') {
+      this.notificationService.error('Required', 'Please enter your WhatsApp number before placing the order.');
+      return;
+    }
 
     if (this.pendingBillsService.hasPendingBilling) {
       this.notificationService.error(
@@ -130,9 +394,21 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.isPlacingOrder = true;
+    const confirmed = await this.confirmationService.confirm(
+      `Confirm order for ₹${this.total}?`,
+      'Place Order',
+      'Place Order',
+      'Cancel'
+    );
+    if (!confirmed) return;
 
     const currentUser = this.authService.getCurrentUser();
+    if (currentUser && this.whatsappNumber !== currentUser.phone) {
+      this.syncPhoneInBackground(this.whatsappNumber);
+    }
+
+    this.isPlacingOrder = true;
+
     const customerId = currentUser?.id;
     const restaurantId = sessionStorage.getItem('current_customer_restaurant_id');
     const tableNumber = sessionStorage.getItem('current_customer_table_no');
@@ -144,19 +420,18 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
       restaurant_id: restaurantId !== null ? Number(restaurantId) : null,
       status: 'PENDING',
       total_amount: this.total,
-      tax_amount: this.gst, 
-      tax_percentage: this.isGst ? this.gstPercentage : null,
+      tax_amount: this.gst,
+      tax_percentage: this.isGst ? Number(this.gstPercentage || 0) : null,
       payment_status: 'PENDING',
       order_type: this.orderType,
       priority: 'MEDIUM',
       special_instructions: '',
-      // new fields added to match order interface
       created_at : new Date().toISOString(),
       delivered_at : null,
       estimated_ready_time : null,
       updated_at : null,
       order_id : null,
-    payment_method : null,
+      payment_method : null,
       order_items: this.cartItems.map(cartItem => ({
         menu_item_id: cartItem.menuItem.id,
         menu_item_name: cartItem.menuItem.name,
@@ -165,7 +440,16 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
         total_price: cartItem.menuItem.price * cartItem.quantity,
         category: cartItem.menuItem.category || '',
         special_instructions: '',
-        status: 'PENDING'
+        status: 'PENDING',
+        addons: (cartItem.selectedAddons || []).map(addon => ({
+          addon_id: addon.addonId,
+          addon_name: addon.addonName,
+          addon_price: addon.addonPrice,
+          quantity: addon.quantity,
+          is_required: addon.isRequired,
+          min_quantity: addon.minQuantity,
+          max_quantity: addon.maxQuantity
+        }))
       }))
     };
 
@@ -208,20 +492,35 @@ export class CustomerCartComponent implements OnInit, OnDestroy {
     this.location.back();
   }
 
+  private roundToTwo(value: number): number {
+    return Math.round(value * 100) / 100;
+  }
+
   private computeTotals(): void {
-    this.subtotal = this.cartItems.reduce((sum, cartItem) => {
-      const menuItem = cartItem.menuItem;
-      const effectivePrice = menuItem.price;
-      return sum + effectivePrice * cartItem.quantity;
+    this.itemsSubtotal = this.roundToTwo(this.cartItems.reduce((sum, cartItem) => {
+      return sum + cartItem.menuItem.price * cartItem.quantity;
+    }, 0));
+
+    this.addonsSubtotal = this.roundToTwo(this.cartItems.reduce((sum, cartItem) => {
+      const addonsTotal = (cartItem.selectedAddons || []).reduce((addonSum, addon) => addonSum + (addon.addonPrice * addon.quantity), 0);
+      return sum + addonsTotal;
+    }, 0));
+
+    this.addonsCount = this.cartItems.reduce((sum, cartItem) => {
+      const selectedAddons = cartItem.selectedAddons || [];
+      const distinctAddons = selectedAddons.filter(a => a.quantity > 0);
+      return sum + distinctAddons.length;
     }, 0);
+
+    this.subtotal = this.roundToTwo(this.itemsSubtotal + this.addonsSubtotal);
 
     if (this.isGst && this.gstPercentage !== null) {
       const rate = Number(this.gstPercentage) || 0;
-      this.gst = Math.round(this.subtotal * (rate / 100));
+      this.gst = this.roundToTwo(this.subtotal * (rate / 100));
     } else {
       this.gst = 0;
     }
-    this.total = this.subtotal + this.deliveryFee + this.gst;
+    this.total = this.roundToTwo(this.subtotal + this.deliveryFee + this.gst);
     this.orderCount = this.cartItems.length;
   }
 }
